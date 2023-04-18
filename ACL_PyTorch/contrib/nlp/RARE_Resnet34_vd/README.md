@@ -5,8 +5,6 @@
 
     - [输入输出数据](#section540883920406)
 
-
-
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
@@ -60,10 +58,9 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                    | 22.0.2.3  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | 固件与驱动                                                    | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.12.1  | -                                                            |
   | paddlepaddle                                                 | 2.3.2   | 该依赖只支持x86                                               |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。  | \       | \                                                            |
 
@@ -80,6 +77,8 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
    cd PaddleOCR 
    git reset --hard a40f64a70b8d290b74557a41d869c0f9ce4959d5
    git apply ../RARE_Resnet34_vd.patch
+   python3 setup.py install
+   export PYTHONPATH=$(echo $(pwd)):$PYTHONPATH
    cd ..
    ```
 
@@ -87,22 +86,13 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
 
    ```
    pip3 install -r requirements.txt
-   cd PaddleOCR
-   python3 setup.py install
-   export PYTHONPATH=$(echo $(pwd)):$PYTHONPATH
-   cd ..
-   git clone https://gitee.com/ascend/auto-optimizer.git
-   cd auto-optimizer
-   pip3 install -r requirements.txt
-   python3 setup.py install
-   cd ..
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
 
-   该模型在以LMDB格式(LMDBDataSet)存储的IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE数据集上进行评估，共计12067个评估数据，数据介绍参考[[DTRB](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here)]，数据集[[下载链接](https://www.dropbox.com/sh/i39abvnefllx2si/AAAbAYRvxzRp3cIE5HzqUw3ra?dl=0)]。
+   该模型在以LMDB格式(LMDBDataSet)存储的IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE数据集上进行评估，共计12067个评估数据，数据介绍参考[DTRB](https://github.com/clovaai/deep-text-recognition-benchmark#download-lmdb-dataset-for-traininig-and-evaluation-from-here)。
    
    下载后将其中的`evaluation.zip`压缩包存放在`RARE_Resnet34_vd`目录下，并通过以下命令进行解压。 
 
@@ -118,15 +108,15 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
    在`RARE_Resnet34_vd`工作目录下，执行RARE_Resnet34_vd_preprocess.py脚本，完成预处理。
 
    ```
-    python3 RARE_Resnet34_vd_preprocess.py \
+   python3 RARE_Resnet34_vd_preprocess.py \
         --config=PaddleOCR/configs/rec/rec_r34_vd_tps_bilstm_att.yml \
         --opt=bin_data=rare_bindata
    ```
 
    - 参数说明：
 
-       -   --config：模型配置文件。
-       -   --opt=bin_data：bin文件保存路径。
+      - --config：模型配置文件。
+      - --opt=bin_data：bin文件保存路径。
 
    运行后在当前目录下的`rare_bindata`路径中保存生成的二进制数据。
 
@@ -181,19 +171,14 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
          运行后在`RARE_Resnet34_vd`目录下获得RARE_Resnet34_vd_dybs.onnx文件。
     
       2. 优化ONNX文件。
-         
-         使用onnxsim工具优化onnx模型，命令如下。
-
-         ```
-          onnxsim RARE_Resnet34_vd_dybs.onnx RARE_Resnet34_vd_sim_dybs.onnx --skip-shape-inference
-         ```
+         请访问[auto-optimizer推理工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 
          使用opt_onnx.py脚本优化onnx模型，主要是替换GridSample算子。
 
          ```
           python3 opt_onnx.py \
-              --in_onnx=./RARE_Resnet34_vd_sim_dybs.onnx \
-              --out_onnx=./RARE_Resnet34_vd_sim_opt_dybs.onnx
+              --in_onnx=./RARE_Resnet34_vd_dybs.onnx \
+              --out_onnx=./RARE_Resnet34_vd_opt_dybs.onnx
          ```
 
          - 参数说明：
@@ -201,7 +186,7 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
            -   --in_onnx：输入ONNX模型文件。
            -   --out_onnx：输出ONNX模型文件。
 
-         获得RARE_Resnet34_vd_sim_opt_dybs.onnx文件。
+         获得RARE_Resnet34_vd_opt_dybs.onnx文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -234,12 +219,12 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
 
       3. 执行ATC命令。
 
-         ```
+         ```shell
          atc --framework=5 \
-             --model=./RARE_Resnet34_vd_sim_opt_dybs.onnx \
-             --output=./RARE_Resnet34_vd_bs${batchsize} \
+             --model=./RARE_Resnet34_vd_opt_dybs.onnx \
+             --output=./RARE_Resnet34_vd_bs${bs} \
              --input_format=NCHW \
-             --input_shape="x:${batchsize},3,32,100" \
+             --input_shape="x:${bs},3,32,100" \
              --log=error \
              --soc_version=Ascend${chip_name}
          ```
@@ -254,46 +239,43 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           `${batchsize}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
-           运行成功后生成`RARE_Resnet34_vd_bs${batchsize}.om`模型文件。
+           `${bs}`表示om模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
+           运行成功后生成`RARE_Resnet34_vd_bs${bs}.om`模型文件。
 
 2. 开始推理验证。
 
-   a.  安装ais_bench推理工具。
+   1. 安装ais_bench推理工具。
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
 
-   b.  执行推理。
+   2. 执行推理。
 
-      ```
+      ```shell
       python3 -m ais_bench \
-          --model=./RARE_Resnet34_vd_bs${batchsize}.om \
+          --model=./RARE_Resnet34_vd_bs${bs}.om \
           --input=./rare_bindata \
-          --batchsize=${batchsize} \
-          --output=./
+          --output=./ --output_dirname output
       ```
 
       -   参数说明：
 
            -   --model：om模型路径。
            -   --input：bin文件路径。
-           -   --batchsize：om模型的batch。
            -   --output：推理结果保存路径。
-     
-      `${batchsize}`表示不同batch的om模型。
+           -   --output_dirname：推理结果子目录。
 
-      推理完成后在当前`RARE_Resnet34_vd`工作目录生成推理结果。其目录命名格式为`xxxx_xx_xx-xx_xx_xx`(`年_月_日-时_分_秒`)，如`2022_08_18-06_55_19`。
+      推理完成后在当前目录生成output文件夹。
 
 
-   c.  精度验证。
+   3. 精度验证。
 
       执行后处理脚本`RARE_Resnet34_vd_postprocess.py`，参考命令如下：
 
       ```
       python3 RARE_Resnet34_vd_postprocess.py \
           --config=PaddleOCR/configs/rec/rec_r34_vd_tps_bilstm_att.yml \
-          --opt=results=${output_path}
+          --opt=results=output
       ```
 
       -   参数说明：
@@ -301,7 +283,6 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
             -   --config：模型配置文件。
             -   --opt：推理结果路径。
 
-      ${output_path}为推理结果的保存路径。
 
       推理结果通过屏显显示，如下所示：
 
@@ -309,15 +290,15 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
       {'acc': 0.847932376855944, 'norm_edit_dis': 0.9322851725751706}
       ```
 
-   d.  性能验证。
+   4. 性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
-      ```
+      ```shell
       python3 -m ais_bench \
-          --model=./RARE_Resnet34_vd_bs${batchsize}.om \
+          --model=./RARE_Resnet34_vd_bs${bs}.om \
           --loop=50 \
-          --batchsize=${batchsize}
+          --batchsize=${bs}
       ```
 
       -   参数说明：
@@ -326,13 +307,8 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
           -   --loop：推理次数。
           -   --batchsize：om模型的batch。
 
-      `${batchsize}`表示不同batch的om模型。
+      `${bs}`表示不同batch的om模型。
 
-      纯推理完成后，在ais_bench的屏显日志中`throughput`为计算的模型推理性能，如下为batchsize=16时的性能测试结果（性能测试会有波动，以实际结果为准）：
-
-      ```
-      [INFO] throughput 1000*batchsize(16)/NPU_compute_time.mean(10.348920078277589): 1546.0550355958437
-      ```
 
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
@@ -341,9 +317,9 @@ RARE是一个对于不规则的文字具有鲁棒性的识别模型模型，参�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|Ascend310P3| 1                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 261.020  fps |
-|Ascend310P3| 4                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 989.540 fps |
-|Ascend310P3| 8                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1268.500 fps |
-|Ascend310P3| 16               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1546.055 fps |
-|Ascend310P3| 32               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1141.291 fps |
-|Ascend310P3| 64               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1112.714 fps |
+|Ascend310P3| 1                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 296.48 |
+|Ascend310P3| 4                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 949.78 |
+|Ascend310P3| 8                | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1161.38 |
+|Ascend310P3| 16               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1431.58 |
+|Ascend310P3| 32               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1603.60 |
+|Ascend310P3| 64               | IIIT, SVT, IC03, IC13, IC15, SVTP, CUTE | {'acc': 0.8479, 'norm_edit_dis': 0.9322} | 1601.73 |

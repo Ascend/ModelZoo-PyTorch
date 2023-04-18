@@ -6,7 +6,6 @@ onnx==1.12.0
 lanms-nova==1.0.1
 opencv-contrib-python==4.4.0.46
 imgaug==0.4.0
-torch==1.12.1
 onnx-simplifier==0.4.8
 shapely
 scikit-image

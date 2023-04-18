@@ -4532,7 +4532,7 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-	<td>1546(bs16)</td>
+	<td>1603(bs32)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 100</td>
     </tr>
     <tr>
