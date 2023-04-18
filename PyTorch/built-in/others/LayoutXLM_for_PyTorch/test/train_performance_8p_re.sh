@@ -38,6 +38,9 @@ if [ x"${cur_path_last_dirname}" == x"test" ]; then
 else
   test_path_dir=${cur_path}/test
 fi
+
+source ${test_path_dir}/env_npu.sh
+
 #创建DeviceID输出目录，不需要修改
 if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ]; then
   rm -rf ${cur_path}/test/output/${ASCEND_DEVICE_ID}
@@ -52,7 +55,8 @@ echo "start_time: ${start_time}"
 
 python3 -m torch.distributed.launch --nproc_per_node=8 examples/run_xfun_re.py \
         --model_name_or_path microsoft/layoutxlm-base \
-        --output_dir /tmp/test-re \
+        --output_dir /tmp/test-re  \
+        --skip_steps 100 \
         --do_train \
         --do_eval \
         --lang zh \
@@ -71,11 +75,11 @@ e2e_time=$(($end_time - $start_time))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "train_samples_per_second =" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}')
+FPS=$(grep "train_samples_per_second " ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $7}')
 
 ##获取性能数据，不需要修改
 #吞吐量
-ActualFPS=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*'${FPS}'}')
+ActualFPS=$(awk 'BEGIN{printf "%.2f\n", '${FPS}'}')
 
 #打印，不需要修改
 echo "Final Performance images/sec : $ActualFPS"
