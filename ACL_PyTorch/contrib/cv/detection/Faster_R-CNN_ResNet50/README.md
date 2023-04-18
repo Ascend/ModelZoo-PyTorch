@@ -30,7 +30,7 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
   url=https://github.com/open-mmlab/mmdetection/tree/master/configs/faster_rcnn
   branch=master
   commit_id=a21eb25535f31634cef332b09fc27d28956fb24b
-  model_name=faster_rcnn_r50_fpn_fp16
+  model_name=faster_rcnn_r50_fpn
   ```
   
 
@@ -72,12 +72,12 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
 1. 获取本仓代码
    ```bash
    git clone https://gitee.com/ascend/ModelZoo-PyTorch.git 
-   cd ./ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/detection/Faster_R-CNN_FP16/
+   cd ./ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/detection/Faster_R-CNN_ResNet50/
    ```
 
    文件说明
    ```
-   Faster_R-CNN_FP16
+   Faster_R-CNN_ResNet50
      ├── README.md                              # 此文档
      ├── coco_eval.py                           # 验证推理精度的脚本
      ├── get_info.py                            # 用于获取图像数据集的info文件
