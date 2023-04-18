@@ -97,6 +97,8 @@ CenterNet 是在 2019 年提出的用于目标检测的模型，相比传统依�
     cd ../models/networks/DCNv2
     python setup.py build develop
     cd ../../../../../../
+    export PATH=./CenterNet/src/:$PATH
+
    ```
 
 3. 在编译可变形卷积的时候可能出现编译不成功的情况，如果出现下面这类错误，通过打补丁的形式修改相应文件。
@@ -235,15 +237,21 @@ CenterNet 是在 2019 年提出的用于目标检测的模型，相比传统依�
 
    3. 精度验证。
 
-      在CenterNet根目录下，执行脚本CenterNet_postprocess.py获取精度。
+      在CenterNet根目录下，执行脚本CenterNet_postprocess_s1.py
 
       ```
-      python CenterNet_postprocess.py --bin_data_path=./result/dumpout_bs1/  --dataset=./data
+      mkdir save
+      python CenterNet_postprocess_s1.py --bin_data_path=./result/dumpout_bs1/  --dataset=./data
+      ```
+      然后执行执行脚本CenterNet_postprocess_s2.py 获得模型精度信息
+      ```
+      python CenterNet_postprocess_s2.py --dataset=./data
       ```
 
       - 参数说明：
 
         - --bin_data_path：推理结果文件路径
+        - --dataset: 原始数据集路径
 
    4. 性能验证。
 
