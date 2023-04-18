@@ -1494,7 +1494,7 @@ CV-classfication
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet18_Pytorch_Infer">  Resnet18_Pytorch_Infer </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet18_for_PyTorch">  Resnet18_for_PyTorch </a>
         </td>
         <td>ImageNet</td>
 	<td>69.75%</td>
