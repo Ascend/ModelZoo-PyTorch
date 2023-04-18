@@ -39,6 +39,8 @@ RepVgg是一个分类网络，该网络是在VGG网络的基础上进行改进�
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
+  | PyTorch 1.11   | - |
+
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。

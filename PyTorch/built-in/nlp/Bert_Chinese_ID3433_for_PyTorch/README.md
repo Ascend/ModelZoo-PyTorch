@@ -40,6 +40,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
   | :--------: | :----------------------------------------: |
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
+  | PyTorch 1.11   | - |
 
 - 环境准备指导。
 

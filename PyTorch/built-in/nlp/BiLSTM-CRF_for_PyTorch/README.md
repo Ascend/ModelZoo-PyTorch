@@ -38,7 +38,8 @@ LSTM常常被用来解决序列标注问题。LSTM依靠神经网络超强的非
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
-  
+  | PyTorch 1.11   | - |
+
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。

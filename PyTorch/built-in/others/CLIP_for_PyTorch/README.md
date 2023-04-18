@@ -41,6 +41,7 @@ CLIP (Contrastive Language-Image Pre-Training，以下简称 CLIP) 模型是 Ope
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
+  | PyTorch 1.11   | - |
   
 - 环境准备指导。
 
