@@ -679,6 +679,31 @@ CV-image_registration
 	<td nowrap="nowrap">1 x 1 x 1200 x 1600</td>
 </table>
 
+CV-video_understanding
+
+<table align="center">
+    <tr>
+        <th rowspan=2>Name</th>
+	<th rowspan=2>Dataset</th>
+        <th align="center" colspan=2>精度</th>
+	<th rowspan=2>310P最优性能(对应bs)</th>
+	<th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+        <td nowrap="nowrap">Top1Acc</td>
+        <td>Top5Acc</td>
+    </tr>
+    <tr>
+        <td>
+        <a href=https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/TSM_sthv2_for_Pytorch> TSM_sthv2_for_Pytorch </a>
+        </td>
+        <td>sthv2</td>
+	<td>61.87%</td>
+        <td>87.21%</td>
+	<td>20(bs1)</td>
+	<td nowrap="nowrap">bs x 48 x 3 x 256 x 256</td>
+</table>
+
 Audio
 
 <table align="center">
@@ -781,6 +806,15 @@ Nlp
         <td>SST-2</td>
         <td>92.8%</td>
 	<td>1327(bs8)</td>
+	<td nowrap="nowrap">bs x 128</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Bert_Base_Cased_SST2">  Bert_Base_Cased_SST2 </a>
+        </td>
+        <td>SST-2</td>
+        <td>92.43%</td>
+	<td>1379(bs16)</td>
 	<td nowrap="nowrap">bs x 128</td>
     </tr>
     <tr>
