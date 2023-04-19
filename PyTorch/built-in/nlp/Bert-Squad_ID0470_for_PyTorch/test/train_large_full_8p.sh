@@ -165,7 +165,10 @@ echo "------------------ Final result ------------------"
 step_time=`grep 'step_time : ' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print $13}'`
 
 FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
-
+#排除功能问题导致计算溢出的异常，增加健壮性
+if [ x"${FPS}" == x"2147483647" ] || [ x"${FPS}" == x"-2147483647" ];then
+    FPS=""
+fi
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
