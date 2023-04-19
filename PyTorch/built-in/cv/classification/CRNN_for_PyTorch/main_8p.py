@@ -72,24 +72,15 @@ def main():
     # seed everything
     utils.seed_everything()
 
-    os.environ['MASTER_ADDR'] = config.DISTRIBUTED.ADDR
-    os.environ['MASTER_PORT'] = '29501'
     if config.DISTRIBUTED.DIST_URL == "env://" and config.DISTRIBUTED.WORLD_SIZE == -1:
         config.DISTRIBUTED.WORLD_SIZE = int(os.environ["WORLD_SIZE"])
 
-    # process_device_map = utils.device_id_to_process_device_map(config.DISTRIBUTED.DEVICE_LIST)
-
     npus_per_node = int(os.environ["RANK_SIZE"])
-    # if config.DISTRIBUTED.DEVICE_LIST !='':
-    #     npus_per_node = len(process_device_map)
-    # else:
-    #     npus_per_node = torch.npu.device_count()
 
     if config.DISTRIBUTED.MULTIPROCESSING_DISTRIBUTED:
         # Since we have ngpus_per_node processes per node, the total world_size needs to be adjusted accordingly
         # world_size means nums of all devices or nums of processes
         config.DISTRIBUTED.WORLD_SIZE = npus_per_node * config.DISTRIBUTED.WORLD_SIZE
-
 
     if npu is not None:
         print("[npu id:", npu, "]", "Use NPU: {} for training".format(npu))
@@ -102,8 +93,12 @@ def main():
         config.DISTRIBUTED.RANK = config.DISTRIBUTED.RANK * npus_per_node + int(npu)
 
     print("rank:", config.DISTRIBUTED.RANK)
-    dist.init_process_group(backend=config.DISTRIBUTED.DIST_BACKEND,  # init_method=cfg.dist_url,
-                            world_size=config.DISTRIBUTED.WORLD_SIZE, rank=config.DISTRIBUTED.RANK)
+    distributed = config.DISTRIBUTED.WORLD_SIZE > 1 or config.DISTRIBUTED.MULTIPROCESSING_DISTRIBUTED
+    if distributed:
+        os.environ['MASTER_ADDR'] = config.DISTRIBUTED.ADDR
+        os.environ['MASTER_PORT'] = '29501'
+        dist.init_process_group(backend=config.DISTRIBUTED.DIST_BACKEND,  # init_method=cfg.dist_url,
+                                world_size=config.DISTRIBUTED.WORLD_SIZE, rank=config.DISTRIBUTED.RANK)
 
     # DistributedDataParallel, we need to divide the batch size
     # ourselves based on the total number of NPUs we have
@@ -153,7 +148,6 @@ def main():
 
     # utils.model_info(model)
     train_dataset = utils.lmdbDataset(config, is_train=True)
-    distributed = config.DISTRIBUTED.WORLD_SIZE > 1 or config.DISTRIBUTED.MULTIPROCESSING_DISTRIBUTED
     if distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
     else:
@@ -182,7 +176,8 @@ def main():
     )
 
     # Wrap the model, data parallel
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[npu], broadcast_buffers=False)
+    if distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[npu], broadcast_buffers=False)
 
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
     if config.DISTRIBUTED.RANK % npus_per_node == 0:

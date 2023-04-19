@@ -38,8 +38,8 @@ CRNN (Convolutional Recurrent Neural Network) 于2015年由华中科技大学的
 
   | Torch_Version      | 三方库依赖版本                                 |
   | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.5 | pillow==8.4.0 |
-  | PyTorch 1.8 | pillow==9.1.0 |
+  | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
+  | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
   
 - 环境准备指导。
 

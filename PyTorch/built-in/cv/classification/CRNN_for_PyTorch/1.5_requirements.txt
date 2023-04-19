@@ -2,3 +2,9 @@ easydict==1.9
 lmdb==0.98
 PyYAML==5.3
 Pillow==8.4.0
+torchvision==0.2.2.post3
+six
+decorator
+sympy
+attrs
+scipy
