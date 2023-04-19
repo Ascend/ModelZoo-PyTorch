@@ -16,6 +16,8 @@ train_epochs=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
 precision_mode="allow_mix_precision"
+#设置训练步数
+perf_steps=200
 
 #使能profiling，默认为False
 profiling=False
@@ -72,6 +74,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
+    perf_steps=2000
 fi
 
 sed -i "s|`grep 'config.rec' ${cur_path}/configs/glint360k_r100.py|awk -F " " '{print $3}'`|'"$data_path"'|g" ${cur_path}/configs/glint360k_r100.py
@@ -103,7 +106,7 @@ do
         --profiling ${profiling} \
         --start_step ${start_step} \
         --stop_step ${stop_step} \
-        --local_rank=${RANK_ID} --perf_steps=2000 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --local_rank=${RANK_ID} --perf_steps=$perf_steps > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 
