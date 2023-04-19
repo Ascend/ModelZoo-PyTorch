@@ -38,6 +38,19 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 from inception import inception_v3
 from torch_npu.utils.profiler import Profile
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 from apex import amp
 import apex

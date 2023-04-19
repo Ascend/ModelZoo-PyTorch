@@ -79,7 +79,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 #参数修改
-sed -i "s|pass|break|g"  main.py
+sed -i "54, $ s|pass|break|g"  main.py
 wait
 
 python3 ./main.py \
@@ -104,7 +104,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #参数回改
-sed -i "s|break|pass|g"  main.py
+sed -i "54, $ s|break|pass|g"  main.py
 wait
 
 # 结果打印，不需要修改
