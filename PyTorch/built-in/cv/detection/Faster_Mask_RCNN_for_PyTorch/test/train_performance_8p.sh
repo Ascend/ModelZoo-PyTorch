@@ -130,6 +130,7 @@ sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \
 wait
 
 cd $cur_path/
+python3.7 -m pip install -e .
 #性能脚本取消评测，缩短训练时间
 export PERF_ONLY=True
 
