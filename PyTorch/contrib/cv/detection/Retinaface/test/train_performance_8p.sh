@@ -23,6 +23,10 @@ do
 #        workers=`echo ${para#*=}`
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --fp32* ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32* ]];then
+        hf32=`echo ${para#*=}`
     fi
 done
 
@@ -87,6 +91,7 @@ python3 train.py \
     --opt-level=O2 \
     --distributed \
     --max_steps=100 \
+    $fp32 $hf32 \
     --device-list=${device_id_list} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 wait
 
@@ -115,7 +120,14 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
+
 
 ##获取性能数据，不需要修改
 #吞吐量

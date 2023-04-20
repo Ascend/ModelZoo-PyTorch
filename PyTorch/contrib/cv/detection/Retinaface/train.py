@@ -66,6 +66,8 @@ parser.add_argument('--amp', default=False, action='store_true', help='use amp t
 parser.add_argument('--loss-scale', default=64., type=float, help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str, help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--warmup_epoch', default=1, type=int, help='warm up')
+parser.add_argument('--hf32', default=False, action='store_true', help='enable_hi_float_32_execution')
+parser.add_argument('--fp32', default=False, action='store_true', help='disable_hi_float_32_execution')
 parser.add_argument('--distributed', action='store_true', help='distributed')
 parser.add_argument('--max_steps', default=None, type=int, metavar='N',
                         help="number of total steps to run")
@@ -115,6 +117,14 @@ process_device_map = device_id_to_process_device_map(args.device_list)
 
 
 def main():
+    option = {}
+    if args.hf32:
+        torch.npu.conv.allow_hf32 = True
+        torch.npu.matmul.allow_hf32 = True
+    if args.fp32:
+        torch.npu.conv.allow_hf32 = False
+        torch.npu.matmul.allow_hf32 = False
+    torch.npu.set_option(option)
     print("===============main()=================")
     print(args)
     print("===============main()=================")
