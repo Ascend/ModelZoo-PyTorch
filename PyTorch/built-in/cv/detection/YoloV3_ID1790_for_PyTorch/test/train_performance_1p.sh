@@ -46,7 +46,7 @@ do
     elif [[ $para == --fp32* ]];then
         fp32=`echo ${para#*=}`
     elif [[ $para == --hf32* ]];then
-        hf32=`echo ${para#*=}
+        hf32=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
