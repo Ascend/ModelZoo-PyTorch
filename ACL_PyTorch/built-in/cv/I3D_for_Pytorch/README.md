@@ -98,7 +98,7 @@ url=https://github.com/open-mmlab/mmaction2
     运行该脚本获取验证所需要的验证文件。将生成kinetics400_label.txt和kinetics400_val_list_rawframes.txt。kinetics400_val_list_rawframes.txt即为验证时需要的文件。
 
     ```sh
-    cd ..
+    cd ./data/kinetics400
     python generate_labels.py
     ```
 
@@ -185,14 +185,15 @@ url=https://github.com/open-mmlab/mmaction2
         ```sh
         mv i3d_inference.py mmaction2/tools
         cd mmaction2/tools
-        python i3d_inference.py ../configs/recognition/i3d/i3d_nl_dot_product_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../../i3d_bs1.om --device_id 0
+        python i3d_inference.py ../configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../i3d_bs1.om --device_id 0 --show
 
         ```
          - 参数说明：
             -   --eval：精度指标。
             -   --model：om模型文件。
             -   --out：输出路径。
-            -   ---bs：输入模型的batch size。
+            -   -bs：输入模型的batch size。
+            -   --show：是否展示d2h和h2d的耗时，默认为False
 
     3. 性能验证。
 

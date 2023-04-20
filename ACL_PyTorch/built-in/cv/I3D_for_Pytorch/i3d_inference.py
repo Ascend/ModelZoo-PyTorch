@@ -34,9 +34,8 @@ from mmaction.datasets import build_dataloader, build_dataset
 from mmaction.models import build_model
 from mmaction.utils import register_module_hooks
 
-from acl_net import Net
-import acl
-
+from ais_bench.infer.interface import InferSession, MemorySummary
+from ais_bench.infer.summary import summary
 
 
 def parse_args():
@@ -52,7 +51,7 @@ def parse_args():
         type=str,
         nargs='+',
         help='evaluation metrics, which depends on the dataset, e.g.,'
-        ' "top_k_accuracy", "mean_class_accuracy" for video dataset')
+             ' "top_k_accuracy", "mean_class_accuracy" for video dataset')
     parser.add_argument(
         '-bs', '--batch_size', type=int, default=1,
         help='batch size')
@@ -62,9 +61,13 @@ def parse_args():
     parser.add_argument(
         '--model', required=True, type=str,
         help='i3d.om')
+    parser.add_argument(
+        '--show', type=bool, default=False,
+        help='show h2d time and d2h time')
     args = parser.parse_args()
 
     return args
+
 
 def check_ret(message, ret):
     if ret != 0:
@@ -73,27 +76,8 @@ def check_ret(message, ret):
 
 class I3d():
     def __init__(self, device_id, model) -> None:
-        ret = acl.init()
-        check_ret("acl.init failed", ret)
-        ret = acl.rt.set_device(device_id)
-        check_ret("acl.rt.set_device failed", ret)
-        context, ret = acl.rt.create_context(device_id)
-        check_ret("acl.rt.create_context failed", ret)
         self.device_id = device_id
-                            
-        self.i3d_context = Net(context, model_path=model, device_id=device_id, first=True)
-
-    def __del__(self):
-        del self.i3d_context
-
-        ret = acl.rt.reset_device(self.device_id)
-        check_ret("acl.rt.reset_device failed", ret)
-        context, ret = acl.rt.get_context()
-        check_ret("acl.rt.get_context failed", ret)
-        ret = acl.rt.destroy_context(context)
-        check_ret("acl.rt.destroy_context failed", ret)
-        ret = acl.finalize()
-        check_ret("acl.finalize failed", ret)
+        self.model = model
 
     def inference(self, data_loader):
         results = []
@@ -114,8 +98,16 @@ class I3d():
             for _ in range(batch_size):
                 prog_bar.update()
 
+        print('\n')
+        s = model.sumary()
+        summary.npu_compute_time_list = s.exec_time_list
+        summary.h2d_latency_list = MemorySummary.get_H2D_time_list()
+        summary.d2h_latency_list = MemorySummary.get_D2H_time_list()
+        if args.show:
+            summary.report(opt.batch_size, output_prefix=None, display_all_summary=True)
+        else:
+            summary.report(opt.batch_size, output_prefix=None, display_all_summary=False)
         return results
-
 
 
 def main():
@@ -168,9 +160,9 @@ def main():
         workers_per_gpu=1,
         dist=False,
         shuffle=False)
-    dataloader_setting = dict(dataloader_setting,
+    dataloader_settings = dict(dataloader_setting,
                               **cfg.data.get('test_dataloader', {}))
-    data_loader = build_dataloader(dataset, **dataloader_setting)
+    data_loader = build_dataloader(dataset, **dataloader_settings)
 
     i3d = I3d(args.device_id, args.model)
     outputs = i3d.inference(data_loader)
@@ -189,4 +181,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
