@@ -39,6 +39,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
     parser.add_argument('config', help='train config file path')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
+    parser.add_argument('--hf32', default=False, action='store_true', help='enable_hi_float_32_execution')
+    parser.add_argument('--fp32', default=False, action='store_true', help='disable_hi_float_32_execution')
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
     parser.add_argument(
@@ -110,6 +112,14 @@ def main():
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
         torch.npu.set_option(option)
         torch.npu.config.allow_internal_format=False
+    option = {}
+    if args.hf32:
+        torch.npu.conv.allow_hf32 = True
+        torch.npu.matmul.allow_hf32 = True
+    if args.fp32:
+        torch.npu.conv.allow_hf32 = False
+        torch.npu.matmul.allow_hf32 = False
+    torch.npu.set_option(option)
 
     os.environ['MASTER_ADDR'] = args.master_addr
     os.environ['MASTER_PORT'] = args.master_port

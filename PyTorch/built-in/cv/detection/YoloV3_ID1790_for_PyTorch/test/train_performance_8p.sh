@@ -36,6 +36,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --fp32* ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32* ]];then
+        hf32=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
     fi
@@ -125,7 +129,7 @@ do
             optimizer.lr=0.0032 \
             --precision_mode ${precision_mode} \
             --seed 0 \
-            --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --local_rank 0 $fp32 $hf32 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
         python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
             --launcher pytorch \
@@ -133,7 +137,7 @@ do
             optimizer.lr=0.0032 \
             --precision_mode ${precision_mode} \
             --seed 0 \
-            --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+            --local_rank 0  $fp32 $hf32 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
 
@@ -164,10 +168,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $precision_mode == "must_keep_origin_dtype" ]];then
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
 else
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 fi
 
 ##获取性能数据，不需要修改
