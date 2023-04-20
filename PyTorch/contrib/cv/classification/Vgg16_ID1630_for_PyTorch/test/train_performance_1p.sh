@@ -83,7 +83,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 #修改参数
-sed -i "91, $ s|pass|break|g" main.py
+sed -i "439, $ s|pass|break|g" main.py
 python3.7 ./main.py \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
@@ -110,7 +110,7 @@ wait
 ##################获取训练数据##################
 
 #参数回改
-sed -i "91, $ s|break|pass|g" ${test_path_dir}/../main.py
+sed -i "439, $ s|break|pass|g" ${test_path_dir}/../main.py
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
