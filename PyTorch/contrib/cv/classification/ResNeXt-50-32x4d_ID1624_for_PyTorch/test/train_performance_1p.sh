@@ -53,7 +53,7 @@ fi
 ##################指定训练脚本执行路径##################
 # cd到与test文件同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
-sed -i "59, $ s|pass|break|g" ../main.py
+sed -i "550, $ s|pass|break|g" ../main.py
 cur_path_last_dirname=${cur_path##*/}
 if [ x"${cur_path_last_dirname}" == x"test" ]; then
     test_path_dir=${cur_path}
@@ -112,6 +112,9 @@ wait
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
+# 参数恢复
+sed -i "550, $ s|break|pass|g" ${test_path_dir}/../main.py
+
 # 终端结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
@@ -158,4 +161,3 @@ echo "TrainingTime = ${TrainingTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_
 echo "ActualLoss = ${ActualLoss}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CompileTime = ${CompileTime}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-sed -i "59, $ s|break|pass|g" ${test_path_dir}/../main.py
