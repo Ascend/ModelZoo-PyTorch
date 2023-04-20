@@ -53,7 +53,7 @@ def parse_args():
         help='evaluation metrics, which depends on the dataset, e.g.,'
              ' "top_k_accuracy", "mean_class_accuracy" for video dataset')
     parser.add_argument(
-        '-bs', '--batch_size', type=int, default=1,
+        '--bs', '--batch_size', type=int, default=1,
         help='batch size')
     parser.add_argument(
         '--device_id', type=int, default=1,

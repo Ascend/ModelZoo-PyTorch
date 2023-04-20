@@ -157,7 +157,7 @@ url=https://github.com/open-mmlab/mmaction2
         
         3. 执行ATC命令
 
-            本节采用的模型输入为:1x30x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件。由于本模型较大，只支持bs=1，4。
+            本节采用的模型输入为:1x10x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改文件。由于本模型较大，只支持bs=1，4。
             
             ```
             atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
@@ -185,14 +185,15 @@ url=https://github.com/open-mmlab/mmaction2
         ```sh
         mv i3d_inference.py mmaction2/tools
         cd mmaction2/tools
-        python i3d_inference.py ../configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../../i3d_bs1.om --device_id 0
+        python i3d_inference.py ../configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../i3d_bs1.om --device_id 0 --show
 
         ```
          - 参数说明：
             -   --eval：精度指标。
             -   --model：om模型文件。
             -   --out：输出路径。
-            -   ---bs：输入模型的batch size。
+            -   --bs：输入模型的batch size。
+            -   --show: 是否展示d2h和h2d的耗时，默认为False 
 
     3. 性能验证。
 
@@ -204,10 +205,10 @@ url=https://github.com/open-mmlab/mmaction2
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据，由于本模型较大，310P3只测试batch_size为1，4，8情况下的精度与性能，主仓精度TOP1：73.92，TOP5：91.59
+调用ACL接口推理计算，性能参考下列数据，由于本模型较大，310P3只测试batch_size为1，4情况下的精度与性能，主仓精度TOP1：73.92，TOP5：91.59
 
 | 芯片型号 | Batch Size | 数据集|  精度TOP1 | 精度TOP5 | 性能|
 | --------- | ----| ----------| ------     |---------|---------|
-| 310P3 |  1       | ImageNet |   71.2     |   90.2  |   4.86      |
-| 310P3 |  4       | ImageNet |       |   |   4.98      |
+| 310P3 |  1       | kinetics400 |   71.2     |   90.2  |   18.04     |
+| 310P3 |  4       | kinetics400 |       |   |   18.26     | 
 
