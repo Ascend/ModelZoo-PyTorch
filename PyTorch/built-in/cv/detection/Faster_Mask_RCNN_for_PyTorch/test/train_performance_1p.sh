@@ -132,6 +132,9 @@ sed -i "s|\"coco_2017_val\": (\"coco/val2017\", \"coco/annotations/instances_val
 sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \"$data_path/R-101.pkl\"|g" $cur_path/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
 wait
 
+cd $cur_path
+python3.7 -m pip install -e .
+
 #性能脚本取消评测，缩短训练时间
 export PERF_ONLY=True
 #非平台场景时source 环境变量
@@ -141,8 +144,6 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
-
-cd $cur_path
 
 
 #训练开始时间，不需要修改
