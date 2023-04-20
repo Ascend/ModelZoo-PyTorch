@@ -34,7 +34,7 @@ from averageMeter import AverageMeter
 import matplotlib.pyplot as plt
 try:
     from torch_npu.utils.profiler import Profile
-except:
+except Exception:
     print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
     class Profile:
         def __init__(self, *args, **kwargs):

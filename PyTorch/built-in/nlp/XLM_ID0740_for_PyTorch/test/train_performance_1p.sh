@@ -136,7 +136,7 @@ fi
 
 #sed -i "s|./data|$data_path|g" examples/cats_and_dogs.py
 #sed -i "s|epochs = 20|epochs = 1|g" examples/cats_and_dogs.py
-sed -i "s|pass|break|g" train.py
+sed -i "52, $ s|pass|break|g" train.py
 
 #python3 setup.py install
 #mkdir -p checkpoints
@@ -186,7 +186,7 @@ done
 wait
 
 #恢复参数
-sed -i "s|break|pass|g" train.py
+sed -i "52, $ s|break|pass|g" train.py
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)

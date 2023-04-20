@@ -13,6 +13,7 @@
 # limitations under the License.
 import sys
 import os
+import stat
 import time
 import io
 import gc
@@ -43,7 +44,7 @@ if torch.__version__ >= '1.8':
     import torch_npu
 try:
     from torch_npu.utils.profiler import Profile
-except:
+except Exception:
     print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
     class Profile:
         def __init__(self, *args, **kwargs):
@@ -61,7 +62,7 @@ try:
     import apex
     from apex.parallel.LARC import LARC
     from apex.parallel import DistributedDataParallel as DDP
-    from apex.fp16_utils import *
+    from apex.fp16_utils import convert_network
     from apex.multi_tensor_apply import multi_tensor_applier
 except ImportError:
     raise ImportError("Please install APEX from https://github.com/nvidia/apex")
@@ -79,7 +80,7 @@ class Logger(object):
         self.terminal.write(message)
         if self.logfile != "":
             try:
-                fd = os.open(self.logfile, os.O_RDWR|os.O_CREAT)
+                fd = os.open(self.logfile, os.O_RDWR|os.O_CREAT, stat.S_IRWXU)
                 self.log = os.fdopen(fd, "a")
                 self.log.write(message)
                 self.log.close(fd)
@@ -496,7 +497,7 @@ def main():
 
 if __name__ == "__main__":
     option = {}
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingReduceGrad,
-                                             BNTrainingUpdate,BNTrainingUpdateGrad"
+    option["NPU_FUZZY_COMPILE_BLACKLIST"] = '''BNTrainingReduce,BNTrainingReduceGrad,
+                                             BNTrainingUpdate,BNTrainingUpdateGrad'''
     torch.npu.set_option(option)
     main()

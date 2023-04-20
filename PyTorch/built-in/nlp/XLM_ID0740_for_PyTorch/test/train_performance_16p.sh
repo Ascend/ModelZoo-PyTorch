@@ -101,7 +101,7 @@ start_time=$(date +%s)
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
 
-sed -i "s|pass|break|g" train.py
+sed -i "52, $ s|pass|break|g" train.py
 
 #创建DeviceID输出目录，不需要修改
 if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
@@ -199,7 +199,7 @@ done
 wait
 
 #恢复参数
-sed -i "s|break|pass|g" train.py
+sed -i "52, $ s|break|pass|g" train.py
 
 #训练结束时间，不需要修改
 end_time=$(date +%s)

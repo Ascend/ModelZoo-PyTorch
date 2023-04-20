@@ -71,7 +71,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 else
-    sed -i "s|pass|break|g" ${cur_path}/solver.py
+    sed -i "49, $ s|pass|break|g" ${cur_path}/solver.py
 fi
 
 nohup python3 -u ./main.py \

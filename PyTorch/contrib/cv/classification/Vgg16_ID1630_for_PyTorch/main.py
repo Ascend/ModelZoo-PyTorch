@@ -53,7 +53,9 @@ import shutil
 import time
 import warnings
 
+import math
 import torch
+import torch.npu
 if torch.__version__ >= "1.8":
     import torch_npu
 import torch.nn as nn
@@ -70,13 +72,12 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 from vgg import vgg16
 
-import math
 from apex import amp
 import apex
 import numpy as np
 try:
     from torch_npu.utils.profiler import Profile
-except:
+except Exception:
     print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
     class Profile:
         def __init__(self, *args, **kwargs):
@@ -185,9 +186,6 @@ def main():
 
     args.process_device_map = device_id_to_process_device_map(args.device_list)
 
-    if 'npu' in args.device:
-        import torch.npu
-
     if args.seed is not None:
         seed_everything(args.seed, args.device)
         warnings.warn('You have chosen to seed training. '
@@ -236,7 +234,6 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.device == 'npu':
         loc = 'npu:{}'.format(args.gpu)
-        #torch.npu.set_device(loc)
         if torch.__version__ >= "1.8":
             torch_npu.npu.set_device(loc)
         else:
@@ -262,7 +259,8 @@ def main_worker(gpu, ngpus_per_node, args):
     criterion = nn.CrossEntropyLoss().to(loc)
 
     if args.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale_value,combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, \
+                                          loss_scale=args.loss_scale_value,combine_grad=True)
     if args.distributed:   
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 

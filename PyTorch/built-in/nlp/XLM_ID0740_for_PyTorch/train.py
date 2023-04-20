@@ -37,7 +37,7 @@ from xlm.trainer import SingleTrainer, EncDecTrainer
 from xlm.evaluation.evaluator import SingleEvaluator, EncDecEvaluator
 try:
     from torch_npu.utils.profiler import Profile
-except:
+except Exception:
     print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
     class Profile:
         def __init__(self, *args, **kwargs):
@@ -71,7 +71,8 @@ def get_parser():
     parser.add_argument("--fp16", type=bool_flag, default=False,
                         help="Run model with float16")
     parser.add_argument("--amp", type=int, default=-1,
-                        help="Use AMP wrapper for float16 / distributed / gradient accumulation. Level of optimization. -1 to disable.")
+                        help='''Use AMP wrapper for float16 / distributed / gradient accumulation.
+                                Level of optimization. -1 to disable.''')
 
     # only use an encoder (use a specific decoder for machine translation)
     parser.add_argument("--encoder_only", type=bool_flag, default=True,
@@ -103,7 +104,8 @@ def get_parser():
     if parser.parse_known_args()[0].use_memory:
         HashingMemory.register_args(parser)
         parser.add_argument("--mem_enc_positions", type=str, default="",
-                            help="Memory positions in the encoder ('4' for inside layer 4, '7,10+' for inside layer 7 and after layer 10)")
+                            help='''Memory positions in the encoder 
+                                    ('4' for inside layer 4, '7,10+' for inside layer 7 and after layer 10)''')
         parser.add_argument("--mem_dec_positions", type=str, default="",
                             help="Memory positions in the decoder. Same syntax as `mem_enc_positions`.")
 
@@ -158,7 +160,8 @@ def get_parser():
     parser.add_argument("--batch_size", type=int, default=32,
                         help="Number of sentences per batch")
     parser.add_argument("--max_batch_size", type=int, default=0,
-                        help="Maximum number of sentences per batch (used in combination with tokens_per_batch, 0 to disable)")
+                        help='''Maximum number of sentences per batch
+                                (used in combination with tokens_per_batch, 0 to disable)''')
     parser.add_argument("--tokens_per_batch", type=int, default=-1,
                         help="Number of tokens per batch")
 
@@ -220,9 +223,11 @@ def get_parser():
     parser.add_argument("--beam_size", type=int, default=1,
                         help="Beam size, default = 1 (greedy decoding)")
     parser.add_argument("--length_penalty", type=float, default=1,
-                        help="Length penalty, values < 1.0 favor shorter sentences, while values > 1.0 favor longer ones.")
+                        help='''Length penalty, values < 1.0 favor shorter sentences,
+                                while values > 1.0 favor longer ones.''')
     parser.add_argument("--early_stopping", type=bool_flag, default=False,
-                        help="Early stopping, stop as soon as we have `beam_size` hypotheses, although longer ones may have better scores.")
+                        help='''Early stopping, stop as soon as we have `beam_size` hypotheses,
+                                although longer ones may have better scores.''')
 
     # evaluation
     parser.add_argument("--eval_bleu", type=bool_flag, default=False,
@@ -364,19 +369,19 @@ if __name__ == '__main__':
     option["MM_BMM_ND_ENABLE"] = 'disable'
     torch.npu.set_option(option)
     # generate parser / parse parameters
-    parser = get_parser()
-    params = parser.parse_args()
+    parsers = get_parser()
+    param = parsers.parse_args()
 
     # debug mode
-    if params.debug:
-        params.exp_name = 'debug'
-        params.exp_id = 'debug_%08i' % random.randint(0, 100000000)
-        params.debug_slurm = True
-        params.debug_train = True
+    if param.debug:
+        param.exp_name = 'debug'
+        param.exp_id = 'debug_%08i' % random.randint(0, 100000000)
+        param.debug_slurm = True
+        param.debug_train = True
 
     # check parameters
-    check_data_params(params)
-    check_model_params(params)
+    check_data_params(param)
+    check_model_params(param)
 
     # run experiment
-    main(params)
+    main(param)
