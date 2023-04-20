@@ -35,6 +35,10 @@ do
         PREC="--opt-level "$apex_opt_level
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --fp32* ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32* ]];then
+        hf32=`echo ${para#*=}`
     fi
 done
 if [[ $apex_opt_level=="O0" ]];then
@@ -103,6 +107,7 @@ python3 train.py \
     --rank=0 \
     $prec \
     --distributed \
+    $fp32 $hf32 \
     --device-list=${device_id_list} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 wait
 
@@ -143,11 +148,14 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $apex_opt_level == "O0" ]];then
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
 else
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 fi
+
 # 获取性能数据，不需要修改
 # 吞吐量
 ActualFPS=${FPS}
