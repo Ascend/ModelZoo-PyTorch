@@ -32,7 +32,19 @@ from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
 from fairseq.modules.multihead_attention import MHAConfig
-from torch_npu.utils.profiler import Profile
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 
 logging.basicConfig(

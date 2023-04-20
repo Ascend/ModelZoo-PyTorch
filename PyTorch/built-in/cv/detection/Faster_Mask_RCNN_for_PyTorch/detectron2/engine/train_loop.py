@@ -25,7 +25,19 @@ from apex import amp
 
 import detectron2.utils.comm as comm
 from detectron2.utils.events import EventStorage
-from torch_npu.utils.profiler import Profile
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 __all__ = ["HookBase", "TrainerBase", "SimpleTrainer"]
 

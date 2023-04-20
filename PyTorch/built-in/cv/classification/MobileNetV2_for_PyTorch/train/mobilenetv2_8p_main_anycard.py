@@ -46,7 +46,19 @@ import apex
 from apex import amp
 
 from multi_epochs_dataloader import MultiEpochsDataLoader,NoProfiling
-from torch_npu.utils.profiler import Profile
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 BATCH_SIZE = 6144
 OPTIMIZER_BATCH_SIZE = 6144

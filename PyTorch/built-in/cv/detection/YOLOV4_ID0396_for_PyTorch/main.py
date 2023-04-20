@@ -16,10 +16,12 @@ import warnings
 import argparse
 import math
 import os
+import stat
 import random
 import time
 from pathlib import Path
 
+import test  # import test.py to get mAP after each epoch
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
@@ -30,16 +32,27 @@ import torch.optim.lr_scheduler as lr_scheduler
 import torch.utils.data
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from torch_npu.utils.profiler import Profile
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 import apex
 from tqdm import tqdm
 from apex import amp
 import numpy as np
 
-import test  # import test.py to get mAP after each epoch
 import yaml
-from models.models import *
+from models.models import Darknet
 from utils.datasets import create_dataloader
 from utils.general import (
     check_img_size, torch_distributed_zero_first, labels_to_class_weights, plot_labels, check_anchors,
@@ -65,16 +78,16 @@ def train(hyp, opt, device, tb_writer=None):
 
     # TODO: Use DDP logging. Only the first process is allowed to log.
     # Save run settings
-    with open(log_dir / 'hyp.yaml', 'w') as f:
+    with os.fdopen(os.open(log_dir / 'hyp.yaml', os.O_WRONLY, stat.S_IWUSR), 'w') as f:
         yaml.dump(hyp, f, sort_keys=False)
-    with open(log_dir / 'opt.yaml', 'w') as f:
+    with os.fdopen(os.open(log_dir / 'opt.yaml', os.O_WRONLY, stat.S_IWUSR), 'w') as f:
         yaml.dump(vars(opt), f, sort_keys=False)
 
     # Configure
     npu = device.type != 'cpu'
     init_seeds(2 + rank)
     with open(opt.data) as f:
-        data_dict = yaml.load(f, Loader=yaml.FullLoader)  # model dict
+        data_dict = yaml.safe_load(f)  # model dict
     train_path = data_dict['train']
     test_path = data_dict['val']
     nc, names = (1, ['item']) if opt.single_cls else (int(data_dict['nc']), data_dict['names'])  # number classes, names
@@ -108,7 +121,8 @@ def train(hyp, opt, device, tb_writer=None):
             pg0.append(v)  # all else
 
     if opt.adam:
-        optimizer = apex.optimizers.NpuFusedAdam(pg0, lr=hyp['lr0'], betas=(hyp['momentum'], 0.999))  # adjust beta1 to momentum
+        # adjust beta1 to momentum
+        optimizer = apex.optimizers.NpuFusedAdam(pg0, lr=hyp['lr0'], betas=(hyp['momentum'], 0.999))
     else:
         optimizer = apex.optimizers.NpuFusedSGD(pg0, lr=hyp['lr0'], momentum=hyp['momentum'], nesterov=True)
 
@@ -124,7 +138,6 @@ def train(hyp, opt, device, tb_writer=None):
     # https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#OneCycleLR
     lf = lambda x: (((1 + math.cos(x * math.pi / epochs)) / 2) ** 1.0) * 0.8 + 0.2  # cosine
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-    # plot_lr_scheduler(optimizer, scheduler, epochs)
 
     # Resume
     start_epoch, best_fitness = 0, 0.0
@@ -136,7 +149,7 @@ def train(hyp, opt, device, tb_writer=None):
 
         # Results
         if ckpt.get('training_results') is not None:
-            with open(results_file, 'w') as file:
+            with os.fdopen(os.open(results_file, os.O_WRONLY, stat.S_IWUSR), 'w') as file:
                 file.write(ckpt['training_results'])  # write results.txt
 
         # Epochs
@@ -196,14 +209,9 @@ def train(hyp, opt, device, tb_writer=None):
         if tb_writer:
             tb_writer.add_histogram('classes', c, 0)
 
-        # Check anchors
-        #if not opt.noautoanchor:
-        #    check_anchors(dataset, model=model, thr=hyp['anchor_t'], imgsz=imgsz)
-
     # Start training
     t0 = time.time()
     nw = max(3 * nb, 1e3)  # number of warmup iterations, max(3 epochs, 1k iterations)
-    # nw = min(nw, (epochs - start_epoch) / 2 * nb)  # limit warmup to < 1/2 of training
     maps = np.zeros(nc)  # mAP per class
     results = (0, 0, 0, 0, 0, 0, 0)  # 'P', 'R', 'mAP', 'F1', 'val GIoU', 'val Objectness', 'val Classification'
     scheduler.last_epoch = start_epoch - 1  # do not move
@@ -212,7 +220,6 @@ def train(hyp, opt, device, tb_writer=None):
         print('Image sizes %g train, %g test' % (imgsz, imgsz_test))
         print('Using %g dataloader workers' % dataloader.num_workers)
         print('Starting training for %g epochs...' % epochs)
-    # torch.autograd.set_detect_anomaly(True)
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
 
@@ -257,7 +264,6 @@ def train(hyp, opt, device, tb_writer=None):
             # Warmup
             if ni <= nw:
                 xi = [0, nw]  # x interp
-                # model.gr = np.interp(ni, xi, [0.0, 1.0])  # giou loss ratio (obj_loss = 1.0 or giou)
                 accumulate = max(1, np.interp(ni, xi, [1, nbs / total_batch_size]).round())
                 for j, x in enumerate(optimizer.param_groups):
                     # bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0
@@ -320,7 +326,6 @@ def train(hyp, opt, device, tb_writer=None):
                     result = plot_images(images=imgs, targets=targets, paths=paths, fname=f)
                     if tb_writer and result is not None:
                         tb_writer.add_image(f, result, dataformats='HWC', global_step=epoch)
-                        # tb_writer.add_graph(model, imgs)  # add model to tensorboard
             print("Current iter: {}, time: {}".format(i, time.time()-begine_time))
             if opt.stop_step_num is not None and i >= opt.stop_step_num:
                 break
@@ -352,7 +357,7 @@ def train(hyp, opt, device, tb_writer=None):
                                                  save_dir=log_dir)
 
             # Write
-            with open(results_file, 'a') as f:
+            with os.fdopen(os.open(results_file, os.O_RDWR|os.O_CREAT, stat.S_IRWXU), 'a') as f:
                 f.write(s + '%10.4g' * 7 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
             if len(opt.name) and opt.bucket:
                 os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
@@ -442,13 +447,12 @@ def main_worker(opt):
     assert len(opt.cfg) or len(opt.weights), 'either --cfg or --weights must be specified'
 
     opt.img_size.extend([opt.img_size[-1]] * (2 - len(opt.img_size)))  # extend to 2 sizes (train, test)
-    #device = select_device(opt.device, batch_size=opt.batch_size)
     opt.total_batch_size = opt.batch_size
     opt.batch_size = opt.total_batch_size // opt.world_size
 
     print("opt.. ")
     with open(opt.hyp) as f:
-        hyp = yaml.load(f, Loader=yaml.FullLoader)  # load hyps
+        hyp = yaml.safe_load(f)  # load hyps
 
     # Train
     if not opt.evolve:
@@ -483,7 +487,6 @@ def main_worker(opt):
 
         assert opt.local_rank == -1, 'DDP mode not implemented for --evolve'
         opt.notest, opt.nosave = True, True  # only test/save final epoch
-        # ei = [isinstance(x, (int, float)) for x in hyp.values()]  # evolvable indices
         yaml_file = Path('runs/evolve/hyp_evolved.yaml')  # save best result here
         if opt.bucket:
             os.system('gsutil cp gs://%s/evolve.txt .' % opt.bucket)  # download evolve.txt if exists
@@ -497,7 +500,6 @@ def main_worker(opt):
                 x = x[np.argsort(-fitness(x))][:n]  # top n mutations
                 w = fitness(x) - fitness(x).min()  # weights
                 if parent == 'single' or len(x) == 1:
-                    # x = x[random.randint(0, n - 1)]  # random selection
                     x = x[random.choices(range(n), weights=w)[0]]  # weighted selection
                 elif parent == 'weighted':
                     x = (x * w.reshape(n, 1)).sum(0) / w.sum()  # weighted combination
@@ -569,7 +571,6 @@ if __name__ == '__main__':
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
     parser.add_argument('--name', default='', help='renames results.txt to results_name.txt if supplied')
-    #parser.add_argument('--device', default='', help='npu device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
     parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset')
     parser.add_argument('--adam', action='store_true', help='use torch.optim.Adam() optimizer')
