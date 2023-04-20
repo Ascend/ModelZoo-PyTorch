@@ -78,6 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 cd $cur_path
+python3.7 -m pip install -e .
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
