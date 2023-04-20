@@ -80,12 +80,13 @@ class I3d():
         self.model = model
 
     def inference(self, data_loader):
+        model = InferSession(self.device_id, self.model)
         results = []
         dataset = data_loader.dataset
         prog_bar = mmcv.ProgressBar(len(dataset))
         for data in data_loader:
             input_data = np.array(data['imgs'])
-            result = self.i3d_context([input_data])
+            result = model.infer([input_data])
             result = torch.from_numpy(np.array(result))
             batch_size = result.shape[1]
             result = result.view(result.shape[0], batch_size, -1)
@@ -158,6 +159,7 @@ def main():
     dataloader_setting = dict(
         videos_per_gpu=args.batch_size,
         workers_per_gpu=1,
+        num_gpus = 0,
         dist=False,
         shuffle=False)
     dataloader_settings = dict(dataloader_setting,

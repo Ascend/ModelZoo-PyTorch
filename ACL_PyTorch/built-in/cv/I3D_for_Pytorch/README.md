@@ -16,7 +16,7 @@ url=https://github.com/open-mmlab/mmaction2
 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | FLOAT32 | batch x 30 x 3 x 32 x 256 x 256 | batch x clip x channel x time x height x width         |
+  | input    | FLOAT32 | batch x 10 x 3 x 32 x 256 x 256 | batch x clip x channel x time x height x width         |
 
 
 - 输出数据
@@ -98,7 +98,7 @@ url=https://github.com/open-mmlab/mmaction2
     运行该脚本获取验证所需要的验证文件。将生成kinetics400_label.txt和kinetics400_val_list_rawframes.txt。kinetics400_val_list_rawframes.txt即为验证时需要的文件。
 
     ```sh
-    cd ./data/kinetics400
+    cd ..
     python generate_labels.py
     ```
 
@@ -119,7 +119,7 @@ url=https://github.com/open-mmlab/mmaction2
            运行pytorch2onnx.py脚本
            ```
            cd mmaction2
-           python3 tools/deployment/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50.pth --shape 1 30 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
+           python3 tools/deployment/pytorch2onnx.py configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py checkpoints/i3d_r50.pth --shape 1 10 3 32 256 256 --verify --show --output i3d.onnx --opset-version 11
            ```
          
            - 参数说明：
@@ -160,7 +160,7 @@ url=https://github.com/open-mmlab/mmaction2
             本节采用的模型输入为:1x30x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件。由于本模型较大，只支持bs=1，4。
             
             ```
-            atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,30,3,32,256,256"
+            atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
             ```
 
             - 参数说明：
@@ -185,15 +185,14 @@ url=https://github.com/open-mmlab/mmaction2
         ```sh
         mv i3d_inference.py mmaction2/tools
         cd mmaction2/tools
-        python i3d_inference.py ../configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../i3d_bs1.om --device_id 0 --show
+        python i3d_inference.py ../configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../../i3d_bs1.om --device_id 0
 
         ```
          - 参数说明：
             -   --eval：精度指标。
             -   --model：om模型文件。
             -   --out：输出路径。
-            -   -bs：输入模型的batch size。
-            -   --show：是否展示d2h和h2d的耗时，默认为False
+            -   ---bs：输入模型的batch size。
 
     3. 性能验证。
 
