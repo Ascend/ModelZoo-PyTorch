@@ -79,7 +79,7 @@ def parse_arguments():
                         help='file path for val label')
     parser.add_argument('-s', '--save_path', type=str, default='./result.json',
                         help='save path for evaluation result')
-    parser.add_argument('-d', '--dtype', type=str, default='float16',
+    parser.add_argument('-d', '--dtype', type=str, default='float32',
                         help='dtype for predict result')
     return parser.parse_args()
 
