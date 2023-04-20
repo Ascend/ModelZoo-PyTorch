@@ -21,6 +21,10 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 
