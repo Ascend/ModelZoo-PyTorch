@@ -150,6 +150,9 @@ def make_pad_mask(lengths, xs=None, length_dim=-1, maxlen=None):
     if length_dim == 0:
         raise ValueError("length_dim cannot be 0: {}".format(length_dim))
 
+    device = lengths.device if isinstance(lengths, torch.Tensor) \
+        else (xs.device if isinstance(xs, torch.Tensor) else "cpu")
+
     if not isinstance(lengths, list):
         lengths = lengths.tolist()
     bs = int(len(lengths))
@@ -162,7 +165,7 @@ def make_pad_mask(lengths, xs=None, length_dim=-1, maxlen=None):
         assert xs is None
         assert maxlen >= int(max(lengths))
 
-    seq_range = torch.arange(0, maxlen, dtype=torch.int64)
+    seq_range = torch.arange(0, maxlen, dtype=torch.int64, device=device)
     seq_range_expand = seq_range.unsqueeze(0).expand(bs, maxlen)
     seq_length_expand = seq_range_expand.new(lengths).unsqueeze(-1)
     mask = seq_range_expand >= seq_length_expand
