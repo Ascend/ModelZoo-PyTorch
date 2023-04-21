@@ -55,7 +55,7 @@ class LabelSmoothingLoss(nn.Module):
             true_dist = x.clone()
             true_dist.fill_(self.smoothing / (self.size - 1))
             ignore = target == self.padding_idx  # (B,)
-            total = len(target) - ignore.sum().item()
+            total = len(target) - ignore.sum()
             target = target.masked_fill(ignore, 0)  # avoid -1 index
             true_dist.scatter_(1, target.unsqueeze(1), self.confidence)
         kl = self.criterion(torch.log_softmax(x, dim=1), true_dist)
