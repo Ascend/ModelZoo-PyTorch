@@ -66,6 +66,7 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
     cp -f mmcv_need/dist_utils.py mmcv/mmcv/runner/
     cp -f mmcv_need/distributed.py mmcv/mmcv/parallel/
     cp -f mmcv_need/optimizer.py mmcv/mmcv/runner/hooks/
+    cp -f mmcv_need/epoch_based_runner.py mmcv/mmcv/runner/
     
     cd mmcv
     export MMCV_WITH_OPS=1 

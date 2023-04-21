@@ -89,9 +89,11 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
+#训练步数
+export PERF_MAX_STEPS=2000
 export TASK_QUEUE_ENABLE=0
 rm -rf kernel_meta/
-python3.7 ./tools/train.py configs/ssd/ssd300_coco_npu.py --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} --gpu-ids ${device_id} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3.7 ./tools/train.py configs/ssd/ssd300_coco_npu.py --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} --gpu-ids ${device_id} --no-validate > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
