@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--device', type=str, default='cuda', help='model to device cuda or npu')
     parser.add_argument('--master-addr', type=str, default='127.0.0.1', help='master addr')
-    parser.add_argument('--master-port', type=str, default='23333', help='master port')
+    parser.add_argument('--master-port', type=str, default='29500', help='master port')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
