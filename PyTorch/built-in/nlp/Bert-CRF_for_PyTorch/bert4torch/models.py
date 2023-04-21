@@ -363,8 +363,7 @@ class BaseModel(nn.Module):
                 
                 # 添加loss至log打印
                 logs.update({'loss': loss.item()})
-                if local_step > 1:
-                    logs['step time'] = step_time
+                logs['step time'] = step_time
                 logs_loss_detail = {k: v.item() if isinstance(v, torch.Tensor) else v for k, v in loss_detail.items()}
                 logs.update(logs_loss_detail)
                 if self.global_step == resume_step:
