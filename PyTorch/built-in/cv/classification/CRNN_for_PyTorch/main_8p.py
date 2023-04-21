@@ -60,8 +60,6 @@ def main():
     if args.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
-    else:
-        torch.npu.config.allow_internal_format = True
     npu = args.npu
     if args.bin:
         print('enable run time2.0 model now!')

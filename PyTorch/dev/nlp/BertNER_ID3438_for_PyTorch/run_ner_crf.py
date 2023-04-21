@@ -444,8 +444,6 @@ def main():
     if args.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
-    else:
-        torch.npu.config.allow_internal_format = True
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     init_logger(log_file=args.output_dir + f'/{args.model_type}-{args.task_name}-{time_}.log')
     if os.path.exists(args.output_dir) and os.listdir(

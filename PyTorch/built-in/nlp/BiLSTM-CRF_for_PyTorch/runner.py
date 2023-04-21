@@ -64,8 +64,6 @@ def main():
     if args.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
-    else:
-        torch.npu.config.allow_internal_format = True
     if args.bin_mode:
         print('bin_mode is on')
         torch.npu.set_compile_mode(jit_compile=False)

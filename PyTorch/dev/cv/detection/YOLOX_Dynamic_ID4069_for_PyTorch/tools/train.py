@@ -123,8 +123,6 @@ def main(exp: Exp, args):
     if args.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
-    else:
-        torch.npu.config.allow_internal_format = True
     if exp.seed is not None:
         random.seed(exp.seed)
         torch.manual_seed(exp.seed)
