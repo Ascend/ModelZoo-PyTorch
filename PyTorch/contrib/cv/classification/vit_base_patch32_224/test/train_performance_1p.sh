@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="vit_base_patch32_224"
+Network="vit_base_patch32_224_for pytorch"
 # 训练batch_size
 batch_size=256
 # 训练使用的npu卡数
