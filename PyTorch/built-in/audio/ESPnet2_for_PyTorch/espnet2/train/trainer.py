@@ -187,9 +187,6 @@ class Trainer:
 
         scaler = None
         torch.npu.set_compile_mode(jit_compile=False)
-        option = {}
-        option["MM_BMM_ND_ENABLE"] = 'disable'
-        torch.npu.set_option(option)
 
         if trainer_options.resume and (output_dir / "checkpoint.pth").exists():
             cls.resume(
@@ -323,7 +320,7 @@ class Trainer:
 
             if not distributed_option.distributed or distributed_option.dist_rank == 0:
                 # 3. Report the results
-                logging.info(reporter.log_message())
+                print(reporter.log_message(), flush=True)
                 if trainer_options.use_matplotlib:
                     reporter.matplotlib_plot(output_dir / "images")
                 if summary_writer is not None:
@@ -640,7 +637,8 @@ class Trainer:
             # NOTE(kamo): Call log_message() after next()
             reporter.next()
             if iiter % log_interval == 0:
-                logging.info(reporter.log_message(-log_interval))
+                if not distributed_option.distributed or distributed_option.dist_rank == 0:
+                    print(reporter.log_message(-log_interval), flush=True)
                 if summary_writer is not None:
                     reporter.tensorboard_add_scalar(summary_writer, -log_interval)
                 if use_wandb:

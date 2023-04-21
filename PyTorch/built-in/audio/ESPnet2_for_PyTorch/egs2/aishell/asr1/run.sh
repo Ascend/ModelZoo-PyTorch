@@ -20,6 +20,13 @@ use_wordlm=false
 # (train_set will be "${train_set}_sp" if speed_perturb_factors is specified)
 speed_perturb_factors="0.9 1.0 1.1"
 
+inference_nj=32
+# arm 推理打开全核进行以提升推理速度
+if [ $(uname -m) = "aarch64" ]; then
+    inference_nj=192
+fi
+
+
 ./asr.sh                                               \
     --lang zh                                          \
     --audio_format wav                                 \
@@ -37,4 +44,5 @@ speed_perturb_factors="0.9 1.0 1.1"
     --asr_speech_fold_length 512 \
     --asr_text_fold_length 150 \
     --lm_fold_length 150 \
-    --lm_train_text "data/${train_set}/text" "$@"
+    --lm_train_text "data/${train_set}/text" \
+    --inference_nj "${inference_nj}" "$@"

@@ -38,6 +38,7 @@ gpu_inference=false  # Whether to perform gpu decoding.
 dumpdir=dump         # Directory to dump features.
 expdir=exp           # Directory to save experiments.
 python=python3       # Specify python to execute espnet commands.
+num_workers=12       # The number of workers of dataloader.
 
 # Data preparation related
 local_data_opts= # The options given to local/data.sh.
@@ -1110,6 +1111,7 @@ if ! "${skip_train}"; then
                 --fold_length "${_fold_length}" \
                 --fold_length "${asr_text_fold_length}" \
                 --output_dir "${asr_exp}" \
+                --num_workers "${num_workers}" \
                 ${_opts} ${asr_args}
 
     fi
