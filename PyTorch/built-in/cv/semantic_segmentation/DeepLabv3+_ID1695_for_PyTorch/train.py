@@ -305,7 +305,7 @@ def main():
     parser.add_argument('--apex-opt-level', default='O2', type=str,
                         help='For apex mixed precision training'
                              'O0 for FP32 training, O1 for mixed precison training.')
-    parser.add_argument('--loss-scale-value', default='dynamic',
+    parser.add_argument('--loss-scale-value', default=1024,
                         help='loss scale using in amp, default -1 means dynamic')
     parser.add_argument('--multiprocessing_distributed', action='store_true',
                         help='Use multi-processing distributed training to'
