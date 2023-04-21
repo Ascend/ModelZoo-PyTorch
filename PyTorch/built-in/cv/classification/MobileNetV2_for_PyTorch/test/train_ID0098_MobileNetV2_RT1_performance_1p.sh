@@ -129,7 +129,7 @@ wait
 
 #参数修改
 sed -i "s|if i >= 200|if i >= ${steps_per_epoch}|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
-sed -i "s|pass|break|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
+sed -i "487s|pass|break|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
 wait
 
 #训练开始时间，不需要修改
@@ -168,7 +168,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #参数改回
-sed -i "s|break|pass|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
+sed -i "487s|break|pass|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
 wait
 
 #结果打印，不需要修改
