@@ -1,1 +1,0 @@
-atc --model=online_encoder.onnx --framework=5 --output=online_encoder --input_format=ND --input_shape="chunk_xs:64,67,80;chunk_lens:64;offset:64,1;att_cache:64,12,4,64,128;cnn_cache:64,12,256,7;cache_mask:64,1,64" --log=error  --soc_version=$1

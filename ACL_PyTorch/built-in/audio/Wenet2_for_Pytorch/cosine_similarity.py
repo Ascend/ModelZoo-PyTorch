@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import argparse
+
 from pyacl.acl_infer import AclNet, init_acl, release_acl
 import acl
 import numpy as np
@@ -24,18 +26,25 @@ def cos_sim(a, b):
     return cos
 
 if __name__ == '__main__':
-    DEVICE = 0
-    init_acl(DEVICE)
-    chunk_xs = np.random.random((64, 67, 80)).astype("float32")
-    chunk_lens = np.array([600]*64).astype("int32")
-    offset = np.array([0]*64).reshape((64, 1))
-    att_cache = np.random.random((64, 12, 4, 64, 128)).astype("float32")
-    cnn_cache = np.random.random((64, 12, 256, 7)).astype("float32")
-    cache_mask = np.random.random((64, 1, 64)).astype("float32")  
-    net = AclNet(model_path="online_encoder.om", device_id=DEVICE)
+    parser = argparse.ArgumentParser(description='recognize with your model')
+    parser.add_argument('--encoder_onnx', required=True, help='encoder onnx file')
+    parser.add_argument('--encoder_om', required=True, help='encoder om file')
+    parser.add_argument('--batch_size', required=True, type=int, help='batch size')
+    parser.add_argument('--device_id', default=0, type=int, help='device id')
+    args = parser.parse_args()
+    print(args)
+
+    init_acl(args.device_id)
+    chunk_xs = np.random.random((args.batch_size, 67, 80)).astype("float32")
+    chunk_lens = np.array([600]*args.batch_size).astype("int32")
+    offset = np.array([0]*args.batch_size).reshape((args.batch_size, 1))
+    att_cache = np.random.random((args.batch_size, 12, 4, args.batch_size, 128)).astype("float32")
+    cnn_cache = np.random.random((args.batch_size, 12, 256, 7)).astype("float32")
+    cache_mask = np.random.random((args.batch_size, 1, args.batch_size)).astype("float32")
+    net = AclNet(model_path=args.encoder_om, device_id=args.device_id)
     output_data, exe_time = net([chunk_xs, chunk_lens, offset, att_cache, cnn_cache, cache_mask])
     y = output_data[0].flatten()
-    onnx_model = onnxruntime.InferenceSession("./onnx/online_encoder.onnx")
+    onnx_model = onnxruntime.InferenceSession(args.encoder_onnx)
     inputs = {
         onnx_model.get_inputs()[0].name: chunk_xs,
         onnx_model.get_inputs()[1].name: chunk_lens,
@@ -49,5 +58,5 @@ if __name__ == '__main__':
     onnx_y = onnx_output[0].flatten()
     cos_1 = cos_sim(y, onnx_y)
     print("acc: ", cos_1)
-    del net
-    release_acl(DEVICE)
+    net.release_model()
+    release_acl(args.device_id)

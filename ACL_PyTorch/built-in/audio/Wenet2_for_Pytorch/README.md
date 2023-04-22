@@ -3,18 +3,17 @@
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
+    - [输入输出数据](#section540883920406)
+
 - [推理环境准备](#ZH-CN_TOPIC_0000001126281702)
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
-- [获取源码](#section183221994400)
+
+  - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
-  
-- [模型推理性能](#ZH-CN_TOPIC_0000001172201573)
 
-
-
-
+- [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
@@ -28,17 +27,6 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
   branch=v2.0.1
   model_name=Wenet
   ```
-  
-
-通过Git获取对应commit\_id的代码方法如下：
-
-```
-  git clone {repository_url}        # 克隆仓库的代码
-  cd {repository_name}              # 切换到模型的代码仓目录
-  git checkout {branch/tag}         # 切换到对应分支
-  git reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-  cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-```
 
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -106,29 +94,43 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
   | best_index | batchsize | INT64    | ND           |
 
 
-
-
-# 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
   **表 1**  版本配套表
 
-| 配套                                                         | 版本    | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 6.0.RC1 | -                                                            |
-| Python                                                       | 3.7.5   | -                                                            |
-| PyTorch                                                      | 1.10.1  | -                                                            |
-| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+  | 配套                                                         | 版本      | 环境准备指导                                                 |
+  |---------| ------- | ------------------------------------------------------------ |
+  | 固件与驱动                                                   | 22.0.4  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 6.3.RC1 | -                                                            |
+  | Python                                                       | 3.7.5   | -                                                            |
+  | PyTorch                                                      | 1.8.0   | -                                                            |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
+
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
-安装依赖。
+
+## 获取源码<a name="section4622531142816"></a>
+
+1. 获取源码。
+   
+   在工作目录下执行下述命令获取源码并切换到相应路径。
+
+   ```
+    git clone https://github.com/wenet-e2e/wenet.git
+    cd wenet
+    git checkout v2.0.1
+    cd ..
+   ```
+
+2. 安装依赖。
 
    ```
    pip3 install -r requirements.txt
    ```
-om_gener安装
+
+3. 安装om_gener
 
    ```
    git clone https://gitee.com/peng-ao/om_gener.git
@@ -136,7 +138,7 @@ om_gener安装
    pip3 install .
    ```
 
-ctc_dcoder安装
+4. 安装ctc_dcoder
 
    ```
    git clone https://github.com/Slyne/ctc_decoder.git
@@ -146,7 +148,7 @@ ctc_dcoder安装
    cd ctc_decoder/swig && bash setup.sh
    ```
 
-acl_infer安装
+5. 安装acl_infer
 
    ```
    git clone https://gitee.com/peng-ao/pyacl.git
@@ -155,218 +157,253 @@ acl_infer安装
    ```
 
 
-
-## 获取源码<a name="section183221994400"></a>
-
-在工作目录下执行下述命令获取源码并切换到相应路径。
-
-   ```
-    git clone https://github.com/wenet-e2e/wenet.git
-    cd wenet
-    git checkout v2.0.1
-    wenet_path=$(pwd)
-   ```
-
-路径说明：
-
-${wenet_path}表示wenet开源模型代码的路径
-
-${code_path}表示modelzoo中Wenet_for_Pytorch工程代码的路径，例如code_path=/home/ModelZoo-PyTorch/ACL_PyTorch/built-in/audio/Wenet_for_Pytorch
-
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
 
-    cd ${wenet_path}/examples/aishell/s0/
+   ```
+   cd wenet/examples/aishell/s0/
+   mkdir -p /export/data/asr-data/OpenSLR/33
+   bash run.sh --stage -1 --stop_stage -1 # 下载数据集
+   ```
 
-    mkdir -p /export/data/asr-data/OpenSLR/33
+2. 处理数据集。
 
-    bash run.sh --stage -1 --stop_stage -1 # 下载数据集
-    bash run.sh --stage 0 --stop_stage 0 # 处理数据集
-    bash run.sh --stage 1 --stop_stage 1 # 处理数据集
-    bash run.sh --stage 2 --stop_stage 2 # 处理数据集
-    bash run.sh --stage 3 --stop_stage 3 # 处理数据集
+   ```
+   bash run.sh --stage 0 --stop_stage 0
+   bash run.sh --stage 1 --stop_stage 1
+   bash run.sh --stage 2 --stop_stage 2
+   bash run.sh --stage 3 --stop_stage 3
+   ```
+
 
 ## 模型推理<a name="section741711594517"></a>
 
 1. 模型转换。
 
-   本模型基于开源框架PyTorch训练的Wenet进行模型转换。使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   下载权重链接：https://github.com/wenet-e2e/wenet/blob/main/docs/pretrained_models.md
+   1. 获取权重文件。
 
-   选择aishell数据集对应的Checkpoint Model下载即可
-
-   下载压缩文件，将文件解压，将文件夹内的文件放置到wenet/examples/aishell/s0/exp/20210601_u2++_conformer_exp文件夹下，若没有该文件夹，则创建该文件夹
-
-    1. 放置权重等文件。
-
-        ```
-        tar -zvxf 20210601_u2++_conformer_exp.tar.gz
-        mkdir -p ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp
-        mkdir -p ${wenet_path}/exp/20210601_u2++_conformer_exp
-        mkdir -p ${wenet_path}/examples/aishell/s0/onnx/
-        cp -r 20210601_u2pp_conformer_exp/20210601_u2++_conformer_exp/* ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp
-        cp -r examples/aishell/s0/data/test/data.list ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/
-        ```
-   ```
-        
-   ```
-        cp -r examples/aishell/s0/data/test/text ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/
-        cp -r ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/global_cmvn ${wenet_path}/exp/20210601_u2++_conformer_exp
-        cd  ${code_path}
-        cp -r export_onnx_npu.py ${wenet_path}/wenet/bin/
-        cp -r recognize_om.py ${wenet_path}/wenet/bin/
-        cp -r cosine_similarity.py ${wenet_path}/examples/aishell/s0/ 
-        cp -r adaptdecoder.py ${wenet_path}/examples/aishell/s0/
-        cp -r *.sh ${wenet_path}/examples/aishell/s0/
-        ```
+      WeNet预训练模型[下载链接](https://github.com/wenet-e2e/wenet/blob/main/docs/pretrained_models.md)，选择aishell数据集对应的Checkpoint Model下载，将压缩文件放到${wenet_path}下解压。
+      ```
+      cd ../../../
+      tar -zvxf 20210601_u2++_conformer_exp.tar.gz
+      mkdir -p exp/20210601_u2++_conformer_exp
+      cp examples/aishell/s0/data/test/data.list 20210601_u2++_conformer_exp
+      cp examples/aishell/s0/data/test/text 20210601_u2++_conformer_exp
+      cp 20210601_u2++_conformer_exp/global_cmvn exp/20210601_u2++_conformer_exp
+      cp ../export_onnx_npu.py wenet/bin
+      cp ../recognize_om.py wenet/bin
+      cp ../cosine_similarity.py .
+      ```
 
    2. 导出onnx文件。
 
-      1. 运行以下命令导出对应的onnx。
+      使用export_onnx_npu.py导出onnx文件。
+
+      ```
+      # 非流式场景
+      python3 wenet/bin/export_onnx_npu.py --config 20210601_u2++_conformer_exp/train.yaml --checkpoint 20210601_u2++_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3
+      
+      # 流式场景
+      python3 wenet/bin/export_onnx_npu.py --config 20210601_u2++_conformer_exp/train.yaml --checkpoint 20210601_u2++_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3 --streaming
+      ```
+
+      - 参数说明：
+
+         - --config：aishell预训练模型配置文件路径。
+         - --checkpoint：aishell预训练模型checkpoint文件路径。
+         - --output_onnx_dir：输出onnx的文件夹路径。
+         - --num_decoding_left_chunks：self-attention依赖的左侧chunk数。
+         - --reverse_weight：从右往左解码权重。
+         - --streaming：流式开关。
+
+      获得offline_encoder.onnx、online_encoder.onnx、decoder.onnx文件。
+
+   3. 使用ATC工具将ONNX模型转OM模型。
+
+      1. 配置环境变量。
+
          ```
-         cd ${wenet_path}/examples/aishell/s0
-         mkdir onnx
-         #非流式
-         python3 wenet/bin/export_onnx_npu.py --config ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/train.yaml --checkpoint ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3 
-         #流式
-         python3 wenet/bin/export_onnx_npu.py --config ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/train.yaml --checkpoint ${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3 --streaming
+         source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
-2. 使用ATC工具将ONNX模型转OM模型。
+      2. 执行命令查看芯片名称（$\{chip\_name\}）。
 
-    1. 配置环境变量。
+         ```
+         npu-smi info
+         #该设备芯片名为Ascend310P3 （自行替换）
+         回显如下：
+         +-------------------+-----------------+------------------------------------------------------+
+         | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+         | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+         +===================+=================+======================================================+
+         | 0       310P3     | OK              | 15.8         42                0    / 0              |
+         | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+         +===================+=================+======================================================+
+         | 1       310P3     | OK              | 15.4         43                0    / 0              |
+         | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+         +===================+=================+======================================================+
+         ```
 
-        ```
-        source /usr/local/Ascend/ascend-toolkit/set_env.sh
-        export ASCEND_GLOBAL_LOG_LEVEL=3
-        /usr/local/Ascend/driver/tools/msnpureport -g error -d 0
-        ```
+      3. 执行ATC命令。
 
-        > **说明：** 
-        >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
+         ```
+         # 流式场景encoder部分
+         atc --input_format=ND --framework=5 --model=onnx/online_encoder.onnx --input_shape="chunk_xs:${batch_size},67,80;chunk_lens:${batch_size};offset:${batch_size},1;att_cache:${batch_size},12,4,64,128;cnn_cache:${batch_size},12,256,7;cache_mask:${batch_size},1,64" --output=om/online_encoder_bs${batch_size} --log=error --soc_version=Ascend${chip_name}
+         
+         # 非流式动态shape场景encoder部分
+         atc --input_format=ND --framework=5 --model=onnx/offline_encoder.onnx --input_shape_range="speech:[1~64,1~1500,80];speech_lengths:[1~64]" --output=om/offline_encoder_dynamic --log=error --soc_version=Ascend${chip_name}
+         
+         # 非流式分档场景encoder部分
+         atc --input_format=ND --framework=5 --model=onnx/offline_encoder.onnx --input_shape="speech:${batch_size},-1,80;speech_lengths:${batch_size}" --dynamic_dims="262;326;390;454;518;582;646;710;774;838;902;966;1028;1284;1478" --output=om/offline_encoder_static_bs${batch_size} --log=error --soc_version=Ascend${chip_name}
+         
+         # 非流式分档场景decoder部分
+         bash static_decoder.sh ${batch_size} Ascend${chip_name}
+         ```
 
-    2. 执行命令查看芯片名称（$\{chip\_name\}）。
+         - 参数说明：
 
-        ```
-        npu-smi info
-        #该设备芯片名为Ascend310P3 （自行替换）
-        回显如下：
-        +-------------------+-----------------+------------------------------------------------------+
-        | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
-        | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
-        +===================+=================+======================================================+
-        | 0       310P3     | OK              | 15.8         42                0    / 0              |
-        | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
-        +===================+=================+======================================================+
-        | 1       310P3     | OK              | 15.4         43                0    / 0              |
-        | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
-        +===================+=================+======================================================+
-        ```
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --input\_shape\_range：输入数据的shape范围。
+           -   --dynamic\_dims：设置ND格式下动态维度的档位。 
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
 
-    3. 执行ATC命令。
+         运行成功后生成online_encoder_bs${batch_size}.om、offline_encoder_dynamic.om、offline_encoder_static_bs${batch_size}.om、offline_decoder_static_bs${batch_size}.om模型文件。
 
-        ```
-        cd ${code_path}
-        cp ${wenet_path}/examples/aishell/s0/onnx/* ${code_path}/
-        bash online_encoder.sh Ascend${chip_name} 
-        bash offline_encoder.sh Ascend${chip_name} # Ascend310P3
-        bash static_encoder.sh Ascend${chip_name}
-        #若需要decoder部分,对于分档场景
-        python3 adaptdecoder.py
-        bash static_decoder.sh Ascend${chip_name}
-        ```
+2. 开始推理验证。
+
+   1. 安装ais_bench推理工具。
+
+      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
+
+   2. 非流式动态shape场景性能和精度验证。
+
+      ```
+      # 性能验证
+      python3 wenet/bin/recognize_om.py --config=20210601_u2++_conformer_exp/train.yaml --test_data=20210601_u2++_conformer_exp/data.list --dict=20210601_u2++_conformer_exp/units.txt --mode=ctc_greedy_search --result_file=offline_dynamic_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_dynamic.om --decoder_om=xx.om --batch_size=${batch_size} --device_id=0 --test_file=offline_dynamic_test_result_bs${batch_size}.txt
+      ```
+
+      - 参数说明：
+        - --config：aishell预训练模型配置文件路径。
+        - --test_data：测试数据路径。
+        - --dict：aishell预训练模型词典路径。
+        - --mode：解码模式，可选ctc_greedy_search、ctc_prefix_beam_search和attention_rescoring。
+        - --result_file：解码结果文件。
+        - --encoder_om：非流式动态shape场景encoder的om路径。
+        - --decoder_om：无需decoder的om，但需要填写该字段。
+        - --batch_size：batch大小。
+        - --device_id：卡序号。
+        - --test_file：性能结果文件。
+
+      ```
+      # 精度验证
+      python3 tools/compute-wer.py --char=1 --v=1 20210601_u2++_conformer_exp/text offline_dynamic_result_bs${batch_size}.txt
+      ```
+
+      - 参数说明：
+        - --char：是否逐词比对，0为整句比对，1为逐词比对。
+        - --v：是否打印对比结果，0为不打印，1为打印。
+        - 20210601_u2++_conformer_exp/text：标签文件路径。
+        - static_result.txt：比对结果输出文件路径。
+
+   3. 非流式分档场景精度和性能验证。
+
+      移动LSTM_postprocess_data.py脚本至steps目录下，执行LSTM_postprocess_data.py脚本进行数据后处理。
+
+      ```
+      python3 wenet/bin/recognize_om.py --config=20210601_u2++_conformer_exp/train.yaml --test_data=20210601_u2++_conformer_exp/data.list --dict=20210601_u2++_conformer_exp/units.txt --mode=ctc_greedy_search --result_file=static_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt
+      ```
+
+      - 参数说明：
+        - --config：aishell预训练模型配置文件路径。
+        - --test_data：测试数据路径。
+        - --dict：aishell预训练模型词典路径。
+        - --mode：解码模式，可选ctc_greedy_search、ctc_prefix_beam_search和attention_rescoring。
+        - --result_file：解码结果文件。
+        - --encoder_om：非流式分档场景encoder的om路径。
+        - --decoder_om：非流式分档场景decoder的om路径。
+        - --batch_size：batch大小。
+        - --device_id：卡序号。
+        - --static：是否执行分档模式。
+        - --test_file：性能结果文件。
+
+      ```
+      # 精度验证
+      python3 tools/compute-wer.py --char=1 --v=1 20210601_u2++_conformer_exp/text static_result_bs${batch_size}.txt
+      ```
+
+      - 参数说明：
+        - --char：是否逐词比对，0为整句比对，1为逐词比对。
+        - --v：是否打印对比结果，0为不打印，1为打印。
+        - 20210601_u2++_conformer_exp/text：标签文件路径。
+        - static_result.txt：比对结果输出文件路径。
+
+   4. 流式纯推理场景精度和性能验证。
+
+      可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
+
+      ```
+      # 性能验证
+      python3 -m ais_bench --model=online_encoder_bs${batch_size}.om --loop=1000 --batchsize=${batch_size}
+      ```
+
+      - 参数说明：
+        - --model：om文件路径。
+        - --loop：循环次数。
+        - --batchsize：batch大小。
+      
+      ```
+      # 精度验证
+      python3 cosine_similarity.py --encoder_onnx=onnx/online_encoder.onnx --encoder_om=om/online_encoder_bs${batch_size}.om --batch_size=${batch_size} --device_id=0
+      ```
+      
+      - 参数说明：
+        - --encoder_onnx：流式encoder的onnx路径。
+        - --encoder_om：流式encoder的om路径。
+        - --batch_size：batch大小。
+        - --device_id：卡序号。
 
 
-3. 开始推理验证。
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-   使用ais-infer工具进行推理验证流式模型性能。
+因为decoder部分存在性能bug(比onnxruntime还慢)，仅提供encoder部分，性能参考下列数据。 
 
-   ais-infer工具获取及使用方式请点击查看[[ais_infer 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_infer)]
+非流式动态shape场景
 
-   run.sh脚本封装了ctc_greedy_search场景的动态shape和动态分档的推理，并将性能和精度分别保存在了offline_test_result.txt online_test_result.txt以及static_test_result.txt中，
+| 芯片型号        | Batch Size | 数据集       | 精度(WER) | 性能(测试数据集执行总时间) |
+|-------------|------------|-----------|---------|----------------|
+| Ascend310P3 | 1          | aishell   | 5.18%   | 118.9s         |
+| Ascend310P3 | 4          | aishell   | 5.18%   | 44.9s          |
+| Ascend310P3 | 8          | aishell   | 5.18%   | 37.9s          |
+| Ascend310P3 | 16         | aishell   | 5.18%   | 40.5s          |
+| Ascend310P3 | 32         | aishell   | 5.18%   | 44.9s          |
+| Ascend310P3 | 64         | aishell   | 5.18%   | 48.6s          |
 
-   运行bash run.sh Ascend310P3即可
+非流式分档场景
 
-   首先设置日志等级
+| 芯片型号        | Batch Size | 数据集       | 精度(WER) | 性能(测试数据集执行总时间) |
+|-------------|------------|-----------|---------|----------------|
+| Ascend310P3 | 1          | aishell   | 5.18%   | 39.1s          |
+| Ascend310P3 | 4          | aishell   | 5.18%   | 29.6s          |
+| Ascend310P3 | 8          | aishell   | 5.18%   | 28.6s          |
+| Ascend310P3 | 16         | aishell   | 5.18%   | 31.8s          |
+| Ascend310P3 | 32         | aishell   | 5.18%   | 35.1s          |
+| Ascend310P3 | 64         | aishell   | 5.18%   | 51.9s          |
 
-   ​        1. 设置日志等级 export ASCEND_GLOBAL_LOG_LEVEL=3
+流式纯推理场景
 
-   ​        2. 拷贝om模型到${wenet_path}/examples/aishell/s0
-
-   ```
-   cp ${code_path}/online_encoder.om ${wenet_path}/examples/aishell/s0/
-   cp ${code_path}/offline_encoder.om ${wenet_path}/examples/aishell/s0/
-   ```
-
-   动态shape场景：
-
-- 非流式场景下推理模型
-
-
-```
-python3 wenet/bin/recognize_om.py --config=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/train.yaml --test_data=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/data.list --dict=units.txt --mode=ctc_greedy_search --result_file=offline_res_result.txt --encoder_om=encoder_offline.om --decoder_om=xx.om --batch_size=1 --device_id=0 --test_file=offline_test_result.txt
-```
-
-- 计算并查看overall精度
-
-  ```
-  python3 tools/compute-wer.py --char=1 --v=1 text offline_res_result.txt > offline_wer
-  cat offline_wer | grep "Overall"
-  ```
-
-- 查看非流式性能
-
-  性能和精度保存在offline_dynamic_results.txt
-
-流式场景
-
-- 获取流式场景下性能
-
-  可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
-  ```
-     python3 -m ais_bench --model=${om_model_path} --loop=1000 --batchsize=${batch_size}
-  ```
-
-  - 参数说明：
-    - --model：om模型
-    - --batchsize：模型batchsize
-    - --loop: 循环次数
-
-- 查看精度(余弦相似度)
-
-  ```
-  python3 cosine_similarity.py
-  ```
-
-分档场景：
-
-- 推理模型:
-
-
-```
-python3 wenet/bin/recognize_om.py --config=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/train.yaml --test_data=${wenet_path}/examples/aishell/s0/exp/20210601_u2++_conformer_exp/data.list --dict=units.txt --mode=ctc_greedy_search --result_file=static_res_result.txt --encoder_om=encoder_static.om --decoder_om=decoder_static.om --batch_size=32--device_id=0 --static --test_file=static_test_result.txt
-```
-
-- 查看性能和精度
-  在static_test_result.txt文件中
-
-# 模型推理性能<a name="ZH-CN_TOPIC_0000001172201573"></a>
-
-性能参考下列数据，因为GPU上decoder部分存在性能bug(比onnxruntime还慢)，我们仅提供encoder部分（对应ctc_greedy_search和ctc_prefix_beam_search）的性能，在数据测试集上的打点性能(最优batch)。
-
-非流式
-
-| 模型              | 310P性能   | T4性能     | 310P/T4 |
-|-----------------|----------|----------|---------|
-| Wenet动态shape bs=32） | 40s      | 42s    | 1.05 |
-| Wenet分档 (bs=32) | 37s | 42s | 1.13 |
-
-流式(纯推理)
-
-| 模型           | 310P性能 | T4性能  | 310P/T4 |
-| -------------- | -------- | ------- | ------- |
-| Wenet（bs=64） | 2439fps  | 1714fps | 1.42    |
-
+| 芯片型号        | Batch Size | om与onnx余弦相似度  | 性能             |
+|---------------|------------|-------------------|----------------|
+| Ascend310P3   | 1          | 0.9999997         | 468.7643 fps   |
+| Ascend310P3   | 4          | 0.9999957         | 1126.4175 fps  |
+| Ascend310P3   | 8          | 0.9999978         | 1734.4887 fps  |
+| Ascend310P3   | 16         | 0.9999974         | 2015.7208 fps  |
+| Ascend310P3   | 32         | 0.9999971         | 2177.3159 fps  |
+| Ascend310P3   | 64         | 0.9999974         | 2484.5166 fps  |

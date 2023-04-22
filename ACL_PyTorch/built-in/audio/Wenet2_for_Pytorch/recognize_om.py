@@ -43,6 +43,7 @@ import copy
 import logging
 import os
 import sys
+import time
 
 import torch
 import yaml
@@ -250,6 +251,7 @@ def main():
     sumt1 = 0
     sumt2 = 0
     data_cnt = 0
+    total_time = 0
     with torch.no_grad(), open(args.result_file, 'w') as fout:
         for _, batch in enumerate(test_data_loader):
             data_cnt = data_cnt + 1
@@ -259,6 +261,7 @@ def main():
             t1 = 0
             if args.fp16:
                 feats = feats.astype(np.float16)
+            start_time = time.time()
             if args.static:
                 feats_pad = _pad_sequence([torch.from_numpy(
                     x) for x in feats], True, 0, mul_shape, args.batch_size, feats.shape[0])
@@ -269,6 +272,8 @@ def main():
                     [feats_pad, feats_lengths], dims=dims1)
             else:
                 ort_outs, t1 = encoder_ort_session([feats, feats_lengths])
+            end_time = time.time()
+            total_time += (end_time - start_time)
             sumt1 = sumt1 + t1
             encoder_out, encoder_out_lens, ctc_log_probs, \
                 beam_log_probs, beam_log_probs_idx = ort_outs
@@ -395,7 +400,7 @@ def main():
                 logging.info('{} {}'.format(key, content))
                 fout.write('{} {}\n'.format(key, content))
         fps = float(1000/((sumt1+sumt2)/(data_cnt*args.batch_size)))
-        resstr = "perf: {}\n".format(fps)
+        resstr = "total time: {}\n".format(total_time)
         with open(args.test_file, "a") as resfile:
             resfile.write(resstr)
     encoder_ort_session.release_model()
