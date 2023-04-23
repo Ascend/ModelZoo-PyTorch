@@ -78,9 +78,9 @@ def train(hyp, opt, device, tb_writer=None):
 
     # TODO: Use DDP logging. Only the first process is allowed to log.
     # Save run settings
-    with os.fdopen(os.open(log_dir / 'hyp.yaml', os.O_WRONLY, stat.S_IWUSR), 'w') as f:
+    with os.fdopen(os.open(log_dir / 'hyp.yaml', os.O_WRONLY|os.O_CREAT, stat.S_IWUSR), 'w') as f:
         yaml.dump(hyp, f, sort_keys=False)
-    with os.fdopen(os.open(log_dir / 'opt.yaml', os.O_WRONLY, stat.S_IWUSR), 'w') as f:
+    with os.fdopen(os.open(log_dir / 'opt.yaml', os.O_WRONLY|os.O_CREAT, stat.S_IWUSR), 'w') as f:
         yaml.dump(vars(opt), f, sort_keys=False)
 
     # Configure
