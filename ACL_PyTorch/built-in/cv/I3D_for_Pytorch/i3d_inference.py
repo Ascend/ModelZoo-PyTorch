@@ -18,7 +18,9 @@ import os
 import os.path as osp
 from sys import path
 import warnings
+import sys
 
+import json
 import numpy as np
 import mmcv
 import torch
@@ -38,6 +40,7 @@ from ais_bench.infer.interface import InferSession, MemorySummary
 from ais_bench.infer.summary import summary
 
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='i3d inference')
@@ -53,7 +56,7 @@ def parse_args():
         help='evaluation metrics, which depends on the dataset, e.g.,'
              ' "top_k_accuracy", "mean_class_accuracy" for video dataset')
     parser.add_argument(
-        '--bs', '--batch_size', type=int, default=1,
+        '-bs', '--batch_size', type=int, default=1,
         help='batch size')
     parser.add_argument(
         '--device_id', type=int, default=1,
@@ -79,7 +82,7 @@ class I3d():
         self.device_id = device_id
         self.model = model
 
-    def inference(self, data_loader):
+    def inference(self, data_loader, args):
         model = InferSession(self.device_id, self.model)
         results = []
         dataset = data_loader.dataset
@@ -99,15 +102,16 @@ class I3d():
             for _ in range(batch_size):
                 prog_bar.update()
 
-        print('\n')
+        
         s = model.sumary()
+        print('\n')
         summary.npu_compute_time_list = s.exec_time_list
         summary.h2d_latency_list = MemorySummary.get_H2D_time_list()
         summary.d2h_latency_list = MemorySummary.get_D2H_time_list()
         if args.show:
-            summary.report(opt.batch_size, output_prefix=None, display_all_summary=True)
+            summary.report(args.batch_size, output_prefix=None, display_all_summary=True)
         else:
-            summary.report(opt.batch_size, output_prefix=None, display_all_summary=False)
+            summary.report(args.batch_size, output_prefix=None, display_all_summary=False)
         return results
 
 
@@ -159,7 +163,6 @@ def main():
     dataloader_setting = dict(
         videos_per_gpu=args.batch_size,
         workers_per_gpu=1,
-        num_gpus = 0,
         dist=False,
         shuffle=False)
     dataloader_settings = dict(dataloader_setting,
@@ -167,7 +170,7 @@ def main():
     data_loader = build_dataloader(dataset, **dataloader_settings)
 
     i3d = I3d(args.device_id, args.model)
-    outputs = i3d.inference(data_loader)
+    outputs = i3d.inference(data_loader, args)
 
     rank, _ = get_dist_info()
     if rank == 0:
