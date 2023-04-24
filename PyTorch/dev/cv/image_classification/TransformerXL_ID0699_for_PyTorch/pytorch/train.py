@@ -820,8 +820,6 @@ def main():
     if args.ND:
         print('***********allow_internal_format = False*******************')
         torch.npu.config.allow_internal_format = False
-    else:
-        torch.npu.config.allow_internal_format = True
     if args.affinity != 'disabled':
         nproc_per_node = torch.cuda.device_count()
         affinity = utils.gpu_affinity.set_affinity(
