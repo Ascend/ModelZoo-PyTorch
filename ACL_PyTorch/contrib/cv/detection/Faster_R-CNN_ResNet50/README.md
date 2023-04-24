@@ -234,7 +234,14 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
 
       获得```faster_rcnn_r50_fpn.onnx```文件。
 
-   4. 使用ATC工具将ONNX模型转OM模型。
+   4. 优化onnx算子，消除冗余算子(安装[auto-optimzer](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)工具)：
+
+      ```
+      python3 modify.py --model=faster_rcnn_r50_fpn.onnx --output=faster_rcnn_r50_fpn_m.onnx
+      ```
+      获得```faster_rcnn_r50_fpn_m.onnx```文件。
+
+   5. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
@@ -265,7 +272,7 @@ Faster-R-CNN 在Fast RCNN的基础上使用RPN层代替Selective Search提取候
 
       3. 执行ATC命令。
          ```
-         atc --framework=5 --model=faster_rcnn_r50_fpn.onnx --output=faster_rcnn_r50_fpn --input_format=NCHW --input_shape="input:1,3,1216,1216" --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=faster_rcnn_r50_fpn_m.onnx --output=faster_rcnn_r50_fpn --input_format=NCHW --input_shape="input:1,3,1216,1216" --log=debug --soc_version=${chip_name}
          ```
 
          参数说明：
