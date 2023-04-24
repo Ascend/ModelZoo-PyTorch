@@ -17,8 +17,8 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
 - 参考实现：
 
   ```
-  url=https://github.com/pytorch/vision/blob/main/torchvision/models/densenet.py
-  commit_id=585ce2c4fb80ae6ab236f79f06911e2f8bef180c
+  url=https://github.com/pytorch/examples/tree/main/imagenet
+  commit_id=f5bb60f8e6b2881be3a2ea8c9a3d43e676aa2340
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -28,7 +28,7 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
   code_path=PyTorch/built-in/cv/classification
   ```
 
-# 准备训练环境<a id="2"></a>
+# 准备训练环境
 
 ## 准备环境
 - 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
@@ -47,6 +47,7 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
 - 安装依赖。
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  
   ```
   pip install -r 1.5_requirements.txt  # Pytorch1.5版本
 
@@ -54,6 +55,7 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
   ```
   > **说明:**
   > 只需执行一条对应的PyTorch版本依赖安装命令。
+
 
 ## 准备数据集
 
@@ -90,7 +92,7 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
    >该数据集的训练过程脚本只作为一种参考示例。
 
 
-# 开始训练<a id="3"></a>
+# 开始训练
 
 ## 训练模型
 
@@ -110,6 +112,7 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
 
      ```
      bash ./test/train_full_1p.sh --data_path=real_data_path  # 单卡精度
+     
      bash ./test/train_performance_1p.sh --data_path=real_data_path  # 单卡性能
      ```
 
@@ -119,6 +122,7 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
 
      ```
      bash ./test/train_full_8p.sh --data_path=real_data_path  # 8卡精度
+     
      bash ./test/train_performance_8p.sh --data_path=real_data_path  # 8卡性能
      ```
 
@@ -152,21 +156,18 @@ DenseNet-121是一个经典的图像分类网络，对于一个L层的网络，D
 
 |   NAME   | Acc@1 | FPS  | Epochs | AMP_Type | Torch_Version |
 | :------: | :---: | :--: | :----: | :------: | :-----------: |
-| 1p-竞品V |   -   | -    |   1    |    -     |      1.5      |
-| 8p-竞品V | -     | -    |  90   |    -     |      1.5      |
 |  1p-NPU-ARM  |   -   | 1038  |   1    |    O2    |      1.8      |
 |  8p-NPU-ARM  | 74.658 | 7445  |  90   |    O2    |      1.8      |
 |  1p-NPU-非ARM  |   -   | 1180.78  |   1    |    O2    |      1.8      |
 |  8p-NPU-非ARM  | - | 7315.34  |  90   |    O2    |      1.8      |
 
 
-# 版本说明<a id="5"></a>
+# 版本说明
 
 ## 变更
 
-2022.11.03：更新pytorch1.8版本，重新发布。
+2023.04.24：更新readme，重新发布。
 
-## 已知问题
+## FAQ
 
 无。
-

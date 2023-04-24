@@ -10,13 +10,13 @@
 # 概述
 ## 简述
 
- MobileNetV3结合了MobileNetV1的深度可分离卷积、MobileNetV2的Inverted Residuals和Linear Bottleneck、SE模块，利用NAS（神经结构搜索）来搜索网络的配置和参数，采用了新的非线性激活层h-swish，在精度和性能方面较MobileNetV2均有一定程度提高。
+MobileNetV3结合了MobileNetV1的深度可分离卷积、MobileNetV2的Inverted Residuals和Linear Bottleneck、SE模块，利用NAS（神经结构搜索）来搜索网络的配置和参数，采用了新的非线性激活层h-swish，在精度和性能方面较MobileNetV2均有一定程度提高。
 
 - 参考实现：
 
   ```
-  url=https://github.com/rwightman/pytorch-image-models
-  commit_id=8880f696b6b8368a76296126476ea020fc7c814c
+  url=https://github.com/pytorch/examples/tree/main/imagenet
+  commit_id=f5bb60f8e6b2881be3a2ea8c9a3d43e676aa2340
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -169,5 +169,8 @@
 
 ## FAQ
 
-无。
-
+1. 在ARM平台上，安装0.6.0版本的torchvision，需进行源码编译安装，可以参考源码readme进行安装。
+   
+   ```
+   https://github.com/pytorch/vision
+   ```

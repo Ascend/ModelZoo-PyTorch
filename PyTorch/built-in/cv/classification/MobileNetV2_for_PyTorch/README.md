@@ -15,8 +15,8 @@
 - 参考实现：
 
   ```
-  url=https://github.com/pytorch/vision.git 
-  commit_id=7bf6e7b149720144be9745b2e406672d1da51957
+  url=https://github.com/pytorch/examples/tree/main/imagenet
+  commit_id=f5bb60f8e6b2881be3a2ea8c9a3d43e676aa2340
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -129,7 +129,8 @@
       2. 开始训练，每个机器请按下面提示进行配置
           bash ./test/train_performance_multinodes.sh --data_path=数据集路径 --batch_size=单卡batch_size*单机卡数 --nnodes=机器总数量 --node_rank=当前机器rank(0,1,2..) --local_addr=当前机器IP(需要和master_addr处于同一网段) --master_addr=主节点IP
      ```
-    --data_path参数填写数据集路径，需写到数据集的一级目录。
+   
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
 
    模型训练脚本参数说明如下。
 
@@ -163,11 +164,9 @@
 
 | NAME    | Acc@1  |    FPS  | Epochs | AMP_Type | Torch_Version |
 | :-----: | :----: |  :---:  | :----: | :------: |  :-------:    |
-| 1p-竞品V| - | - | 1  | - | 1.5 |
-| 8p-竞品V| - | - | 600 | - | 1.5 |
-| 1p-NPU(ARM)|   -    |   2789.13  |        |    O2    |   1.8    |
+| 1p-NPU(ARM)|   -    |   2789.13  | 1 |    O2    |   1.8    |
 | 8p-NPU(ARM)| 71.3   | 13477.3 | 600    |    O2    |   1.8    |
-| 1p-NPU(非ARM)|   -    |   2807.02  |        |    O2    |   1.8    |
+| 1p-NPU(非ARM)|   -    |   2807.02  | 1 |    O2    |   1.8    |
 | 8p-NPU(非ARM)| -   | 9190.41 | 600    |    O2    |   1.8    |
 
 
@@ -175,11 +174,14 @@
 
 ## 变更
 
-2022.10.24：更新torch1.8版本，重新发布。
+2023.04.24：更新torch1.8版本，重新发布。
 
 2020.12.19：首次发布。
 
 ## FAQ
 
-无。
-
+1. 在ARM平台上，安装0.6.0版本的torchvision，需进行源码编译安装，可以参考源码readme进行安装。
+   
+   ```
+   https://github.com/pytorch/vision
+   ```

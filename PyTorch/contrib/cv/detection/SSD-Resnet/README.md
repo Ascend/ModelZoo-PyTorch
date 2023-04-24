@@ -15,7 +15,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 - 参考实现：
 
   ```
-  url=https://github.com/mlcommons/training_results_v0.7 
+  url=https://github.com/mlcommons/training_results_v0.7/tree/master/NVIDIA/benchmarks/ssd/implementations/pytorch
   commit_id=585ce2c4fb80ae6ab236f79f06911e2f8bef180
   ```
 
