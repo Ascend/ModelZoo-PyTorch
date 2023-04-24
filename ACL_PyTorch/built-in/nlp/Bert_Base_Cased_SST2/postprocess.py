@@ -19,20 +19,20 @@ import numpy as np
 
 
 def postprocess(output_path, label_path):
-    with open(label_path, 'r') as label_file:
-        labels = json.load(label_file)
+    number = 0
     correct = 0
-    output_files = os.listdir(output_path)
-    for output_file in output_files:
-        name = output_file.split('_')[0]
-        label = int(labels[name])
-        predict = np.fromfile(
-            os.path.join(output_path, output_file),
-            dtype=np.float32
-        )
-        if predict[label] > predict[1 - label]:
-            correct += 1
-    print('accuracy:', correct/len(output_files))
+    label_files = os.listdir(label_path)
+    for label_file in label_files:
+        labels = np.load(os.path.join(label_path, label_file))
+        output_file = label_file[: -4] + '_0.npy'
+        predicts = np.load(os.path.join(output_path, output_file))
+        for i in range(labels.shape[0]):
+            number += 1
+            predict = predicts[i]
+            label = int(labels[i])
+            if predict[label] > predict[1 - label]:
+                correct += 1
+    print('accuracy:', correct/number)
 
 
 if __name__ == '__main__':
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_path', required=True,
                         help='path of predict path')
     parser.add_argument('--label_path', required=True,
-                        help='path of the json file of labels')
+                        help='path of the folder of labels')
     args = parser.parse_args()
 
     postprocess(args.output_path, args.label_path)

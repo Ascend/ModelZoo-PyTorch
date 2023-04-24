@@ -105,8 +105,9 @@
    python3 preprocess.py \
             --text_file data/SST-2/dev.tsv \
             --tokenizer_path bert-base-cased-finetuned-sst2 \
-            --seq_len ${seq_len} \
-            --save_path data_bin
+            --seq_len ${seq_len_1},${seq_len_2} \
+            --save_path data_bin/${bs}/ \
+            --batch_size ${bs}
    ```
 
    - 参数说明：
@@ -114,6 +115,7 @@
       - --tokenizer_path：配置路径。
       - --save_path：预处理数据路径
       - --sqe_len：sequence长度。
+      - --batch_size：输入batch size。
 
 ### 模型推理<a name="section741711594517"></a>
 
@@ -132,21 +134,26 @@
       ```shell
       python3 pth2onnx.py \
               --model_dir bert-base-cased-finetuned-sst2/checkpoint-12630/ \
-              --save_path ./bert_base_sst2.onnx
+              --save_path model/bert_base_sst2.onnx
       ```
-      运行成功后得到`bert_base_sst2.onnx`模型文件
+      运行成功后在model目录下得到`bert_base_sst2.onnx`模型文件
       
       - 参数说明：
          - --model_dir：模型路径（包含配置文件等）
          - --save_path：输出的onnx文件路径。
 
-   3. 优化onnx文件
+   3. 优化ONNX文件。 请访问[auto-optimizer优化工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 
       ```shell
-      python3 -m onnxsim ./bert_base_sst2.onnx ./bert_base_sst2_bs${bs}.onnx --input-shape "input_ids:${bs},${seq_len}" "attention_mask:${bs},${seq_len}"
-      python3 modify_onnx.py bert_base_sst2_bs${bs}.onnx bert_base_sst2_bs${bs}_md.onnx
+      python3 -m onnxsim model/bert_base_sst2.onnx model/bert_base_sst2_bs${bs}.onnx --input-shape "input_ids:${bs},${seq_len}" "attention_mask:${bs},${seq_len}"
+      python3 modify_onnx.py model/bert_base_sst2_bs${bs}.onnx model/bert_base_sst2_bs${bs}_md.onnx
+      python3 modify_shape.py \
+              --original_onnx model/bert_base_sst2.onnx \
+              --modified_onnx model/bert_base_sst2_bs${bs}_md.onnx \
+              --save_path model/bert_base_sst2_bs${bs}_md_dynamic.onnx \
+              --batch_size ${bs}
       ```
-      运行成功后得到`bert_base_sst2_bs${bs}_md.onnx`模型文件
+      运行成功后在model目录下得到`bert_base_sst2_bs${bs}_md_dynamic.onnx`模型文件
 
    4. 使用ATC工具将ONNX模型转OM模型。
 
@@ -179,14 +186,16 @@
 
       3. 执行ATC命令。
          ```shell
-         atc --model=./bert_base_sst2_bs${bs}_md.onnx \
+         atc --model=model/bert_base_sst2_bs${bs}_md_dynamic.onnx \
              --framework=5 \
-             --output=./bert_base_sst2_bs${bs} \
+             --output=model/bert_base_sst2_bs${bs} \
              --input_format=ND \
              --log=error \
              --soc_version=Ascend${chip_name} \
              --optypelist_for_implmode="Gelu" \
-             --op_select_implmode=high_performance
+             --op_select_implmode=high_performance \
+             --input_shape="input_ids:${bs},-1;attention_mask:${bs},-1" \
+             --dynamic_dims="${seq_len_1},${seq_len_1};${seq_len_2},${seq_len_2}"
          ```
 
          - 参数说明：
@@ -198,6 +207,8 @@
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
+           -   --input_shape：输入shape。
+           -   --dynamic_dims：输入序列的不同长度
 
            运行成功后生成`bert_base_sst2_bs${bs}.om`模型文件。
 
@@ -211,17 +222,21 @@
 
       ```shell
       python3 -m ais_bench \
-               --model ./bert_base_sst2_bs${bs}.om \
-               --input ./data_bin/input_ids,./data_bin/attention_mask \
-               --output ./data_bin/ \
-               --output_dirname output
+               --model model/bert_base_sst2_bs${bs}.om \
+               --input ./data_bin/${bs}/input_ids,./data_bin/${bs}/attention_mask \
+               --output ./data_bin/${bs}/ \
+               --output_dirname output \
+               --auto_set_dymdims_mode 1 \
+               --outfmt NPY
       ```
-      -   参数说明：
+      - 参数说明：
 
-            -   --model：om文件路径。
-            -   --input：输入文件。
-            -   --output：输出目录。
-            -   --output_dirname：输出子目录。
+         -   --model：om文件路径。
+         -   --input：输入文件。
+         -   --output：输出目录。
+         -   --output_dirname：输出子目录。
+         -   --auto_set_dymdims_mode：自动匹配输入。
+         -   --outfmt：输出文件类型。
 
 
         推理后的输出默认在当前目录data_bin/output下。
@@ -232,8 +247,8 @@
 
       ```shell
       python3 postprocess.py \
-               --output_path ./data_bin/output \
-               --label_path ./data_bin/labels.json
+               --output_path ./data_bin/${bs}/output \
+               --label_path ./data_bin/${bs}/labels
       ```
       
       - 参数说明：
@@ -245,7 +260,7 @@
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```shell
-      python3 -m ais_bench --model=./bert_base_sst2_bs${bs}.om --loop=100
+      python3 -m ais_bench --model=model/bert_base_sst2_bs${bs}.om --loop=100
       ```
 
       - 参数说明：
@@ -255,12 +270,12 @@
 ## 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 调用ACL接口推理计算，性能参考下列数据。
 
-seq_len = 128
+seq_len = 64, 128
 | 芯片型号 | Batch Size   |  数据集  |   精度   |   性能   |
 | -------- | --------- | ---------- | -------- | ----------- |
-|   310P   |    1      |   SST-2    |   92.43  |   483.08     |
-|   310P   |    4      |   SST-2    |   92.43  |   1136.52    |
-|   310P   |    8      |   SST-2    |   92.43  |   1336.38    |
-|   310P   |    16     |   SST-2    |   92.43  |   1379.32    |
-|   310P   |    32     |   SST-2    |   92.43  |   1254.83    |
-|   310P   |    64     |   SST-2    |   92.43  |   1220.88    |
+|   310P   |    1      |   SST-2    |   92.43  |   522.28     |
+|   310P   |    4      |   SST-2    |   92.43  |   1634.64    |
+|   310P   |    8      |   SST-2    |   92.43  |   2426.22    |
+|   310P   |    16     |   SST-2    |   92.43  |   2694.21    |
+|   310P   |    32     |   SST-2    |   92.43  |   2906.40    |
+|   310P   |    64     |   SST-2    |   92.43  |   2661.63    |

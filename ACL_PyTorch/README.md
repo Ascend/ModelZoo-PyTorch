@@ -814,8 +814,8 @@ Nlp
         </td>
         <td>SST-2</td>
         <td>92.43%</td>
-	<td>1379(bs16)</td>
-	<td nowrap="nowrap">bs x 128</td>
+	<td>2906(bs32)</td>
+	<td nowrap="nowrap">bs x 128 <br> bs x 64</td>
     </tr>
     <tr>
         <td>
