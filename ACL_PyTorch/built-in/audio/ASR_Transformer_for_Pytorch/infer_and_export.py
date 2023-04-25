@@ -461,6 +461,7 @@ if __name__ == "__main__":
     print(f'test audio duration: {test_duration} s')
 
     if run_opts['mode'] == 'export':
+        asr_brain.on_evaluate_start()
         print('encoder export')
         src = torch.rand((8,55,20,256), dtype=torch.float32)
         tokens_bos = torch.randint(0, 100, (8,9), dtype=torch.int64)
