@@ -28,7 +28,17 @@ if torch.__version__ >= "1.8":
     import torch_npu
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 from callback.optimization.lamb import Lamb
 from model.modeling_albert import AlbertConfig, AlbertForSequenceClassification
 from model import tokenization_albert
@@ -40,10 +50,13 @@ from processors import glue_output_modes as output_modes
 from processors import glue_processors as processors
 from processors import glue_convert_examples_to_features as convert_examples_to_features
 from processors import collate_fn
+
 from tools.common import seed_everything
 from tools.common import init_logger, logger
 from callback.progressbar import ProgressBar
 from tools.fps_counter import FpsCounter
+
+
 
 os.environ['MASTER_ADDR'] = '127.0.0.1'
 os.environ['MASTER_PORT'] = '29688'
@@ -123,38 +136,37 @@ def train(args, train_dataset, model, tokenizer):
         pbar = ProgressBar(n_total=len(train_dataloader), desc='Training')
         # fps
         fps = FpsCounter()
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for step, batch in enumerate(train_dataloader):
             print('=====iter%d' % global_step)
             if args.local_rank == -1 and step == 30:  # 单卡模式生成prof
                 if 'npu' in str(args.device):
-                    with torch.autograd.profiler.profile(use_npu=False if 'cpu' in str(args.device) else True) as prof:
-                        model.train()
-                        batch = tuple(t.to(args.device) for t in batch)
-                        inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'labels': batch[3]}
-                        inputs['token_type_ids'] = batch[2]
-
-                        outputs = model(**inputs)
-                        loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
-
-                        if args.n_gpu > 1:
-                            loss = loss.mean()  # mean() to average on multi-gpu parallel training
-                        if args.gradient_accumulation_steps > 1:
-                            loss = loss / args.gradient_accumulation_steps
-
-                        if args.fp16:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                            torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-                        else:
-                            loss.backward()
-                            torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-
-                        tr_loss += loss.item()
-                        if (step + 1) % args.gradient_accumulation_steps == 0:
-                            optimizer.step()
-                            scheduler.step()  # Update learning rate schedule
-                            model.zero_grad()
-                            global_step += 1
+                    model.train()
+                    batch = tuple(t.to(args.device) for t in batch)
+                    inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'labels': batch[3]}
+                    inputs['token_type_ids'] = batch[2]
+                    profiler.start()
+                    outputs = model(**inputs)
+                    loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+                    if args.n_gpu > 1:
+                        loss = loss.mean()  # mean() to average on multi-gpu parallel training
+                    if args.gradient_accumulation_steps > 1:
+                        loss = loss / args.gradient_accumulation_steps
+                    if args.fp16:
+                        with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                        torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
+                    else:
+                        loss.backward()
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    tr_loss += loss.item()
+                    if (step + 1) % args.gradient_accumulation_steps == 0:
+                        optimizer.step()
+                        scheduler.step()  # Update learning rate schedule
+                        model.zero_grad()
+                        global_step += 1
+                    profiler.end()
                     logger.info("npu profiler dump to {}{}npu.prof".format(args.output_dir, args.model_type))
                     prof.export_chrome_trace("{}{}npu.prof".format(args.output_dir, args.model_type))
                 else:

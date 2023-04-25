@@ -26,7 +26,17 @@ from torch import distributed
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from apex import amp
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 from backbones import get_model
 from dataset import get_dataloader
 from losses import CombinedMarginLoss
@@ -212,45 +222,38 @@ def main(args):
             train_loader.sampler.set_epoch(epoch)
         if args.profiling == 'True':
             args.perf_steps = args.stop_step
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for _, (img, local_labels) in enumerate(train_loader):
             global_step += 1
-            if args.start_step<= global_step <= args.stop_step and args.profiling == 'True':
-                profiling = torch.npu.profile(profiler_result_path="./CANN_prof")
+            start_time = time.time()
+            img = img.npu()
+            local_labels = local_labels.npu()
+            profiler.start()
+            local_embeddings = backbone(img)
+            loss: torch.Tensor = module_partial_fc(local_embeddings, local_labels, opt_pfc)
+            if cfg.fp16:
+                with amp.scale_loss(loss, [opt_backbone, opt_pfc]) as scaled_loss:
+                    scaled_loss.backward()
+                opt_backbone.clip_optimizer_grad_norm_fused(5)
             else:
-                profiling = NoProfiling()
-            with profiling:
-                start_time = time.time()
-                if args.perf_steps and global_step > args.perf_steps:
-                    exit()
-                img = img.npu()
-                local_labels = local_labels.npu()
-                local_embeddings = backbone(img)
-                loss: torch.Tensor = module_partial_fc(local_embeddings, local_labels, opt_pfc)
-
-                if cfg.fp16:
-                    with amp.scale_loss(loss, [opt_backbone, opt_pfc]) as scaled_loss:
-                        scaled_loss.backward()
-                    opt_backbone.clip_optimizer_grad_norm_fused(5)
-                else:
-                    loss.backward()
-                    torch.nn.utils.clip_grad_norm_(backbone.parameters(), 5)
-                opt_backbone.step()
-                opt_pfc.step()
-
-                opt_backbone.zero_grad()
-                opt_pfc.zero_grad()
-                lr_scheduler_backbone.step()
-                lr_scheduler_pfc.step()
-                if global_step < 3 and epoch == 0:
-                    print("step_time = {}".format(time.time() - start_time), flush=True)
-
-                with torch.no_grad():
-                    loss_am.update(loss.item(), 1)
-                    callback_logging(global_step, loss_am, epoch, cfg.fp16, lr_scheduler_backbone.get_last_lr()[0], apex.amp._amp_state.loss_scalers[0])
-
-                    if global_step % cfg.verbose == 0 and global_step > 0:
-                        callback_verification(global_step, backbone)
-                        torch.distributed.barrier()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(backbone.parameters(), 5)
+            opt_backbone.step()
+            opt_pfc.step()
+            opt_backbone.zero_grad()
+            opt_pfc.zero_grad()
+            lr_scheduler_backbone.step()
+            lr_scheduler_pfc.step()
+            profiler.end()
+            if global_step < 3 and epoch == 0:
+                print("step_time = {}".format(time.time() - start_time), flush=True)
+            with torch.no_grad():
+                loss_am.update(loss.item(), 1)
+                callback_logging(global_step, loss_am, epoch, cfg.fp16, lr_scheduler_backbone.get_last_lr()[0], apex.amp._amp_state.loss_scalers[0])
+                if global_step % cfg.verbose == 0 and global_step > 0:
+                    callback_verification(global_step, backbone)
+                    torch.distributed.barrier()
 
         if cfg.save_all_states:
             checkpoint = {

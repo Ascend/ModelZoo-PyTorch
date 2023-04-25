@@ -14,12 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import contextlib
 import logging
-import numpy as np
 import time
 import weakref
+import numpy as np
 import torch
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 from apex import amp
 
 import detectron2.utils.comm as comm
@@ -149,6 +161,8 @@ class TrainerBase:
         with EventStorage(start_iter) as self.storage:
             try:
                 self.before_train()
+                profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                                   profile_type=os.getenv("PROFILE_TYPE"))
                 for self.iter in range(start_iter, max_iter):
                     # if self.iter == 100:
                     #     with torch.autograd.profiler.profile(record_shapes=True,use_npu=True) as prof:
@@ -159,7 +173,9 @@ class TrainerBase:
                     #     break
 
                     self.before_step()
+                    profiler.start()
                     self.run_step()
+                    profiler.end()
                     self.after_step()
             except Exception:
                 logger.exception("Exception during training:")

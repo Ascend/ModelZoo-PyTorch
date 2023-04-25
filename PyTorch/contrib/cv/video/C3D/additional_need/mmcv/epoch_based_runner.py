@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import os
 import os.path as osp
 import platform
 import shutil
@@ -21,7 +22,17 @@ import time
 import warnings
 
 import torch
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 import mmcv
 from .base_runner import BaseRunner
 from .builder import RUNNERS
@@ -55,7 +66,7 @@ class EpochBasedRunner(BaseRunner):
     def train(self, data_loader, **kwargs):
         self.batch_time = AverageMeter('Time', ':6.3f')
         self.data_time = AverageMeter('Data', ':6.3f')
-        rank,world_size = get_dist_info() 
+        rank,world_size = get_dist_info()
         self.model.train()
         self.end = time.time()
         self.mode = 'train'
@@ -63,13 +74,17 @@ class EpochBasedRunner(BaseRunner):
         self._max_iters = self._max_epochs * len(self.data_loader)
         self.call_hook('before_train_epoch')
         time.sleep(2)  # Prevent possible deadlock during epoch transition
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for i, data_batch in enumerate(self.data_loader):
             self.data_time.update(time.time()-self.end)
             if(self.rank == 0 and i==0):
                 self.logger.info('load_data costs:'+str(time.time()-self.end))
             self._inner_iter = i
             self.call_hook('before_train_iter')
+            profiler.start()
             self.run_iter(data_batch, train_mode=True, **kwargs)
+            profiler.end()
             self.call_hook('after_train_iter')
             self._iter += 1
             if(rank == 0 and self.batch_time.avg>0):
