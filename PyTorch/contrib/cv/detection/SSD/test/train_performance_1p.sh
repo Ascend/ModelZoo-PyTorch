@@ -3,10 +3,11 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="SSD for pytorch"
+Network="SSD_for_PyTorch"
 # 训练batch_size
 batch_size=8
 # 训练使用的npu卡数
+RANK_SIZE=1
 export RANK_SIZE=1
 # 数据集路径,保持为空,不需要修改
 data_path=""
