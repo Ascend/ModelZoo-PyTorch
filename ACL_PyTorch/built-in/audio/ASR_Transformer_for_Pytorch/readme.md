@@ -88,10 +88,11 @@
 1. PyTroch 模型转 ONNX 模型  
 
     请与开源仓（[https://huggingface.co/speechbrain/asr-transformer-aishell]）下载googledrive中的权重文件AISHELL-1-20230413T041318Z-001.zip
-    解压zip包，并将解压目录下的result文件夹移动到代码根目录下
+    解压zip包，并将解压目录下的result文件夹移动到代码根目录下，删除results下存在的csv文件
     ```
     unzip AISHELL-1-20230413T041318Z-001.zip
     mv AISHELL-1/ASR/Transformer/AISHELL-Transformer/ASR/results/ ./
+    rm results/*.csv 
     ```
 
     修改results/transformer/8886/hyperparams.yaml文件中的tokenizer_file及data_folder为相对应的路径
@@ -134,23 +135,23 @@
     source /usr/local/Ascend/ascend-toolkit/set_env.sh
     
     chip_name=310P3  # 根据 step1 的结果设值
-    batch_size=1  # 根据需要自行设置 
-
-    
+ 
     # 执行 ATC 进行模型转换
     atc --model=./encoder.onnx \
         --framework=5 \
         --output=encoder \
         --input_format=ND \
         --input_shape_range="src:[-1,-1,20,256];wav_lens:[-1]" \
-        --log=error 
+        --log=error \
+        --soc_version=Ascend${chip_name}
 
     atc --model=./decoder.onnx \
         --framework=5 \
         --output=decoder \
         --input_format=ND \
         --input_shape_range="token:[-1,-1,256];encoder_out:[-1,-1,256];decoder_mask:[-1,-1]" \
-        --log=error 
+        --log=error \
+        --soc_version=Ascend${chip_name}
     ```
 
    参数说明：
@@ -178,9 +179,7 @@
     + --decoder_file:decoder文件路径
     + --ctc_enable :ctc模块开关
 
-2. 精度数据
-    CER:1.52e+02
-
-
-
-
+2. 精度与性能数据
+    CER:6.74
+    Infer Time:1063s
+    RTF:0.02943
