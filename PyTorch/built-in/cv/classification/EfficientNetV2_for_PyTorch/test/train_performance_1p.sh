@@ -3,7 +3,7 @@
 #规避环境变量冲突
 if [ -f /usr/local/Ascend/bin/setenv.bash ];then
     unset PYTHONPATH
-    source /usr/local/Ascend/bin/setenv.bash  
+    source /usr/local/Ascend/bin/setenv.bash
 fi
 #集合通信参数,不需要修改
 export RANK_SIZE=1
@@ -19,7 +19,6 @@ Network="EfficientNetV2_for_Pytorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=256
-
 #参数校验，不需要修改
 for para in $*
 do

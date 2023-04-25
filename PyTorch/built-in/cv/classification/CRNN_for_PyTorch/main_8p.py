@@ -31,6 +31,17 @@ from easydict import EasyDict as edict
 
 import torch.distributed as dist
 import torch.utils.data.distributed
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 
 def parse_arg():
@@ -39,8 +50,10 @@ def parse_arg():
     parser.add_argument('--npu', help='npu id', type=str)
     parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
     parser.add_argument('--pro', type=ast.literal_eval, default=False, help='enable control steps number')
-    parser.add_argument('--training_debug', type=ast.literal_eval, default=False, help='enable control train_model is debug')
-    parser.add_argument('--training_type', type=ast.literal_eval, default=False, help="enable control train_model is 'GE' or 'CANN'")
+    parser.add_argument('--training_debug', type=ast.literal_eval,
+                        default=False, help='enable control train_model is debug')
+    parser.add_argument('--training_type', type=ast.literal_eval,
+                        default=False, help="enable control train_model is 'GE' or 'CANN'")
     parser.add_argument('--profiling', type=str, default='NONE',help='choose profiling way--CANN,GE,NONE')
     parser.add_argument('--max_step', default=10, type=int, help='start_step')
     parser.add_argument('--start_step', default=0, type=int, help='start_step')
@@ -225,6 +238,9 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
     end = time.time()
     num_steps = 0
     distributed = npus_per_node > 1
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
+
     for i, (inp, idx) in enumerate(train_loader):
         if not distributed and args.training_debug and i >= args.max_step:
             break
@@ -233,32 +249,27 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
         if not distributed and args.training_type and args.num_steps > args.stop_step:
             import sys
             sys.exit()
-        elif not distributed and args.start_step<= num_steps <= args.stop_step and args.profiling == 'CANN':
-            profiling = torch.npu.profile(profiler_result_path="./CANN_prof")
-        elif not distributed and num_steps <= args.stop_step and num_steps >= args.start_step and args.profiling == 'GE':
-            profiling = torch.npu.profile(profiler_result_path="./GE_prof")
+        profiler.start()
+        data_time.update((time.time() - end) * 1000)
+        labels = idx
+        inp = inp.to(device)
+        preds = model(inp)
+        batch_size = inp.size(0)
+        text, length = converter.encode(labels)
+        preds_size = torch.IntTensor([preds.size(0)] * batch_size)  # timestep * batchsize
+        text = text.to(device)
+        length = length.to(device)
+        preds_size = preds_size.to(device)
+        loss = criterion(preds, text, preds_size, length)
+        optimizer.zero_grad()
+        if config.TRAIN.AMP:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
         else:
-            profiling = NoProfiling()
-        with profiling:
-            data_time.update((time.time() - end) * 1000)
-            labels = idx
-            inp = inp.to(device)
-            preds = model(inp)
-            batch_size = inp.size(0)
-            text, length = converter.encode(labels)
-            preds_size = torch.IntTensor([preds.size(0)] * batch_size)  # timestep * batchsize
-            text = text.to(device)
-            length = length.to(device)
-            preds_size = preds_size.to(device)
-            loss = criterion(preds, text, preds_size, length)
-            optimizer.zero_grad()
-            if config.TRAIN.AMP:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
-            optimizer.step()
-            losses.update(loss.item(), inp.size(0))
+            loss.backward()
+        optimizer.step()
+        profiler.end()
+        losses.update(loss.item(), inp.size(0))
         if i == 9:
             batch_time.reset()
             data_time.reset()

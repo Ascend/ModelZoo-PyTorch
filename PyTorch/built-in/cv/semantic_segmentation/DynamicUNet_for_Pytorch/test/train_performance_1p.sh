@@ -12,7 +12,6 @@ more_path1=""
 
 # 指定训练所使用的npu device卡id
 device_id=0
-
 #参数校验，不需要修改
 for para in $*
 do
@@ -47,8 +46,8 @@ fi
 if [[ $more_path1 == "" ]];then
 	pretrained_model="./"
 else
-	pretrained_model=${more_path1}/resnet50-19c8e357.pth 
-fi 
+	pretrained_model=${more_path1}/resnet50-19c8e357.pth
+fi
 
 
 ###############指定训练脚本执行路径###############

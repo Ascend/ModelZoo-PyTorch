@@ -30,7 +30,17 @@ import bugfix
 import torch.nn as nn
 import torch.utils.data as data
 import torch.backends.cudnn as cudnn
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *paramers, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 from torchvision import transforms
 from core.data.dataloader import get_segmentation_dataset
 from core.models.model_zoo import get_segmentation_model
@@ -154,9 +164,7 @@ def parse_args():
                         help='profiling start step')
     parser.add_argument('--stop_step', type=int, default=100,
                         help='profiling stop_ step')
-
     args = parser.parse_args()
-
     # default settings for epochs, batch_size and lr
     if args.epochs is None:
         epoches = {
@@ -304,48 +312,36 @@ class Trainer(object):
         iter_end_time = start_time
         iter_time = 0
         logger.info(
-            'Start training, Total Epochs: {:d} = Total Iterations {:d}, Iter Per Epoch: {:d}'.format(epochs,
-                                                                                                      max_iters,
-                                                                                                      self.args.iters_per_epoch))
+            'Start training, Total Epochs: {:d} = Total Iterations {:d}, \
+                Iter Per Epoch: {:d}'.format(epochs, max_iters, self.args.iters_per_epoch))
 
         self.model.train()
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for iteration, (images, targets, _) in enumerate(self.train_loader):
             iteration = iteration + 1
             if iteration > self.args.stop_step and self.args.profiling != "None":
                 sys.exit()
 
-            elif iteration <= self.args.stop_step and iteration >= self.args.start_step  and self.args.profiling == 'CANN':
-                prof_manager = torch.npu.profile(profiler_result_path="./CANN_prof")
-            elif iteration <= self.args.stop_step and iteration >= self.args.start_step  and self.args.profiling == 'GE':
-                prof_manager = torch.npu.profile(profiler_result_path="./GE_prof")
+            self.lr_scheduler.step()
+            images = images.to(self.device)
+            targets = targets.to(self.device)
+            profiler.start()
+            outputs = self.model(images)
+            loss_dict = self.criterion(outputs, targets)
+            losses = sum(loss for loss in loss_dict.values())
+            # reduce losses over all GPUs for logging purposes
+            loss_dict_reduced = reduce_loss_dict(loss_dict)
+            losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+            self.optimizer.zero_grad()
+            if self.amp:
+                with apex.amp.scale_loss(losses, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
             else:
-                prof_manager = NoProfiling()
-
-            with prof_manager:
-                self.lr_scheduler.step()
-
-                images = images.to(self.device)
-                targets = targets.to(self.device)
-
-                outputs = self.model(images)
-                loss_dict = self.criterion(outputs, targets)
-
-                losses = sum(loss for loss in loss_dict.values())
-
-                # reduce losses over all GPUs for logging purposes
-                loss_dict_reduced = reduce_loss_dict(loss_dict)
-                losses_reduced = sum(loss for loss in loss_dict_reduced.values())
-
-                self.optimizer.zero_grad()
-
-                if self.amp:
-                    with apex.amp.scale_loss(losses, self.optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                else:
-                    losses.backward()
-
-                self.optimizer.step()
-                torch.cuda.synchronize()
+                losses.backward()
+            self.optimizer.step()
+            profiler.end()
+            torch.cuda.synchronize()
 
             current_iter_time = time.time() - iter_end_time
             if iteration < 5:

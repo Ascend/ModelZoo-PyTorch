@@ -4,9 +4,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,17 @@ import vision_transformer as vits
 from vision_transformer import DINOHead
 if torch.__version__ >= "1.8":
     import torch_npu
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -363,6 +373,8 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                     ema, args):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
     for it, (images, _) in enumerate(metric_logger.log_every(data_loader, 10, header)):
         # update weight decay and learning rate according to their schedule
         it = len(data_loader) * epoch + it  # global training iteration
@@ -374,7 +386,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
         # move images to gpu
         images = [im.npu(non_blocking=True) for im in images]
         # teacher and student forward passes + compute dino loss
-
+        profiler.start()
         teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
         student_output = student(images)
         loss = dino_loss(student_output, teacher_output, epoch)
@@ -399,7 +411,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                                               args.freeze_last_layer)
             optimizer.step()
             utils.patch_gradients_last_layer(epoch, student, args.freeze_last_layer)
-
+        profiler.end()
         # EMA update for the teacher
         with torch.no_grad():
             m = momentum_schedule[it]  # momentum parameter
@@ -429,10 +441,10 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
 
 class NpuSumImpl(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, input, dim):
-        ctx.input_shape = input.shape
+    def forward(ctx, x, dim):
+        ctx.input_shape = x.shape
         ctx.dim = dim
-        return torch.sum(input, dim=dim)
+        return torch.sum(x, dim=dim)
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -551,8 +563,8 @@ class DataAugmentationDINO(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('DINO', parents=[get_args_parser()])
-    args = parser.parse_args()
+    parsers = argparse.ArgumentParser('DINO', parents=[get_args_parser()])
+    args = parsers.parse_args()
     if args.bin:
         torch.npu.set_compile_mode(jit_compile=False)
     else:

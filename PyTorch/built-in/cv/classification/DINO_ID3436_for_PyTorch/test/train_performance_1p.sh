@@ -23,7 +23,6 @@ epochs=1
 device_id=0
 num_steps=200
 bin=True
-
 #参数校验，不需要修改
 for para in $*
 do
@@ -32,7 +31,7 @@ do
     elif [[ $para == --more_path1* ]];then
         more_path1=`echo ${para#*=}`
     elif [[ $para == --bin* ]];then
-        bin=`echo ${para#*=}`        
+        bin=`echo ${para#*=}`
     fi
 done
 

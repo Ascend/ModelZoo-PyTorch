@@ -40,19 +40,29 @@ from datetime import datetime
 import torch
 if torch.__version__ >= "1.8":
     import torch_npu
-import torch_npu
 from torch_npu.contrib import transfer_to_npu
 import torch.nn as nn
 import torchvision.utils
 from torch.nn.parallel import DistributedDataParallel as NativeDDP
 from timm.models.efficientnet_blocks import ConvBnAct
 from timm.models.layers import drop_path
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint,\
     convert_splitbn_model, model_parameters
 from timm.utils import *
-from timm.loss import *
+from timm.loss import JsdCrossEntropy, LabelSmoothingCrossEntropy, SoftTargetCrossEntropy,\
+    BinaryCrossEntropy
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler
 from timm.utils import ApexScaler, NativeScaler
@@ -337,8 +347,7 @@ parser.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='convert model torchscript for inference')
 parser.add_argument('--log-wandb', action='store_true', default=False,
                     help='log training and validation metrics to wandb')
-parser.add_argument("--perf-steps", default=-1, type=int)                    
-
+parser.add_argument("--perf-steps", default=-1, type=int)
 
 def _parse_args():
     # Do we have a config file to parse?
@@ -360,14 +369,13 @@ def _parse_args():
 def main():
     setup_default_logging()
     args, args_text = _parse_args()
-    
     if args.log_wandb:
         if has_wandb:
             wandb.init(project=args.experiment, config=args)
-        else: 
+        else:
             _logger.warning("You've requested to log metrics to wandb but package not found. "
                             "Metrics not being logged to wandb, try `pip install wandb`")
-             
+
     args.prefetcher = not args.no_prefetcher
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
@@ -740,6 +748,8 @@ def train_one_epoch(
     end = time.time()
     last_idx = len(loader) - 1
     num_updates = epoch * len(loader)
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
     for batch_idx, (input, target) in enumerate(loader):
         if args.perf_steps > 0 and batch_idx > args.perf_steps:
             exit()
@@ -751,7 +761,7 @@ def train_one_epoch(
                 input, target = mixup_fn(input, target)
         if args.channels_last:
             input = input.contiguous(memory_format=torch.channels_last)
-
+        profiler.start()
         with amp_autocast():
             output = model(input)
             loss = loss_fn(output, target)
@@ -773,7 +783,7 @@ def train_one_epoch(
                     model_parameters(model, exclude_head='agc' in args.clip_mode),
                     value=args.clip_grad, mode=args.clip_mode)
             optimizer.step()
-
+        profiler.end()
         if model_ema is not None:
             if str(os.environ['use_amp']) == 'apex':
                 model_ema.update(model, optimizer.get_model_combined_params()[0])
