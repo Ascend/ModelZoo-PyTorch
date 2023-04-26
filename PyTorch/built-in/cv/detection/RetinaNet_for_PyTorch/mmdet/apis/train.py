@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import time
 import random
 
 import numpy as np
@@ -26,6 +28,43 @@ from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.utils import get_root_logger
 from apex import amp
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
+
+def train(self, data_loader, **kwargs):
+    self.model.train()
+    self.mode = 'train'
+    self.data_loader = data_loader
+    self._max_iters = self._max_epochs * len(self.data_loader)
+    self.call_hook('before_train_epoch')
+    time.sleep(2)  # Prevent possible deadlock during epoch transition
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+    for i, data_batch in enumerate(self.data_loader):
+        self._inner_iter = i
+        profile.start()
+        self.call_hook('before_train_iter')
+        self.run_iter(data_batch, train_mode=True)
+        self.call_hook('after_train_iter')
+        profile.end()
+        self._iter += 1
+
+    self.call_hook('after_train_epoch')
+    self._epoch += 1
+
+EpochBasedRunner.train = train
 
 def set_random_seed(seed, deterministic=False):
     """Set random seed.
@@ -100,12 +139,10 @@ def train_detector(model,
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
     else:
-        # torch.npu.set_device(cfg.gpu_ids[0])
         model = MMDataParallel(
             model.npu(), device_ids=cfg.gpu_ids)
 
     # build runner
-    # optimizer = build_optimizer(model, cfg.optimizer)
     runner = EpochBasedRunner(
         model,
         optimizer=optimizer,

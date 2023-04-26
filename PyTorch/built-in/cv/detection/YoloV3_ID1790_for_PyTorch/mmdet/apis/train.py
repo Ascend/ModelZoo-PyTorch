@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import time
 import random
 
 import numpy as np
@@ -19,7 +21,6 @@ import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          Fp16OptimizerHook, OptimizerHook, build_optimizer)
-from .runner_profiling import RunnerProfiling
 from mmcv.utils import build_from_cfg
 
 from mmdet.core import DistEvalHook, EvalHook
@@ -27,7 +28,45 @@ from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.utils import get_root_logger
 from apex import amp
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
 
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
+from .runner_profiling import RunnerProfiling
+
+
+def train(self, data_loader, **kwargs):
+    self.model.train()
+    self.mode = 'train'
+    self.data_loader = data_loader
+    self._max_iters = self._max_epochs * len(self.data_loader)
+    self.call_hook('before_train_epoch')
+    time.sleep(2)  # Prevent possible deadlock during epoch transition
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
+    for i, data_batch in enumerate(self.data_loader):
+        self._inner_iter = i
+        profile.start()
+        self.call_hook('before_train_iter')
+        self.run_iter(data_batch, train_mode=True)
+        self.call_hook('after_train_iter')
+        profile.end()
+        self._iter += 1
+
+    self.call_hook('after_train_epoch')
+    self._epoch += 1
+
+EpochBasedRunner.train = train
 
 def set_random_seed(seed, deterministic=False):
     """Set random seed.
