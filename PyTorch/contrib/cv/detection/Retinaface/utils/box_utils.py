@@ -159,16 +159,16 @@ def match(threshold, truths, priors, variances, labels, landms, loc_t, conf_t, l
     truths = truths.npu()
     labels = labels.npu()
     best_truth_idx = best_truth_idx.npu()
-    matches = truths.index_select(0, best_truth_idx).cpu()
+    matches = truths.index_select(0, best_truth_idx)
     #matches = truths[best_truth_idx]            # Shape: [num_priors,4] each anchor related to a bbox
-    conf = labels.index_select(0, best_truth_idx).cpu()
+    conf = labels.index_select(0, best_truth_idx)
     #conf = labels[best_truth_idx]               # Shape: [num_priors]   each anchor related to label
 
     conf[best_truth_overlap < threshold] = 0    # label as background   overlap<0.35 as negative sample
     loc = encode(matches, priors, variances)
     #matches_landm = landms[best_truth_idx]
     landms = landms.npu()
-    matches_landm = landms.index_select(0, best_truth_idx).cpu()
+    matches_landm = landms.index_select(0, best_truth_idx)
     landm = encode_landm(matches_landm, priors, variances)
     loc_t[idx] = loc    # [num_priors,4] encoded offsets to learn
     conf_t[idx] = conf  # [num_priors] top class label for each prior

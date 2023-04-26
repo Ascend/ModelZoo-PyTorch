@@ -224,7 +224,7 @@ def main_worker(gpu, ngpus_per_node, args):
         priors = priorbox.forward()
     priors = priors.to(loc)
     optimizer = optim.SGD(net.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
-    criterion = MultiBoxLoss(num_classes, 0.35, True, 0, True, 7, 0.35, False).cpu()
+    criterion = MultiBoxLoss(num_classes, 0.35, True, 0, True, 7, 0.35, False)
     if args.amp:
         print("---use amp---")
         net, optimizer = amp.initialize(net, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
@@ -340,8 +340,7 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
         adjust_learning_rate(optimizer, gamma, epoch, step_index, train_loader_len* epoch + i, train_loader_len)
 
         images = images.to(loc, non_blocking=True)
-        #targets = [anno.to(loc, non_blocking=True) for anno in target]
-        targets = [anno.cpu() for anno in target]
+        targets = [anno.to(loc) for anno in target]
         optimizer.zero_grad()
         # compute output
         if i == 11 and not args.distributed:
@@ -349,7 +348,7 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
             with torch.autograd.profiler.profile(use_npu=True) as prof:
                 out = model(images)
                 # backprop
-                loss_l, loss_c, loss_landm = criterion(out, priors.cpu(), targets, args.gpu)
+                loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
                 loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
                 if args.amp:
                     with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -360,7 +359,7 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
             prof.export_chrome_trace("output.prof")
         else:
             out = model(images)
-            loss_l, loss_c, loss_landm = criterion(out, priors.cpu(), targets, args.gpu)
+            loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
             loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
             if args.amp:
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
