@@ -169,7 +169,7 @@
 
 1. 对数据集推理  
     python3 infer_and_export.py results/transformer/8886/hyperparams.yaml --device cpu --mode "infer" \
---npu_rank 0 --encoder_file encoder.om --decoder_file decoder.om --ctc_enable True
+--npu_rank 0 --encoder_file encoder.om --decoder_file decoder.om 
     ```
     参数说明：
     + --device :固定传入参数“cpu”
@@ -177,9 +177,5 @@
     + --npu_rank :推理使用的npu设备
     + --encoder_file:encoder文件路径
     + --decoder_file:decoder文件路径
-    + --ctc_enable :ctc模块开关
 
-2. 精度与性能数据
-    CER:6.74
-    Infer Time:1063s
-    RTF:0.02943
+
