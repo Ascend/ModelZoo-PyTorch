@@ -15,12 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import argparse
-import ast
 import functools
 import glob
 import logging
 import os
 import re
+import ast
 from unittest import mock
 
 import yaml
@@ -48,6 +48,20 @@ def parse_args():
                         help='the test data')
     parser.add_argument('--onnx', default=True, type=ast.literal_eval,
                         help="convert pth model to onnx")
+
+    # 训练参数
+    parser.add_argument('--npu', default='0', help='npu id', type=str)
+    parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
+    parser.add_argument('--pro', type=ast.literal_eval, default=False, help='enable control steps number')
+    parser.add_argument('--training_debug', type=ast.literal_eval,
+                        default=False, help='enable control train_model is debug')
+    parser.add_argument('--training_type', type=ast.literal_eval,
+                        default=False, help="enable control train_model is 'GE' or 'CANN'")
+    parser.add_argument('--profiling', type=str, default='NONE',help='choose profiling way--CANN,GE,NONE')
+    parser.add_argument('--max_step', default=10, type=int, help='start_step')
+    parser.add_argument('--start_step', default=0, type=int, help='start_step')
+    parser.add_argument('--stop_step', default=1000, type=int,help='stop_step')
+
     args = parser.parse_args()
 
     return args
@@ -57,21 +71,20 @@ def load_args_from_config_file(params_file_path):
     with open(params_file_path, 'r') as params_file:
         params_config = yaml.load(params_file)
         params_config = EasyDict(params_config)
-    print("Load params config from %s success: %r" %
-          (params_file_path, params_config))
+    print("Load params config from %s success: %r" % (params_file_path, params_config))
     return params_config
 
 
 def mock_main_parse_arg():
-    params_file_path = os.path.join(modelarts_utils.get_cur_path(__file__),
-                                    os.path.pardir, "LMDB_config.yaml")
+    params_file_path = os.path.join(modelarts_utils.get_cur_path(__file__), os.path.pardir, "LMDB_config.yaml")
     config = load_args_from_config_file(params_file_path)
 
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
     config.DATASET.TRAIN_ROOT = _CACHE_TRAIN_DATA_URL
     config.DATASET.TEST_ROOT = _CACHE_TEST_DATA_URL
+    config.OUTPUT_DIR = _CACHE_TRAIN_OUT_URL
 
-    return config
+    return config, parse_args()
 
 
 @mock.patch.object(train_main, 'parse_arg', mock_main_parse_arg)
@@ -129,12 +142,14 @@ def main():
 
         # 改变工作目录，用于模型保存
         os.makedirs(_CACHE_TRAIN_OUT_URL, exist_ok=True)
-        os.chdir(_CACHE_TRAIN_OUT_URL)
 
         train()
+
         if args.onnx:
-            print("convert pth to onnx")
-            convert_pth_to_onnx()
+           print("convert pth to onnx")
+           convert_pth_to_onnx()
+
+        os.makedirs("/cache/train_url/abc", exist_ok=True)
 
         mox.file.copy_parallel(_CACHE_TRAIN_OUT_URL, args.train_url)
     except ModuleNotFoundError:
