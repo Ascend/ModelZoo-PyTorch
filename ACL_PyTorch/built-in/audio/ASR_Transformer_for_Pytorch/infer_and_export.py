@@ -55,9 +55,7 @@ class ASR(sb.core.Brain):
             checkpointer=checkpointer,
             profiler=profiler,
         )
-        if run_opts['mode'] == 'infer':
-            self.encoder_sess_om = InferSession(run_opts['npu_rank'], run_opts['encoder_file'])
-            self.decoder_sess_om = InferSession(run_opts['npu_rank'], run_opts['decoder_file'])
+
 
     def export_encoder_onnx(self, src, tokens_bos, wav_lens, pad_index):
         pad_index = torch.from_numpy(np.array([pad_index])).to(self.device)
@@ -89,24 +87,30 @@ class ASR(sb.core.Brain):
             do_constant_folding=True,
             opset_version=11
         )
-    
-    def encoder_om_infer(self, src, tokens_bos, wav_lens, pad_index):
+    #src, tokens_bos, wav_lens, self.hparams.pad_index, encoder_model, decoder_model
+    def encoder_om_infer(self, src, tokens_bos, wav_lens, pad_index, encoder_model):
+
         src_np = src.cpu().numpy()
+
         src_np = np.ascontiguousarray(src_np)
+
         tokens_bos_np = tokens_bos.cpu().numpy()
+
         wav_lens_np = wav_lens.cpu().numpy()
+
         pad_index_np = np.expand_dims(np.array(pad_index), axis=0)
 
         outputSizes = 10000000
-        
-        result = self.encoder_sess_om.infer([src_np, wav_lens_np], 'dymshape', custom_sizes=outputSizes)
-    
+
+        result = encoder_model.infer([src_np, wav_lens_np], 'dymshape', custom_sizes=outputSizes)
+
         enc_out_om = torch.from_numpy(result[0]).to(self.device)
 
         return enc_out_om
-
-    def compute_forward(self, batch, stage):
+#batch, stage, device_id, encoder_model, decoder_model
+    def compute_forward(self, batch, stage, device_id,encoder_model, decoder_model):
         """Forward computations from the waveform batches to the output probabilities."""
+
         batch = batch.to(self.device)
         wavs, wav_lens = batch.sig
         tokens_bos, _ = batch.tokens_bos
@@ -120,15 +124,20 @@ class ASR(sb.core.Brain):
                 tokens_bos = torch.cat([tokens_bos, tokens_bos], dim=0)
 
         # compute features
+
+
         feats = self.hparams.compute_features(wavs)
+
         current_epoch = self.hparams.epoch_counter.current
+
         feats = self.hparams.normalize(feats, wav_lens, epoch=current_epoch)
+
 
         # forward modules
         src = self.hparams.CNN(feats)
 
         # Transformer om infer
-        enc_out = self.encoder_om_infer(src, tokens_bos, wav_lens, self.hparams.pad_index)
+        enc_out = self.encoder_om_infer(src, tokens_bos, wav_lens, self.hparams.pad_index, encoder_model)
 
         # Compute outputs
         hyps = None
@@ -142,8 +151,9 @@ class ASR(sb.core.Brain):
                 # and no LM to give user some idea of how the AM is doing
                 hyps, _ = self.hparams.valid_search(enc_out.detach(), wav_lens)
         elif stage == sb.Stage.TEST:
-            hyps, _ = self.hparams.test_search(self.decoder_sess_om, enc_out.detach(), wav_lens, run_opts['ctc_enable'])
-        
+
+            hyps, _ = self.hparams.test_search(decoder_model, enc_out.detach(), wav_lens, run_opts['ctc_enable'])
+
         return None, None, None, hyps
 
     def compute_objectives(self, predictions, batch, stage):
@@ -200,13 +210,15 @@ class ASR(sb.core.Brain):
             self.hparams.noam_annealing(self.optimizer)
 
         return loss.detach()
-
-    def evaluate_batch(self, batch, stage):
+#batch, Stage.TEST, device_id, encoder_model, decoder_model, out_que
+    def evaluate_batch(self, batch, stage, device_id, encoder_model, decoder_model, out_que):
         """Computations needed for validation/test batches"""
         with torch.no_grad():
-            predictions = self.compute_forward(batch, stage=stage)
+
+            predictions = self.compute_forward(batch, stage, device_id, encoder_model, decoder_model)
             loss = self.compute_objectives(predictions, batch, stage=stage)
-        return loss
+            out_que.put(loss)
+        return out_que
 
     def on_stage_start(self, stage, epoch):
         """Gets called at the beginning of each epoch"""
@@ -481,7 +493,7 @@ if __name__ == "__main__":
 
         # Testing
         infer_start = time.time()
-        asr_brain.evaluate(test_data, test_loader_kwargs=hparams["test_dataloader_opts"])
+        asr_brain.evaluate(test_data, test_loader_kwargs=hparams["test_dataloader_opts"], encoder_path=run_opts["encoder_file"], decopder_path=run_opts["decoder_file"])
         infer_end = time.time()
         infer_time = infer_end - infer_start
         RTF = (infer_end - infer_start) / test_duration
