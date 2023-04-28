@@ -44,8 +44,15 @@ def main(opt, qtepoch=[0,]):
   if opt.use_fp32:
       option = {}
       option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+      if opt.hf32:
+          torch.npu.conv.allow_hf32 = True
+          torch.npu.matmul.allow_hf32 = True
+      if opt.fp32:
+          torch.npu.conv.allow_hf32 = False
+          torch.npu.matmul.allow_hf32 = False
       torch.npu.set_option(option)
       torch.npu.config.allow_internal_format=False
+
 
   torch.manual_seed(opt.seed)
   torch.backends.cudnn.benchmark = not opt.not_cuda_benchmark and not opt.test
