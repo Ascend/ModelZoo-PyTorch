@@ -123,6 +123,10 @@ class opts(object):
     self.parser.add_argument('--trainval', action='store_true',
                              help='include validation in training and '
                                   'test on test set')
+    self.parser.add_argument('--hf32', action='store_true',
+                             help='enable_hi_float_32_execution')
+    self.parser.add_argument('--fp32', action='store_true',
+                             help='disble_hi_float_32_execution')
     self.parser.add_argument(
         "--pretrained",
         dest="pretrained",

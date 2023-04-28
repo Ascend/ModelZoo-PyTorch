@@ -24,6 +24,10 @@ do
         precision_mode=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
     fi
@@ -92,7 +96,7 @@ ln -s ${data_path} ${default_data_path}/.
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 cd $cur_path/src
 {
-python3 main.py $PREC --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=160 --device_list=$device_id
+python3 main.py $PREC ${fp32} ${hf32} --batch_size=$batch_size --lr=5e-4 --lr_step='75,95' --num_epochs=160 --device_list=$device_id
 python3 test_wider_face.py
 cd $cur_path/evaluate
 python3 setup.py build_ext --inplace
@@ -123,10 +127,12 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $precision_mode == "must_keep_origin_dtype" ]];then
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
 else
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 fi
 
 #获取性能数据，不需要修改
