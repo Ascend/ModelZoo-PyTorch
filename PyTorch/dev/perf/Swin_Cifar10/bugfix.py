@@ -15,6 +15,7 @@
 
 import torch
 from torch import nn
+import models
 
 class PatchMergingFixed(models.swin.PatchMerging):
     def forward(self, x):
