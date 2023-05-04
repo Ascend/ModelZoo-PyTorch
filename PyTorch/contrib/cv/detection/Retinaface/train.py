@@ -117,13 +117,15 @@ process_device_map = device_id_to_process_device_map(args.device_list)
 
 
 def main():
-    option = {}
-    if args.hf32:
-        torch.npu.conv.allow_hf32 = True
-        torch.npu.matmul.allow_hf32 = True
     if args.fp32:
+        torch.npu.config.allow_internal_format = False
         torch.npu.conv.allow_hf32 = False
         torch.npu.matmul.allow_hf32 = False
+    if args.hf32:
+        torch.npu.config.allow_internal_format = False
+    option = {}
+    if args.fp32 == False and args.hf32 == False:
+        option["ACL_PRECISION_MODE"] = "allow_fp32_to_fp16"
     torch.npu.set_option(option)
     print("===============main()=================")
     print(args)
