@@ -33,14 +33,14 @@ learning_rate=0.045
 
 
 
-#维测参数，precision_mode需要模型审视修改
-precision_mode="allow_mix_precision"
 #维持参数，以下不需要修改
 over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling=False
 
+#精度模式
+precision_mode="allow_mix_precision"
 
 if [[ $1 == --help || $1 == --h ]];then
    echo "usage:./train_performance_1p.sh --data_path=data_dir --batch_size=1024 --learning_rate=0.04"
@@ -57,12 +57,19 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
-PREC=""
-if [[ $precision_mode == "amp" ]];then
-  PREC="--amp"
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec="--opt-level O0"
+else
+    prec="--amp"
 fi
 
 #校验是否传入data_path,不需要修改
@@ -139,9 +146,12 @@ then
         --rank 0 \
         --gpu $i \
         --device-list '0,1,2,3,4,5,6,7' \
-        --amp \
+        ${prec} \
         --benchmark 0 \
         --perf \
+        --precision_mode $precision_mode\
+        ${fp32} \
+        ${hf32} \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 else
@@ -164,9 +174,11 @@ else
         --rank 0 \
         --gpu $i \
         --device-list '0,1,2,3,4,5,6,7' \
-        --amp \
+        ${prec} \
         --benchmark 0 \
         --perf \
+        ${fp32} \
+        ${hf32} \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 fi
@@ -196,7 +208,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量

@@ -44,14 +44,16 @@ def main(opt, qtepoch=[0,]):
   if opt.use_fp32:
       option = {}
       option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
+      torch.npu.config.allow_internal_format=False
       if opt.hf32:
           torch.npu.conv.allow_hf32 = True
           torch.npu.matmul.allow_hf32 = True
       if opt.fp32:
           torch.npu.conv.allow_hf32 = False
           torch.npu.matmul.allow_hf32 = False
-      torch.npu.set_option(option)
-      torch.npu.config.allow_internal_format=False
+  else not opt.use_fp32:
+        option["ACL_PRECISION_MODE"] = "allow_fp32_to_fp16"
+  torch.npu.set_option(option)
 
 
   torch.manual_seed(opt.seed)

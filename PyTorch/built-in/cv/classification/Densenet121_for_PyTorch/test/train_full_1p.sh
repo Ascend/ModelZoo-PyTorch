@@ -48,16 +48,20 @@ do
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
       device_id=`echo ${para#*=}`
     fi
 done
 
-PREC=""
-if [[ $precision_mode == "amp" ]];then
-  PREC="--amp"
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec="--opt-level O0"
+else
+    prec="--amp"
 fi
-
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
@@ -116,13 +120,15 @@ nohup python3.7 ${cur_path}/main.py  \
       --arch densenet121 \
       --lr 0.1 \
       --momentum 0.9 \
-      --amp \
+      ${prec} \
       --print-freq 1 \
       --eval-freq 5 \
       --gpu $device_id \
       --batch-size $batch_size \
       --epochs $train_epochs \
       --dist-backend 'hccl' \
+      ${fp32} \
+      ${hf32} \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
@@ -151,7 +157,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
