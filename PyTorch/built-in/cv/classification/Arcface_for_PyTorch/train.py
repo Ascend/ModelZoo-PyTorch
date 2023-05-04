@@ -220,12 +220,13 @@ def main(args):
         torch.distributed.barrier()
         if isinstance(train_loader, DataLoader):
             train_loader.sampler.set_epoch(epoch)
-        if args.profiling == 'True':
-            args.perf_steps = args.stop_step
         profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
                            profile_type=os.getenv("PROFILE_TYPE"))
         for _, (img, local_labels) in enumerate(train_loader):
             global_step += 1
+            # control exec time to avoid taking too long
+            if args.perf_steps and global_step > args.perf_steps:
+                exit(0)
             start_time = time.time()
             img = img.npu()
             local_labels = local_labels.npu()
