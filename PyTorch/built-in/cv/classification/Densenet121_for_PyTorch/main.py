@@ -599,10 +599,4 @@ def accuracy(output, target, topk=(1,)):
 
 if __name__ == '__main__':
     
-    option = {}
-    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
-    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
-    print("option:", option)
-    torch.npu.set_option(option)
-
     main()
