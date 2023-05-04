@@ -40,8 +40,6 @@ import torchvision.transforms as transforms
 import bugfix
 from utils import progress_bar
 from randomaug import RandAugment
-from models.vit import ViT
-from models.convmixer import ConvMixer
 
 class LabelSmoothing(nn.Module):
     """
@@ -171,16 +169,22 @@ def get_net(args):
     # Model factory..
     print('==> Building model..')
     if args.net=='res18':
+        from models import ResNet18
         net = ResNet18()
     elif args.net=='vgg':
+        from models import VGG
         net = VGG('VGG19')
     elif args.net=='res34':
+        from models import ResNet34
         net = ResNet34()
     elif args.net=='res50':
+        from models import ResNet50
         net = ResNet50()
     elif args.net=='res101':
+        from models import ResNet101
         net = ResNet101()
     elif args.net=="convmixer":
+        from models.convmixer import ConvMixer
         # from paper, accuracy >96%. you can tune the depth and dim to scale accuracy and speed.
         net = ConvMixer(256, 16, kernel_size=args.convkernel, patch_size=1, n_classes=10)
     elif args.net=="mlpmixer":
