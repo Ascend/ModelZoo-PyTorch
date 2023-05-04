@@ -106,19 +106,15 @@ def parse_args():
 
 def main():
     args = parse_args()
-
-    if args.precision_mode == 'must_keep_origin_dtype':
-        option = {}
-        option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype" 
-        torch.npu.set_option(option)
-        torch.npu.config.allow_internal_format=False
     option = {}
-    if args.hf32:
-        torch.npu.conv.allow_hf32 = True
-        torch.npu.matmul.allow_hf32 = True
-    if args.fp32:
-        torch.npu.conv.allow_hf32 = False
-        torch.npu.matmul.allow_hf32 = False
+    if args.precision_mode == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format = False  # 全局ND开关，默认值True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False  # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False  # matmul支持HF32开关，默认值True
+    elif args.precision_mode == 'allow_mix_precision':
+        option["ACL_PRECISION_MODE"] = "allow_fp32_to_fp16"
+        # ACL层精度模式，默认值must_keep_origin_dtype
     torch.npu.set_option(option)
 
     os.environ['MASTER_ADDR'] = args.master_addr
