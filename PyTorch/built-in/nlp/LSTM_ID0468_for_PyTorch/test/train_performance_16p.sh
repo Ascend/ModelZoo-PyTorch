@@ -29,9 +29,9 @@ devicesnum=""
 #网络名称，同目录名称
 Network="LSTM_ID0468_for_PyTorch"
 #训练epoch
-train_epochs=0
+train_epochs=1
 #训练batch_size
-batch_size=128
+batch_size=1024
 #训练step
 train_steps=10000
 #学习率
@@ -90,6 +90,10 @@ do
         conf_path=`echo ${para#*=}`
     elif [[ $para == --server_index* ]];then
         server_index=`echo ${para#*=}`
+    elif [[ $para == --train_epochs* ]];then
+        train_epochs=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -121,7 +125,8 @@ export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'
 cd $cur_path/NPU/8p/
 
 #训练前修改参数配置
-sed -i "s|num_epoches: 30|num_epoches: 1|g" conf/ctc_config.yaml
+sed -i "s|batch_size: 1024|batch_size: ${batch_size}|g" conf/ctc_config.yaml
+sed -i "s|num_epoches: 30|num_epoches: ${train_epochs}|g" conf/ctc_config.yaml
 sed -i "s|data|${data_path}|g" conf/ctc_config.yaml
 sed -i "s|from torch.utils.tensorboard import SummaryWriter|from tensorboardX import SummaryWriter|g" steps/train_ctc.py
 sed -i "s|data|${data_path}|g" ${data_path}/train/fbank.scp
@@ -185,7 +190,8 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #训练完恢复参数配置
-sed -i "s|num_epoches: 1|num_epoches: 30|g" conf/ctc_config.yaml
+sed -i "s|batch_size: ${batch_size}|batch_size: 1024|g" conf/ctc_config.yaml
+sed -i "s|num_epoches: ${train_epochs}|num_epoches: 30|g" conf/ctc_config.yaml
 sed -i "s|${data_path}|data|g" conf/ctc_config.yaml
 sed -i "s|from tensorboardX import SummaryWriter|from torch.utils.tensorboard import SummaryWriter|g" steps/train_ctc.py
 sed -i "s|${data_path}|data|g" ${data_path}/train/fbank.scp

@@ -78,6 +78,8 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -109,6 +111,7 @@ fi
 cd $cur_path/timit/
 
 #训练前修改参数配置
+sed -i "s|batch_size: 128|batch_size: ${batch_size}|g" conf/ctc_config.yaml
 sed -i "s|data|${data_path}|g" conf/ctc_config.yaml
 sed -i "s|data|${data_path}|g" ${data_path}/train/fbank.scp
 sed -i "s|data|${data_path}|g" ${data_path}/dev/fbank.scp
@@ -155,6 +158,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #训练完恢复参数配置
+sed -i "s|batch_size: ${batch_size}|batch_size: 128|g" conf/ctc_config.yaml
 sed -i "s|${data_path}|data|g" conf/ctc_config.yaml
 sed -i "s|${data_path}|data|g" ${data_path}/train/fbank.scp
 sed -i "s|${data_path}|data|g" ${data_path}/dev/fbank.scp
