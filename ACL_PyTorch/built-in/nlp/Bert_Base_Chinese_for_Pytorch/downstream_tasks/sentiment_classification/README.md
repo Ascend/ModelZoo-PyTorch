@@ -142,7 +142,7 @@
 1. 模型转换
 
    1. 获取权重文件
-     使用[原仓代码](https://github.com/Tongjilibo/bert4torch/blob/master/examples/sentence_classfication/task_sentiment_classification.py) 训练得到权重。
+     [权重链接](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Bert-Base_Chinese/PTH/Sentiment_Cls/best_model.pt)
 
    2. 导出onnx文件
 
