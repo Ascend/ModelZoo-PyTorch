@@ -73,14 +73,20 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
    >该数据集的训练过程脚本只作为一种参考示例。 
 
 ## 获取预训练模型
-   请参考原始仓库上的README.md进行预训练模型获取。将获取的预训练模型bert-large-cased放在源码根目录下。在获取预训练模型之前需执行以下命令。
+   请参考原始仓库上的README.md进行预训练模型获取。将获取的预训练模型bert-large-cased/bert-base-cased放在源码根目录下。在获取预训练模型之前需执行以下命令。
    ```
     git lfs install 
    ```
    在预训练模型下载完毕之后执行以下命令：
-   ```
-    cp -f ./config.json ./bert-large-cased/
-   ```
+   
+   - bert-large-cased 请执行：
+     ```
+     cp -f ./config.json ./bert-large-cased/
+     ```
+   - bert-base-cased 请执行： 
+     ```
+     cp -f ./bert_base_cased_config.json ./bert-base-cased/config.json
+     ```
 
 # 开始训练
 
