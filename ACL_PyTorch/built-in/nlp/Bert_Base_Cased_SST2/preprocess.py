@@ -39,8 +39,8 @@ def padding(result, seq_lens):
             pad_input = np.pad(input_ids, ((0, 0 ), (0, pad_num)))
             pad_mask = np.pad(attention_mask, ((0, 0 ), (0, pad_num)))
             return pad_input, pad_mask, seq_len
-    restore_ids = input_ids[:, :, :seq_len]
-    restore_mask = attention_mask[:, :, seq_len]
+    restore_ids = np.hstack((input_ids[:, :seq_len - 1], input_ids[:, -1:]))
+    restore_mask = attention_mask[:, :seq_len]
     return restore_ids, restore_mask, seq_len
 
 
