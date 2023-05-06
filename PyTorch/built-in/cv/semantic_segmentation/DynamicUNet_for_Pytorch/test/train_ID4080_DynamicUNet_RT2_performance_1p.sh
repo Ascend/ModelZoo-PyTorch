@@ -22,6 +22,9 @@ stop_step=20
 bin_mode=True
 perf_iter=-1
 
+#精度参数
+precision_mode="allow_mix_precision"
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -49,6 +52,12 @@ do
         bin_mode=`echo ${para#*=}`
     elif [[ $para == --perf_iter* ]];then
         perf_iter=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
 	fi
 done
 
@@ -66,6 +75,12 @@ if [[ $more_path1 == "" ]];then
 	pretrained_model="./"
 else
 	pretrained_model=${more_path1}/resnet50-19c8e357.pth
+fi
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+   prec=""
+else
+   prec="--amp"
 fi
 
 ###############指定训练脚本执行路径###############
@@ -106,7 +121,7 @@ start_time=$(date +%s)
 export PYTHONPATH=./awesome-semantic-segmentation-pytorch:$PYTHONPATH
 
 nohup python3 -u runner.py \
---model dynamicunet --amp \
+--model dynamicunet ${prec} \
 --dataset pascal_voc --dataset-path ${data_path} \
 --lr ${lr} \
 --epochs ${epochs} \
@@ -119,7 +134,8 @@ nohup python3 -u runner.py \
 --stop_step ${stop_step} \
 --perf_iter ${perf_iter} \
 --bin_mode ${bin_mode} \
->${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+--precision_mode ${precision_mode} \
+${hf32} ${fp32} >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -149,7 +165,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
