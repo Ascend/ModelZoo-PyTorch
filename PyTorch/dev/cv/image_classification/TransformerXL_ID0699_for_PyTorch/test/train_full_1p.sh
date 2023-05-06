@@ -24,6 +24,8 @@ learning_rate=0.495
 
 #参数配置
 data_path=""
+#维测参数，precision_mode需要模型审视修改
+precision_mode="allow_mix_precision"
 
 if [[ $1 == --help || $1 == --h ]];then
 	echo "usage:./train_performance_1p.sh "
@@ -32,15 +34,28 @@ fi
 
 for para in $*
 do
-	if [[ $para == --data_path* ]];then
-		data_path=`echo ${para#*=}`
-	fi
+    if [[ $para == --data_path* ]];then
+        data_path=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
+    elif [[ $para == --fp32* ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32* ]];then
+        hf32=`echo ${para#*=}`
+    fi
 done
 
 if [[ $data_path  == "" ]];then
 	echo "[Error] para \"data_path\" must be config"
 	exit 1
 fi
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+   prec=""
+else
+   prec="--fp16"
+fi
+
 ##############执行训练##########
 cd $cur_path
 if [ -d $cur_path/test/output ];then
@@ -62,9 +77,9 @@ nohup python3 -m torch.distributed.launch \
 	--work_dir=$cur_path/test/output/$ASCEND_DEVICE_ID \
 	--batch_size=$batch_size \
     --batch_chunk=16 \
-	--fp16 \
 	--data=$data_path \
-	--max_step=40000 > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+	--max_step=40000 \
+	--precision_mode=$precision_mode ${fp32} ${hf32} ${prec} > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
 e2e_time=$(( $end - $start ))
@@ -74,7 +89,13 @@ BatchSize=${batch_size}
 #设备类型，自动获取
 DeviceType=`uname -m`
 #用例名称，自动获取
-CaseName=${Network}_bs${BatchSize}_${RankSize}'p'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 #结果打印，不需要修改
 echo "-------------------- Final result --------------------"
