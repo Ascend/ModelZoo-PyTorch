@@ -149,7 +149,6 @@ then
         ${prec} \
         --benchmark 0 \
         --perf \
-        --precision_mode $precision_mode\
         ${fp32} \
         ${hf32} \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
