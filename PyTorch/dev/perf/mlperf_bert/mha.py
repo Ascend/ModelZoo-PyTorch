@@ -15,8 +15,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from apex.contrib.multihead_attn import fast_mask_softmax_dropout_func
-
 from bmm1 import *
 from bmm2 import *
 from padding import *

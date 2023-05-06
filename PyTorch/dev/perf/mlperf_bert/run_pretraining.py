@@ -25,38 +25,29 @@ import csv
 import h5py
 import os
 import glob
-import numpy as np
-import torch
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Dataset
-from torch.utils.data.distributed import DistributedSampler
 import logging
 import math
 import multiprocessing
-import numpy as np
-import os
 import random
 import re
 import time
 
 from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
-from modeling import BertForPretraining, BertConfig
-from schedulers import LinearWarmupPolyDecayScheduler
 
-import utils
-
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Dataset
 from torch.utils.data.distributed import DistributedSampler
-import amp_C
 
+import amp_C
 import apex_C
 from apex import amp
 from apex.amp import _amp_state
 from apex.optimizers import FusedLAMB
-from apex.parallel import DistributedDataParallel as DDP
 from apex.parallel.distributed import flat_dist_call
 
+import utils
 from file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from modeling import BertForPretraining, BertConfig
 from schedulers import LinearWarmUpScheduler, LinearWarmupPolyDecayScheduler
@@ -401,7 +392,7 @@ def setup_training(args):
 
     if args.local_rank == -1:
         device = torch.device("cuda")
-        args.n_gpu = torch.cuda.device_count()
+        args.n_gpu = 1
     else:
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)
@@ -569,7 +560,13 @@ def prepare_model_and_optimizer(args, device):
 
     if args.local_rank != -1:
         if not args.allreduce_post_accumulation:
-            model = DDP(model, message_size=250000000, gradient_predivide_factor=torch.distributed.get_world_size())
+            # model = DDP(model, message_size=250000000, gradient_predivide_factor=torch.distributed.get_world_size())
+            model = torch.nn.parallel.DistributedDataParallel(
+                model,
+                device_ids=[args.local_rank],
+                output_device=args.local_rank,
+                bucket_cap_mb=8192,
+            )
         else:
             flat_dist_call([param.data for param in model.parameters()], torch.distributed.broadcast, (0,) )
 
@@ -693,7 +690,7 @@ def main():
     mlperf_logger.mlperf_submission_log('bert')
 
     worker_seeds, shuffling_seeds = utils.setup_seeds(args.seed, args.num_epochs_to_generate_seeds_for, device)
-    worker_seed = worker_seeds[torch.distributed.get_rank()]
+    worker_seed = worker_seeds[torch.distributed.get_rank() if torch.distributed.is_initialized() else 0]
 
     random.seed(worker_seed)
     np.random.seed(worker_seed)
@@ -808,7 +805,7 @@ def main():
                 data_file = files[(f_start_id*torch.distributed.get_world_size() + torch.distributed.get_rank() +
                                    remainder * f_start_id) % num_files]
             else:
-                data_file = files[(f_start_id*torch.distributed.get_world_size() + torch.distributed.get_rank()) % num_files]
+                data_file = files[f_start_id % num_files]
 
             previous_file = data_file
 
@@ -822,11 +819,14 @@ def main():
                 overflow_buf = torch.cuda.IntTensor([0])
 
             for f_id in range(f_start_id + 1, len(files)):
-                if torch.distributed.get_world_size() > num_files:
-                    data_file = files[(f_id*torch.distributed.get_world_size() + torch.distributed.get_rank() +
-                                       remainder * f_id) % num_files]
+                if torch.distributed.is_initialized():
+                    if torch.distributed.get_world_size() > num_files:
+                        data_file = files[(f_id*torch.distributed.get_world_size() + torch.distributed.get_rank() +
+                                           remainder * f_id) % num_files]
+                    else:
+                        data_file = files[(f_id*torch.distributed.get_world_size() + torch.distributed.get_rank())%num_files]
                 else:
-                    data_file = files[(f_id*torch.distributed.get_world_size() + torch.distributed.get_rank())%num_files]
+                    data_file = files[f_id % num_files]
 
                 previous_file = data_file
 
@@ -1002,10 +1002,15 @@ def main():
                             else:
                                 output_save_file = os.path.join(args.output_dir, "phase1_ckpt_{}.pt".format(samples_trained))
                             if args.do_train:
-                                torch.save({'model': model_to_save.state_dict(),
-                                            'optimizer': optimizer.state_dict(),
-                                            'master params': list(amp.master_params(optimizer)),
-                                            'files': [f_id] + files}, output_save_file)
+                                if args.fp16:
+                                    torch.save({'model': model_to_save.state_dict(),
+                                                'optimizer': optimizer.state_dict(),
+                                                'master params': list(amp.master_params(optimizer)),
+                                                'files': [f_id] + files}, output_save_file)
+                                else:
+                                    torch.save({'model': model_to_save.state_dict(),
+                                                'optimizer': optimizer.state_dict(),
+                                                'files': [f_id] + files}, output_save_file)
 
                                 most_recent_ckpts_paths.append(output_save_file)
                                 if len(most_recent_ckpts_paths) > args.keep_n_most_recent_checkpoints:
