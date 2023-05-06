@@ -39,10 +39,10 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 def main(opt, qtepoch=[0,]):
   os.environ['MASTER_ADDR'] = '127.0.0.1'
   os.environ['MASTER_PORT'] = opt.port
+  option = {}
   if opt.bin_mode:
       torch.npu.set_compile_mode(jit_compile=False)
   if opt.use_fp32:
-      option = {}
       option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
       torch.npu.config.allow_internal_format=False
       if opt.hf32:
