@@ -1235,6 +1235,7 @@ def main():
 
 
 if __name__ == "__main__":
+    args = parse_args()
     option = {}
     if args.precision_mode == 'must_keep_origin_dtype':
         torch.npu.config.allow_internal_format = False  # 全局ND开关，默认值True
