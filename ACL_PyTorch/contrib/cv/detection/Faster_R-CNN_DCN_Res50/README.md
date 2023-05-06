@@ -1,4 +1,4 @@
- Faster_R-CNN_DCN_Res50模型-推理指导
+# Faster_R-CNN_DCN_Res50模型-推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -70,7 +70,7 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
 2. 安装常规依赖。
 
    ```
-   pip3.7 install -r requirment.txt
+   pip3.7 install -r requirements.txt
    ```
 3. 安装mmcv。(注：此步骤安装时间较长，约10分钟左右，请耐心等候)
    ```
@@ -120,7 +120,7 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
 
         - --bin_folder_path：输出的二进制文件（.bin）所在路径。
     
-    成功运行后生成val2017_bin文件夹
+    成功运行后生成coco2017_bin文件夹
     
     2.2：执行gen_dataset_info.py，以val2017文件夹的jpg图片生成coco2017_jpg.info文件
    ```
@@ -143,9 +143,9 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 获取权重文件。(TODO)
+   1. 获取权重文件。
         点击[此链接](https://download.openmmlab.com/mmdetection/v2.0/dcn/faster_rcnn_x101_32x4d_fpn_dconv_c3-c5_1x_coco/faster_rcnn_x101_32x4d_fpn_dconv_c3-c5_1x_coco_20200203-4f85c69c.pth)
-        下载经过训练的faster_rcnn_x101_32x4d_fpn_dconv_c3-c5_1x_coco模型权重文件，并移动到Modelzoo源码包中。
+        下载经过训练的faster_rcnn模型权重文件，并移动到Modelzoo源码包中。
 
    2. pth导出onnx文件。
 
@@ -217,7 +217,7 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
    b.  执行推理。
 
       ```
-      python3.7 -m ais_bencn --model ./faster_rcnn_r50_fpn_1x_coco_bs1.om --input ./coco2017_bin --output ./ais_results --outfmt BIN --batchsize 1 --output_dirname bs1
+      python3.7 -m ais_bench --model ./faster_rcnn_r50_fpn_1x_coco_bs1.om --input ./coco2017_bin --output ./ais_results --outfmt BIN --batchsize 1 --output_dirname bs1
       ```
       -   参数说明：
         -   --model：om文件路径。
@@ -233,7 +233,7 @@ c.  精度验证。
 -   bin转txt：
 
     ```
-    python3.7 FasterRCNN+FPN+DCN_postprocess.py --test_annotation coco2017_jpg.info --bin_data_path ais_result/bs1
+    python3.7 FasterRCNN+FPN+DCN_postprocess.py --test_annotation coco2017_jpg.info --bin_data_path ais_results/bs1
     ```
     -   参数说明：
         --bin_data_path：推理结果所在文件夹。
@@ -251,7 +251,7 @@ c.  精度验证。
     生成coco_detection_result.json文件
 -   json对比获取精度数据：
     ```
-    python3.7 coco_eval.py --ground_truth data/coco/annotations/instances_val2017.json --detection_result coco_detection_result.json
+    python3.7 coco_eval.py --ground_truth data/coco/instances_val2017.json --detection_result coco_detection_result.json
     ```
     -   参数说明：
         --ground_truth: GT文件路径。
