@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Copyright (c) Open-MMLab. All rights reserved.
+import os
 import logging
 import os.path as osp
 import time
@@ -20,6 +21,20 @@ import time
 import torch
 
 import mmcv
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
 from . import hooks
 from .checkpoint import load_checkpoint, save_checkpoint
 from .dist_utils import get_dist_info
@@ -302,43 +317,21 @@ class Runner(object):
         self.data_loader = data_loader
         self._max_iters = self._max_epochs * len(data_loader)
         self.call_hook('before_train_epoch')
+        profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                          profile_type=os.getenv('PROFILE_TYPE'))
         for i, data_batch in enumerate(data_loader):
-            """
-            # get ops
-            with torch.autograd.profiler.profile(record_shapes=True, use_cuda=True) as prof:
-                self._inner_iter = i
-                self.call_hook('before_train_iter')
-                outputs = self.batch_processor(
-                    self.model, data_batch, train_mode=True, **kwargs)
-                if not isinstance(outputs, dict):
-                    raise TypeError('batch_processor() must return a dict')
-                if 'log_vars' in outputs:
-                    self.log_buffer.update(outputs['log_vars'],
-                                           outputs['num_samples'])
-                self.outputs = outputs
-                self.call_hook('after_train_iter')
-                self._iter += 1
-            print(prof.table(row_limit=10000000))
-            if i == 10:
-                exit()
-            """
             self._inner_iter = i
             self.call_hook('before_train_iter')
-            if i <= self.stop_step and i >= self.start_step and self.profiling == 'CANN':
-                prof_manager = torch.npu.profiling(profiler_result_path="./CANN_prof")
-            elif i <= self.stop_step and i >= self.start_step and self.profiling == 'GE':
-                prof_manager =  torch.npu.profiling(profiler_result_path="./GE_prof")
-            else:
-                prof_manager = NoProfiling()
-            with prof_manager:
-                outputs = self.batch_processor(
-                        self.model, data_batch, train_mode=True, **kwargs)
-                if not isinstance(outputs, dict):
-                    raise TypeError('batch_processor() must return a dict')
-                if 'log_vars' in outputs:
-                    self.log_buffer.update(outputs['log_vars'],
-                                        outputs['num_samples'])
-                self.outputs = outputs
+            profile.start()
+            outputs = self.batch_processor(
+                    self.model, data_batch, train_mode=True, **kwargs)
+            if not isinstance(outputs, dict):
+                raise TypeError('batch_processor() must return a dict')
+            if 'log_vars' in outputs:
+                self.log_buffer.update(outputs['log_vars'],
+                                    outputs['num_samples'])
+            self.outputs = outputs
+            profile.end()
 
             self.call_hook('after_train_iter')
             self._iter += 1
@@ -347,8 +340,6 @@ class Runner(object):
                 self.logger.info('FPS: %02f' % (self.samples_per_gpu * self.num_of_gpus * (i - 5) /
                                                 self.iter_time_hook.time_all))
             if i >= self.steps_per_epoch and self.train_performance:
-                break
-            if self.profiling in ['CANN','GE'] and i >= self.stop_step:
                 break
         if not self.train_performance:
             self.logger.info('FPS: ' + str(
