@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import os
 import sys
 import argparse
 import yaml
@@ -30,6 +31,18 @@ from torchlight import str2bool
 from torchlight import DictAction
 from torchlight import import_class
 from apex import amp, optimizers
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 from .processor import Processor
 
 
@@ -148,6 +161,8 @@ class REC_Processor(Processor):
         loss_value = []
         batch_time = AverageMeter('Time', ':6.3f')
         end = time.time()
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for data, label in loader:
             if self.meta_info['iter'] > self.arg.steps_per_epoch:
                 continue
@@ -218,6 +233,7 @@ class REC_Processor(Processor):
                     end = time.time()
 
             else:
+                profiler.start()
                 # forward
                 start_time = time.time()
                 output = self.model(data)
@@ -241,6 +257,7 @@ class REC_Processor(Processor):
                 self.meta_info['iter'] += 1
                 batch_time.update(time.time() - end)
                 end = time.time()
+                profiler.end()
 
         self.epoch_info['mean_loss'] = np.mean(loss_value)
         self.show_epoch_info()

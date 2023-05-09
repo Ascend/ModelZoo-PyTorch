@@ -36,6 +36,17 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import apex
 from apex import amp
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),'../../'))
 from efficientnet_pytorch import EfficientNet
@@ -382,6 +393,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
 
     end = time.time()
     step_per_epoch = len(train_loader)
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
     for i, (images, target) in enumerate(train_loader):
         if i > 100:
             pass
@@ -396,6 +409,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
         target = target.int()
         images, target = images.to('npu:' + str(args.npu), non_blocking=True), target.to('npu:' + str(args.npu), non_blocking=True)
 
+        profiler.start()
         # compute output
         output = model(images)
 
@@ -416,6 +430,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args, nnpus_per_node
         else:
             loss.backward()
         optimizer.step()
+        profiler.end()
 
         # measure elapsed time
         fps_time.update(total_batch_size / (time.time() - end))
