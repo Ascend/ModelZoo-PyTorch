@@ -38,7 +38,6 @@ import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 
 import bugfix
-from utils import progress_bar
 from randomaug import RandAugment
 
 class LabelSmoothing(nn.Module):
@@ -65,7 +64,8 @@ class LabelSmoothing(nn.Module):
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         return loss.mean()
 
-def train(epoch, scaler, criterion_ls, trainloader):
+def train(net, device, use_amp, optimizer, 
+          epoch, scaler, criterion_ls, trainloader):
     print('\nEpoch: %d' % epoch)
     net.train()
     train_loss = 0
@@ -89,12 +89,15 @@ def train(epoch, scaler, criterion_ls, trainloader):
 
         # Avoid confusion caused by printing multiple cards at the same time
         if torch.distributed.get_rank() == 0:
-            progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            avg_step_time = bugfix.progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Train_Acc: %.3f%% (%d/%d)'
                 % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-    return train_loss/(batch_idx+1)
+        else:
+            avg_step_time = None
+    return train_loss/(batch_idx+1), avg_step_time
 
 ##### Validation
-def test(epoch, best_acc, criterion, testloader):
+def test(args, net, device, optimizer, scaler, 
+         epoch, best_acc, criterion, testloader):
     net.eval()
     test_loss = 0
     correct = 0
@@ -112,8 +115,10 @@ def test(epoch, best_acc, criterion, testloader):
 
             # Avoid confusion caused by printing multiple cards at the same time
             if torch.distributed.get_rank() == 0:
-                progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                avg_step_time = bugfix.progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Val_Acc: %.3f%% (%d/%d)'
                     % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            else:
+                avg_step_time = None
     
     # Save checkpoint.
     acc = 100. * correct / total
@@ -131,10 +136,10 @@ def test(epoch, best_acc, criterion, testloader):
         best_acc = acc
 
     content = time.ctime() + ' ' + f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f},\
-              val loss: {test_loss:.5f}, acc: {(acc):.5f}'
+              val loss: {test_loss/(batch_idx+1):.5f}, acc: {(acc):.5f}'
     if torch.distributed.get_rank() == 0:
         print(content + "\n", flush=True)
-    return test_loss, acc, best_acc
+    return test_loss/(batch_idx+1), acc, best_acc, avg_step_time
 
 def get_args():
     # parsers
@@ -385,17 +390,21 @@ def main():
 
     for epoch in range(start_epoch, args.n_epochs):
         start = time.time()
-        trainloss = train(epoch, scaler, criterion_ls, trainloader)
+        trainloss, train_step_time = train(net, device, use_amp, optimizer,
+                                           epoch, scaler, criterion_ls, trainloader)
 
         if (epoch + 1) % args.eval_interval == 0 or epoch > int(args.n_epochs * 0.9):
-            val_loss, acc, best_acc = test(epoch, best_acc, criterion, testloader)
+            val_loss, acc, best_acc, val_step_time = test(args, net, device, optimizer,scaler,
+                                                          epoch, best_acc, criterion, testloader)
         else:
-            val_loss, acc, best_acc = -1, -1, -1
+            val_loss, acc, best_acc, val_step_time = -1, -1, -1, None
 
         scheduler.step(epoch-1) # step cosine scheduling
 
-        print(f"Epoch[{epoch}] epoch_time: {time.time() - start} trainloss: {trainloss} \
-              val_loss: {val_loss} acc: {acc} best_acc: {best_acc}", flush=True)
+        print(f"Epoch[{epoch}] epoch_time: {time.time() - start}", flush=True)
+        print(f"Train: average_step_time: {train_step_time} train_loss: {trainloss}", flush=True)
+        print(f"Val: average_step_time: {val_step_time} val_loss: {val_loss} ",
+              f"acc: {acc} best_acc: {best_acc}", flush=True)
 
 if __name__ == '__main__':
     main()
