@@ -14,11 +14,17 @@
 # ============================================================================
 
 import torch
+import torchvision
 from torch import nn
 from torch import Tensor
-from torchvision.models.utils import load_state_dict_from_url
 from typing import Callable, Any, Optional, List
 
+TORCHVERSION_MAJOR = int(torchvision.__version__.split('.')[0])
+TORCHVERSION_MINOR = int(torchvision.__version__.split('.')[1])
+if TORCHVERSION_MAJOR == 0 and TORCHVERSION_MINOR < 11:
+    from torchvision.models.utils import load_state_dict_from_url
+else:
+    from torch.hub import load_state_dict_from_url
 
 __all__ = ['MobileNetV2', 'mobilenet_v2']
 

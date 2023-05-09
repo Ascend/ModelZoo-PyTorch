@@ -14,14 +14,19 @@
 # ============================================================================
 
 import torch
-
+import torchvision
 from functools import partial
 from torch import nn, Tensor
 from torch.nn import functional as F
 from typing import Any, Callable, Dict, List, Optional, Sequence
-
-from torchvision.models.utils import load_state_dict_from_url
 from mobilenetv2 import _make_divisible, ConvBNActivation
+
+TORCHVERSION_MAJOR = int(torchvision.__version__.split('.')[0])
+TORCHVERSION_MINOR = int(torchvision.__version__.split('.')[1])
+if TORCHVERSION_MAJOR == 0 and TORCHVERSION_MINOR < 11:
+    from torchvision.models.utils import load_state_dict_from_url
+else:
+    from torch.hub import load_state_dict_from_url
 
 
 __all__ = ["MobileNetV3", "mobilenet_v3_large", "mobilenet_v3_small"]
