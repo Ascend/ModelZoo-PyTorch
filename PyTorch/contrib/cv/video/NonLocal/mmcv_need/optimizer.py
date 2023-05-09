@@ -18,7 +18,7 @@ from distutils.version import LooseVersion
 from itertools import chain
 
 from torch.nn.utils import clip_grad
-from torch._six import inf
+from math import inf
 
 from mmcv.utils import TORCH_VERSION
 from ..dist_utils import allreduce_grads

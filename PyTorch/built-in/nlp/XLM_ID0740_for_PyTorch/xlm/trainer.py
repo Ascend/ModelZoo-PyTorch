@@ -31,7 +31,7 @@ if torch.__version__ >= "1.8":
 from torch import nn
 from torch.nn import functional as F
 #from torch.nn.utils import clip_grad_norm_
-from torch._six import inf
+from math import inf
 import apex
 
 from .optim import get_optimizer

@@ -18,7 +18,7 @@ from typing import Any, Union
 import torch
 import torch.nn as nn
 import torch_npu
-from torch._six import inf
+from math import inf
 
 class MatmulApply(torch.autograd.Function):
     @staticmethod
