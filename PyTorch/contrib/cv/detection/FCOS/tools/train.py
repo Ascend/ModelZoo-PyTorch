@@ -107,7 +107,7 @@ def parse_args():
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--local_rank', "--local-rank", type=int, default=0)
     parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
     args = parser.parse_args()
 
