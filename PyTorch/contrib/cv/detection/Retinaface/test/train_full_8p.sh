@@ -41,7 +41,7 @@ do
         hf32=`echo ${para#*=}`
     fi
 done
-if [[ $apex_opt_level=="O0" ]];then
+if [[ $apex_opt_level == "O0" ]];then
     prec=$PREC
 else
     prec="--loss-scale=128. --amp $PREC"

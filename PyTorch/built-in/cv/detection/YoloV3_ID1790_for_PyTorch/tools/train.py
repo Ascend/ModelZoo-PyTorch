@@ -112,9 +112,6 @@ def main():
         if args.fp32:
             torch.npu.conv.allow_hf32 = False  # conv支持HF32开关，默认值True
             torch.npu.matmul.allow_hf32 = False  # matmul支持HF32开关，默认值True
-    elif args.precision_mode == 'allow_mix_precision':
-        option["ACL_PRECISION_MODE"] = "allow_fp32_to_fp16"
-        # ACL层精度模式，默认值must_keep_origin_dtype
     torch.npu.set_option(option)
 
     os.environ['MASTER_ADDR'] = args.master_addr
