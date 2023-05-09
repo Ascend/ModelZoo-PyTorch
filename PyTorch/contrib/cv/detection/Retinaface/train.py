@@ -124,8 +124,6 @@ def main():
     if args.hf32:
         torch.npu.config.allow_internal_format = False
     option = {}
-    if args.fp32 == False and args.hf32 == False:
-        option["ACL_PRECISION_MODE"] = "allow_fp32_to_fp16"
     torch.npu.set_option(option)
     print("===============main()=================")
     print(args)

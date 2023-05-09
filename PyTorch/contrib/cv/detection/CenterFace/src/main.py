@@ -51,8 +51,6 @@ def main(opt, qtepoch=[0,]):
       if opt.fp32:
           torch.npu.conv.allow_hf32 = False
           torch.npu.matmul.allow_hf32 = False
-  else :
-        option["ACL_PRECISION_MODE"] = "allow_fp32_to_fp16"
   torch.npu.set_option(option)
 
 
