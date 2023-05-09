@@ -40,11 +40,15 @@ import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, Dataset
 from torch.utils.data.distributed import DistributedSampler
 
-import amp_C
-import apex_C
+try:
+    import amp_C
+    import apex_C
+except Error:
+    pass
 from apex import amp
 from apex.amp import _amp_state
 from apex.optimizers import FusedLAMB
+from optim import Lamb
 from apex.parallel.distributed import flat_dist_call
 
 import utils
@@ -249,6 +253,10 @@ def parse_arguments():
                         default=False,
                         action='store_true',
                         help="Whether to use 16-bit float precision instead of 32-bit")
+    parser.add_argument('--use_lamb',
+                        default=False,
+                        action='store_true',
+                        help="Whether to Lamb optimizer instead of FusedLAMB")
     parser.add_argument('--loss_scale',
                         type=float, default=0.0,
                         help='Loss scaling, positive power of 2 values can improve fp16 convergence.')
@@ -514,11 +522,17 @@ def prepare_model_and_optimizer(args, device):
     mlperf_logger.log_event(key=mlperf_logger.constants.OPT_BASE_LR,
                             value=args.learning_rate, sync=False)
 
-    # Set max_grad_norm=65536. to avoid clip after allreduce
-    optimizer = FusedLAMB(optimizer_grouped_parameters,
-                     lr=args.learning_rate,
-                     betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2),
-                     max_grad_norm=65536.0)
+    if args.use_lamb:
+        optimizer = Lamb(optimizer_grouped_parameters,
+                              lr=args.learning_rate,
+                              betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2))
+    else:
+        # Set max_grad_norm=65536. to avoid clip after allreduce
+        optimizer = FusedLAMB(optimizer_grouped_parameters,
+                              lr=args.learning_rate,
+                              betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2),
+                              max_grad_norm=65536.0)
+    mlperf_logger.log_event(key='optimizer', value=optimizer.__class__.__name__, sync=False)
 
     mlperf_logger.log_event(key='opt_epsilon', value=optimizer.defaults['eps'],
                             sync=False)
@@ -560,7 +574,6 @@ def prepare_model_and_optimizer(args, device):
 
     if args.local_rank != -1:
         if not args.allreduce_post_accumulation:
-            # model = DDP(model, message_size=250000000, gradient_predivide_factor=torch.distributed.get_world_size())
             model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[args.local_rank],
@@ -1062,4 +1075,12 @@ if __name__ == "__main__":
         gpu_count = torch.distributed.get_world_size()
     if utils.is_main_process():
         e2e_time = time.time() - now
-        print({"e2e_time": e2e_time})
+        training_perf = global_batch_size(args) \
+                        * (args.max_steps - args.resume_step + skipped_steps) / train_time_raw
+        if args.do_train:
+            print({"e2e_time": e2e_time,
+                   "training_sequences_per_second": training_perf,
+                   "final_loss": final_loss,
+                   "raw_train_time": train_time_raw})
+        else:
+            print({"e2e_time": e2e_time})
