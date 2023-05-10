@@ -74,6 +74,8 @@ start_time=$(date +%s)
 
 nohup bash run.sh \
   --stage ${stage} \
+  --use_lm false \
+  --stop_stage 11 \
   --ngpu 1 &
 
 wait
