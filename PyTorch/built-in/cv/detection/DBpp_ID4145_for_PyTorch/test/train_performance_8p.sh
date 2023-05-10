@@ -25,21 +25,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
-        cur_path=`pwd`
-        echo --$cur_path
-        cd $cur_path
-        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
-        j="1.8"
-        result=$(echo $i | grep "${j}")
-        if [[ "$result" != "" ]]
-        then
-            source ${cur_path}/set_conda.sh --conda_name=$conda_name
-            source activate $conda_name
-        else
-            source ${cur_path}/set_conda.sh --conda_name=py4_1.11
-            source activate py4_1.11
-        fi
-        cd -
+        source set_conda.sh
+        source activate $conda_name
     fi
 done
 ###############指定训练脚本执行路径###############
