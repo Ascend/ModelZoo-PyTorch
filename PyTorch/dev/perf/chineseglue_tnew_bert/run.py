@@ -12,8 +12,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+from torch.utils.data import RandomSampler, DistributedSampler, DataLoader
+import apex
 
-import run_classifier
+from classifier_pytorch import run_classifier
+from classifier_pytorch.run_classifier import evaluate
+from classifier_pytorch.processors import xlnet_collate_fn, collate_fn
+from classifier_pytorch.tools.common import seed_everything
+from classifier_pytorch.tools.progressbar import ProgressBar
+from classifier_pytorch.transformers import logger, WarmupLinearSchedule
+
 
 def train(args, train_dataset, model, tokenizer):
     """ Train the model """

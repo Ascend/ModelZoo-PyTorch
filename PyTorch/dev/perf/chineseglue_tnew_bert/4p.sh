@@ -4,7 +4,7 @@ export GLUE_DIR=$CURRENT_DIR/chineseGLUEdatasets
 export OUTPUR_DIR=$CURRENT_DIR/outputs
 TASK_NAME="tnews"
 
-export PYTHONPATH=./chineseglue_tnew_bert:$PYTHONPATH
+export PYTHONPATH=./classifier_pytorch:$PYTHONPATH
 
 export MASTER_ADDR='127.0.0.1'
 export MASTER_PORT='23333'
