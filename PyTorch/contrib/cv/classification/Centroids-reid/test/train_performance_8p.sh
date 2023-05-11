@@ -94,7 +94,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END python3.7 train_ctl_model.py \
+        taskset -c $PID_START-$PID_END python3 train_ctl_model.py \
             --config_file="configs/256_resnet50.yml" \
             GPU_IDS [$RANK] \
             DATASETS.NAMES 'DukeMTMC-reID' \
@@ -106,7 +106,7 @@ do
             OUTPUT_DIR './logs/dukemtmcreid/256_resnet50' \
             DATALOADER.USE_RESAMPLING False > ./test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 train_ctl_model.py \
+        python3 train_ctl_model.py \
             --config_file="configs/256_resnet50.yml" \
             GPU_IDS [$RANK] \
             DATASETS.NAMES 'DukeMTMC-reID' \

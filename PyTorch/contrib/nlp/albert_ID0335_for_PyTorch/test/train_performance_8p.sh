@@ -79,7 +79,7 @@ for i in $(seq 7 -1 0)
     do
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END python3.7 ./run_classifier.py \
+        nohup taskset -c $PID_START-$PID_END python3 ./run_classifier.py \
         --device=$DEVICE \
         --model_type=SST \
         --model_name_or_path=$BERT_BASE_DIR/ \

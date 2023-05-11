@@ -80,7 +80,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 inference.py \
+python3 inference.py \
     -f mel_files.txt \
     -w ${pth_path} \
     -o . \

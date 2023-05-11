@@ -71,8 +71,8 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
     cd mmcv
     export MMCV_WITH_OPS=1 
     export MAX_JOBS=8
-    python3.7 setup.py build_ext
-    python3.7 setup.py develop
+    python3 setup.py build_ext
+    python3 setup.py develop
     pip3.7 list | grep mmcv
     cd ..
     ```
@@ -182,7 +182,7 @@ SSD 模型利用不同尺度的特征图进行目标的检测，SSD 采用多个
 
     FPS 可使用 calc_fps.py 计算，使用方法为：
     ```
-    python3.7 calc_fps.py xxx.log.json ${gpu_nums} ${batch_size}
+    python3 calc_fps.py xxx.log.json ${gpu_nums} ${batch_size}
     ```
     参数batch_size是模型训练加载图片的批次大小。
 

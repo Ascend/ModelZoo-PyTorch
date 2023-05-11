@@ -12,8 +12,8 @@ RUN git clone -b v1.3.9 --depth=1 https://github.com/open-mmlab/mmcv.git
 WORKDIR ./mmcv
 ENV MMCV_WITH_OPS=1
 ENV MAX_JOBS=8
-RUN python3.7 setup.py build_ext
-RUN python3.7 setup.py develop
+RUN python3 setup.py build_ext
+RUN python3 setup.py develop
 RUN pip3.7 uninstall opencv-python
 RUN pip3.7 install opencv-python-headless
 COPY mmcv_need/_functions.py ./mmcv/parallel/

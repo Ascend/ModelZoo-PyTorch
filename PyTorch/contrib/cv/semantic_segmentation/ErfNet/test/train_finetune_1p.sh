@@ -14,7 +14,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-nohup python3.7 -u train/main.py \
+nohup python3 -u train/main.py \
     --datadir ${data_path} \
     --finetune \
     --fnum 20 \

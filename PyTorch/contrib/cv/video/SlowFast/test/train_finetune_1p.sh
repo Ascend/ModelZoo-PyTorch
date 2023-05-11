@@ -80,7 +80,7 @@ currentDir=$(cd "$(dirname "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
-python3.7.5 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options optimizer.lr=0.05 total_epochs=${epoch} evaluation.interval=1 data.videos_per_gpu=${batch_size} \
+python3 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options optimizer.lr=0.05 total_epochs=${epoch} evaluation.interval=1 data.videos_per_gpu=${batch_size} \
 --validate --resume-from ${ckpt} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_finetune_${ASCEND_DEVICE_ID}.log  2>&1 &
 
 wait

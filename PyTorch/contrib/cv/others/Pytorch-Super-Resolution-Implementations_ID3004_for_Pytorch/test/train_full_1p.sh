@@ -117,9 +117,9 @@ batch_size=8
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 train_npu.py --datapath=${data_path}
+    python3 train_npu.py --datapath=${data_path}
 else
-    python3.7 train_npu.py --datapath=${data_path} 1>${print_log} 2>&1
+    python3 train_npu.py --datapath=${data_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算

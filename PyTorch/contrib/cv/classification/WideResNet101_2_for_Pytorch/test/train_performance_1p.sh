@@ -106,7 +106,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u ./main_npu_1p.py \
+python3 -u ./main_npu_1p.py \
     "${data_path}" \
     --lr=0.2 \
     --print-freq=10 \

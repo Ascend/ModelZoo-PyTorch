@@ -114,14 +114,14 @@ bash ./test/train_full_8p.sh
 执行以下命令，完成pth到onnx模型的转换
 
 ```
-python3.7 pth2onnx.py --pth_path ./models/mnist/CGAN/CGAN_G.pth --onnx_path ./CGAN.onnx
+python3 pth2onnx.py --pth_path ./models/mnist/CGAN/CGAN_G.pth --onnx_path ./CGAN.onnx
 ```
 
 ## Demo
 
 执行以下命令，程序会自动生成输入并经过网络产生输出，将输出保存在"demo/demo_result.png"中
 ```
-python3.7 demo.py --pth_path ./models/mnist/CGAN/CGAN_G.pth --save_path ./demo
+python3 demo.py --pth_path ./models/mnist/CGAN/CGAN_G.pth --save_path ./demo
 ```
 
 ### 精度对比

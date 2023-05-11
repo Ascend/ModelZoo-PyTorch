@@ -81,7 +81,7 @@ start_time=$(date +%s)
 # source 环境变量
 source "${test_path_dir}"/env.sh
 export RANK_ID=0
-python3.7 tools/dist_train.py --cfg experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml \
+python3 tools/dist_train.py --cfg experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml \
                            --amp \
                            --opt-level 'O2'\
                            MULTIPROCESSING_DISTRIBUTED False \

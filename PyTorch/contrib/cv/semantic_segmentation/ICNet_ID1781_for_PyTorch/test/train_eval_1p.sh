@@ -84,7 +84,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 CONFIG_YAML_PATH=./configs/icnet_eval.yaml
 
-nohup python3.7 evaluate.py \
+nohup python3 evaluate.py \
           ${data_path} \
           $CONFIG_YAML_PATH  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 

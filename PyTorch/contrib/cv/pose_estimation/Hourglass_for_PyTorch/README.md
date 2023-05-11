@@ -166,7 +166,7 @@ bash scripts/eval.sh 1
 You can use following command to run the demo.py script. And after the script successful run complete, you can find the original image and the image of inference result in this file path: Hourglass/mmpose-master/demo/mpii_demo_img/demo_mpii.jpg ( and infer_demo_mpii.jpg )
 
 ```
-python3.7 demo.py [--config {the path of your config}] [--checkpoint {the path of your checkpoint}]
+python3 demo.py [--config {the path of your config}] [--checkpoint {the path of your checkpoint}]
 ```
 
 **state**
@@ -176,13 +176,13 @@ python3.7 demo.py [--config {the path of your config}] [--checkpoint {the path o
 **Example:**
 
 ```
-python3.7 demo.py
+python3 demo.py
 ```
 
 ​																					or
 
 ```
-python3.7 demo.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourglass52_mpii_384x384.py --checkpoint ./mmpose-master/work_dirs/hourglass52_mpii_384x384/latest.pth
+python3 demo.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourglass52_mpii_384x384.py --checkpoint ./mmpose-master/work_dirs/hourglass52_mpii_384x384/latest.pth
 ```
 
 ### Exporting to the ONNX
@@ -196,7 +196,7 @@ python3.7 demo.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourg
 2. Then, You should navigate(cd) into the path of the Hourglass file:`Hourglass`, and then,you can use following command to export checkpoint into the ONNX model.And after the script successful run complete, you can find the onnx file named `hourglass.onnx` in the same file.
 
    ```
-   python3.7 pytorch2onnx.py [--config {the path of your config}] [--checkpoint {the path of your checkpoint}]
+   python3 pytorch2onnx.py [--config {the path of your config}] [--checkpoint {the path of your checkpoint}]
    ```
 
    **State:**
@@ -206,13 +206,13 @@ python3.7 demo.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourg
    **Example:**
 
    ```
-   python3.7 pytorch2onnx.py
+   python3 pytorch2onnx.py
    ```
    
    ​																			  or
    
    ```
-   python3.7 pytorch2onnx.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourglass52_mpii_384x384.py --checkpoint ./mmpose-master/work_dirs/hourglass52_mpii_384x384/latest.pth
+   python3 pytorch2onnx.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourglass52_mpii_384x384.py --checkpoint ./mmpose-master/work_dirs/hourglass52_mpii_384x384/latest.pth
    ```
 
 ## Hourglass Training Results

@@ -83,8 +83,8 @@ SiamFC通过全卷积的孪生网络结构实现了对视频或图像序列中�
 	- lmdb_data_path 必须是 out_data_path+".lmdb"，例如 out_data_path 是 "./data/ILSVRC_VID_CURATION"，那么 lmdb_data_path 则为 "./data/ILSVRC_VID_CURATION.lmdb"。
 	
 	```
-	python3.7 bin/create_dataset.py --d real_data_path --o out_data_path
-	python3.7 bin/create_lmdb.py --d out_data_path --o lmdb_data_path
+	python3 bin/create_dataset.py --d real_data_path --o out_data_path
+	python3 bin/create_lmdb.py --d out_data_path --o lmdb_data_path
 	```
 
 

@@ -87,7 +87,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 # 启动训练
-python3.7 train.py \
+python3 train.py \
     -fp16_run true \
     -output_directory ${output_directory} \
     -epochs ${train_epochs} \

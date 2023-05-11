@@ -71,7 +71,7 @@ currentDir=$(cd "$(dirname -- "$0")";pwd)
 num_worker=$(($(nproc)/8))
 source ${currentDir}/env_npu.sh
 
-python3.7.5 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options evaluation.interval=5 data.videos_per_gpu=${batch_size} data.workers_per_gpu=$num_worker \
+python3 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options evaluation.interval=5 data.videos_per_gpu=${batch_size} data.workers_per_gpu=$num_worker \
 optimizer.lr=0.00016 --validate --work-dir ./result > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsn_train_full_1p_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 

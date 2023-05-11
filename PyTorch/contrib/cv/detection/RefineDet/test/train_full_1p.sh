@@ -67,7 +67,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 -u train_1p.py \
+nohup python3 -u train_1p.py \
     --dataset_root ${data_path} \
     --save_folder ./RefineDet320/ \
     --num_workers 8 \
@@ -77,7 +77,7 @@ nohup python3.7 -u train_1p.py \
     --device_id 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
-nohup python3.7 eval_refinedet.py './RefineDet320/RefineDet320_VOC_231.pth' ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 eval_refinedet.py './RefineDet320/RefineDet320_VOC_231.pth' ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 ##################获取训练数据################

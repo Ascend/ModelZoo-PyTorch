@@ -81,7 +81,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env_set.sh
-python3.7 ./main.py recognition\
+python3 ./main.py recognition\
        -c config/st_gcn/kinetics-skeleton/train.yaml\
        --device ${device_id}\
        --batch_size ${batch_size}\

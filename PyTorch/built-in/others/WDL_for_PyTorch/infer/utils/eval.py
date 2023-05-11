@@ -16,7 +16,7 @@
 # ============================================================================
 """
 To generate the evaluation metric AUC.
-Usage example: python3.7 eval.py ./result/test.txt ./result/label.txt
+Usage example: python3 eval.py ./result/test.txt ./result/label.txt
 """
 
 import sys
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         ground_truth_file = sys.argv[2]
     except IndexError:
         print("Please enter predict result file path | groud truth file path"
-              "Such as: python3.7 eval.py ./result/infer_result.txt ./result/ground_truth.txt")
+              "Such as: python3 eval.py ./result/infer_result.txt ./result/ground_truth.txt")
         exit(1)
 
     print("loading infer result file: %s" % infer_result_file)

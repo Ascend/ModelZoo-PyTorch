@@ -82,7 +82,7 @@ if [ x"${etp_flag}" != x"true" ];then
 else
     data_path=${more_path1}
 fi
-python3.7 ./main.py \
+python3 ./main.py \
     ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \

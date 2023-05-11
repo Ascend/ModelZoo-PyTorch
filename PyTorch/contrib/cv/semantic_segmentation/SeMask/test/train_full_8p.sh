@@ -120,7 +120,7 @@ export PYTHONPATH=../:$PYTHONPATH
 
 echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 echo "$data_path"
-python3.7 -u -m bind_pyt \
+python3 -u -m bind_pyt \
     --nsockets_per_node ${n_sockets} \
     --ncores_per_socket ${n_cores_per_socket} \
     --master_addr $(hostname -I |awk '{print $1}') \

@@ -52,7 +52,7 @@ bash ./test/eval.sh --data_path=real_data_path --pth_path=real_pre_train_model_p
 
 #To ONNX
 # 是否正确进行pth模型文件转onnx模型文件
-python3.7 PAMTRI_pth2onnx.py --load-weights ./real_model_path.pth --output_path ./PAMTRI.onnx
+python3 PAMTRI_pth2onnx.py --load-weights ./real_model_path.pth --output_path ./PAMTRI.onnx
 # 验收结果： OK / Failed
 # 备注： 无输出日志，运行报错，报错日志xx 等
 

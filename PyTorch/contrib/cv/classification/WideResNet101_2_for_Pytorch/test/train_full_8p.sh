@@ -100,7 +100,7 @@ else
     mkdir -p ${test_path_dir}/train_8p_${start_time}
 fi
 
-python3.7 -u ./main_npu_8p.py \
+python3 -u ./main_npu_8p.py \
     "${data_path}" \
     --addr=$(hostname -I |awk '{print $1}') \
     --lr=${learning_rate} \

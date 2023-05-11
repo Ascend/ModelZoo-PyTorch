@@ -134,7 +134,7 @@ do
     then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 main.py --img $image_size $image_size \
+    taskset -c $PID_START-$PID_END python3 main.py --img $image_size $image_size \
                                           --data coco.yaml \
                                           --cfg cfg/yolov4_8p.cfg \
                                           --weights '' \
@@ -155,7 +155,7 @@ do
                                           --stop_step_num 100 \
                                           --notest > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 main.py --img $image_size $image_size \
+        python3 main.py --img $image_size $image_size \
                    --data coco.yaml \
                    --cfg cfg/yolov4_8p.cfg \
                    --weights '' \

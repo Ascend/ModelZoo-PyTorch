@@ -78,7 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 kernel_num=$(($(nproc) / 8))
-python3.7 -u train.py "$@" \
+python3 -u train.py "$@" \
     --num-workers $kernel_num \
     --data $data_path \
     --device npu:$ASCEND_DEVICE_ID \

@@ -31,4 +31,4 @@ fi
 
 batch_size=512
 
-python3.7 tools/run_net.py --cfg demo/Kinetics/X3D_S.yaml NUM_GPUS 8 RNG_SEED 3 TRAIN.ENABLE False TEST.ENABLE False TEST.BATCH_SIZE ${batch_size} TEST.CHECKPOINT_FILE_PATH ${pth_path} DATA.PATH_TO_DATA_DIR ${data_path} DATA_LOADER.NUM_WORKERS 3 OUTPUT_DIR '.'
+python3 tools/run_net.py --cfg demo/Kinetics/X3D_S.yaml NUM_GPUS 8 RNG_SEED 3 TRAIN.ENABLE False TEST.ENABLE False TEST.BATCH_SIZE ${batch_size} TEST.CHECKPOINT_FILE_PATH ${pth_path} DATA.PATH_TO_DATA_DIR ${data_path} DATA_LOADER.NUM_WORKERS 3 OUTPUT_DIR '.'

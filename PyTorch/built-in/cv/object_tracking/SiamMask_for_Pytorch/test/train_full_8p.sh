@@ -94,7 +94,7 @@ do
   export LOCAL_RANK=$RANK_ID
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
-  nohup taskset -c $PID_START-$PID_END python3.7 -u tools/train_siammask.py \
+  nohup taskset -c $PID_START-$PID_END python3 -u tools/train_siammask.py \
     --config=experiments/siammask_base/config.json \
     --workers 32 \
     --batch $batch_size \
@@ -112,7 +112,7 @@ TEST_DATASET=VOT2018
 for i in $(seq 1 $epochs)
 do
   export RANK=0
-  python3.7 -u tools/test.py \
+  python3 -u tools/test.py \
             --config=experiments/siammask_base/config.json \
             --resume output/checkpoint_e${i}.pth \
             --log ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${TEST_DATASET}.log \

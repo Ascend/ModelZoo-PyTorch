@@ -82,7 +82,7 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+        taskset -c $a-$b python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
             --launcher pytorch \
             --cfg-options \
             optimizer.lr=0.04 total_epochs=1 data_root=$data_path \
@@ -90,7 +90,7 @@ do
             --gpu-ids 0 \
             --opt-level O1 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+        python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
             --launcher pytorch \
             --cfg-options \
             optimizer.lr=0.04 total_epochs=1 data_root=$data_path \
@@ -176,7 +176,7 @@ echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Cas
 #    then
 #        let a=0+RANK_ID*24
 #        let b=23+RANK_ID*24
-#        taskset -c $a-$b python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+#        taskset -c $a-$b python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
 #            --launcher pytorch \
 #            --cfg-options \
 #            optimizer.lr=0.04 \
@@ -184,7 +184,7 @@ echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Cas
 #            --gpu-ids 0 \
 #            --opt-level O1 &
 #    else
-#        python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+#        python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
 #            --launcher pytorch \
 #            --cfg-options \
 #            optimizer.lr=0.04 \

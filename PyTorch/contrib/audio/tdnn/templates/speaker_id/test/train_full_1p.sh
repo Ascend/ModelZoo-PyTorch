@@ -99,7 +99,7 @@ do
 			--number_of_epochs=$train_epochs \
 			--data_folder=$data_folder > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}_full_1p.log 2>&1 &
 	else
-        python3.7 train.py train.yaml \
+        python3 train.py train.yaml \
 			--local_rank ${ASCEND_DEVICE_ID} \
 			--batch_size=$batch_size \
 			--number_of_epochs=$train_epochs \

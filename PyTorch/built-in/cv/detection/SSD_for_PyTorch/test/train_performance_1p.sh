@@ -78,7 +78,7 @@ fi
 RANK_ID_START=0
 export WORLD_SIZE=${RANK_SIZE}
 export RANK=${RANK_ID}
-nohup python3.7 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_1p.py \
+nohup python3 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_1p.py \
     --seed 0 \
     --gpu-ids 0 \
     --opt-level O1  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &

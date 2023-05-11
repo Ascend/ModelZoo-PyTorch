@@ -63,7 +63,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env.sh
 fi
 
-python3.7 predict_2_txt.py --data-path=$data_path\
+python3 predict_2_txt.py --data-path=$data_path\
           --model-path=$checkpoint\
           > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
@@ -73,7 +73,7 @@ wait
 
 # 输出训练精度,需要模型审视修改
 echo "Final Train Accuracy : "
-python3.7 scripts/script.py -g=gt.zip -s=predict.zip
+python3 scripts/script.py -g=gt.zip -s=predict.zip
 wait
 echo \
 ##################获取训练数据################

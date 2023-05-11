@@ -97,7 +97,7 @@ NPUS=($(seq 0 $devices_num))
 rank_server=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${server_index}'}'`
 export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'}'`
 
-python3.7 ./main.py \
+python3 ./main.py \
     --addr=$one_node_ip \
     --seed=49 \
     --workers=184 \

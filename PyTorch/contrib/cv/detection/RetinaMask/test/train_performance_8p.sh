@@ -80,7 +80,7 @@ n_cores_per_socket=$(get_lscpu_value 'Core(s) per socket' <<< "${lscpu_out}")
 
 echo "num_sockets = ${n_sockets} cores_per_socket=${n_cores_per_socket}"
 
-python3.7 -u -m bind_pyt \
+python3 -u -m bind_pyt \
     --nsockets_per_node ${n_sockets} \
     --ncores_per_socket ${n_cores_per_socket} \
     --master_addr $(hostname -I |awk '{print $1}') \

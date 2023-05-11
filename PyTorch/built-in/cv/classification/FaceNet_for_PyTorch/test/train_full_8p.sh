@@ -88,7 +88,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END python3.7 fine_tune_new_8p.py \
+        nohup taskset -c $PID_START-$PID_END python3 fine_tune_new_8p.py \
             --seed 12345 \
             --amp_cfg \
             --opt_level O2 \
@@ -107,7 +107,7 @@ do
             --multiprocessing_distributed \
             --world_size 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup python3.7 fine_tune_new_8p.py \
+        nohup python3 fine_tune_new_8p.py \
             --seed 12345 \
             --amp_cfg \
             --opt_level O2 \

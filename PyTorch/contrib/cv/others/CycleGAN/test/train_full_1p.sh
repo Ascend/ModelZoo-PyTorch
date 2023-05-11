@@ -1,7 +1,7 @@
 export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
 rm -rf npu1pbs1.*
 rm -rf checkpoints_1pbs1
-nohup python3.7.5 train.py --pu_ids='0' \
+nohup python3 train.py --pu_ids='0' \
 	 --prof=0 \
 	 --multiprocessing_distributed=0 \
 	 --distributed=1 \

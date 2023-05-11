@@ -115,11 +115,11 @@ if [ x"${modelarts_flag}" != x ];
 then
     ./${data_path}/dataset/pretrained_model/bert_cn/pytorch_model.bin
     ./${data_path}/dataset/pretrained_model/bert_en/pytorch_model.bin
-    python3.7 ./run.py --data_path=${data_path} --model_save_dir=${output_path} --res_save_dir=${output_path}
+    python3 ./run.py --data_path=${data_path} --model_save_dir=${output_path} --res_save_dir=${output_path}
 else
     ./${data_path}/dataset/pretrained_model/bert_cn/pytorch_model.bin
     ./${data_path}/dataset/pretrained_model/bert_en/pytorch_model.bin
-    python3.7 ./run.py --data_path=${data_path}/dataset --model_save_dir=${output_path} --res_save_dir=${output_path} 1>${print_log} 2>&1
+    python3 ./run.py --data_path=${data_path}/dataset --model_save_dir=${output_path} --res_save_dir=${output_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算

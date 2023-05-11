@@ -15,7 +15,7 @@ currentDir=$(cd "$(dirname "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
-python3.7 -u -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
+python3 -u -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
 ${currentDir}/../test.py --checkpoint ${currentDir}/../result_full/best_top1_acc_epoch_40.pth \
 --launcher pytorch --data_root ${data_path} > ${currentDir}/../i3d_eval_8p.log 2>&1 &
 

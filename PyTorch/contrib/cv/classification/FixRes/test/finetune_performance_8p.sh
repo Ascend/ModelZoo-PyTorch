@@ -68,7 +68,7 @@ fi
 
 rm -rf finetune_performance_8p.log
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 main_finetune.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node=8 main_finetune.py \
     --input_size 384 \
 	--imnet_path ${data_path} \
 	--epochs ${train_epochs} \

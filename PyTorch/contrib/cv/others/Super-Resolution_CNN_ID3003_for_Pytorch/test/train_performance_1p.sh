@@ -114,14 +114,14 @@ lr=3e-4
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 train_performance.py \
+    python3 train_performance.py \
         --data_url=${data_path} \
         --train_url=${output_path} \
         --num-epochs=${train_epochs} \
         --batch-size=${batch_size} \
         --lr=${lr} 1>${print_log} 2>&1
 else
-    python3.7 train_performance.py \
+    python3 train_performance.py \
         --data_url=${data_path} \
         --train_url=${output_path} \
         --num-epochs=${train_epochs} \

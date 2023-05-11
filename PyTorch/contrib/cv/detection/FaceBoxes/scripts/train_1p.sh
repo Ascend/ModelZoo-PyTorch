@@ -4,7 +4,7 @@ currentDir=$(cd "$(dirname "$0")";pwd)/..
 cd ${currentDir}
 echo "train log path is ${currentDir}/1p_train.log"
 
-python3.7.5 -u ${currentDir}/train.py \
+python3 -u ${currentDir}/train.py \
 	--dist_url='tcp://127.0.0.1:123456' \
 	--multiprocessing-distributed \
 	--print-freq=1 \

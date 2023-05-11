@@ -106,7 +106,7 @@ export MASTER_ADDR=localhost
 export MASTER_PORT=1222
 
 TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log
-python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $ASCEND_DEVICE_ID --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
+python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $ASCEND_DEVICE_ID --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
 echo "LOG: ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log"
 
 wait
@@ -146,7 +146,7 @@ else
   echo "Saving to: $SAVE_DIR"
 fi
 
-python3.7 infer_val.py --dataset $DS \
+python3 infer_val.py --dataset $DS \
                          --cfg $CONFIG \
                          --exp $EXP \
                          --run $RUN_ID \
@@ -166,7 +166,7 @@ LISTNAME=`basename $FILELIST .txt`
 # without CRF
 data_path_len=${#data_path}
 data_path=${data_path:1:data_path_len-2}
-python3.7 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
+python3 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
 
 wait
 

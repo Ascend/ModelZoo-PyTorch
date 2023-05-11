@@ -113,7 +113,7 @@ then
     do
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/main.py \
+    nohup taskset -c $PID_START-$PID_END python3 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -138,7 +138,7 @@ then
 else
     for i in $(seq 0 7)
     do
-    nohup python3.7 ${cur_path}/main.py \
+    nohup python3 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \

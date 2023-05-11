@@ -95,7 +95,7 @@ do
 
      # 绑核，不需要的绑核的模型删除，需要模型审视修改
     
-	nohup python3.7 ${cur_path}/main.py \
+	nohup python3 ${cur_path}/main.py \
         --arch=mobilenet \
         --data=${data_path} \
         --batch_size=${batch_size} \

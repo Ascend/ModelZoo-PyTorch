@@ -98,7 +98,7 @@ start_time=$(date +%s)
 ls -l ${test_path_dir}/env.sh 
 source ${test_path_dir}/env.sh
 
-python3.7 ./main.py \
+python3 ./main.py \
 	  ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \

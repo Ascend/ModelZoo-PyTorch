@@ -116,7 +116,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 # 绑核，不需要的绑核的模型删除，需要模型审视修改
-python3.7 ${cur_path}//transform_peta.py \
+python3 ${cur_path}//transform_peta.py \
 	--save_dir=$data_path \
 	--traintest_split_file=$data_path/peta_partition.pkl
 
@@ -124,7 +124,7 @@ corenum=`cat /proc/cpuinfo |grep "processor"|wc -l`
 let a=RANK_ID*${corenum}/${RANK_SIZE}
 let b=RANK_ID+1
 let c=b*${corenum}/${RANK_SIZE}-1
-nohup taskset -c $a-$c python3.7 ${cur_path}/train_deepmar_resnet50_8p.py \
+nohup taskset -c $a-$c python3 ${cur_path}/train_deepmar_resnet50_8p.py \
 	  --addr=$(hostname -I |awk '{print $1}') \
       --save_dir=$data_path \
       --exp_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/ \

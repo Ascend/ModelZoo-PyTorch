@@ -97,7 +97,7 @@ do
 		mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 	fi
 
-	taskset -c $PID_START-$PID_END python3.7 -u train.py \
+	taskset -c $PID_START-$PID_END python3 -u train.py \
 	  --device 'npu'\
 	  --device-list '0' \
 	  --npu 0 \

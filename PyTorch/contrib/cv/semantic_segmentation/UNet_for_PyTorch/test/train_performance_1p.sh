@@ -119,7 +119,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7.5 -u train.py \
+nohup python3 -u train.py \
     --device_id $device_id \
     --bin_mode ${bin_mode} \
     --start_step ${start_step} \

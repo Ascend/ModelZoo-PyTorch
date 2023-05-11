@@ -61,7 +61,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 eval_refinedet.py './RefineDet320_bn/RefineDet320_VOC_231.pth' ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 eval_refinedet.py './RefineDet320_bn/RefineDet320_VOC_231.pth' ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 ##################获取训练数据################

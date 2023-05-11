@@ -32,5 +32,5 @@ export GST_PLUGIN_PATH=${MX_SDK_HOME}/opensource/lib/gstreamer-1.0:${MX_SDK_HOME
 export PYTHONPATH=$PYTHONPATH:${MX_SDK_HOME}/python
 export ASCEND_GLOBAL_LOG_LEVEL=0
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
-python3.7 main.py
+python3 main.py
 exit 0

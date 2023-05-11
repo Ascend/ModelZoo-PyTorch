@@ -96,7 +96,7 @@ else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
-python3.7.5 tools/train_npu.py \
+python3 tools/train_npu.py \
 	--pretrained \
 	--pth_path=${pth_path} \
 	--data_path=${data_path} \

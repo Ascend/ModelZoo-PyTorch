@@ -60,7 +60,7 @@ bash test/train_finetune_1p.sh --data_path=/opt/npu
 
 # online inference demo
 source test/env_npu.sh
-python3.7 demo.py
+python3 demo.py
 ```
 Note:
 - If you save dataset in another path but not /opt/npu, please specify argument --data_path.

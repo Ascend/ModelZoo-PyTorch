@@ -38,7 +38,7 @@ commit_id=815d6585344826e0346a01efd57de45498cfe52b
   然后将label_root 修改为dataset文件夹的目录+'MOT16/labels_with_ids/train' 例如/root/dataset/MOT17/labels_with_ids/train
   然后执行 
   ```
-  python3.7 gen_labels_16.py
+  python3 gen_labels_16.py
   ```
   下载https://github.com/ifzhang/FairMOT模型， 将刚下载下的FairMOT/src下的data文件夹放至本模型的src目录下
 

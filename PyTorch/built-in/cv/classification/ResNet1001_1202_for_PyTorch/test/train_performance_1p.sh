@@ -91,7 +91,7 @@ else
   ln -nsf $data_path/* ${cur_path}/data
   data_path=${cur_path}/data
 fi
-nohup python3.7 ./pytorch_resnet_apex.py \
+nohup python3 ./pytorch_resnet_apex.py \
     --arch ${arch} \
     --data ${data_path} \
     --npu ${ASCEND_DEVICE_ID} \

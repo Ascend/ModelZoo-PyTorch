@@ -89,7 +89,7 @@ export HCCL_IF_IP=$local_addr
 start_time=$(date +%s)
 # source 环境变量
 
-python3.7 ./main.py \
+python3 ./main.py \
     --addr=${master_addr} \
     --seed=49 \
     --workers=184 \

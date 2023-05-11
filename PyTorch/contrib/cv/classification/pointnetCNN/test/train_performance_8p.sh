@@ -91,7 +91,7 @@ export MASTER_ADDR=127.0.0.1
 export MASTER_PORT=5678
 for i in $(seq 0 7)
 do
-python3.7 train_pytorch.py \
+python3 train_pytorch.py \
   --local_rank=$i \
   --multi=1 \
   --learning_rate=0.008 \

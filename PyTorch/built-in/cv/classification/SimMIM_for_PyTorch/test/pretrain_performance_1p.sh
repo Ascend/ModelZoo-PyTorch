@@ -77,7 +77,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 export RANK=$local_rank
-nohup taskset -c 0-24 python3.7 main_simmim.py  \
+nohup taskset -c 0-24 python3 main_simmim.py  \
     --cfg configs/swin_base__100ep/simmim_pretrain__swin_base__img192_window6__100ep.yaml \
     --opts TRAIN.EPOCHS $train_epochs \
     --batch-size $batch_size \

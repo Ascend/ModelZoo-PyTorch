@@ -2,7 +2,7 @@ ARG FROM_IMAGE_NAME
 FROM $FROM_IMAGE_NAME
 
 RUN apt update && apt install -y git
-RUN /usr/bin/python3.7 -m pip install --update pip 2to3 libgl1-mesa-glx
+RUN /usr/bin/python3 -m pip install --update pip 2to3 libgl1-mesa-glx
 RUN pip install addict ninja
 
 RUN mkdir ./fsaf_requirement

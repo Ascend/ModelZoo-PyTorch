@@ -128,7 +128,7 @@ NPUS=($(seq 0 $devices_num))
 rank_server=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${server_index}'}'`
 export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",'${device_num}'*'${linux_num}'}'`
 
-python3.7 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
+python3 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
     --addr=$one_node_ip \
     --seed 49  \
     --workers 128 \

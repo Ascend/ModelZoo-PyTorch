@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -m torch.distributed.launch --nproc_per_node=8 \
+python3 -m torch.distributed.launch --nproc_per_node=8 \
     main_evaluate_imnet.py --input_size 384 \
     --imnet_path ${data_path} \
     --architecture 'ResNet50' \

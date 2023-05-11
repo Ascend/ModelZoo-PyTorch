@@ -97,7 +97,7 @@ for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-python3.7  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list='0,1,2,3,4,5,6,7' --dataset pascal --num_epochs 2 --lr_step 45,60,75 --port='34578' --addr ${master_addr} --world_size ${world_size} --rank ${node_rank}  --batch_size $batch_size --lr 3.54e-4 --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3  main_npu_8p.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --device_list='0,1,2,3,4,5,6,7' --dataset pascal --num_epochs 2 --lr_step 45,60,75 --port='34578' --addr ${master_addr} --world_size ${world_size} --rank ${node_rank}  --batch_size $batch_size --lr 3.54e-4 --num_workers ${KERNEL_NUM} --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 # python test.py ctdet --exp_id pascal_resdcn18_384 --arch resdcn_18 --dataset pascal --resume --flip_test
    

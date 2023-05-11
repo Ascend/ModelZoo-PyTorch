@@ -73,7 +73,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./tools/valid.py \
+python3 ./tools/valid.py \
           ${data_path} \
           --cfg ./experiments/cls_hrnet_w18_sgd_lr5e-2_wd1e-4_bs32_x100.yaml \
           --testModel ./output/imagenet/cls_hrnet_w18_sgd_lr5e-2_wd1e-4_bs32_x100/model_best.pth.tar \

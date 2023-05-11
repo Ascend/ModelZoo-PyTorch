@@ -77,7 +77,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 export RANK=$local_rank
-nohup taskset -c 0-24 python3.7 main_finetune.py  \
+nohup taskset -c 0-24 python3 main_finetune.py  \
     --cfg configs/swin_base__100ep/simmim_finetune__swin_base__img192_window6__100ep.yaml \
     --opts TRAIN.EPOCHS $train_epochs \
     --pretrained ./$output_dir/simmim_pretrain/simmim_pretrain__swin_base__img192_window6__100ep/ckpt_epoch_1.pth \

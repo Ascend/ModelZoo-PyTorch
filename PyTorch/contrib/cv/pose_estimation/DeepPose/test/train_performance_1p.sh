@@ -81,7 +81,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./train.py configs/top_down/deeppose/coco/npu_deeppose_res50_coco_256x192.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 ./train.py configs/top_down/deeppose/coco/npu_deeppose_res50_coco_256x192.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

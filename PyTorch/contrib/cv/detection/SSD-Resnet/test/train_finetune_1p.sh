@@ -80,7 +80,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 export WORLD_SIZE=$RANK_SIZE
-python3.7 ./demo.py \
+python3 ./demo.py \
     --data=${data_path} \
     --checkpoint=${checkpoint_path} \
     --num-workers=${workers} \

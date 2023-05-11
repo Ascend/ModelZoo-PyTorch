@@ -84,7 +84,7 @@ ln -s ${data_path} ${default_data_path}/.
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 {
-nohup python3.7 train.py
+nohup python3 train.py
 if [ -d "${cur_path}/results/val" ];then
     cd ${cur_path}/results/val
     rm -rf all
@@ -95,9 +95,9 @@ if [ -d "${cur_path}/results/val" ];then
 else
     mkdir -p ${cur_path}/results/val
 fi
-#python3.7 test.py --resume='ckpt/only-final-lr-0.01-iter-430000.pth'
-python3.7 test.py --resume='ckpt/only-final-lr-0.01-iter-10000.pth'
-python3.7 main.py
+#python3 test.py --resume='ckpt/only-final-lr-0.01-iter-430000.pth'
+python3 test.py --resume='ckpt/only-final-lr-0.01-iter-10000.pth'
+python3 main.py
 } > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     
 wait

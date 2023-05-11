@@ -92,7 +92,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 NUM_PROC=$1
 shift
-python3.7 -m torch.distributed.launch --nproc_per_node=8 train_8p.py "$@" \
+python3 -m torch.distributed.launch --nproc_per_node=8 train_8p.py "$@" \
         ${data_path} \
         --model spnasnet_100 \
         --sched cosine \

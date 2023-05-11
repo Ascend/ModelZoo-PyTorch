@@ -83,7 +83,7 @@ do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python3.7 train_8p_new.py -j ${KERNEL_NUM} --local_rank $RANK_ID & 
+nohup taskset -c $PID_START-$PID_END python3 train_8p_new.py -j ${KERNEL_NUM} --local_rank $RANK_ID & 
 done
 
 
@@ -100,7 +100,7 @@ do
     echo run process ${rank}
 
 
-    nohup python3.7 train_8p_new.py \
+    nohup python3 train_8p_new.py \
         $data_path \
       --arch transformer_wmt_en_de \
       --share-all-embeddings \

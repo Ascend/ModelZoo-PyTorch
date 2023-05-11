@@ -15,7 +15,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-python3.7 ./train_8p.py \
+python3 ./train_8p.py \
 	--device='npu' \
 	--num_points=2500 \
 	--workers=128 \

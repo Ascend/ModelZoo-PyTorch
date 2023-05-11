@@ -10,7 +10,7 @@ do
     export RANK=$RANK_ID
     export LOCAL_RANK=$RANK
 
-    python3.7 train_ctl_model.py \
+    python3 train_ctl_model.py \
     --config_file="configs/256_resnet50.yml" \
     GPU_IDS [$RANK] \
     DATASETS.NAMES 'DukeMTMC-reID' \

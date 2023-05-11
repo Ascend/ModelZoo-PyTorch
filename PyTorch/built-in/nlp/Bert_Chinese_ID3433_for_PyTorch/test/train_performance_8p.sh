@@ -91,7 +91,7 @@ else
     train_epochs=1
 fi
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node 8 run_mlm.py \
         --model_type bert \
         --config_name ./bert-${model_size}-chinese/config.json \
         --tokenizer_name ./bert-${model_size}-chinese \

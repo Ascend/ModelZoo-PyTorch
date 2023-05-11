@@ -81,8 +81,8 @@ I3D是一种新型的基于二维卷积网络膨胀生成的双流三位卷积�
   cd mmcv
   export MMCV_WITH_OPS=1 
   export MAX_JOBS=8
-  python3.7 setup.py build_ext
-  python3.7 setup.py develop
+  python3 setup.py build_ext
+  python3 setup.py develop
   pip3.7 list | grep mmcv
   ```
   

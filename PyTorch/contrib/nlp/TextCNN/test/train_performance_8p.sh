@@ -74,14 +74,14 @@ do
 	then
 	    let a=0+RANK_ID*24
 	    let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 run.py \
+        taskset -c $a-$b python3 run.py \
     			--data_path ${data_path} \
     			--local_rank ${RANK_ID} \
     			--model TextCNN \
     			--world_size 8 \
     			--distributed > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	else
-        python3.7 run.py \
+        python3 run.py \
     			--data_path ${data_path} \
     			--local_rank ${RANK_ID} \
     			--model TextCNN \

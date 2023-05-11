@@ -126,7 +126,7 @@ KERNEL_NUM=$(($(nproc)/$RANK_SIZE))
 PID_START=$((KERNEL_NUM * rank_id))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 taskset -c $PID_START-$PID_END \
-    python3.7 \
+    python3 \
     ../src/bin/train.py \
     --train-json ${feat_train_dir}/data.json \
     --valid-json ${feat_dev_dir}/data.json \

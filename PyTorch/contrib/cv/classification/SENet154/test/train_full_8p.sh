@@ -74,7 +74,7 @@ kernel_num=$(($(nproc) / 8))
 pid_start=$((kernel_num * rank))
 pid_end=$((pid_start + kernel_num - 1))
 
-taskset -c $pid_start-$pid_end python3.7 -u train.py "$@" \
+taskset -c $pid_start-$pid_end python3 -u train.py "$@" \
     --distributed \
     --num-devices 8 \
     --local-rank $rank \

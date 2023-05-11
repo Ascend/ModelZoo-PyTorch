@@ -96,7 +96,7 @@ do
 
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
-    nohup python3.7 run_squad.py \
+    nohup python3 run_squad.py \
           --init_checkpoint ${ckpt_path}/bert_base.pt \
           --bert_model bert-base-uncased \
 		  --do_train \

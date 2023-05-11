@@ -103,7 +103,7 @@ fi
 #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
 for i in $(seq 0 7)
 do
-        nohup python3.7 ${cur_path}/gru_8p.py \
+        nohup python3 ${cur_path}/gru_8p.py \
             --addr=$(hostname -I |awk '{print $1}') \
             --data-dir $data_path \
             --seed 123456 \
@@ -124,7 +124,7 @@ done
 wait
 
 ###验证精度
-nohup python3.7 ${cur_path}/bleu_score.py \
+nohup python3 ${cur_path}/bleu_score.py \
     --workers 40 \
     --dist-url 'tcp://127.0.0.1:50000' \
     --data-dir $data_path \

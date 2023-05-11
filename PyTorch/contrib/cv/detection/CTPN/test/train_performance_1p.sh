@@ -75,7 +75,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env.sh
-python3.7 train.py \
+python3 train.py \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49 \
         --workers=128 \

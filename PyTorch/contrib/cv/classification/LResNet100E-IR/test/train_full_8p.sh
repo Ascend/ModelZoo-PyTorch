@@ -107,7 +107,7 @@ for((i=0;i<$((RANK_SIZE));i++));
     PID_START=$((KERNEL_NUM*i))
     PID_END=$((PID_START+KERNEL_NUM-1))
     taskset -c ${PID_START}-${PID_END} \
-        python3.7 train.py \
+        python3 train.py \
             --net_mode ${net} \
             --net_depth ${depth} \
             --data_mode ${data_mode} \

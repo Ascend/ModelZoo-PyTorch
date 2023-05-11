@@ -44,7 +44,7 @@ bash test/train_finetune_1p.sh --data_path xxx
 
 # online inference demo 
 # The prediction results are output correctly, and the output results of multiple runs of the fixed tensor are consistent
-python3.7.5 demo.py
+python3 demo.py
 ```
 
 

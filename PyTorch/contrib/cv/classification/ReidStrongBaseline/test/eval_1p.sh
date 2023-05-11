@@ -80,7 +80,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/set_npu_env.sh
-python3.7 tools/test.py \
+python3 tools/test.py \
 	--config_file='configs/softmax_triplet_with_center.yml' \
 	--npus=1 \
 	MODEL.DEVICE_ID "('0')" \

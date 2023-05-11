@@ -46,6 +46,6 @@ bash test/train_eval_8p.sh --data_path=xxx
 bash test/train_finetune_1p.sh --data_path=xxx 
 
 # online inference demo 
-python3.7 demo.py
+python3 demo.py
 
 ```

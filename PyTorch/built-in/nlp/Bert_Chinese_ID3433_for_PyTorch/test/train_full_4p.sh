@@ -89,7 +89,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node 4 run_mlm.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node 4 run_mlm.py \
         --model_type bert \
         --config_name ./bert-${model_size}-chinese/config.json \
         --tokenizer_name ./bert-${model_size}-chinese \

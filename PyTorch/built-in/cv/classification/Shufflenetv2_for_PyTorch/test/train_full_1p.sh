@@ -135,7 +135,7 @@ do
     export DEVICE_ID=$RANK_ID
    
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-    nohup python3.7 8p_main_med.py \
+    nohup python3 8p_main_med.py \
         --data=$data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49  \

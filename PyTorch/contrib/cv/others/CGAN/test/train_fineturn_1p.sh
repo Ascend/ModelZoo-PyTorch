@@ -78,7 +78,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -u ./main.py \
+python3 -u ./main.py \
     --dataset=${data_path} \
     --gan_type CGAN \
     --epoch=${train_epochs} \

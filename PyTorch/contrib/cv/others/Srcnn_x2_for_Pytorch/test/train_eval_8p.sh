@@ -76,7 +76,7 @@ fi
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++));
 do
     export RANK_ID=$RANK_ID
-    nohup python3.7.5 -u ./train.py \
+    nohup python3 -u ./train.py \
         --train-file ${data_path}/91-image_x2.h5 \
         --eval-file ${data_path}/Set5_x2.h5 \
         --outputs-dir ${test_path_dir}/npu_8p \

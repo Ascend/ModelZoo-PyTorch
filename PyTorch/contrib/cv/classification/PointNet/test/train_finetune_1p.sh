@@ -31,7 +31,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-python3.7 ./finetune.py \
+python3 ./finetune.py \
 	--num_classes=${num_classes} \
 	--model=${pth_path} \
 	--nepoch=1 \

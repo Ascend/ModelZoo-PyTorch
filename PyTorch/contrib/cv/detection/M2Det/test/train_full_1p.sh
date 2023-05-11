@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source ./test/env_npu.sh
 
-python3.7 -u train_8p.py \
+python3 -u train_8p.py \
         --c=configs/m2det512_vgg.py \
         --ngpu=1 \
         --amp \

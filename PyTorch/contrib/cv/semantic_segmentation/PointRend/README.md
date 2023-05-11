@@ -21,14 +21,14 @@ commit_id=f5e4c452bba854b8ed14a7240f51720ca7857e91
 安装完其他依赖后，请使用代码仓中的源码编译安装detectron2：
 ```
 source test/env_npu.sh
-python3.7 -m pip install -e .
+python3 -m pip install -e .
 ```
 
 
 ## 准备数据集
 创建一个存放数据集的文件夹（如/root/datasets/cityscapes），再从cityscapes官网获取gtFine_trainvaltest.zip和leftImg8bit_trainvaltest.zip，将这两个压缩包解压到创建的文件夹中，随后参考detectron2官网的方法创建labelTrainIds.png ：
 ```
-python3.7 createTrainLabelIds.py /root/datasets/cityscapes
+python3 createTrainLabelIds.py /root/datasets/cityscapes
 ```
 
 ## 准备预训练权重

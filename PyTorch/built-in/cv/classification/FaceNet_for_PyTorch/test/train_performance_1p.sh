@@ -62,7 +62,7 @@ fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 
-nohup python3.7 fine_tune_new.py \
+nohup python3 fine_tune_new.py \
     --seed 12345 \
     --amp_cfg \
     --opt_level O2 \

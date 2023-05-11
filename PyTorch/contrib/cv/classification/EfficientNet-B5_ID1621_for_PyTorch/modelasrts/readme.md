@@ -524,7 +524,7 @@ I0910 08:52:25.676152  3967 Resnet50PostProcess.cpp:120] End to Process Resnet50
 
       ```
       cd util
-      python3.7 classification_task_metric.py ../sdk/result/ /home/data/mindx/dataset/val_lable.txt ./ result.json
+      python3 classification_task_metric.py ../sdk/result/ /home/data/mindx/dataset/val_lable.txt ./ result.json
       ```
 
       参数说明：

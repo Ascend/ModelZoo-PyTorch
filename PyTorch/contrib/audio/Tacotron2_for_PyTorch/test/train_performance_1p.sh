@@ -72,7 +72,7 @@ ln -nsf $data_path ${cur_path}/
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-python3.7 ${cur_path}/train.py \
+python3 ${cur_path}/train.py \
     -m Tacotron2 \
     -o ./output/ \
     -lr 1e-3 \

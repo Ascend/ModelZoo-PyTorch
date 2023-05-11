@@ -103,7 +103,7 @@ start_time=$(date +%s)
 
 PID_START=$((KERNEL_NUM * i))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END nohup python3.7 -u ./trainval_net_8p.py \
+taskset -c $PID_START-$PID_END nohup python3 -u ./trainval_net_8p.py \
     --net=res101 \
     --nw=${workers} \
     --lr=${learning_rate} \
@@ -122,7 +122,7 @@ wait
 
 ASCEND_DEVICE_ID=0
 
-nohup python3.7 ./test_net.py \
+nohup python3 ./test_net.py \
     --arch=rfcn \
     --dataset=pascal_voc \
     --net=res101 \

@@ -62,7 +62,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${cur_path}/test/env_npu.sh
 fi
-nohup python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  $MODEL --show --out  results_solo.pkl --eval segm \
+nohup python3 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  $MODEL --show --out  results_solo.pkl --eval segm \
       --batch_size=${batch_size} --gpu-ids ${device_id} --data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

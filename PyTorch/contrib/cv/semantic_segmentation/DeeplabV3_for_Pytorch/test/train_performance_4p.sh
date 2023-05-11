@@ -92,7 +92,7 @@ do
             --options device_num=${RANK_SIZE} data.workers_per_gpu=${workers} evaluation.interval=10000 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
+        python3 ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
             --launcher pytorch \
             --seed 1 \
             --deterministic \

@@ -168,7 +168,7 @@ do
         mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     fi
 
-    python3.7 run_squad.py \
+    python3 run_squad.py \
             --init_checkpoint ${ckpt_path}/bert_large_pretrained_amp.pt \
             --bert_model bert-large-uncased \
             --do_train \

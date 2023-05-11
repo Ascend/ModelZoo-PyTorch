@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 evalOnePic.py \
+python3 evalOnePic.py \
     --data_path=${data_path}  \
     --resume=${resume} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

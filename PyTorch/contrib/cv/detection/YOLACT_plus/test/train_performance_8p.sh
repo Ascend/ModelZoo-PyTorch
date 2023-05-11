@@ -99,7 +99,7 @@ do
         let PID_START=$((KERNEL_NUM * RANK_ID))
         let PID_END=$((PID_START + KERNEL_NUM - 1))
         taskset -c $PID_START-$PID_END \
-        python3.7 -u train.py \
+        python3 -u train.py \
           --data_path=${data_path} \
           --num_workers=${workers} \
           --lr=2e-3 \
@@ -109,7 +109,7 @@ do
           --save_interval=10000 \
           --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-      python3.7 -u train.py \
+      python3 -u train.py \
         --data_path=${data_path} \
         --num_workers=${workers} \
         --lr=2e-3 \

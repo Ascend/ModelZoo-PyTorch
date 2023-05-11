@@ -67,7 +67,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -u tools/train_net.py \
+python3 -u tools/train_net.py \
     --config-file configs/COCO-Detection/retinanet_R_50_FPN_1x.yaml \
     --device-ids 0 1 2 3 4 5 6 7 \
     --num-gpus 8 \

@@ -35,7 +35,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 cd src
-nohup python3.7  track.py mot --exp_id mot17_dla34  \
+nohup python3  track.py mot --exp_id mot17_dla34  \
             --load_model ${cur_path}/exp/mot/mot17_dla34/model_50.pth \
             --data_cfg '../src/lib/cfg/mot17.json'   \
             --world_size 1 \

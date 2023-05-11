@@ -69,7 +69,7 @@ fi
 
 # for i in $(seq 0 7)
 # do
-python3.7 ./train_classification_8P.py \
+python3 ./train_classification_8P.py \
     --data=${data_path} \
     --batch_size=${batch_size} \
     --epoch=${train_epochs} \

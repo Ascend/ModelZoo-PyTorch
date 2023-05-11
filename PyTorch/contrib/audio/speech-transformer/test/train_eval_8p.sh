@@ -73,7 +73,7 @@ decode_dir=${expdir}/${ASCEND_DEVICE_ID}
 echo ${feat_test_dir}/data.json
 echo ${dict}
 echo ${decode_dir}/data.json
-python3.7 \
+python3 \
     ../src/bin/recognize.py \
     --recog-json ${feat_test_dir}/data.json \
     --dict $dict \

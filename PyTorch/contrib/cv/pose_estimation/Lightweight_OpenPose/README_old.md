@@ -28,11 +28,11 @@ wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8
 ```
 * 将训练标准文件转化为内部格式,在主目录下生成文件`prepared_train_annotation.pkl`
 ```shell
-python3.7.5 scripts/prepare_train_labels.py --labels <coco_home>/annotations/person_keypoints_train2017.json
+python3 scripts/prepare_train_labels.py --labels <coco_home>/annotations/person_keypoints_train2017.json
 ```
 * 从完整的5000样本数量的验证集中随机生成一个样本量250的子集。在主目录下生成文件`val_subset.json`。
 ```shell
-python3.7.5 scripts/make_val_subset.py --labels <coco_home>/annotations/person_keypoints_val2017.json
+python3 scripts/make_val_subset.py --labels <coco_home>/annotations/person_keypoints_val2017.json
 ```
 
 ## 快速运行

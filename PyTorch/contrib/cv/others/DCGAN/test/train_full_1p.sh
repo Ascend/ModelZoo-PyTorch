@@ -80,7 +80,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7.5 -u ./main.py \
+python3 -u ./main.py \
     --data ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --batch-size=${batch_size} \

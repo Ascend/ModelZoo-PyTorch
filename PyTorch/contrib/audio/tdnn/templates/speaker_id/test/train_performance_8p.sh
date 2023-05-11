@@ -88,7 +88,7 @@ do
     export RANK=$RANK_ID
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 train.py train.yaml \
+    nohup taskset -c $PID_START-$PID_END python3 train.py train.yaml \
 			--distributed_launch \
 			--distributed_backend=hccl \
 			--local_rank ${RANK_ID} \

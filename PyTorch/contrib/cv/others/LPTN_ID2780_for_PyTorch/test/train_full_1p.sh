@@ -123,7 +123,7 @@ batch_size=16
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./train.py --opt=${PWD}/options/train/LPTN/train_FiveK.yml 1>${print_log} 2>&1
+    python3 ./train.py --opt=${PWD}/options/train/LPTN/train_FiveK.yml 1>${print_log} 2>&1
 else
     python3 train.py --opt=${PWD}/options/train/LPTN/train_FiveK.yml 1>${print_log} 2>&1
     python3 test.py  --opt=${PWD}/options/test/LPTN/test_FiveK.yml 1>>${print_log} 2>&1

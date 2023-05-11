@@ -53,11 +53,11 @@ do
  export WORLD_SIZE=$RANK_SIZE
  if [ $(uname -m) = "aarch64" ]
  then
-    nohup taskset -c $PID_START-$PID_END python3.7 -u ${test_path_dir}/../tools_8p/train.py \
+    nohup taskset -c $PID_START-$PID_END python3 -u ${test_path_dir}/../tools_8p/train.py \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml\
         --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
  else
-    nohup python3.7 -u ${test_path_dir}/../tools_8p/train.py \
+    nohup python3 -u ${test_path_dir}/../tools_8p/train.py \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml\
         --local_rank $RANK_ID > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
  fi
@@ -67,7 +67,7 @@ wait
 
 
 
-python3.7  ${test_path_dir}/../tools_1p/test.py 	\
+python3  ${test_path_dir}/../tools_1p/test.py 	\
 	--snapshot ${test_path_dir}/../snapshot_8p/checkpoint_e20.pth \
     --config ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml \
 	--datasetdir ${test_path_dir}/../../testing_dataset/VOT2016
@@ -75,7 +75,7 @@ python3.7  ${test_path_dir}/../tools_1p/test.py 	\
 wait
 
 
-python3.7 ${test_path_dir}/../tools_1p/eval.py 	 \
+python3 ${test_path_dir}/../tools_1p/eval.py 	 \
 	--tracker_path ${test_path_dir}/../results > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_acc_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

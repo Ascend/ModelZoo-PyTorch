@@ -72,7 +72,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 echo "task_queue_enable: $TASK_QUEUE_ENABLE"
-nohup python3.7 -m torch.distributed.launch --nproc_per_node=1 --use_env main.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node=1 --use_env main.py \
               --model alt_gvt_small \
               --device npu \
               --batch-size 128\

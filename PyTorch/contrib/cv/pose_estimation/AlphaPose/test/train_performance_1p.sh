@@ -83,7 +83,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 set -x
-python3.7 ./scripts/train_1p.py \
+python3 ./scripts/train_1p.py \
     --exp-id exp_test \
     --cfg ./configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

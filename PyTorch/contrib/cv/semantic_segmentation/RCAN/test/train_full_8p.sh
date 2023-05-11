@@ -90,7 +90,7 @@ fi
 # 训练开始时间
 start_time=$(date +%s)
 
-nohup python3.7 -u main.py  --arch ${arch_network} \
+nohup python3 -u main.py  --arch ${arch_network} \
                           --batch_size ${batch_size} \
                           --num_epochs ${num_epochs} \
                           --device ${device} \

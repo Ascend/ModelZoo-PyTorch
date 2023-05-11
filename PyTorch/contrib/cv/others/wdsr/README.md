@@ -50,7 +50,7 @@ bash test/train_eval_8p.sh --pre_train_model=real_pre_train_model
 
 # demo
 # 请将要测试图片路径作为lr_image的参数传入，输出会在output_sr 文件夹
-python3.7.5 demo.py --pre_train_model real_pre_train_model --lr_image 0801x2.png
+python3 demo.py --pre_train_model real_pre_train_model --lr_image 0801x2.png
 ```
 
 

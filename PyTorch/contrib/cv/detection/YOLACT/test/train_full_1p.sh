@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 export RANK_ID=${ASCEND_DEVICE_ID}
-nohup python3.7 -u ./train.py \
+nohup python3 -u ./train.py \
     --data=${data_path} \
     --seed=1234 \
     --max_iter=${max_iter} \
@@ -79,7 +79,7 @@ wait
 
 export RANK_SIZE=1
 export RANK_ID=0
-nohup python3.7 -u ./eval.py \
+nohup python3 -u ./eval.py \
 	--trained_model=weights/yolact_base_54_800000.pth \
 	--val_data=${data_path} >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log>&1 &
 

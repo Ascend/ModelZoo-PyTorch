@@ -32,4 +32,4 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7.5 ./get_mnist.py --data_path ${data_path}
+python3 ./get_mnist.py --data_path ${data_path}

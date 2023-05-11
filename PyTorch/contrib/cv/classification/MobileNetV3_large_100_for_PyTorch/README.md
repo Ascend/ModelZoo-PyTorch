@@ -42,10 +42,10 @@ bash ./test/train_performance_8p.sh --data_path=real_data_path
 bash test/train_eval.sh
 
 #To ONNX
-python3.7 pthtar2onx.py  --model-path path/to/model_best.pth.tar 
+python3 pthtar2onx.py  --model-path path/to/model_best.pth.tar 
 
 # online inference demo 
-python3.7 demo.py --model-path /path/to/model_best.pth.tar
+python3 demo.py --model-path /path/to/model_best.pth.tar
 
 ```
 

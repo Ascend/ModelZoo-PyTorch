@@ -90,7 +90,7 @@ do
   export LOCAL_RANK=$RANK_ID
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
-  nohup taskset -c $PID_START-$PID_END python3.7 -u tools/train.py configs/bisenetv1/bisenetv1_r50-d32_4x4_1024x1024_160k_cityscapes_8p_perf.py \
+  nohup taskset -c $PID_START-$PID_END python3 -u tools/train.py configs/bisenetv1/bisenetv1_r50-d32_4x4_1024x1024_160k_cityscapes_8p_perf.py \
     --launcher pytorch \
     --work-dir=work_dirs/bisenetv1_8p_perf \
     --seed 36436756 \

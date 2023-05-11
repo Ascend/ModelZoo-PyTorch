@@ -92,7 +92,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END python3.7 -u run_classification_criteo_dcn.py \
+        nohup taskset -c $PID_START-$PID_END python3 -u run_classification_criteo_dcn.py \
 	      --npu_id $RANK_ID \
 	      --device_num 8 \
 	      --trainval_path=${data_path}/train_after_preprocess_trainval_0.93.txt \
@@ -101,7 +101,7 @@ do
 	      --lr=0.0006 \
 	      --use_fp16 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &\
 	  else
-	      nohup python3.7 -u run_classification_criteo_dcn.py \
+	      nohup python3 -u run_classification_criteo_dcn.py \
 	      --npu_id $RANK_ID \
 	      --device_num 8 \
 	      --trainval_path=${data_path}/train_after_preprocess_trainval_0.93.txt \

@@ -15,7 +15,7 @@ then
     mkdir $OUTPUT_DIR
 fi
 
-python3.7 -u ./train.py ./data/SST-2/ \
+python3 -u ./train.py ./data/SST-2/ \
     --restore-file $ROBERTA_PATH \
     --max-positions 512 \
     --batch-size $MAX_SENTENCES \

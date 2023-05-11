@@ -84,14 +84,14 @@ export RANK_ID=0
 if [ $(uname -m) = "aarch64" ];then
     let a=0+RANK_ID*24
     let b=23+RANK_ID*24
-    taskset -c $a-$b python3.7 tools/train.py \
+    taskset -c $a-$b python3 tools/train.py \
                       --cfg experiments/coco/transpose_r/TP_R_256x192_d256_h1024_enc3_mh8.yaml  \
                       --amp \
                       DATASET.ROOT $data_path\
                       TRAIN.LR 0.0001 \
                       TRAIN.LR_END 0.00001 >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 else
-    python3.7 tools/train.py \
+    python3 tools/train.py \
                       --cfg experiments/coco/transpose_r/TP_R_256x192_d256_h1024_enc3_mh8.yaml  \
                       --amp \
                       DATASET.ROOT $data_path\

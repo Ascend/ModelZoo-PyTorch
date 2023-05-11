@@ -71,15 +71,15 @@ FSAF为FPN每层添加anchor-free分支，包含分类与回归，在训练时�
      cd mmcv
      export MMCV_WITH_OPS=1
      export MAX_JOBS=8
-     python3.7.5 setup.py build_ext
-     python3.7.5 setup.py develop
+     python3 setup.py build_ext
+     python3 setup.py develop
      pip3.7.5 list | grep mmcv
      ```
   4. 安装mmdetection。
      ```sh
      cd mmdetection
      pip3.7.5 install -r requirements/build.txt
-     python3.7.5 setup.py develop
+     python3 setup.py develop
      pip3.7.5 list | grep mmdet
      ```
   5. 如果遇到`apex O1`报错，尝试修改：找到代码路径`{the path of the fsaf environment in conda}/lib/python3.7/site-packages/apex/amp/utils.py`, mine is `/root/archiconda3/envs/fsaf/lib/python3.7/site-packages/apex/amp/utils.py`

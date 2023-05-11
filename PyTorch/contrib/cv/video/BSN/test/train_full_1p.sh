@@ -46,7 +46,7 @@ else
 fi
 
 
- taskset -c 0-23 python3.7 -u main_1p.py --module full_1p --data_path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+ taskset -c 0-23 python3 -u main_1p.py --module full_1p --data_path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

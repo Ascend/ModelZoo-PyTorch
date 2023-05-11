@@ -94,7 +94,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-taskset -c 0-47 python3.7 -u ./main.py \
+taskset -c 0-47 python3 -u ./main.py \
 	${data_path} \
         --addr=$(hostname -I |awk '{print $1}') \
 	--seed=49 \

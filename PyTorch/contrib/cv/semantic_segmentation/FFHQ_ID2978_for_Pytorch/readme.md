@@ -26,7 +26,7 @@ Face Semantic maps were acquired by training a pytorch implementation of [DeepLa
 
 ## Run
 
-python3.7 run_deeplab.py
+python3 run_deeplab.py
 
 
 > 分割后的图像，放在原图片存放路径里的parsings文件夹下。

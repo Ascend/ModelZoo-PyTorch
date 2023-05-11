@@ -69,7 +69,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
-python3.7 ./train.py \
+python3 ./train.py \
     --data=${data_path} \
     --seed=233 \
     --workers=${workers} \

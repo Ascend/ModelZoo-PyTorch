@@ -83,7 +83,7 @@ else
 fi
 
 
-nohup taskset -c 0-23 python3.7 -u train_npu.py \
+nohup taskset -c 0-23 python3 -u train_npu.py \
     --coco_path=${data_path} \
     --workers=${workers} \
     --gpu=${ASCEND_DEVICE_ID} \

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 root_path=$1
 
-nohup python3.7 ../main.py \
+nohup python3 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu gpu \
     --use_prof 1 \

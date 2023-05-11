@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 test.py \
+python3 test.py \
        -d veri -a densenet121 \
        --root ${data_path} \
        --save-dir log/densenet121-xent-htri-veri-multitask \

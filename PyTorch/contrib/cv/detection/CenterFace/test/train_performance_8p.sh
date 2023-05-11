@@ -94,7 +94,7 @@ do
     KERNEL_NUM=$(($(nproc)/8))
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7  main.py $PREC \
+    taskset -c $PID_START-$PID_END python3  main.py $PREC \
     --device_list='0,1,2,3,4,5,6,7' \
     --world_size=8 \
     --batch_size=$batch_size \

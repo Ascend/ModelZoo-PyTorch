@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -u -m torch.distributed.launch --nproc_per_node=8 --master_port 7164 main_pretrain.py \
+nohup python3 -u -m torch.distributed.launch --nproc_per_node=8 --master_port 7164 main_pretrain.py \
              --data_path ${data_path} \
              --model mae_vit_base_patch16 \
              --epochs ${train_epochs} \

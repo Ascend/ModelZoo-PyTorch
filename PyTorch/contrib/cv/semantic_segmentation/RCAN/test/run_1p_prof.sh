@@ -94,7 +94,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 export TASK_QUEUE_ENABLE=1
 start_time=$(date +%s)
 
-nohup python3.7 -u ../main_prof.py  --arch ${arch_network} \
+nohup python3 -u ../main_prof.py  --arch ${arch_network} \
                           --batch_size ${batch_size} \
                           --train_dataset_dir  ${train_dataset_dir}  \
                           --num_epochs 1 \

@@ -28,7 +28,7 @@ done
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path/../
 
-N_NPUS=$(python3.7.5 -c """
+N_NPUS=$(python3 -c """
 from config import conf_8p as conf
 device_str = conf['ASCEND_VISIBLE_DEVICES']
 print(len(device_str) // 2 + 1)"""

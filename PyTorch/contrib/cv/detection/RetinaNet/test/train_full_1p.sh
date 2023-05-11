@@ -81,7 +81,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 tools/train_net.py \
+python3 tools/train_net.py \
     --config-file configs/COCO-Detection/retinanet_R_50_FPN_1x.yaml \
     AMP 1 \
     OPT_LEVEL O1 \

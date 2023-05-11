@@ -48,7 +48,7 @@ ln -sb ${data_path} /root/dataset
 batch_size=12
 start_time=$(date +%s)
 cd src
-nohup python3.7 -u  train_1p.py mot --exp_id mot17_dla34  \
+nohup python3 -u  train_1p.py mot --exp_id mot17_dla34  \
             --load_model '../models/ctdet_coco_dla_2x.pth' \
             --data_cfg '../src/lib/cfg/mot17.json'   \
             --world_size 1 \

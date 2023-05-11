@@ -11,7 +11,7 @@ do
         pid_start=$((kernel_num * rank))
         pid_end=$((pid_start + kernel_num - 1))
 
-        taskset -c $pid_start-$pid_end python3.7 -u train_ssd.py \
+        taskset -c $pid_start-$pid_end python3 -u train_ssd.py \
           --dataset_type voc  \
           --data_path /opt/npu/voc \
           --net mb2-ssd-lite \
@@ -35,7 +35,7 @@ do
           --dist_backend 'hccl' \
           --device npu  > models/8p/log.txt 2>&1 &
     else
-        python3.7 -u train_ssd.py \
+        python3 -u train_ssd.py \
           --dataset_type voc  \
           --data_path /opt/npu/voc \
           --net mb2-ssd-lite \

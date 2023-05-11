@@ -98,7 +98,7 @@ fi
 export NODE_RANK=${server_index}
 export NPU_WORLD_SIZE=`awk 'BEGIN{printf "%.0f\n",8*'${linux_num}'}'`
 
-nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
+nohup python3 ./DistributedResnet50/main_apex_d76_npu.py \
         --data ${data_path} \
         --addr=$one_node_ip \
         --seed=49 \

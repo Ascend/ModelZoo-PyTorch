@@ -83,7 +83,7 @@ unset TASK_QUEUE_ENABLE
 unset HCCL_WHITELIST_DISABLE
 
 
-python3.7 ./main.py \
+python3 ./main.py \
       ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \

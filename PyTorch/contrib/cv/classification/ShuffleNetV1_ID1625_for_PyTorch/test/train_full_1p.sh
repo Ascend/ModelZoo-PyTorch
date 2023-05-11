@@ -85,7 +85,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -u train.py \
+nohup python3 -u train.py \
     --model-size 1.0x \
     --epochs ${train_epochs} \
     --batch-size ${batch_size} \

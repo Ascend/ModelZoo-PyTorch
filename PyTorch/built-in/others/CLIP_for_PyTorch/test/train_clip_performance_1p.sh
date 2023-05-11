@@ -70,7 +70,7 @@ source ${cur_path}/test/env_npu.sh
 start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
-python3.7 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-1p \
+python3 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-1p \
   --num_train_epochs ${train_epochs} \
   --model_name_or_path "$model_path" \
   --data_dir $data_path \

@@ -111,7 +111,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 sed -i "s|# if iter == 12: exit()|if iter == 12: exit()|g" train.py
-nohup python3.7 train.py --train-folder ${data_path} --max-epochs ${train_epochs} --batch-size ${batch_size} $PREC > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 train.py --train-folder ${data_path} --max-epochs ${train_epochs} --batch-size ${batch_size} $PREC > $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 sed -i "s|if iter == 12: exit()|# if iter == 12: exit()|g" train.py
 #训练结束时间，不需要修改

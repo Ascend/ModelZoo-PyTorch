@@ -32,11 +32,11 @@ bash test/train_eval_8p.sh --data_path=数据集路径
 
 # O2 online inference demo
 source test/env_npu.sh
-python3.7 demo.py
+python3 demo.py
 
 # O2 To ONNX
 source test/env_npu.sh
-python3.7 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 
 ```

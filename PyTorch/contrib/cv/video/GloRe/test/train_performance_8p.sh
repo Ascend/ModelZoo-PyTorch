@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source ./test/env_npu.sh
 
-python3.7 -m torch.distributed.launch --nproc_per_node=8 train_kinetics.py \
+python3 -m torch.distributed.launch --nproc_per_node=8 train_kinetics.py \
 	--batch-size 16 \
 	--gpus 0,1,2,3,4,5,6,7 \
 	--dataset ucf101 \

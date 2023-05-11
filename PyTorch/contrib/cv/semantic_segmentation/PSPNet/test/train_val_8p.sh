@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7.5 tools/test.py configs/pspnet/pspnet_r50-d8_512x512_20k_voc12aug.py \
+python3 tools/test.py configs/pspnet/pspnet_r50-d8_512x512_20k_voc12aug.py \
     ${cur_path}/output/PSPNet/8/ckpt/latest.pth \
     --eval mIoU \
     --options data_root=${data_path} data.train.data_root=${data_path} data.val.data_root=${data_path} data.test.data_root=${data_path} \

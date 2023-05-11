@@ -90,7 +90,7 @@ do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python3.7.5 -u ./main.py \
+nohup taskset -c $PID_START-$PID_END python3 -u ./main.py \
     --data ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --batch-size=${batch_size} \

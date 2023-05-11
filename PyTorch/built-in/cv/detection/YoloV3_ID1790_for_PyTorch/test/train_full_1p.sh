@@ -98,7 +98,7 @@ start_time=$(date +%s)
 sed -i "s|data/coco/|$data_path/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coco.py
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
+python3 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
     --cfg-options optimizer.lr=0.001 data.samples_per_gpu=${batch_size} \
     --seed 0  \
     --local_rank 0 \

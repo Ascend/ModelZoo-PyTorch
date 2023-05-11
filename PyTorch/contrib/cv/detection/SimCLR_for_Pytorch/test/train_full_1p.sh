@@ -79,7 +79,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./main_1p.py \
+python3 ./main_1p.py \
     ${data_path} \
     --workers=${workers} \
     --learning_rate=0.0003 \

@@ -78,13 +78,13 @@ for((RANK_ID=$RANK_ID_START;RANK_ID<$((WORLD_SIZE+RANK_ID_START));RANK_ID++));
 do
     PID_START=$((KERNEL_NUM*RANK_ID))
     PID_END=$((PID_START+KERNEL_NUM-1))
-    nohup taskset -c $PID_START-$PID_END python3.7 -u  ./train.py --opt=./confs/SRFlow_DF2K_8X.yml \
+    nohup taskset -c $PID_START-$PID_END python3 -u  ./train.py --opt=./confs/SRFlow_DF2K_8X.yml \
         --local_rank $RANK_ID  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait
 
 rm -rf ../results
-python3.7 -u ./test.py  ./confs/SRFlow_DF2K_8X.yml >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 -u ./test.py  ./confs/SRFlow_DF2K_8X.yml >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 cd ../
 

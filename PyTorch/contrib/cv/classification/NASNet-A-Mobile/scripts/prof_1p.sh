@@ -1,6 +1,6 @@
 alias python="/usr/bin/python3.7.5"
 source scripts/env_npu.sh
-nohup python3.7.5 -u main_npu_1p.py \
+nohup python3 -u main_npu_1p.py \
 	"/home/data/imagenet/" \
 	--prof \
         --lr=1.0 \

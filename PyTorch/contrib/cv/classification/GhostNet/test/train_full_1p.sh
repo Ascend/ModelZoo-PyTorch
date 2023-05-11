@@ -79,7 +79,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env_npu.sh
-taskset -c 0-32 nohup python3.7  train_ghostnet_1p.py  \
+taskset -c 0-32 nohup python3  train_ghostnet_1p.py  \
     ${data_path} \
     --model GhostNet  \
     -b 1024   \

@@ -38,7 +38,7 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 
 ### O2 online inference demo
 source scripts/set_npu_env.sh
-python3.7.5 demo.py
+python3 demo.py
 
 ## Res2Net101_v1b training result
 

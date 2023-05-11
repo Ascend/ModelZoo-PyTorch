@@ -25,10 +25,10 @@ $FASTBPE applybpe $OUTPATH/valid.zh data/wiki/txt/token_zh.valid $OUTPATH/codes
 
 $FASTBPE getvocab $OUTPATH/train.en $OUTPATH/train.zh > $OUTPATH/vocab
 
-python3.7 preprocess.py $OUTPATH/vocab $OUTPATH/train.en
-python3.7 preprocess.py $OUTPATH/vocab $OUTPATH/test.en
-python3.7 preprocess.py $OUTPATH/vocab $OUTPATH/valid.en
+python3 preprocess.py $OUTPATH/vocab $OUTPATH/train.en
+python3 preprocess.py $OUTPATH/vocab $OUTPATH/test.en
+python3 preprocess.py $OUTPATH/vocab $OUTPATH/valid.en
 
-python3.7 preprocess.py $OUTPATH/vocab $OUTPATH/train.zh
-python3.7 preprocess.py $OUTPATH/vocab $OUTPATH/test.zh
-python3.7 preprocess.py $OUTPATH/vocab $OUTPATH/valid.zh
+python3 preprocess.py $OUTPATH/vocab $OUTPATH/train.zh
+python3 preprocess.py $OUTPATH/vocab $OUTPATH/test.zh
+python3 preprocess.py $OUTPATH/vocab $OUTPATH/valid.zh

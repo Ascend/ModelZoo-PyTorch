@@ -43,7 +43,7 @@ fi
 
 for SIZE in $SIZES
 do
-    nohup python3.7 -u train.py --size $SIZE --apex --epoch_num 3 --val_interval 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1
+    nohup python3 -u train.py --size $SIZE --apex --epoch_num 3 --val_interval 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1
     sleep 5s
 done
 

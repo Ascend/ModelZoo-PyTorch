@@ -98,7 +98,7 @@ for((i=0;i<$((RANK_SIZE));i++));
     PID_START=$((KERNEL_NUM*i))
     PID_END=$((PID_START+KERNEL_NUM-1))
     taskset -c ${PID_START}-${PID_END} \
-        python3.7 eval.py \
+        python3 eval.py \
             --net_mode ${net_mode} \
             --net_depth ${net_depth} \
             --weights ${pth_path} \

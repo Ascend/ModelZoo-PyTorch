@@ -87,9 +87,9 @@ if [ x"${etp_flag}" != x"true" ];then
 else
     #CI看护
     sed -i "s|./R-101.pkl|${data_path}/R-101.pkl|g" configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml
-    python3.7 setup.py build develop
+    python3 setup.py build develop
 fi
-python3.7 tools/train_net.py \
+python3 tools/train_net.py \
         --num-gpus 1 \
         --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
         AMP 1 \

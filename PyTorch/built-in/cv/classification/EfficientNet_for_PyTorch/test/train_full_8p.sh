@@ -114,7 +114,7 @@ let b=RANK_ID+1
 let c=b*${corenum}/${RANK_SIZE}-1
  
 
-nohup taskset -c $a-$c python3.7 ${cur_path}/examples/imagenet/main.py \
+nohup taskset -c $a-$c python3 ${cur_path}/examples/imagenet/main.py \
     --data=$data_path \
     --arch=efficientnet-b0 --batch-size=$batch_size \
     --lr=1.6 \

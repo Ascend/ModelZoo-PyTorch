@@ -1,7 +1,7 @@
 source ./env.sh
 export PYTHONPATH=./:$PYTHONPATH
 
-python3.7 tools/train_net.py \
+python3 tools/train_net.py \
         --config-file configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_1x.yaml \
         --eval-only \
         AMP 1\

@@ -87,7 +87,7 @@ do
     then
 	    PID_START=$((KERNEL_NUM * $RANK_ID))
 	    PID_END=$((PID_START + KERNEL_NUM - 1))
-	    nohup taskset -c $PID_START-$PID_END python3.7 -u run_classification_criteo_wdl.py \
+	    nohup taskset -c $PID_START-$PID_END python3 -u run_classification_criteo_wdl.py \
            --amp \
            --steps ${steps} \
            --device_id $RANK_ID \
@@ -98,7 +98,7 @@ do
            --dist \
            --lr=0.0009 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-	    nohup python3.7 -u run_classification_criteo_wdl.py \
+	    nohup python3 -u run_classification_criteo_wdl.py \
            --amp \
            --steps ${steps} \
            --device_id $RANK_ID \

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source env.sh
 
-python3.7 main_eval.py \
+python3 main_eval.py \
     --backbone res101 \
     --dataset UCAS_AOD \
     --target_size "800,1344" \

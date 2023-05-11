@@ -106,7 +106,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
+        taskset -c $PID_START-$PID_END python3 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
             --launcher pytorch \
             --cfg-options data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \
@@ -114,7 +114,7 @@ do
             --seed 0 \
             --local_rank 0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
+        python3 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
             --launcher pytorch \
             --cfg-options data.samples_per_gpu=${batch_size} \
             optimizer.lr=0.0032 \

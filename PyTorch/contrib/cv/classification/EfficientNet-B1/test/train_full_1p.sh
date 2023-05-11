@@ -74,7 +74,7 @@ fi
 
 echo test_path_dir
 
-python3.7 ./tools/train_net.py \
+python3 ./tools/train_net.py \
     --device npu \
     --cfg ./configs/dds_baselines/effnet/EN-B1_dds_1npu_full.yaml \
     --device_id ${ASCEND_DEVICE_ID} \

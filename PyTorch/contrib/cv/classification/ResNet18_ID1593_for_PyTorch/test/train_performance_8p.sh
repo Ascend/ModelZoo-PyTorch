@@ -99,7 +99,7 @@ if [ $(uname -m) = "aarch64" ]
 then
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END nohup python3.7 ./main.py \
+        nohup taskset -c $PID_START-$PID_END nohup python3 ./main.py \
             ${data_path} \
             -a resnet18 \
             --addr=$(hostname -I |awk '{print $1}') \
@@ -121,7 +121,7 @@ then
             --stop-step-num=128 \
             --batch-size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 else
-    nohup python3.7 ./main.py \
+    nohup python3 ./main.py \
         ${data_path} \
         -a resnet18 \
         --addr=$(hostname -I |awk '{print $1}') \

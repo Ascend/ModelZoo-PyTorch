@@ -91,7 +91,7 @@ export PTCOPY_ENABLE=1
 export TASK_QUEUE_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"
 start_time=$(date +%s)
-nohup python3.7 -u train_1p.py \
+nohup python3 -u train_1p.py \
   $data_path \
   --device-id ${ASCEND_DEVICE_ID}\
   --arch transformer_wmt_en_de \

@@ -88,7 +88,7 @@ KERNEL_NUM=8
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python3.7 -u train_8p.py "$@"  \
+nohup taskset -c $PID_START-$PID_END python3 -u train_8p.py "$@"  \
     --dataset_root ${data_path} \
     --save_folder ./RefineDet320_bn/ \
     --num_workers $KERNEL_NUM \
@@ -100,7 +100,7 @@ nohup taskset -c $PID_START-$PID_END python3.7 -u train_8p.py "$@"  \
 done
 wait
 
-nohup python3.7 eval_refinedet.py './RefineDet320_bn/RefineDet320_VOC_231.pth' ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
+nohup python3 eval_refinedet.py './RefineDet320_bn/RefineDet320_VOC_231.pth' ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

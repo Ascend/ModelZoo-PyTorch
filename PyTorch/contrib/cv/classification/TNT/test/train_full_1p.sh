@@ -78,7 +78,7 @@ fi
 
 rm -rf 1p_full.log
 
-nohup python3.7 train.py ${data_path} \
+nohup python3 train.py ${data_path} \
     --model tnt_s_patch16_224 \
 	--sched cosine \
 	-epochs 300 \

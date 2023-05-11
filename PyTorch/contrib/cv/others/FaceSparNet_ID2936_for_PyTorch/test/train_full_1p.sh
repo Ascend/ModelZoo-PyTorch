@@ -126,9 +126,9 @@ batch_size=32
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7  newtrain.py --data_path=${data_path} --output_path=${output_path}
+    python3  newtrain.py --data_path=${data_path} --output_path=${output_path}
 else
-    python3.7  newtrain.py --data_path=${data_path} --output_path=${output_path} 1>${print_log} 2>&1
+    python3  newtrain.py --data_path=${data_path} --output_path=${output_path} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算

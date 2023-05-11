@@ -74,7 +74,7 @@ source ./test/env.sh
 安装
 
 ```
-python3.7.5 setup.py develop
+python3 setup.py develop
 ```
 
 或使用sh脚本安装

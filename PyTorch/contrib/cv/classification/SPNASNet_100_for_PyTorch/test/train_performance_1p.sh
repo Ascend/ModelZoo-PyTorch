@@ -92,7 +92,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 currentDir=$(cd "$(dirname "$0")";pwd)
 currtime=`date +%Y%m%d%H%M%S`
-python3.7 train_1p.py \
+python3 train_1p.py \
    	  ${data_path} \
     	--model spnasnet_100 \
     	--sched cosine \

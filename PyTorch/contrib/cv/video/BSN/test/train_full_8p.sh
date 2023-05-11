@@ -50,14 +50,14 @@ do
     export NPU_CALCULATE_DEVICE=${i}
     export RANK=${rank}
     echo run process ${rank}
-    python3.7 -u main_8p.py --module TEM --mode train --tem_batch_size 128 --data_path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_tem_${i}.log 2>&1 &
+    python3 -u main_8p.py --module TEM --mode train --tem_batch_size 128 --data_path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_tem_${i}.log 2>&1 &
 
     let rank++
 done
 
 wait
 
-python3.7 -u main_1p.py --module TEM --mode inference >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_tem_0.log 2>&1 &
+python3 -u main_1p.py --module TEM --mode inference >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_tem_0.log 2>&1 &
 
 wait
 
@@ -73,13 +73,13 @@ do
     KERNEL_NUM=$(($(nproc)/8))
     PID_START=$((KERNEL_NUM * RANK))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 -u main_8p.py --module PEM --mode train --pem_batch_size 128  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_pem_${i}.log 2>&1 &
+    taskset -c $PID_START-$PID_END python3 -u main_8p.py --module PEM --mode train --pem_batch_size 128  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_pem_${i}.log 2>&1 &
     let rank++
 done    
 
 wait
 
-python3.7 -u main_1p.py --module PEM --mode inference >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_pem_0.log 2>&1 &
+python3 -u main_1p.py --module PEM --mode inference >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_pem_0.log 2>&1 &
 
 wait
 #################获取训练数据################

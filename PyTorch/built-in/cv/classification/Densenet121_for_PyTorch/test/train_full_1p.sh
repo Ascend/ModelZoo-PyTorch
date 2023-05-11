@@ -115,7 +115,7 @@ fi
 
 
 #训练
-nohup python3.7 ${cur_path}/main.py  \
+nohup python3 ${cur_path}/main.py  \
       --workers 40 \
       --arch densenet121 \
       --lr 0.1 \

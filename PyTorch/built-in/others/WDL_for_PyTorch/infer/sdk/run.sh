@@ -34,5 +34,5 @@ export PYTHONPATH=$PYTHONPATH:${MX_SDK_HOME}/python
 mkdir -p log
 mkdir -p result
 
-python3.7 main.py ./data/wdl_infer.txt ./pipeline/Wdl.pipeline ./result > infer.log 2>&1 &
+python3 main.py ./data/wdl_infer.txt ./pipeline/Wdl.pipeline ./result > infer.log 2>&1 &
 exit 0

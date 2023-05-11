@@ -25,7 +25,7 @@ CUR_PATH=$(realpath $0)
 CUR_DIR=$(dirname ${CUR_PATH})
 DS_CONFIG="${CUR_DIR}/ds_finetune_large.json"
 
-python3.7 zero-shot_chid.py \
+python3 zero-shot_chid.py \
        --data_dir ${DATA_DIR} \
        --model-parallel-size ${MPSIZE} \
        --num-layers ${NLAYERS} \

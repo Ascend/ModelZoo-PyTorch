@@ -13,5 +13,5 @@ currentDir=$(cd "$(dirname "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
-python3.7 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options total_epochs=1 evaluation.interval=1 \
+python3 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options total_epochs=1 evaluation.interval=1 \
 --validate --resume-from . > ${currentDir}/../i3d_full_1p.log 2>&1 &

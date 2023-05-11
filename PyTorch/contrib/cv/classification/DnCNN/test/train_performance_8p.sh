@@ -67,7 +67,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 ulimit -SHn 51200
-nohup python3.7 train_8p.py \
+nohup python3 train_8p.py \
   --data_path=${data_path}  \
   --num_of_layers 17 \
   --mode S \

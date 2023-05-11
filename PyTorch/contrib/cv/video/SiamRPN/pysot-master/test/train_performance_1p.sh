@@ -44,7 +44,7 @@ fi
 npu_VISIBLE_DEVICES=0
 if [ $(uname -m) = "aarch64" ]
 then
-    taskset -c 0-32 python3.7 -m torch.distributed.launch \
+    taskset -c 0-32 python3 -m torch.distributed.launch \
         --nproc_per_node=1 \
         --master_port=2333 \
         ${test_path_dir}/../tools_1p/train.py \
@@ -52,7 +52,7 @@ then
         --max_step 1000 \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu_performace/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_per_${ASCEND_DEVICE_ID}.log 2>&1 &
 else
-    python3.7 -m torch.distributed.launch \
+    python3 -m torch.distributed.launch \
         --nproc_per_node=1 \
         --master_port=2333 \
         ${test_path_dir}/../tools_1p/train.py \

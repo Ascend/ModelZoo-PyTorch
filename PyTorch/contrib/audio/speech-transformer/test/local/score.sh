@@ -14,7 +14,7 @@ fi
 dir=$1
 dic=$2
 
-python3.7 ../src/utils/json2trn.py ${dir}/data.json ${dic} ${dir}/ref.trn ${dir}/hyp.trn
+python3 ../src/utils/json2trn.py ${dir}/data.json ${dic} ${dir}/ref.trn ${dir}/hyp.trn
 
 if [ ! -z ${nlsyms} ]; then
   cp ${dir}/ref.trn ${dir}/ref.trn.org

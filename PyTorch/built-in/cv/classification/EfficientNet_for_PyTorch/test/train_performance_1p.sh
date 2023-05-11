@@ -118,7 +118,7 @@ wait
 start_time=$(date +%s)
 
 #训练
-nohup python3.7 ${cur_path}/examples/imagenet/main.py \
+nohup python3 ${cur_path}/examples/imagenet/main.py \
     --data=$data_path \
     --arch=efficientnet-b0 \
     --batch-size=$batch_size \

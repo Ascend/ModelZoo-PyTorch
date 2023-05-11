@@ -74,7 +74,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./train_1p.py  \
+python3 ./train_1p.py  \
     ${data_path} \
     --model mobilenetv3_large_100  \
     --opt npufusedsgd \

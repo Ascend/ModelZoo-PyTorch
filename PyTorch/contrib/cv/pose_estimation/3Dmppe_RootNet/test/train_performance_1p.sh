@@ -80,7 +80,7 @@ source test/env_npu.sh
 rm -f nohup.out
 cd main
 
-nohup python3.7 train_1p.py \
+nohup python3 train_1p.py \
     --num_thread=${workers} \
     --lr 0.001 \
     --end_epoch=${train_epochs} \

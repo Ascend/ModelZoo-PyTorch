@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env.sh
 fi
 currtime=`date +%Y%m%d%H%M%S`
-nohup python3.7  validate.py  \
+nohup python3  validate.py  \
          ${data_path}  \
         --model spnasnet_100  \
         --checkpoint model_best.pth.tar \

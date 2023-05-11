@@ -76,7 +76,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
 
-    taskset -c $PID_START-$PID_END python3.7 ./main.py \
+    taskset -c $PID_START-$PID_END python3 ./main.py \
         --distributed \
         --lr 0.001 \
         --batch_size ${batch_size} \

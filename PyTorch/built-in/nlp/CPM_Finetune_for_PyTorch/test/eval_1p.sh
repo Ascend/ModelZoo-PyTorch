@@ -42,7 +42,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-taskset -c 0-25 python3.7 -m torch.distributed.launch --master_port ${1-1122} --nproc_per_node ${RANK_SIZE} zero-shot_chid.py \
+taskset -c 0-25 python3 -m torch.distributed.launch --master_port ${1-1122} --nproc_per_node ${RANK_SIZE} zero-shot_chid.py \
        --data_dir ${DATA_DIR} \
        --model-parallel-size ${MPSIZE} \
        --num-layers ${NLAYERS} \

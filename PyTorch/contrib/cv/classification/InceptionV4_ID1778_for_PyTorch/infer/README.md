@@ -362,7 +362,7 @@
  精度结果是在imageNet上进行的，使用classification_task_metric.py 进行测试。修改classification_task_metric.py
 
 ```
-python3.7 classfication_task_metric.py result/ ./val_label.txt . ./result.json"
+python3 classfication_task_metric.py result/ ./val_label.txt . ./result.json"
 ```
 
 参数 1 ： prediction file path

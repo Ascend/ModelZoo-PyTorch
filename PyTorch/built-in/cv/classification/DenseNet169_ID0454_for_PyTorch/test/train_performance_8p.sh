@@ -76,7 +76,7 @@ if [ x"${etp_flag}" != x"true" ];then
         else
             mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
         fi  
-        nohup python3.7 train.py  \
+        nohup python3 train.py  \
             --model densenet169 \
             --epochs ${epochs} \
             --data-path=$data_path \
@@ -108,7 +108,7 @@ else
         else
             mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
         fi  
-        nohup python3.7 train_mp.py  \
+        nohup python3 train_mp.py  \
             --model densenet169 \
             --epochs ${epochs} \
             --data-path=$data_path \

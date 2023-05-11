@@ -1,5 +1,5 @@
 source ./test/env_npu.sh
-nohup python3.7.5 -u train.py \
+nohup python3 -u train.py \
         --cfg ./intrada.yml \
         --device_type npu \
         --device_id 0 \

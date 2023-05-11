@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7  validate.py  \
+python3  validate.py  \
     ${data_path} \
 	--model cspresnext50 \
     -b ${batch_size}   \

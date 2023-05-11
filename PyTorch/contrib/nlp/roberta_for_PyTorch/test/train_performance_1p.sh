@@ -104,7 +104,7 @@ cd ${cur_path}
 python3 setup.py build_ext --inplace > ${test_path_dir}/build.log
 cd ${test_path_dir}
 
-nohup taskset -c 0-23 python3.7 -u ${cur_path}/train.py $data_path \
+nohup taskset -c 0-23 python3 -u ${cur_path}/train.py $data_path \
     --restore-file $ROBERTA_PATH \
     --max-positions 512 \
     --batch-size $batch_size \

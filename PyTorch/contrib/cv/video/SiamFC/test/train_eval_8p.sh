@@ -64,7 +64,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 # source ${test_path_dir}/set_env.sh
 
-nohup python3.7 ./bin/my_test.py \
+nohup python3 ./bin/my_test.py \
 	--model_path ${pth_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log
 
 wait

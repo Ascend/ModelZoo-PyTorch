@@ -71,7 +71,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     nohup \
-    taskset -c $PID_START-$PID_END python3.7 main.py  \
+    taskset -c $PID_START-$PID_END python3 main.py  \
             --model xcit_small_12_p16 --batch-size ${batch_size} \
             --data-path ${data_path}      \
             --drop-path 0.05 --output_dir experiments/xcit_small_12_p16/  \

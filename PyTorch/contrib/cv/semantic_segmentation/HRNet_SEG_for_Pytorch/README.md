@@ -50,7 +50,7 @@ bash test/train_full_8p.sh --data_path=real_data_path
 bash test/train_finetune_1p.sh --data_path=real_data_path --pth_path=real_pre_train_model_path
 
 # online inference demo
-python3.7.5 tools/demo.py --data_path=real_data_path --pth_path=model_pth
+python3 tools/demo.py --data_path=real_data_path --pth_path=model_pth
 ```
 
 Log path:

@@ -70,7 +70,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u train.py \
+python3 -u train.py \
   data.train_manifest=$data_path/an4_train_manifest.csv \
   data.val_manifest=$data_path/an4_val_manifest.csv \
   data.batch_size=$batch_size \

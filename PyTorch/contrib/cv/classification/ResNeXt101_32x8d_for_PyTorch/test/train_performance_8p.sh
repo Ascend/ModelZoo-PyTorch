@@ -101,7 +101,7 @@ KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM*RANK_ID))
 PID_END=$((PID_START+KERNEL_NUM-1))
 
-nohup taskset -c $PID_START-$PID_END  python3.7 ./main.py \
+nohup taskset -c $PID_START-$PID_END  python3 ./main.py \
 	    ${data_path} \
       --addr=$(hostname -I |awk '{print $1}') \
       --seed=49 \

@@ -86,7 +86,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     
-    taskset -c $PID_START-$PID_END python3.7 -u train.py \
+    taskset -c $PID_START-$PID_END python3 -u train.py \
         --batch_size $batch_size \
         --epochs 2 \
         --optimizer Adam \

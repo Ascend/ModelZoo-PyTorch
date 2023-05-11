@@ -107,7 +107,7 @@ wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 ${cur_path}/main.py \
+nohup python3 ${cur_path}/main.py \
     --arch=mobilenet \
     --data=${data_path} \
     --batch_size=${batch_size} \

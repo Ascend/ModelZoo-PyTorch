@@ -71,7 +71,7 @@ fi
 
 # for i in $(seq 0 7)
 # do
-python3.7 ./vit_train.py \
+python3 ./vit_train.py \
     ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \

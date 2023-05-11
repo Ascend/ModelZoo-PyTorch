@@ -113,7 +113,7 @@ train_epochs=50
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./main_edsr.py \
+    python3 ./main_edsr.py \
         --dir_data=${data_path}/ \
         --dir_train_data=${data_path}/train/ \
         --dir_test_data=${data_path}/test/ \
@@ -122,7 +122,7 @@ then
         --use_npu \
         --npu=${NPU_CALCULATE_DEVICE} 1>${print_log} 2>&1
 else
-    python3.7 ./main_edsr.py \
+    python3 ./main_edsr.py \
         --dir_data=${data_path}/ \
         --dir_train_data=${data_path}/train/ \
         --dir_test_data=${data_path}/test/ \

@@ -29,7 +29,7 @@ KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python3.7 -u eval/eval_iou.py \
+nohup taskset -c $PID_START-$PID_END python3 -u eval/eval_iou.py \
 --datadir ${data_path} \
 --loadDir "save/erfnet_training1/" \
 --loadWeights "model_best.pth" \

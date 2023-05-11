@@ -74,7 +74,7 @@ fi
 
 if [ $(uname -m) = "aarch64" ]
     then
-        nohup taskset -c 0-23 python3.7 run_glue.py --model_name_or_path bert-large-cased \
+        nohup taskset -c 0-23 python3 run_glue.py --model_name_or_path bert-large-cased \
                 --task_name $TASK \
                 --do_train \
                 --device ${device_id} \
@@ -95,7 +95,7 @@ if [ $(uname -m) = "aarch64" ]
                 --skip_steps 5 \
                 --output_dir /tmp/$TASK/ > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup  python3.7 run_glue.py --model_name_or_path bert-large-cased \
+        nohup  python3 run_glue.py --model_name_or_path bert-large-cased \
                 --task_name $TASK \
                 --do_train \
                 --device ${device_id} \

@@ -98,7 +98,7 @@ sed -i "s|ann_file_val = f'data/ucf101/ucf101_val_split_{split}_rawframes.txt'|a
 sed -i "s|ann_file_test = f'data/ucf101/ucf101_val_split_{split}_rawframes.txt'|ann_file_test= f'${data_path}/ucf101_val_split_{split}_rawframes.txt'|g" ${cur_path}/configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py
 
 
-python3.7 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py \
+python3 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p.py \
     --validate \
     --seed 0 \
     --deterministic \

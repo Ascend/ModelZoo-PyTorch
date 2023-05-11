@@ -114,7 +114,7 @@ export PYTHONPATH=./:$PYTHONPATH
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 
-python3.7 train.py \
+python3 train.py \
     --net_mode ${net} \
     --net_depth ${depth} \
     --data_mode ${data_mode} \

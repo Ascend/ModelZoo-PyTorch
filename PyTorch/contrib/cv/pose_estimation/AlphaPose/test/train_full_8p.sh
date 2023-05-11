@@ -70,7 +70,7 @@ set -x
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * 0))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7 ./scripts/train.py \
+taskset -c $PID_START-$PID_END python3 ./scripts/train.py \
     --exp-id exp_test \
     --cfg ./configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml \
     --world-size 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

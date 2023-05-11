@@ -32,10 +32,10 @@ bash test/train_performance_8p.sh  --data_path=xxx
 bash ./test/train_eval_8p.sh  --data_path=xxx
 
 # online inference demo 
-python3.7.5 demo.py
+python3 demo.py
 
 # To ONNX
-python3.7.5 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 ## Xception training result
 

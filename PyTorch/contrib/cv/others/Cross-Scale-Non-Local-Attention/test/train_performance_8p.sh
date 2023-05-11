@@ -12,7 +12,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     export RANK_ID=$RANK_ID
-    nohup taskset -c $PID_START-$PID_END python3.7 main.py \
+    nohup taskset -c $PID_START-$PID_END python3 main.py \
         --epochs 1000 \
 	    --model CSNLN \
 	    --data_test Set5 \

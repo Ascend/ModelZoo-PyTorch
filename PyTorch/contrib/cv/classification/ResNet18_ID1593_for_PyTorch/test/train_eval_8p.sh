@@ -67,7 +67,7 @@ fi
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
 # source 环境变量
-python3.7 ./main.py \
+python3 ./main.py \
 	${data_path} \
 	-a resnet18 \
 	--evaluate \

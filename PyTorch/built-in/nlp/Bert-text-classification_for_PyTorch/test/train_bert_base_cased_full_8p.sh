@@ -84,7 +84,7 @@ do
     WORKERS_NUM=$((KERNEL_NUM-1))
     if [ $(uname -m) = "aarch64" ]
     then
-        nohup taskset -c $PID_START-$PID_END python3.7 run_glue.py  --local_rank=${RANK_ID} \
+        nohup taskset -c $PID_START-$PID_END python3 run_glue.py  --local_rank=${RANK_ID} \
                 --model_name_or_path bert-base-cased \
                 --task_name $TASK \
                 --do_train \
@@ -104,7 +104,7 @@ do
                 --skip_steps 5 \
                 --output_dir /tmp/$TASK/ > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup  python3.7 run_glue.py  --local_rank=${RANK_ID} \
+        nohup  python3 run_glue.py  --local_rank=${RANK_ID} \
                 --model_name_or_path bert-base-cased \
                 --task_name $TASK \
                 --do_train \

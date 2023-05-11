@@ -114,7 +114,7 @@ batch_size=3
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 train.py \
+    python3 train.py \
         --dataroot ${data_path}/dataset_unzip/males \
         --name males_model \
         --batchSize 3 \
@@ -123,7 +123,7 @@ then
         --train_url=${output_path} \
         --epochs=${train_epochs} 1>${print_log} 2>&1
 else
-    python3.7 train.py \
+    python3 train.py \
         --dataroot ${data_path}/dataset_unzip/males \
         --npu_ids ${NPU_CALCULATE_DEVICE} \
         --name males_model \

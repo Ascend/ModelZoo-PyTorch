@@ -84,7 +84,7 @@ bash test/train_full_8p.sh --data_path=$data_path > ${test_path_dir}/output/${AS
 
 wait
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 --master_port 12345 moby_linear.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node 8 --master_port 12345 moby_linear.py \
 --cfg configs/moby_swin_tiny.yaml --data-path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

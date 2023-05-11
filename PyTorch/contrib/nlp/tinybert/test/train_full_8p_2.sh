@@ -12,7 +12,7 @@ device_id='0,1,2,3,4,5,6,7'
 
 ################ compiling ##################
 source ./test/env_npu_8p.sh
-python3.7 ./main.py \
+python3 ./main.py \
 	      --pred_distill  \
         --teacher_model ./bert_base_uncased_ft_sst \
         --student_model ./tmp_tinybert_dir \

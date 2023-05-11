@@ -79,7 +79,7 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export NPUID=0
 export RANK=0
-python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
 	--cfg-options \
 	optimizer.lr=0.005 total_epochs=1 data_root=$data_path \
 	--seed 0 \

@@ -76,7 +76,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 nohup \
-python3.7.5 -u train.py \
+python3 -u train.py \
     --net vovnet-39 \
     --fine-tune-from $fine_tune_from \
     --num-workers $workers \

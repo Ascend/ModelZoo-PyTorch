@@ -1,7 +1,7 @@
 #!/bin/bash
 source ./test/env_npu.sh
 
-python3.7 test.py \
+python3 test.py \
     --data data/coco.yaml \
     --img 1280 \
     --batch 32 \

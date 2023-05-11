@@ -36,7 +36,7 @@ bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=./checkpoints/m
 bash test/train_finetune_1p.sh --data_path=real_data_path --pth_path=./checkpoints/checkpoint.pth.tar
 
 # online inference demo 
-python3.7.5 demo.py
+python3 demo.py
 ```
 
 Log path:

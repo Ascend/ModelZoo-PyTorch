@@ -72,7 +72,7 @@ fi
 
 for i in $(seq 0 7)
 do
-    nohup python3.7 train.py \
+    nohup python3 train.py \
         ${data_path} \
         -b ${batch_size} \
         --model gluon_resnet50_v1d \

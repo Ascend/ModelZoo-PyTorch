@@ -14,8 +14,8 @@ export MAX_JOBS=8
 
 source ./test/env_npu.sh
 cd mmcv
-python3.7 setup.py build_ext
-python3.7 setup.py develop
+python3 setup.py build_ext
+python3 setup.py develop
 
 cd ${curPath}
 pip3 install -r requirements/build.txt

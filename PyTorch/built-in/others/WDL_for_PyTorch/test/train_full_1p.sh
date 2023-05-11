@@ -86,7 +86,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-nohup python3.7 run_classification_criteo_wdl.py  \
+nohup python3 run_classification_criteo_wdl.py  \
     --data_path=$data_path \
     --epoch ${train_epochs} \
     --amp \

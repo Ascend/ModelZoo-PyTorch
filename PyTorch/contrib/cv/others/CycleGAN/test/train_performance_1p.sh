@@ -2,7 +2,7 @@ export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
 rm -rf checkpoints_profiling
 rm -rf npu1pbs1_profiling
 rm -rf npu1p.prof
-nohup python3.7.5 train.py --pu_ids='0' \
+nohup python3 train.py --pu_ids='0' \
 	 --prof=1 \
    --prof_file="npu1p.prof"  \
 	 --multiprocessing_distributed=0 \

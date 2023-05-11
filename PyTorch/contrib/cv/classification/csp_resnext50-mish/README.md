@@ -33,10 +33,10 @@ bash test/train_performance_8p.sh  --data_path=xxx
 bash ./test/train_eval_8p.sh  --data_path=xxx
 
 #To ONNX
-python3.7.5 pthtar2onx.py  --model-path path/to/model_best.pth.tar 
+python3 pthtar2onx.py  --model-path path/to/model_best.pth.tar 
 
 # online inference demo 
-python3.7.5 demo.py --model-path /path/to/model_best.pth.tar
+python3 demo.py --model-path /path/to/model_best.pth.tar
 ```
 
 ## CSP_resnext50-mish training result

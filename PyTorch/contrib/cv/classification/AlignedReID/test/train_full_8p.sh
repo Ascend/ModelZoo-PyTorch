@@ -80,7 +80,7 @@ KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-taskset -c $PID_START-$PID_END python3.7 ./main_8p.py \
+taskset -c $PID_START-$PID_END python3 ./main_8p.py \
 --data_pth=${data_path} \
 --workers=${workers} \
 --addr=$(hostname -I |awk '{print $1}') \

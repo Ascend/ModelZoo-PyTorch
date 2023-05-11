@@ -84,7 +84,7 @@ fi
 export PYTHONPATH=./awesome-semantic-segmentation-pytorch:$PYTHONPATH
 
 NGPUS=8
-nohup python3.7 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
+nohup python3 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
 --model dynamicunet ${prec} \
 --dataset pascal_voc --dataset-path ${data_path} \
 --lr 0.0001 --epochs 50 --worker 8 \

@@ -126,7 +126,7 @@ bash ./test/train_full_8p.sh
 然后运行以下脚本，执行demo.py：
 
 ```
-python3.7.5 demon.py --pu_ids='0' \
+python3 demon.py --pu_ids='0' \
 	 --prof=0 \
 	 --multiprocessing_distributed=0 \
 	 --distributed=1 \

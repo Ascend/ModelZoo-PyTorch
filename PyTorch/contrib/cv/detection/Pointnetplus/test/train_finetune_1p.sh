@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./finetune.py \
+python3 ./finetune.py \
         --data=${data_path} \
         --batch_size=${batch_size} \
         --epoch=${train_epochs} \

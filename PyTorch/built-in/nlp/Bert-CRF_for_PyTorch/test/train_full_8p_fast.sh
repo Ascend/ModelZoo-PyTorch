@@ -77,7 +77,7 @@ export RANK=$i
 export LOCAL_RANK=$i
 PID_START=$((KERNEL_NUM * LOCAL_RANK))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
+taskset -c $PID_START-$PID_END python3 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
         --local_rank $i \
         --train_epochs ${train_epochs} \
         --data_path ${data_path} \

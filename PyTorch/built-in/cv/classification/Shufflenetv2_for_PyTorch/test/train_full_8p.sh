@@ -115,7 +115,7 @@ fi
 device_id_list=0,1,2,3,4,5,6,7
 for i in $(seq 0 7)
 do       
-     nohup python3.7 -u 8p_main_med.py \
+     nohup python3 -u 8p_main_med.py \
         --data=$data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49  \

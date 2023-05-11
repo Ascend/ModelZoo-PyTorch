@@ -76,7 +76,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 echo "=============start training==================="
-python3.7 ./train1p.py \
+python3 ./train1p.py \
     --nproc=${workers} \
     --use_npu=True \
     --train_data_path=${data_path}/VOC2012/train \
@@ -105,7 +105,7 @@ echo "E2E Training Duration sec : $e2e_time"
 echo "Final Performance images/sec : $FPS"
 
 echo "=============start running benchmark test.==================="
-python3.7 ./test_benchmark.py \
+python3 ./test_benchmark.py \
     --use_npu=True \
     --output_dir=${test_path_dir}/output
 

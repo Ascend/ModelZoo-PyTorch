@@ -241,7 +241,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
 
             PID_START=$((KERNEL_NUM * RANK_ID))
             PID_END=$((PID_START + KERNEL_NUM - 1))
-            taskset -c $PID_START-$PID_END python3.7 ../../../espnet/bin/asr_train.py \
+            taskset -c $PID_START-$PID_END python3 ../../../espnet/bin/asr_train.py \
                 --config ${train_config} \
                 --preprocess-conf ${preprocess_config} \
                 --ngpu ${ngpu} \

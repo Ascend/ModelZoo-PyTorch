@@ -119,7 +119,7 @@ source ./test/env_npu.sh
 执行数据预处理脚本，将训练集图片裁剪成50*50的图片用与训练，运行成功会生成train.h5和val.h5文件。
 
 ```
-python3.7 preprocess.py --preprocess True --mode S
+python3 preprocess.py --preprocess True --mode S
 ```
 
 # 开始训练

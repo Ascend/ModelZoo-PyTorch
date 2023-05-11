@@ -110,7 +110,7 @@ start_time=$(date +%s)
 # 多机多卡
 export HCCL_IF_IP=$local_addr
 
-nohup python3.7 ${cur_path}/train/mobilenetv2_8p_main_anycard.py \
+nohup python3 ${cur_path}/train/mobilenetv2_8p_main_anycard.py \
 	--addr=$master_addr \
 	--seed 49 \
 	--workers 128 \

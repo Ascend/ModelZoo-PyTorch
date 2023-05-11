@@ -64,7 +64,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 #source ${test_path_dir}/env.sh
-python3.7 ./main.py \
+python3 ./main.py \
 	    ${data_path} \
 	    -a resnet101 \
       --evaluate \

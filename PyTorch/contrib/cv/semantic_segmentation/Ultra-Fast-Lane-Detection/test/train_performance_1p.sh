@@ -70,7 +70,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -u train.py \
+nohup python3 -u train.py \
       configs/tusimple.py \
       --epoch=$train_epochs \
       --batch_size=$batch_size \

@@ -79,7 +79,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/set_npu_env.sh
-python3.7 tools/train_1P.py \
+python3 tools/train_1P.py \
 	--config_file='configs/1P_tri_with_cen.yml' \
 	--loss_scale="64" \
 	MODEL.DEVICE_ID "('0')" \

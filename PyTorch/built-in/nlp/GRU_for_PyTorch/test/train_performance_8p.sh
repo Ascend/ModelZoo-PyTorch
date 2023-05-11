@@ -103,7 +103,7 @@ then
     do
     let p_start=0+20*i
     let p_end=19+20*i
-    taskset -c $p_start-$p_end nohup python3.7 ${cur_path}/gru_8p.py \
+    taskset -c $p_start-$p_end nohup python3 ${cur_path}/gru_8p.py \
         --addr=$(hostname -I |awk '{print $1}') \
         --data-dir $data_path \
         --seed 123456 \
@@ -123,7 +123,7 @@ then
 else
     for i in $(seq 0 7)
     do
-    nohup python3.7 ${cur_path}/gru_8p.py \
+    nohup python3 ${cur_path}/gru_8p.py \
         --addr=$(hostname -I |awk '{print $1}') \
         --data-dir $data_path \
         --seed 123456 \

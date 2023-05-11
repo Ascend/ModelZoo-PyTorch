@@ -356,7 +356,7 @@ I0910 01:47:30.616668  3697 Resnet50PostProcess.cpp:120] End to Process Resnet50
 ​	2.（可选）将“infer/util/”目录下的classification_task_metric.py 文件复制到“infer/mxbase”目录下	
 
 ```
-python3.7 classification_task_metric.py result/ ./val_label.txt ./ ./result.json
+python3 classification_task_metric.py result/ ./val_label.txt ./ ./result.json
 ```
 
 ​	参数说明：
@@ -559,7 +559,7 @@ performance—statistics.log.tpr.xxx
 ​		执行命令计算推理精度。
 
 ```
-python3.7 classification_task_metric.py result/ ./val_label.txt ./ ./result.json
+python3 classification_task_metric.py result/ ./val_label.txt ./ ./result.json
 ```
 
 ​	参数说明：

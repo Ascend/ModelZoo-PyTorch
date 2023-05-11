@@ -26,7 +26,7 @@ start_time=$(date +%s)
 
 
 
-nohup python3.7 ../main.py \
+nohup python3 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu npu \
     --use_prof 1 \

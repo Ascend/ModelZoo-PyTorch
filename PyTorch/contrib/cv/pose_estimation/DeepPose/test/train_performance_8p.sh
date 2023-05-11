@@ -72,7 +72,7 @@ do
     KERNEL_NUM=$(($(nproc)/8))
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 ./train.py \
+    taskset -c $PID_START-$PID_END python3 ./train.py \
         configs/top_down/deeppose/coco/npu_deeppose_res50_coco_256x192.py \
         --world_size 8 \
         --launcher pytorch-npu \

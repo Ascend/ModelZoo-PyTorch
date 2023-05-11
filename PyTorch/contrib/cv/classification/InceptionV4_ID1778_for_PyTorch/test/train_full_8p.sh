@@ -80,7 +80,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u ./train_8p.py \
+python3 -u ./train_8p.py \
 	--amp \
 	--loss-scale 128 \
     	--data ${data_path} \

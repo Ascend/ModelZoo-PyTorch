@@ -54,9 +54,9 @@ do
         PID_END=$((PID_START+KERNEL_NUM-1))
         if [ $RANK_ID == $((WORLD_SIZE+RANK_ID_START-1)) ]
         then
-            taskset -c $PID_START-$PID_END python3.7 -u train.py --size $SIZE --local_rank $RANK_ID --apex > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1
+            taskset -c $PID_START-$PID_END python3 -u train.py --size $SIZE --local_rank $RANK_ID --apex > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1
         else
-            taskset -c $PID_START-$PID_END python3.7 -u train.py --size $SIZE --local_rank $RANK_ID --apex > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1 &
+            taskset -c $PID_START-$PID_END python3 -u train.py --size $SIZE --local_rank $RANK_ID --apex > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1 &
         fi
     done
     sleep 5s
@@ -73,7 +73,7 @@ fi
 
 for SIZE in $SIZES
 do
-    python3.7 eval.py --pth_path saved_model/3T${SIZE}_latest.pth --size $SIZE > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}_eval.log 2>&1
+    python3 eval.py --pth_path saved_model/3T${SIZE}_latest.pth --size $SIZE > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}_eval.log 2>&1
     sleep 5s
 done
 

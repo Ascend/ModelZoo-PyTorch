@@ -89,7 +89,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 export RANK_ID=${ASCEND_DEVICE_ID}
-python3.7 ./train.py \
+python3 ./train.py \
     --data_path=${data_path} \
     --num_workers=${workers} \
     --lr=2e-3 \
@@ -100,7 +100,7 @@ python3.7 ./train.py \
     --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
-python3.7 eval.py --trained_model=weights/yolact_plus.pth > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1
+python3 eval.py --trained_model=weights/yolact_plus.pth > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1
 wait
 
 ##################获取训练数据################

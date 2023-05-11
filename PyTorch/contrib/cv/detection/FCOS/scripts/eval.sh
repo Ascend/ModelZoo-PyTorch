@@ -1,1 +1,1 @@
-python3.7 ./tools/test.py ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x_coco.py ./work_dirs/fcos_r50_caffe_fpn_4x4_1x_coco/latest.pth --eval bbox
+python3 ./tools/test.py ./configs/fcos/fcos_r50_caffe_fpn_4x4_1x_coco.py ./work_dirs/fcos_r50_caffe_fpn_4x4_1x_coco/latest.pth --eval bbox

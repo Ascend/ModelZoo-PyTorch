@@ -73,7 +73,7 @@ fi
 
 rm -rf 8p_eval.log
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 \
+nohup python3 -m torch.distributed.launch --nproc_per_node=8 \
     train.py ${data_path} \
     --model tnt_s_patch16_224 \
     -b 128 \

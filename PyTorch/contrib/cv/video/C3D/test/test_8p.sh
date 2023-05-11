@@ -52,7 +52,7 @@ mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 eval_file=$(find ./ -name "best_top1_acc_epoch*")
 echo "==== Eval top accuracy of epoch pth is ${eval_file}"
 
-python3.7 tools/test.py configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py ${eval_file} --eval top_k_accuracy > ${test_path_dir}/output/$ASCEND_DEVICE_ID/test_$ASCEND_DEVICE_ID.log 2>&1
+python3 tools/test.py configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb.py ${eval_file} --eval top_k_accuracy > ${test_path_dir}/output/$ASCEND_DEVICE_ID/test_$ASCEND_DEVICE_ID.log 2>&1
 wait
 ##################获取训练数据################
 # 训练结束时间，不需要修改

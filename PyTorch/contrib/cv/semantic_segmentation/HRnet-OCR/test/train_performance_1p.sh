@@ -91,7 +91,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup taskset -c $PID_START-$PID_END \
-python3.7 -u ./train.py \
+python3 -u ./train.py \
     --local_rank $RANK_ID \
     --num_workers $KERNEL_NUM \
     --dataset cityscapes \

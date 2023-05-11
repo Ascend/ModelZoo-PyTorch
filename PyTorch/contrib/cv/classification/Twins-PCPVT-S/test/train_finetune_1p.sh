@@ -1,4 +1,4 @@
-python3.7 -m torch.distributed.launch --nproc_per_node=1 --use_env main.py --model pcpvt_small_v0 --device npu --batch-size 128  --data-path ../imagenet --dist-eval --drop-path 0.3
+python3 -m torch.distributed.launch --nproc_per_node=1 --use_env main.py --model pcpvt_small_v0 --device npu --batch-size 128  --data-path ../imagenet --dist-eval --drop-path 0.3
 
 #!/bin/bash
 
@@ -77,7 +77,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node=1 --use_env main.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node=1 --use_env main.py \
               --model pcpvt_small_v0 \
               --device npu \
               --batch-size 128 \

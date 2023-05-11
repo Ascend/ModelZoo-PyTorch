@@ -73,7 +73,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${cur_path}/test/env_npu.sh
 fi
-nohup python3.7 tools/test.py configs/gfocal/gfocal_r50_fpn_1x.py $MODEL --eval bbox \
+nohup python3 tools/test.py configs/gfocal/gfocal_r50_fpn_1x.py $MODEL --eval bbox \
 --cfg-options data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

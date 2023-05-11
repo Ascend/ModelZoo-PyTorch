@@ -4,7 +4,7 @@ FROM $FROM_IMAGE_NAME
 COPY xtcocoapi.zip /tmp/
 RUN unzip /tmp/xtcocoapi.zip
 WORKDIR /tmp/xtcocoapi
-RUN python3.7 setup.py build_ext install
+RUN python3 setup.py build_ext install
 
 WORKDIR /tmp/
 COPY requirements.txt .

@@ -117,7 +117,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 weights=`find -name 'Resnet50*' | xargs ls -t | head -1`
-python3.7 test_widerface.py -m $weights --dataset_folder ${data_path}/val/images/ &
+python3 test_widerface.py -m $weights --dataset_folder ${data_path}/val/images/ &
 
 
 wait
@@ -125,7 +125,7 @@ wait
 echo "Finish test_widerface.py"
 
 cd widerface_evaluate
-python3.7 evaluation.py --gt ${data_path}/wider_face_split/  > eval_result.txt &
+python3 evaluation.py --gt ${data_path}/wider_face_split/  > eval_result.txt &
 
 wait
 

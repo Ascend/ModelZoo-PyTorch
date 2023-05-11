@@ -114,7 +114,7 @@ batch_size=4096
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./train_subg.py \
+    python3 ./train_subg.py \
          --data_path=${data_path}/inat2018_train_dedup_inter_intra_1_in_6_per_class.pkl  \
          --knn_k 10,5,3 \
          --levels 2,3,4 \
@@ -126,7 +126,7 @@ then
          --gat \
          --balance >${print_log} 2>&1
 else
-    python3.7 ./train_subg.py \
+    python3 ./train_subg.py \
          --data_path=${data_path}/inat2018_train_dedup_inter_intra_1_in_6_per_class.pkl  \
          --knn_k 10,5,3 \
          --levels 2,3,4 \

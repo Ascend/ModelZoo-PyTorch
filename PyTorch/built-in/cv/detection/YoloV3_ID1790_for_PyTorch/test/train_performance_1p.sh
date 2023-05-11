@@ -128,7 +128,7 @@ sed -i "s|data/coco/|$data_path/|g" configs/yolo/yolov3_d53_mstrain-608_273e_coc
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * ASCEND_DEVICE_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
+taskset -c $PID_START-$PID_END python3 ./tools/train.py configs/yolo/yolov3_d53_320_273e_coco.py \
     --cfg-options optimizer.lr=0.001 data.samples_per_gpu=${batch_size} \
     --seed 0  \
     --local_rank 0 \

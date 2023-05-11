@@ -87,13 +87,13 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
+        nohup taskset -c $PID_START-$PID_END python3 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
             --launcher pytorch \
             --seed 0 \
             --gpu-ids 0 \
             --opt-level O1 > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     else
-        nohup python3.7 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
+        nohup python3 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
             --launcher pytorch \
             --seed 0 \
             --gpu-ids 0 \
@@ -101,7 +101,7 @@ do
     fi
 done
 wait
-nohup python3.7 ./tools/test.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py ./work_dirs/ssdlite_mobilenetv2_scratch_600e_coco_8p/epoch_120.pth --eval=bbox >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+nohup python3 ./tools/test.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py ./work_dirs/ssdlite_mobilenetv2_scratch_600e_coco_8p/epoch_120.pth --eval=bbox >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改

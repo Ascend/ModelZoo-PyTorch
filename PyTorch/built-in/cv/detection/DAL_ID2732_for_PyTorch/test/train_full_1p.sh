@@ -77,13 +77,13 @@ fi
 cd utils
 sh make.sh
 cd ..
-nohup python3.7 prepare_data.py --data_file_path ${data_path}
+nohup python3 prepare_data.py --data_file_path ${data_path}
 pth_save_path=/root/.cache/torch/checkpoints/
 if [ ! -d ${pth_save_path} ];then
     mkdir -p ${pth_save_path}
 fi
 cp ${data_path}/resnet101-5d3b4d8f.pth ${pth_save_path}
-nohup python3.7 main_train.py \
+nohup python3 main_train.py \
     --backbone res101 \
     --opt_level O1 \
     --dataset UCAS_AOD \
@@ -104,7 +104,7 @@ nohup python3.7 main_train.py \
     --inference 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-nohup python3.7 init_data.py --data_file_path ${data_path}
+nohup python3 init_data.py --data_file_path ${data_path}
 # 训练结束时间，不需要修改
 end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))

@@ -8,7 +8,7 @@ export RANK_ID=${RANK_ID}
 export ASCEND_DEVICE_ID=$RANK_ID
 ASCEND_DEVICE_ID=$RANK_ID
 export RANK=${RANK_ID}
-python3.7 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_1p.py \
+python3 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_1p.py \
     --seed 0 \
     --gpu-ids 0 \
     --opt-level O1

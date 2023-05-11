@@ -77,7 +77,7 @@ start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env_npu.sh
 
-python3.7 run.py \
+python3 run.py \
     --data_path ${data_path} \
     --model TextCNN \
 	--num_epochs ${train_epochs} \

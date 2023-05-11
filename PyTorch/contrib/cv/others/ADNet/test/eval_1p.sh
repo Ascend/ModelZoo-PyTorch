@@ -40,7 +40,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7  test.py \
+python3  test.py \
       --is_distributed 0 \
       --DeviceID 0 \
       --num_gpus 1 \

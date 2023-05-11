@@ -66,7 +66,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./main_1p.py \
+python3 ./main_1p.py \
 --data_pth=${data_path} \
 --ids_per_batch=${batch_size} \
 --base_lr=${base_lr} \

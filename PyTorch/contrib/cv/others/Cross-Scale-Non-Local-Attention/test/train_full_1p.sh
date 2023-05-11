@@ -5,7 +5,7 @@ do
         data_path=`echo ${para#*=}`
     fi
 done
-nohup python3.7 main.py \
+nohup python3 main.py \
 	--epochs 1000 \
 	--model CSNLN \
 	--data_test Set5 \

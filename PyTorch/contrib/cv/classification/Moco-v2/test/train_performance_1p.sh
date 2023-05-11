@@ -76,7 +76,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 model_file=model_moco_epoch_200.pth.tar
-python3.7 main_lincls.py \
+python3 main_lincls.py \
   --rank 0 \
   --lr ${learning_rate} \
   -a resnet50 \

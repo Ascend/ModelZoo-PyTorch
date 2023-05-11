@@ -138,7 +138,7 @@ then
 	do
 	let p_start=0+24*i
 	let p_end=23+24*i
-	taskset -c $p_start-$p_end $CMD python3.7 train_mp.py \
+	taskset -c $p_start-$p_end $CMD python3 train_mp.py \
         --cfg cfg/yolor_p6.cfg \
         --data data/coco.yaml \
         --addr 127.0.0.1 \
@@ -151,7 +151,7 @@ then
         --epochs $train_epochs  > $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 	done
 else
-   python3.7 train.py \
+   python3 train.py \
         --cfg cfg/yolor_p6.cfg \
         --data data/coco.yaml \
         --addr 127.0.0.1 \

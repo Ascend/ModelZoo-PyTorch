@@ -95,14 +95,14 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END nohup python3.7 -u moby_main.py \
+        taskset -c $PID_START-$PID_END nohup python3 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
             --local_rank $RANK_ID \
             --max_epochs $epochs \
             --batch-size $batch_size > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup python3.7 -u moby_main.py \
+        nohup python3 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
             --local_rank $RANK_ID \
@@ -113,7 +113,7 @@ done
 
 wait
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 --master_port 12345 moby_linear.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node 8 --master_port 12345 moby_linear.py \
 --cfg configs/moby_swin_tiny.yaml --data-path ${data_path} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

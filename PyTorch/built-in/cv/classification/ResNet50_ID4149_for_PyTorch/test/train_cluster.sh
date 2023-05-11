@@ -80,7 +80,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        nohup taskset -c $PID_START-$PID_END python3.7 main.py \
+        nohup taskset -c $PID_START-$PID_END python3 main.py \
             --data ${data_path} \
             --addr ${master_addr} \
             --amp \
@@ -95,7 +95,7 @@ do
             --rank ${node_rank} \
             --multiprocessing-distributed > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup python3.7 main.py \
+        nohup python3 main.py \
             --data ${data_path} \
             --addr ${master_addr} \
             --amp \

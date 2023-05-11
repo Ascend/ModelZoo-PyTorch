@@ -129,7 +129,7 @@ CMD+=" --npu_id=0"
 CMD+=" --loss_scale=8192.0"
 CMD+=" --json-summary ${RESULTS_DIR}/dllogger.json "
 
-CMD="python3.7 -u $CMD"
+CMD="python3 -u $CMD"
 
 if [ "$create_logfile" = "true" ] ; then
   export GBS=$(expr $train_batch_size \* $num_npu)
@@ -207,7 +207,7 @@ CMD+=" --npu_id=0"
 CMD+=" --loss_scale=4096.0"
 CMD+=" --json-summary ${RESULTS_DIR}/dllogger.json "
 
-CMD="python3.7 -u $CMD"
+CMD="python3 -u $CMD"
 
 if [ "$create_logfile" = "true" ] ; then
   export GBS=$(expr $train_batch_size_phase2 \* $num_npu)

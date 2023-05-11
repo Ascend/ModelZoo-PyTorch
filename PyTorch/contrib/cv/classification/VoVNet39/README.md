@@ -41,7 +41,7 @@ Log path:
 Run `demo.py` as the demo script with trained model (`model.pth` as example):
 
 ```bash
-python3.7.5 demo.py model.pth
+python3 demo.py model.pth
 ```
 
 

@@ -53,7 +53,7 @@ fi
 
 echo ${weights_path}
 
-python3.7.5 -u evaluation.py \
+python3 -u evaluation.py \
   --weights_path ${weights_path} \
   --G_attn 64 --D_attn 64 \
   --G_nl inplace_relu --D_nl inplace_relu \

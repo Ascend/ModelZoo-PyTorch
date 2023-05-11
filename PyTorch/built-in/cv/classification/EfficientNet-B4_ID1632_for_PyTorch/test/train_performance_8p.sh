@@ -102,7 +102,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 ${test_path_dir}/../examples/imagenet/main.py \
+nohup python3 ${test_path_dir}/../examples/imagenet/main.py \
         --data=${data_path} \
         --arch=efficientnet-b4 \
         --batch-size=${batch_size} \

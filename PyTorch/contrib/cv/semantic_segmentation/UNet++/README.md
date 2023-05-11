@@ -38,7 +38,7 @@ For details, see [UNet++](https://github.com/4uiiurz1/pytorch-nested-unet).
 ```
 - the data-science-bowl-2018 dataset need preprocess. 
 ```bash
-python3.7.5 preprocess_dsb2018.py  --data_dir=./data-science-bowl-2018
+python3 preprocess_dsb2018.py  --data_dir=./data-science-bowl-2018
 数据会保存在./data-science-bowl-2018文件夹下
 ```
 

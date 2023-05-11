@@ -116,9 +116,9 @@ train_epochs=10000
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
+    python3 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
 else
-    python3.7 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
+    python3 ./lstm_classifier/combined/lstm_classifier.py --data_path=${data_path} --output_path=${output_path} 1>>${print_log} 2>&1
 fi
 
 # 性能相关数据计算

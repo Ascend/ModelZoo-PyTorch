@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7 -u -m torch.distributed.launch --nproc_per_node=8 ${currentDir}/main.py \
+python3 -u -m torch.distributed.launch --nproc_per_node=8 ${currentDir}/main.py \
         --distributed \
         --lr 0.0008 \
         --batch_size 128 \

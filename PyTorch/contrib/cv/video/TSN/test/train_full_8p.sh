@@ -65,7 +65,7 @@ currentDir=$(cd "$(dirname "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
-taskset -c 0-47 python3.7.5 -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
+taskset -c 0-47 python3 -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
     ${currentDir}/../train.py  --validate --launcher pytorch --cfg-options data.videos_per_gpu=${batch_size} data.workers_per_gpu=$num_worker \
     --gpu-ids 0 --data_root ${data_path} --work-dir ./result > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsn_train_full_8p_${ASCEND_DEVICE_ID}.log 2>&1 &
 

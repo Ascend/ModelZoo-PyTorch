@@ -120,7 +120,7 @@ export PYTHONPATH=../:$PYTHONPATH
 
 echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 echo "$data_path"
-python3.7 ./tools/train.py\
+python3 ./tools/train.py\
     configs/semask_swin/cityscapes/semfpn_semask_swin_small_patch4_window7_768x768_80k_cityscapes.py \
     --options model.pretrained=$data_path/swin_small_patch4_window7_224.pth data.train.dataset.data_root=$data_path runner.max_iters=80000 \
     data.test.data_root=$data_path data.val.data_root=$data_path \

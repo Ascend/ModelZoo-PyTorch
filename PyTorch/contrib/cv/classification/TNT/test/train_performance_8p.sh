@@ -73,7 +73,7 @@ do
     then
 		PID_START=$((KERNEL_NUM * RANK_ID))
 		PID_END=$((PID_START + KERNEL_NUM - 1))
-		nohup taskset -c $PID_START-$PID_END python3.7 train.py ${data_path} \
+		nohup taskset -c $PID_START-$PID_END python3 train.py ${data_path} \
 			--model tnt_s_patch16_224 \
 			--sched cosine \
 			--epochs 300 \
@@ -102,7 +102,7 @@ do
 			--local_rank $RANK_ID \
             --performance > 8p_perf.log 2>&1 &
     else
-		nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 train.py ${data_path} \
+		nohup python3 -m torch.distributed.launch --nproc_per_node=8 train.py ${data_path} \
 			--model tnt_s_patch16_224 \
 			--sched cosine \
 			--epochs 300 \

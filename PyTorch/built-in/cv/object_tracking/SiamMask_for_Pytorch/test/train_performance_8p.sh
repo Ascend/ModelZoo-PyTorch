@@ -92,7 +92,7 @@ do
   export LOCAL_RANK=$RANK_ID
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
-  nohup taskset -c $PID_START-$PID_END python3.7 -u tools/train_siammask.py \
+  nohup taskset -c $PID_START-$PID_END python3 -u tools/train_siammask.py \
     --config=experiments/siammask_base/config.json \
     --workers 32 \
     --batch $batch_size \

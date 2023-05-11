@@ -84,16 +84,16 @@ then
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     {
-    taskset -c $PID_START-$PID_END python3.7 train8p_perf.py --npu=${i}
+    taskset -c $PID_START-$PID_END python3 train8p_perf.py --npu=${i}
 #    if [ "$ASCEND_DEVICE_ID" -eq "0" ];then 
-#        python3.7 test.py --resume='ckpt/only-final-lr-0.008-iter-50000.pth'
+#        python3 test.py --resume='ckpt/only-final-lr-0.008-iter-50000.pth'
 #    fi
     } > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 else
     {
-    python3.7 train8p_perf.py --npu=${i}
+    python3 train8p_perf.py --npu=${i}
 #    if [ "$ASCEND_DEVICE_ID" -eq "0" ];then 
-#        python3.7 test.py --resume='ckpt/only-final-lr-0.008-iter-50000.pth'
+#        python3 test.py --resume='ckpt/only-final-lr-0.008-iter-50000.pth'
 #    fi
     } > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi

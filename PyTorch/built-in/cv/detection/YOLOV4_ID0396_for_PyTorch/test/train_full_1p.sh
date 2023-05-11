@@ -98,7 +98,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
-nohup taskset -c 0-47 python3.7 main.py \
+nohup taskset -c 0-47 python3 main.py \
                 --img $image_size $image_size \
                 --data coco.yaml \
                 --cfg cfg/yolov4.cfg \
@@ -116,7 +116,7 @@ wait
 
 #评测
 if [ x"${etp_running_flag}" != x"true" ];then
-    nohup taskset -c 0-23  python3.7 test.py --img-size $image_size --conf 0.001 --batch ${batch_size} --device ${ASCEND_DEVICE_ID} --data coco.yaml --cfg cfg/yolov4.cfg --weights runs/evolve/weights/best_yolov4.pt >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    nohup taskset -c 0-23  python3 test.py --img-size $image_size --conf 0.001 --batch ${batch_size} --device ${ASCEND_DEVICE_ID} --data coco.yaml --cfg cfg/yolov4.cfg --weights runs/evolve/weights/best_yolov4.pt >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
 wait
 

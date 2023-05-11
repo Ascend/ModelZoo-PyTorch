@@ -12,7 +12,7 @@ device_id='3'
 
 ################ compiling ##################
 source ./test/env_npu_1p.sh
-python3.7 ./main.py --teacher_model ./bert_base_uncased_ft_sst \
+python3 ./main.py --teacher_model ./bert_base_uncased_ft_sst \
                  --student_model ./general_tinybert \
                  --data_dir ./glue_dir/SST-2 \
                  --task_name SST-2 \

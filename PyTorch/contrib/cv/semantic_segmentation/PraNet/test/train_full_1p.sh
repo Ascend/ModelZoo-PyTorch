@@ -76,7 +76,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-nohup python3.7 ./Train.py \
+nohup python3 ./Train.py \
     --train_path=./data/TrainDataset \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \
@@ -93,12 +93,12 @@ nohup python3.7 ./Train.py \
     --batchsize=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
-python3.7 ./Test.py \
+python3 ./Test.py \
     --device=npu \
     --pth_path=./snapshots/PraNet_Res2Net/PraNet-19.pth >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
-python3.7 ./Eval.py >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 ./Eval.py >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################

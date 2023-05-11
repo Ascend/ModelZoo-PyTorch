@@ -70,7 +70,7 @@ RetinaFace是一个强大的单阶段目标检测器，它利用联合监督和�
     
     执行命令如下所示：
     ```
-    python3.7 tools.py
+    python3 tools.py
     ```
    项目数据集目录结构参考如下所示：
 

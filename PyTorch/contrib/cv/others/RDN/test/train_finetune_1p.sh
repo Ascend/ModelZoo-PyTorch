@@ -72,7 +72,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 main.py \
+nohup python3 main.py \
     --nodes 1 \
     --gpus 1 \
     --model ${Network} \

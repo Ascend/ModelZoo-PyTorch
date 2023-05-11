@@ -7,7 +7,7 @@ mkdir -p ${train_log_dir}
 cd ${train_log_dir}
 echo "train log path is ${train_log_dir}"
 
-python3.7.5 -u ${currentDir}/train.py \
+python3 -u ${currentDir}/train.py \
 	--dist_url='tcp://127.0.0.1:123457' \
 	--multiprocessing-distributed \
     --training_dataset=${currentDir}/data/WIDER_FACE \

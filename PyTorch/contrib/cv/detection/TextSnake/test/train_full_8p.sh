@@ -67,7 +67,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -u train_textsnake_npu.py \
+python3 -u train_textsnake_npu.py \
     example \
     --dataset=${data_path} \
     --num_workers=${workers} \

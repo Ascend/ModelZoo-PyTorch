@@ -16,6 +16,6 @@ do
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-nohup taskset -c $PID_START-$PID_END python3.7 \
+nohup taskset -c $PID_START-$PID_END python3 \
     main.py --local_rank $RANK_ID --device_num 1 --npu --lr 8e-4 --mode evaluate --weight "weights/model_500.pt" --data_path ${data_path} &
 done

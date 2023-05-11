@@ -97,7 +97,7 @@ export COMBINED_ENABLE=1
 export SCALAR_TO_HOST_MEM=1
 start_time=$(date +%s)
 
-nohup python3.7 -u train_1p.py \
+nohup python3 -u train_1p.py \
   $data_path \
   --device-id ${ASCEND_DEVICE_ID}\
   --arch transformer_wmt_en_de \

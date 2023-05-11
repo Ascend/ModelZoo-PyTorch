@@ -80,7 +80,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-nohup tasket -c 0-23 python3.7 train.py  \
+nohup tasket -c 0-23 python3 train.py  \
     --model densenet169 \
     --epochs ${epochs} \
     --data-path=$data_path \

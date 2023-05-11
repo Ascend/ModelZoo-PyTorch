@@ -74,7 +74,7 @@ do
     export RANK_ID=$i
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 -u ./train.py \
+    nohup taskset -c $PID_START-$PID_END python3 -u ./train.py \
         --train-file ${data_path}/91-image_x2.h5 \
         --eval-file ${data_path}/Set5_x2.h5 \
         --outputs-dir ${test_path_dir}/npu_8p \

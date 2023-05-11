@@ -65,7 +65,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 export RANK_ID=${ASCEND_DEVICE_ID}
-nohup python3.7 -u ./train.py \
+nohup python3 -u ./train.py \
     --data=${data_path} \
     --seed=1234 \
     --max_iter=${max_iter} \

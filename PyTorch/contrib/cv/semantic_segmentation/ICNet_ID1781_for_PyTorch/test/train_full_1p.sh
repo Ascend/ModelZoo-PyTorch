@@ -85,7 +85,7 @@ fi
 
 CONFIG_YAML_PATH=./configs/icnet_1p.yaml
 
-python3.7 train.py \
+python3 train.py \
           ${data_path} \
           ${train_epochs} \
           $CONFIG_YAML_PATH  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
