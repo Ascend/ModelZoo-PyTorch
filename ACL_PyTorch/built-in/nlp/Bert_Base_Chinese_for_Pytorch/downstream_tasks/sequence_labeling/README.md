@@ -118,6 +118,8 @@
 
    ```shell
    python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data --dict_path ./bert-base-chinese/vocab.txt
+   # 使能分档加速（可选）
+   python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data_rank --dict_path ./bert-base-chinese/vocab.txt --rank True 
    ```
 
    - 参数说明：
@@ -149,9 +151,11 @@
      通过onnx-simplifier等对onnx进行优化：
 
      ```shell
-     # 修改优化模型：以bs64为例
      python3 -m onnxsim ./models/onnx/bert_base_chinese_sequence_labeling.onnx ./models/onnx/bert_base_chinese_bs64.onnx --input-shape "token_ids:64,256"
+     # 默认优化
      python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs64.onnx ./models/onnx/bert_base_chinese_bs64_fix.onnx
+     # 使能分档加速（可选），参数：${原始onnx} ${修改后onnx} ${batchsize}
+     python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs64.onnx ./models/onnx/bert_base_chinese_bs64_rank.onnx 64 
      ```
 
    4. 使用ATC工具将ONNX模型转OM模型。
@@ -188,6 +192,8 @@
          mkdir -p models/om
          # bs:[1, 4, 8, 16, 32, 64]
          atc --model=./models/onnx/bert_base_chinese_bs${bs}_fix.onnx --framework=5 --output=./models/om/bert_base_chinese_bs${bs} --input_format=ND --log=debug --soc_version=${chip_name} --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         # 使能分档加速（可选）
+         atc --model=./models/onnx/bert_base_chinese_bs${bs}_rank.onnx --framework=5 --output=./models/om/bert_base_chinese_bs${bs}_rank --input_format=ND --log=debug --soc_version=${chip_name} --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_shape="token_ids:64,-1" --dynamic_dims="32;48;64;96;128;192;224;256"
          ```
 
          - 参数说明：
@@ -215,7 +221,9 @@
         ```
         # 以bs64模型推理为例
         mkdir -p ./output_data/bs64
-        python3 -m ais_bench --model ./models/om/bert_base_chinese_bs64.om --input ./preprocessed_data/input_data --output ./output_data --output_dirname bs64 --batchsize 64 --device 0
+        python3 -m ais_bench --model ./models/om/bert_base_chinese_bs64.om --input ./preprocessed_data/input_data --output ./output_data --output_dirname bs64 --batchsize 64 --device 0 --outfmt NPY
+        # 使能分档加速（可选）
+        python3 -m ais_bench --model ./models/om/bert_base_chinese_bs64_rank.om --input ./preprocessed_data_rank/input_data --output ./output_data_rank --output_dirname bs64 --batchsize 64 --device 0  --outfmt NPY --auto_set_dymdims_mode True
         ```
         -   参数说明：
 
@@ -237,6 +245,8 @@
       ```
       # 以bs64模型推理为例
       python3 postprocess.py --result_dir output_data/bs64 --out_path eval.json --label_dir preprocessed_data/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
+      # 使能分档加速（可选）
+      python3 postprocess.py --result_dir output_data_rank/bs64 --out_path eval_rank.json --label_dir preprocessed_data_rank/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
       ```
       - 参数说明：
 
