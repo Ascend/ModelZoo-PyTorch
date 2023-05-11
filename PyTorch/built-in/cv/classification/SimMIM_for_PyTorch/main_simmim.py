@@ -28,6 +28,19 @@ from optimizer import build_optimizer
 from logger import create_logger
 from utils import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper
 from models.swin_transformer import NpuDropPath
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now..Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 try:
     # noinspection PyUnresolvedReferences
@@ -142,10 +155,13 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
 
     start = time.time()
     end = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
     for idx, (img, mask, _) in enumerate(data_loader):
         img = img.npu(non_blocking=True)
         mask = mask.npu(non_blocking=True)
 
+        profile.start()
         loss = model(img, mask)
 
         if config.TRAIN.ACCUMULATION_STEPS > 1:
@@ -186,6 +202,7 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
             lr_scheduler.step_update(epoch * num_steps + idx)
 
         torch.npu.synchronize()
+        profile.end()
 
         loss_meter.update(loss.item(), img.size(0))
         norm_meter.update(grad_norm)
@@ -211,8 +228,8 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
 
 
 if __name__ == '__main__':
-    args, config = parse_option()
-    os.environ['MASTER_ADDR'] = args.addr
+    all_args, config = parse_option()
+    os.environ['MASTER_ADDR'] = all_args.addr
     os.environ['MASTER_PORT'] = '29688'
 
     random.seed(1234)

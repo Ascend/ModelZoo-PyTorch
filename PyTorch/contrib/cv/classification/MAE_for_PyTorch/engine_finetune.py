@@ -23,6 +23,20 @@ from timm.utils import accuracy
 
 import util.misc as misc
 import util.lr_sched as lr_sched
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
 
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
@@ -46,6 +60,8 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         print('log_dir: {}'.format(log_writer.log_dir))
 
     start_FPS = time.time()
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                      profile_type=os.getenv('PROFILE_TYPE'))
     for data_iter_step, (samples, targets) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         if os.environ.get("CONTROL_STEPS"):
             if data_iter_step > int(os.environ.get("CONTROL_STEPS")):
@@ -64,6 +80,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
 
+        profile.start()
         with amp_autocast():
             outputs = model(samples)
             loss = criterion(outputs, targets)
@@ -82,6 +99,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
             optimizer.zero_grad()
 
         torch.npu.synchronize()
+        profile.end()
 
         metric_logger.update(loss=loss_value)
         min_lr = 10.
