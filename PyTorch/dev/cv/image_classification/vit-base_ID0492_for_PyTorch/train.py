@@ -499,7 +499,7 @@ def main():
 if __name__ == "__main__":
     option = {}
     print("=====================================")
-    option["MM_BMM_ND_ENABLE"] = 'disable'
+    option["MM_BMM_ND_ENABLE"] = 'enable'
     print("option[MM_BMM_ND_ENABLE]",option["MM_BMM_ND_ENABLE"])
     print("=====================================")
     torch.npu.set_option(option)
