@@ -71,7 +71,7 @@ do
 	PID_END=$((PID_START + KERNEL_NUM - 1))
 
     nohup taskset -c $PID_START-$PID_END python3.7 -u main.py \
-        --batch_size ${batch_size} --lr ${learning_rate} --n_epochs 200 \
+        --batch_size ${batch_size} --lr ${learning_rate} --n_epochs 200  --num_workers 16 \
         --local_rank $RANK_ID \
         --world_size $WORLD_SIZE > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 done
@@ -86,7 +86,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'Train: average_step_time:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|tail -n 5|awk -F " " '{print $3}'|awk '{sum+=$1} END {print '${batch_size}'*'${RANK_SIZE}'/(sum/NR)}'`
+FPS=`grep -a 'Train: average_step_time:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|tail -n 5|awk -F " " '{print $3}'|awk '{sum+=$1} END {print '${batch_size}'/(sum/NR)}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
