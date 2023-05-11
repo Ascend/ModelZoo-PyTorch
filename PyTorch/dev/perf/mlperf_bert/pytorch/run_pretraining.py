@@ -43,12 +43,11 @@ from torch.utils.data.distributed import DistributedSampler
 try:
     import amp_C
     import apex_C
-except Error:
+except ModuleNotFoundError:
     pass
 from apex import amp
 from apex.amp import _amp_state
 from apex.optimizers import FusedLAMB
-from optim import Lamb
 from apex.parallel.distributed import flat_dist_call
 
 import utils
@@ -253,10 +252,6 @@ def parse_arguments():
                         default=False,
                         action='store_true',
                         help="Whether to use 16-bit float precision instead of 32-bit")
-    parser.add_argument('--use_lamb',
-                        default=False,
-                        action='store_true',
-                        help="Whether to Lamb optimizer instead of FusedLAMB")
     parser.add_argument('--loss_scale',
                         type=float, default=0.0,
                         help='Loss scaling, positive power of 2 values can improve fp16 convergence.')
@@ -522,16 +517,11 @@ def prepare_model_and_optimizer(args, device):
     mlperf_logger.log_event(key=mlperf_logger.constants.OPT_BASE_LR,
                             value=args.learning_rate, sync=False)
 
-    if args.use_lamb:
-        optimizer = Lamb(optimizer_grouped_parameters,
-                              lr=args.learning_rate,
-                              betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2))
-    else:
-        # Set max_grad_norm=65536. to avoid clip after allreduce
-        optimizer = FusedLAMB(optimizer_grouped_parameters,
-                              lr=args.learning_rate,
-                              betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2),
-                              max_grad_norm=65536.0)
+    # Set max_grad_norm=65536. to avoid clip after allreduce
+    optimizer = FusedLAMB(optimizer_grouped_parameters,
+                          lr=args.learning_rate,
+                          betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2),
+                          max_grad_norm=65536.0)
     mlperf_logger.log_event(key='optimizer', value=optimizer.__class__.__name__, sync=False)
 
     mlperf_logger.log_event(key='opt_epsilon', value=optimizer.defaults['eps'],

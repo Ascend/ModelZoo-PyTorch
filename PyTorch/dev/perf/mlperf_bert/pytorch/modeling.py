@@ -34,7 +34,11 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.utils import checkpoint
-from apex.contrib.multihead_attn import SelfMultiheadAttn
+try:
+    from apex.contrib.multihead_attn import SelfMultiheadAttn
+    USE_SELFMHA = True
+except ModuleNotFoundError:
+    USE_SELFMHA = False
 from file_utils import cached_path
 from utils import get_rank
 
@@ -357,20 +361,21 @@ class BertSelfOutput(nn.Module):
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 
-# This module uses Apex C++ multihead attention implementation with fusions. 
-class FastBertAttention(nn.Module):
-    def __init__(self, config):
-        super(FastBertAttention, self).__init__()
-        self.multi_head_attention = SelfMultiheadAttn(config.hidden_size, config.num_attention_heads, dropout = config.attention_probs_dropout_prob, bias=True, include_norm_add=False, impl='fast', separate_qkv_params=True, mask_additive=True)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.p = config.hidden_dropout_prob
-        self.layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
-    def forward(self, input_tensor, attention_mask):
-        residual=input_tensor
-        multi_head_attention_output,_ = self.multi_head_attention(query = input_tensor, key = input_tensor, value = input_tensor, key_padding_mask=attention_mask, need_weights=True,attn_mask = None, is_training = self.training)
-        attention_output = self.dropout(multi_head_attention_output)
-        attention_output = self.layer_norm(attention_output + residual)
-        return attention_output
+if USE_SELFMHA:
+    # This module uses Apex C++ multihead attention implementation with fusions.
+    class FastBertAttention(nn.Module):
+        def __init__(self, config):
+            super(FastBertAttention, self).__init__()
+            self.multi_head_attention = SelfMultiheadAttn(config.hidden_size, config.num_attention_heads, dropout = config.attention_probs_dropout_prob, bias=True, include_norm_add=False, impl='fast', separate_qkv_params=True, mask_additive=True)
+            self.dropout = nn.Dropout(config.hidden_dropout_prob)
+            self.p = config.hidden_dropout_prob
+            self.layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
+        def forward(self, input_tensor, attention_mask):
+            residual=input_tensor
+            multi_head_attention_output,_ = self.multi_head_attention(query = input_tensor, key = input_tensor, value = input_tensor, key_padding_mask=attention_mask, need_weights=True,attn_mask = None, is_training = self.training)
+            attention_output = self.dropout(multi_head_attention_output)
+            attention_output = self.layer_norm(attention_output + residual)
+            return attention_output
 
 class FastUnpadBertAttention(nn.Module):
     def __init__(self, config):
@@ -435,7 +440,10 @@ class BertLayer(nn.Module):
         super(BertLayer, self).__init__()
         self.unpad = config.unpad
         if config.fused_mha:
-            self.attention = FastBertAttention(config)
+            if USE_SELFMHA:
+                self.attention = FastBertAttention(config)
+            else:
+                self.attention = BertAttention(config)
         elif config.unpad:
             self.attention = FastUnpadBertAttention(config)
         else:
