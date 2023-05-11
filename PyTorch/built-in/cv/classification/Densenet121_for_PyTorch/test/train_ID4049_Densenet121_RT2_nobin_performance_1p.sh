@@ -45,6 +45,10 @@ do
       data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
       batch_size=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
@@ -52,9 +56,10 @@ do
     fi
 done
 
-PREC=""
-if [[ $precision_mode == "amp" ]];then
-  PREC="--amp"
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec="--opt-level O0"
+else
+    prec="--amp"
 fi
 
 #校验是否传入data_path,不需要修改
@@ -111,19 +116,21 @@ fi
 
 
 #训练
-nohup python3 ${cur_path}/main.py  \
+nohup python3.7 ${cur_path}/main.py  \
       --workers 40 \
       --arch densenet121 \
       --gpu $ASCEND_DEVICE_ID \
       --lr 0.1 \
       --momentum 0.9 \
-      --amp \
+      $prec \
       --bin \
       --print-freq 1 \
       --eval-freq 5 \
       --batch-size $batch_size \
       --epochs $train_epochs \
       --stop-step-num 50 \
+      ${fp32} \
+      ${hf32} \
       --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
@@ -151,7 +158,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量
