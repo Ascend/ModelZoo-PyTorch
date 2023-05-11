@@ -48,14 +48,19 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
     fi
 done
 
-PREC=""
-if [[ $precision_mode == "amp" ]];then
-  PREC="--amp"
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec="--opt-level O0"
+else
+    prec="--amp"
 fi
 
 #校验是否传入data_path,不需要修改
@@ -113,7 +118,7 @@ then
     do
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3 ${cur_path}/main.py \
+    nohup taskset -c $PID_START-$PID_END python3.7 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -130,15 +135,17 @@ then
         --rank 0 \
         --gpu $i \
         --device-list '0,1,2,3,4,5,6,7' \
-        --amp \
+        ${prec} \
         --bin \
         --benchmark 0 \
+        ${fp32} \
+        ${hf32} \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 else
     for i in $(seq 0 7)
     do
-    nohup python3 ${cur_path}/main.py \
+    nohup python3.7 ${cur_path}/main.py \
         --addr=$(hostname -I|awk '{print $1}') \
         --seed 49 \
         --workers 160 \
@@ -158,6 +165,8 @@ else
         --amp \
         --bin \
         --benchmark 0 \
+        ${fp32} \
+        ${hf32} \
         --data $data_path > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
     done
 fi
@@ -191,8 +200,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
-
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 ##获取性能数据，不需要修改
 #吞吐量
 ActualFPS=${FPS}

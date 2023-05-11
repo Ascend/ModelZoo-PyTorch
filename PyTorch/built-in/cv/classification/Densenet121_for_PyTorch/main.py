@@ -320,12 +320,15 @@ def main_worker(gpu, ngpus_per_node, args):
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-
     if args.amp:
         model, optimizer = amp.initialize(model, optimizer, 
                                           opt_level=args.opt_level, 
                                           loss_scale=args.loss_scale, 
                                           combine_grad=True)
+    else:
+        optimizer = torch.optim.SGD(model.parameters(), args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
