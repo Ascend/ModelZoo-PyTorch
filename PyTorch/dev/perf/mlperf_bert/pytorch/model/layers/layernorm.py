@@ -24,6 +24,8 @@ try:
   import apex.normalization
   #apex.amp.register_float_function(apex.normalization.FusedLayerNorm, 'forward')
   BertLayerNorm = apex.normalization.FusedLayerNorm
+  # If FusedLayerNorm is not supported, it will step into the exception branch
+  dummy_layer_norm = BertLayerNorm(1024, eps=1e-12)
 except ImportError:
   print("Better speed can be achieved with apex installed from https://www.github.com/nvidia/apex.")
   class BertLayerNorm(nn.Module):
