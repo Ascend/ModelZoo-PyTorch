@@ -83,7 +83,7 @@ done
 if [[ $PREC == "O0" ]];then
     prec=" "
 else
-    prec="--fp16 --fp16_opt_level"$PREC
+    prec="--fp16 --fp16_opt_level "$PREC
 fi
 
 #校验是否传入data_path,不需要修改
