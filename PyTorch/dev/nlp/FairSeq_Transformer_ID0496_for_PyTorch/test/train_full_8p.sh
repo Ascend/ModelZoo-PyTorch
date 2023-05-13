@@ -75,6 +75,10 @@ elif [[ $para == --over_dump* ]];then
         mkdir -p ${data_dump_path}
     elif [[ $para == --data_dump_step* ]];then
         data_dump_step=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --profiling* ]];then
         profiling=`echo ${para#*=}`
         profiling_dump_path=${cur_path}/output/profiling
@@ -161,6 +165,9 @@ do
 	    --encoder-ffn-embed-dim 1024 \
 	    --seed 12345 \
 	    $PREC \
+            --precision_mode $precision_mode \
+            ${fp32} \
+            ${hf32} \
 	    --ddp-backend no_c10d \
 	    --disable-validation \
 	    --distributed-no-spawn \
@@ -199,8 +206,10 @@ echo "Final Performance images/sec : $FPS"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-if [[ $precision_mode == "must_keep_origin_dtype" ]];then
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
 else
         CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 fi
