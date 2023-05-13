@@ -461,6 +461,11 @@ def cli_main():
         torch.npu.set_compile_mode(jit_compile=False)
     
     option = {}
+    if args.precision_mode == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+    if args.fp32:
+        torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+        torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
     if not args.fp16:
         option["ACL_PRECISION_MODE"] = "must_keep_origin_dtype"
     option["MM_BMM_ND_ENABLE"] = "enable"
@@ -507,11 +512,4 @@ def cli_main():
 
 
 if __name__ == '__main__':
-    option = {}
-    #option["ACL_DEBUG_DIR"] = "./kernel_meta_test"
-    #option["ACL_OP_DEBUG_LEVEL"] = 3
-    #option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
-    #option["ACL_OP_COMPILER_CACHE_DIR"] = "./cache_dir"
-    option["MM_BMM_ND_ENABLE"] = "enable"
-    torch.npu.set_option(option)
     cli_main()

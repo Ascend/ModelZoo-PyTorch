@@ -218,6 +218,9 @@ def get_parser(desc, default_task='translation'):
                         help='number of updates before increasing loss scale')
     parser.add_argument('--fp16-scale-tolerance', default=0.0, type=float,
                         help='pct of updates that can overflow before decreasing the loss scale')
+    parser.add_argument('--hf32', action='store_true', help='enable_hi_float_32_execution')
+    parser.add_argument('--fp32', action='store_true', help='disble_hi_float_32_execution')
+    parser.add_argument('--precision_mode', default='allow_mix_precision', type=str, help='precision_mode')
     parser.add_argument('--min-loss-scale', default=1e-4, type=float, metavar='D',
                         help='minimum FP16 loss scale, after which training is stopped')
     parser.add_argument('--threshold-loss-scale', type=float,
