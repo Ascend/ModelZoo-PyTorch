@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import time
 import random
 
 import numpy as np
@@ -26,8 +27,9 @@ from optim import Lamb
 from modeling import BertForPretraining, BertConfig
 from schedulers import LinearWarmupPolyDecayScheduler
 import mlperf_logger
+import utils
 import run_pretraining
-from run_pretraining import found_resume_checkpoint
+from run_pretraining import found_resume_checkpoint, global_batch_size
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 
@@ -172,4 +174,17 @@ run_pretraining.WorkerInitObj = NPUWorkInitObj
 run_pretraining.prepare_model_and_optimizer = prepare_model_and_optimizer
 
 if __name__ == "__main__":
-    run_pretraining.main()
+    now = time.time()
+    args, final_loss, train_time_raw = run_pretraining.main()
+
+    if utils.is_main_process():
+        e2e_time = time.time() - now
+        training_perf = global_batch_size(args) \
+                        * (args.max_steps - args.resume_step + run_pretraining.skipped_steps) / train_time_raw
+        if args.do_train:
+            print({"e2e_time": e2e_time,
+                   "training_sequences_per_second": training_perf,
+                   "final_loss": final_loss,
+                   "raw_train_time": train_time_raw})
+        else:
+            print({"e2e_time": e2e_time})
