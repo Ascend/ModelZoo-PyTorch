@@ -468,7 +468,7 @@ def main():
     if config["num_gpus"] > 1:
         #Make model replica operate on the current device
         ddp = torch.nn.parallel.DistributedDataParallel
-        model = ddp(model, device_ids=[cur_device],  broadcast_buffers=False)
+        model = ddp(model, device_ids=[cur_device],  broadcast_buffers=False, find_unused_parameters=True)
 
     if config['scheduler'] == 'CosineAnnealingLR':
         scheduler = lr_scheduler.CosineAnnealingLR(
