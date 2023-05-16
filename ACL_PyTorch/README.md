@@ -1218,13 +1218,13 @@ CV-classfication
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/GoogleNet">  GoogleNet </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/GoogleNet_for_Pytorch">  GoogleNet </a>
         </td>
         <td>ImageNet</td>
-	<td>69.77%</td>
-	<td>89.51%</td>
+	<td>69.78%</td>
+	<td>89.53%</td>
         <td></td>
-	<td>6287.326287(bs8)</td>
+	<td>6308.38(bs8)</td>
         <td></td>
 	<td>bs x 3 x 8 x 224 x 224</td>
     </tr>
