@@ -44,7 +44,7 @@ def parse_args():
 
 
 def preprocess(img_name_lists, save_dirs):
-    test_salobj_dataset = SalObjDataset(img_name_lists=img_name_list,
+    test_salobj_dataset = SalObjDataset(img_name_list=img_name_lists,
                                         lbl_name_list=[],
                                         transform=transforms.Compose([RescaleT(320),
                                                                       ToTensorLab(flag=0)])
