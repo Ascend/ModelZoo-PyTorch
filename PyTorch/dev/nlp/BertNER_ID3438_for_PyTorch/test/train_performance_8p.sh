@@ -126,7 +126,7 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../run_ner_crf.py \
   --overwrite_output_dir \
   --precision_mode=${precision_mode} \
   ${fp32} \
-  ${hf32}
+  ${hf32} \
   --seed=42 > ${cur_path}/output/0/train_0.log 2>&1 &
 wait
 #训练结束时间，不需要修改
