@@ -34,12 +34,24 @@ else
   mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 fi
 
+use_npu_fused_sgd=false
+for para in $*; do
+  if [[ $para == --use_npu_fused_sgd* ]]; then
+    use_npu_fused_sgd=$(echo ${para#*=})
+  fi
+done
+cfg_options=""
+if [ ${use_npu_fused_sgd} == true ]; then
+    cfg_options='optimizer.type=NpuFusedSGD optim_wrapper.optimizer.type=NpuFusedSGD'
+fi
+
 #################启动训练脚本#################
 start_time=$(date +%s)
 nohup bash tools/dist_train.sh \
   configs/deeplabv3/deeplabv3_r101-d16-mg124_8xb8-40k_cityscapes-512x1024.py \
   8 --cfg-options train_cfg.max_iters=2000 \
-  train_cfg.val_interval=1000 >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+  train_cfg.val_interval=1000 \
+  ${cfg_options} >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
