@@ -61,7 +61,7 @@ def main():
         model, optimizer = amp.initialize(model, optimizer, opt_level="O1", loss_scale=None, combine_grad=True)
 
     if args.world_size > 1:
-       model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.rank])
+       model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.rank], find_unused_parameters=True)
 
        
     trainer = train.Trainer(args, model, criterion, optimizer, train_data_loader=training_generator,
