@@ -173,6 +173,7 @@ def prepare_model_and_optimizer(args, device):
 run_pretraining.WorkerInitObj = NPUWorkInitObj
 run_pretraining.prepare_model_and_optimizer = prepare_model_and_optimizer
 
+
 def main():
     now = time.time()
     args, final_loss, train_time_raw = run_pretraining.main()
@@ -189,8 +190,12 @@ def main():
         else:
             print({"e2e_time": e2e_time})
 
+    torch.npu.synchronize()
+    torch.distributed.barrier()
+    os._exit(0)
+
 
 if __name__ == "__main__":
     torch_npu.npu.set_compile_mode(jit_compile=False)
     main()
-
+    
