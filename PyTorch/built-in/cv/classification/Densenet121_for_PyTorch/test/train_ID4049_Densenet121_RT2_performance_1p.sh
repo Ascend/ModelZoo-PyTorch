@@ -59,7 +59,7 @@ done
 if [[ $precision_mode == "must_keep_origin_dtype" ]];then
     prec="--opt-level O0"
 else
-  PREC="--amp"
+  prec="--amp"
 fi
 
 #校验是否传入data_path,不需要修改

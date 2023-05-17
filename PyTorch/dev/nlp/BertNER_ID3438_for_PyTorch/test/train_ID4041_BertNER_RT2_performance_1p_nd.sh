@@ -140,7 +140,7 @@ nohup python3 ${cur_path}/../run_ner_crf.py \
   --seed=42 \
   --precision_mode=${precision_mode} \
   ${fp32} \
-  ${hf32} \ > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+  ${hf32}  > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #conda deactivate
