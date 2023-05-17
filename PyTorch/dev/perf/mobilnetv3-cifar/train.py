@@ -1,9 +1,19 @@
 # -*- coding: UTF-8 -*-
+"""
+Copyright 2021 Huawei Technologies Co., Ltd
 
-'''
-Train the model
-Ref: https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
-'''
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 import torch
 import torch.nn as nn
@@ -17,15 +27,20 @@ import argparse
 import copy
 from math import cos, pi
 
-from statistics import *
+from statistic import accuracy, AverageMeter, ProgressMeter
 from EMA import EMA
 from LabelSmoothing import LabelSmoothingLoss
-# from DataLoader import dataloaders
 from ResultWriter import ResultWriter
 from CosineLR import *
 from Mixup import mixup_data, mixup_criterion
 
-def train(args, model, dataloader, loader_len, criterion, optimizer, scheduler, use_gpu, epoch, ema=None, save_file_name='train.csv'):
+import torch.distributed as dist
+import apex
+from apex import amp
+
+
+def train(args, model, dataloader, loader_len, criterion, optimizer,
+          scheduler, use_gpu, epoch, ema=None, save_file_name='train.csv'):
     '''
     train the model
     '''
@@ -56,14 +71,15 @@ def train(args, model, dataloader, loader_len, criterion, optimizer, scheduler, 
     model.train()
 
     end = time.time()
+    total_step_time = 0
 
     # Iterate over data
     for i, (inputs, labels) in enumerate(dataloader):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+        inputs = inputs.npu()
+        labels = labels.npu()
 
         if args.mixup:
             # using mixup
@@ -90,7 +106,8 @@ def train(args, model, dataloader, loader_len, criterion, optimizer, scheduler, 
         top5.update(acc5[0], inputs.size(0))
             
         # backward + optimize
-        loss.backward()
+        with amp.scale_loss(loss, optimizer) as scaled_loss:
+            scaled_loss.backward()
         if args.lr_decay == 'cos':
             # update lr here if using cosine lr decay
             scheduler.step(epoch * loader_len + i)
@@ -101,7 +118,8 @@ def train(args, model, dataloader, loader_len, criterion, optimizer, scheduler, 
         if args.ema_decay > 0:
             # EMA update after training(every iteration)
             ema.update()
-                
+        
+        total_step_time += (time.time() - end)
         batch_time.update(time.time() - end)
         end = time.time()
 
@@ -111,12 +129,12 @@ def train(args, model, dataloader, loader_len, criterion, optimizer, scheduler, 
     # write training result to file
     resultWriter.write_csv([epoch, losses.avg, top1.avg.item(), top5.avg.item(), scheduler.optimizer.param_groups[0]['lr']])
     
-    print()
-    # there is a bug in get_lr() if using pytorch 1.1.0, see https://github.com/pytorch/pytorch/issues/22107
-    # so here we don't use get_lr()
-    # print('lr:%.6f' % scheduler.get_lr()[0])
-    print('lr:%.6f' % scheduler.optimizer.param_groups[0]['lr'])
-    print('Train ***    Loss:{losses.avg:.2e}    Acc@1:{top1.avg:.2f}    Acc@5:{top5.avg:.2f}'.format(losses=losses, top1=top1, top5=top5))
+    if torch.distributed.get_rank() == 0:
+        # there is a bug in get_lr() if using pytorch 1.1.0, see https://github.com/pytorch/pytorch/issues/22107
+        # so here we don't use get_lr()
+        print('lr:%.6f' % scheduler.optimizer.param_groups[0]['lr'])
+        print(f'Train: Loss: {losses.avg:.2e} Acc@1: {top1.avg:.2f} \
+                Acc@5: {top5.avg:.2f} Train_step_time: {total_step_time/i:.5f}')
 
     if epoch % args.save_epoch_freq == 0 and epoch != 0:
         if not os.path.exists(args.save_path):
@@ -151,14 +169,15 @@ def validate(args, model, dataloader, loader_len, criterion, use_gpu, epoch, ema
     model.eval()
 
     end = time.time()
+    total_step_time = 0
 
     # Iterate over data
     for i, (inputs, labels) in enumerate(dataloader):
         # measure data loading time
         data_time.update(time.time() - end)
         
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+        inputs = inputs.npu()
+        labels = labels.npu()
 
         with torch.set_grad_enabled(False):
             
@@ -170,9 +189,9 @@ def validate(args, model, dataloader, loader_len, criterion, use_gpu, epoch, ema
             losses.update(loss.item(), inputs.size(0))
             top1.update(acc1[0], inputs.size(0))
             top5.update(acc5[0], inputs.size(0))
+            total_step_time += (time.time() - end)
             batch_time.update(time.time() - end)
             end = time.time()
-            
 
     if args.ema_decay > 0:
         # restore the origin parameters after val
@@ -180,7 +199,10 @@ def validate(args, model, dataloader, loader_len, criterion, use_gpu, epoch, ema
     # write val result to file
     resultWriter.write_csv([epoch, losses.avg, top1.avg.item(), top5.avg.item()])
 
-    print(' Val  ***    Loss:{losses.avg:.2e}    Acc@1:{top1.avg:.2f}    Acc@5:{top5.avg:.2f}'.format(losses=losses, top1=top1, top5=top5))
+
+    if torch.distributed.get_rank() == 0:
+        print(f'Val: Loss: {losses.avg:.2e} Acc@1: {top1.avg:.2f} \
+                Acc@5: {top5.avg:.2f} Val_step_time: {total_step_time/i:.5f}')
 
     if epoch % args.save_epoch_freq == 0 and epoch != 0:
         if not os.path.exists(args.save_path):
@@ -211,10 +233,17 @@ def train_model(args, model, dataloader, loaders_len, criterion, optimizer, sche
     for epoch in range(args.start_epoch, args.num_epochs):
 
         epoch_time = time.time()
-        train(args, model, dataloader['train'], loaders_len['train'], criterion, optimizer, scheduler, use_gpu, epoch, ema)
-        top1_acc, top5_acc = validate(args, model, dataloader['val'], loaders_len['val'], criterion, use_gpu, epoch, ema)
+        train(args, model, dataloader['train'], loaders_len['train'],
+              criterion, optimizer, scheduler, use_gpu, epoch, ema)
+        top1_acc, top5_acc = validate(args, model, dataloader['val'],
+                                      loaders_len['val'], criterion, use_gpu, epoch, ema)
         epoch_time = time.time() - epoch_time
-        print('Time of epoch-[{:d}/{:d}] : {:.0f}h {:.0f}m {:.0f}s\n'.format(epoch, args.num_epochs, epoch_time // 3600, (epoch_time % 3600) // 60, epoch_time % 60))
+        if torch.distributed.get_rank() == 0:
+            print('Time of epoch-[{:d}/{:d}] : {:.0f}h {:.0f}m {:.0f}s\n'.format(epoch,
+                                                                                 args.num_epochs,
+                                                                                 epoch_time // 3600,
+                                                                                 (epoch_time % 3600) // 60,
+                                                                                 epoch_time % 60))
 
         # deep copy the model if it has higher top-1 accuracy
         if top1_acc > best_acc:
@@ -226,25 +255,25 @@ def train_model(args, model, dataloader, loaders_len, criterion, optimizer, sche
             if args.ema_decay > 0:
                 ema.restore()
 
-    print(os.path.split(args.save_path)[-1])
-    print('Best val top-1 Accuracy: {:4f}'.format(best_acc))
-    print('Corresponding top-5 Accuracy: {:4f}'.format(correspond_top5))
-    
-    time_elapsed = time.time() - since
-    print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600, (time_elapsed % 3600) // 60, time_elapsed % 60))
+    if torch.distributed.get_rank() == 0:
+        print(os.path.split(args.save_path)[-1])
+        print('Best val top-1 Accuracy: {:4f}'.format(best_acc))
+        print('Corresponding top-5 Accuracy: {:4f}'.format(correspond_top5))
+        
+        time_elapsed = time.time() - since
+        print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600,
+                                                                    (time_elapsed % 3600) // 60,
+                                                                    time_elapsed % 60))
 
     # load best model weights
     model.load_state_dict(best_model_wts)
     # save best model weights
     if args.save:
-        torch.save(model.state_dict(), os.path.join(args.save_path, 'best_model_wts-' + '{:.2f}'.format(best_acc) + '.pth'))
+        torch.save(model.state_dict(),
+                   os.path.join(args.save_path, 'best_model_wts-' + '{:.2f}'.format(best_acc) + '.pth'))
     return model
 
-if __name__ == '__main__':
-
-    import warnings
-    warnings.filterwarnings('ignore')
-
+def main():
     parser = argparse.ArgumentParser(description='PyTorch implementation of MobileNetV3')
     # Root catalog of images
     parser.add_argument('--data-dir', type=str, default='/media/data2/chenjiarong/ImageData')
@@ -280,25 +309,45 @@ if __name__ == '__main__':
     parser.add_argument('--bn-momentum', type=float, default=0.1, help='momentum in BatchNorm2d')
     parser.add_argument('-use-seed', default=False, action='store_true', help='using fixed random seed or not')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
-    parser.add_argument('-deterministic', default=False, action='store_true', help='torch.backends.cudnn.deterministic')
+    parser.add_argument('-deterministic', default=False, action='store_true', 
+                        help='torch.backends.cudnn.deterministic')
     parser.add_argument('-nbd', default=False, action='store_true', help='no bias decay')
     parser.add_argument('-zero-gamma', default=False, action='store_true', help='zero gamma in BatchNorm2d when init')
     parser.add_argument('-mixup', default=False, action='store_true', help='mixup or not')
     parser.add_argument('--mixup-alpha', type=float, default=0.2, help='alpha used in mixup')
+
+    # add extra parameter for adp
+    parser.add_argument('--local_rank', type=int, default=0, help='local rank in ddp')
+    parser.add_argument('--world_size', type=int, default=1, help='world size in ddp')
+
     args = parser.parse_args()
 
     args.lr_decay = args.lr_decay.lower()
     args.dataset = args.dataset.lower()
     args.optimizer = args.optimizer.lower()
 
+    local_rank = args.local_rank
+    torch.npu.set_device(local_rank)
+    dist.init_process_group(backend='hccl', init_method='tcp://127.0.0.1:23333',
+                            world_size=args.world_size, rank=args.local_rank)
+
     # folder to save what we need in this type: MobileNetV3-mode-dataset-width_multiplier-dropout-lr-batch_size-ema_decay-label_smoothing
-    folder_name = ['MobileNetV3', args.mode, args.dataset, 'wm'+str(args.width_multiplier), 'dp'+str(args.dropout), 'lr'+str(args.lr), 'bs'+str(args.batch_size), 'ed'+str(args.ema_decay), 'ls'+str(args.label_smoothing), args.optimizer+str(args.weight_decay), 'bn'+str(args.bn_momentum), 'epochs'+str(args.num_epochs), 'seed'+(str(args.seed) if args.use_seed else 'None'), 'determin'+str(args.deterministic), 'NoBiasDecay'+str(args.nbd), 'zeroGamma'+str(args.zero_gamma), 'mixup'+(str(args.mixup_alpha) if args.mixup else 'False')]
+    folder_name = ['MobileNetV3', args.mode, args.dataset, 'wm'+str(args.width_multiplier),
+                   'dp'+str(args.dropout), 'lr'+str(args.lr), 'bs'+str(args.batch_size),
+                   'ed'+str(args.ema_decay), 'ls'+str(args.label_smoothing),
+                   args.optimizer+str(args.weight_decay),
+                   'bn'+str(args.bn_momentum), 'epochs'+str(args.num_epochs),
+                   'seed'+(str(args.seed) if args.use_seed else 'None'),
+                   'determin'+str(args.deterministic), 'NoBiasDecay'+str(args.nbd),
+                   'zeroGamma'+str(args.zero_gamma), 'mixup'+(str(args.mixup_alpha) if args.mixup else 'False')]
+
     if args.lr_decay == 'step':
         folder_name.append(args.lr_decay+str(args.step_size)+'&'+str(args.gamma))
     elif args.lr_decay == 'cos':
         folder_name.append(args.lr_decay+str(args.warmup_epochs) + '&' + str(args.lr_min))
     elif args.lr_decay == 'sgdr':
-        folder_name.append(args.lr_decay+str(args.T_0)+'&'+str(args.T_mult)+'&'+str(args.warmup_epochs)+'&'+str(args.decay_rate))
+        folder_name.append(args.lr_decay+str(args.T_0)+'&'+str(args.T_mult)+'&'+ \
+                           str(args.warmup_epochs)+'&'+str(args.decay_rate))
     folder_name = '-'.join(folder_name)
     args.save_path = os.path.join(args.save_path, folder_name)
     if not os.path.exists(args.save_path):
@@ -332,14 +381,26 @@ if __name__ == '__main__':
     if args.dali and (args.dataset == 'tinyimagenet' or args.dataset == 'imagenet'):
         if args.dataset == 'imagenet':
             from DALIDataLoader import get_dali_imageNet_train_loader, get_dali_imageNet_val_loader
-            train_loader, train_loader_len = get_dali_imageNet_train_loader(data_path=args.data_dir, batch_size=args.batch_size, seed=args.seed, num_threads=args.num_workers)
-            val_loader, val_loader_len = get_dali_imageNet_val_loader(data_path=args.data_dir, batch_size=args.batch_size, seed=args.seed, num_threads=args.num_workers)
+            train_loader, train_loader_len = get_dali_imageNet_train_loader(data_path=args.data_dir,
+                                                                            batch_size=args.batch_size,
+                                                                            seed=args.seed,
+                                                                            num_threads=args.num_workers)
+            val_loader, val_loader_len = get_dali_imageNet_val_loader(data_path=args.data_dir,
+                                                                      batch_size=args.batch_size,
+                                                                      seed=args.seed,
+                                                                      num_threads=args.num_workers)
             dataloaders = {'train' : train_loader, 'val' : val_loader}
             loaders_len = {'train': train_loader_len, 'val' : val_loader_len}
         elif args.dataset == 'tinyimagenet':
             from DALIDataLoader import get_dali_tinyImageNet_train_loader, get_dali_tinyImageNet_val_loader
-            train_loader, train_loader_len = get_dali_tinyImageNet_train_loader(data_path=args.data_dir, batch_size=args.batch_size, seed=args.seed, num_threads=args.num_workers)
-            val_loader, val_loader_len = get_dali_tinyImageNet_val_loader(data_path=args.data_dir, batch_size=args.batch_size, seed=args.seed, num_threads=args.num_workers)
+            train_loader, train_loader_len = get_dali_tinyImageNet_train_loader(data_path=args.data_dir,
+                                                                                batch_size=args.batch_size,
+                                                                                seed=args.seed,
+                                                                                num_threads=args.num_workers)
+            val_loader, val_loader_len = get_dali_tinyImageNet_val_loader(data_path=args.data_dir,
+                                                                          batch_size=args.batch_size,
+                                                                          seed=args.seed,
+                                                                          num_threads=args.num_workers)
             dataloaders = {'train' : train_loader, 'val' : val_loader}
             loaders_len = {'train': train_loader_len, 'val' : val_loader_len}
     else:
@@ -367,16 +428,11 @@ if __name__ == '__main__':
         num_class = 10
     
     # get model
-    model = MobileNetV3(mode=args.mode, classes_num=num_class, input_size=input_size, 
-                    width_multiplier=args.width_multiplier, dropout=args.dropout, 
+    model = MobileNetV3(mode=args.mode, classes_num=num_class, input_size=input_size,
+                    width_multiplier=args.width_multiplier, dropout=args.dropout,
                     BN_momentum=args.bn_momentum, zero_gamma=args.zero_gamma)
 
-    if use_gpu:
-        if torch.cuda.device_count() > 1:
-            model = torch.nn.DataParallel(model)
-        model.to(torch.device('cuda'))
-    else:
-        model.to(torch.device('cpu'))
+    model.npu()
 
     if args.resume:
         if os.path.isfile(args.resume):
@@ -400,7 +456,8 @@ if __name__ == '__main__':
                 noBiasDecay(model, args.lr, args.weight_decay), 
                 momentum=0.9)
         else:
-            optimizer_ft = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+            optimizer_ft = apex.optimizers.NpuFusedSGD(model.parameters(), lr=args.lr,
+                                                       momentum=0.9, weight_decay=args.weight_decay)
     elif args.optimizer == 'rmsprop':
         optimizer_ft = optim.RMSprop(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
     elif args.optimizer == 'adam':
@@ -408,11 +465,22 @@ if __name__ == '__main__':
 
     if args.lr_decay == 'step':
         # Decay LR by a factor of 0.99 every 3 epoch
-        lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=args.step_size, gamma=args.gamma)
+        lr_schedule = lr_scheduler.StepLR(optimizer_ft, step_size=args.step_size, gamma=args.gamma)
     elif args.lr_decay == 'cos':
-        lr_scheduler = CosineWarmupLR(optimizer=optimizer_ft, epochs=args.num_epochs, iter_in_one_epoch=loaders_len['train'], lr_min=args.lr_min, warmup_epochs=args.warmup_epochs)
+        lr_schedule = CosineWarmupLR(optimizer=optimizer_ft,
+                                      epochs=args.num_epochs,
+                                      iter_in_one_epoch=loaders_len['train'],
+                                      lr_min=args.lr_min,
+                                      warmup_epochs=args.warmup_epochs)
     elif args.lr_decay == 'sgdr':
-        lr_scheduler = CosineAnnealingWarmRestarts(optimizer=optimizer_ft, T_0=args.T_0, T_mult=args.T_mult, warmup_epochs=args.warmup_epochs, decay_rate=args.decay_rate)
+        lr_schedule = CosineAnnealingWarmRestarts(optimizer=optimizer_ft,
+                                                   T_0=args.T_0, T_mult=args.T_mult,
+                                                   warmup_epochs=args.warmup_epochs,
+                                                   decay_rate=args.decay_rate)
+
+    model, optimizer_ft = amp.initialize(model, optimizer_ft, opt_level="O2", combine_grad=True)
+
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank], broadcast_buffers=False)
 
     model = train_model(args=args,
                         model=model,
@@ -422,3 +490,8 @@ if __name__ == '__main__':
                         optimizer=optimizer_ft,
                         scheduler=lr_scheduler,
                         use_gpu=use_gpu)
+
+if __name__ == '__main__':
+    main()
+
+    
