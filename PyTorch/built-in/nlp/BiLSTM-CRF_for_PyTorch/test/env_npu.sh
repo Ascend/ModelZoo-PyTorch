@@ -44,3 +44,4 @@ export HCCL_CONNECT_TIMEOUT=1800
 
 ulimit -SHn 512000
 
+export PYTHONPATH=$PYTHONPATH:./named_entity_recognition
