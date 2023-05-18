@@ -83,7 +83,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END python3.7\
+        taskset -c $PID_START-$PID_END python3\
         ${cur_path}/tools/train.py ${cur_path}/configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
             --launcher pytorch \
             --seed 1 \
