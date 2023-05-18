@@ -44,7 +44,7 @@ fi
 export DETECTRON2_DATASETS=$data_path
 
 #安装detectron2
-cd $cur_path
+cd $cur_path/../
 python3 -m pip install -e ./
 
 #训练开始时间，不需要修改
