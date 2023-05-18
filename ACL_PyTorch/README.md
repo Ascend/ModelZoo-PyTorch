@@ -289,7 +289,7 @@ CV-detection
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_sierkinhane_for_Pytorch">  CRNN_sierkinhane_for_Pytorch </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_BuiltIn_for_Pytorch">  CRNN_BuiltIn_for_Pytorch </a>
         </td>
         <td>IIIT5K_lmdb</td>
 	<td>74.87%</td>

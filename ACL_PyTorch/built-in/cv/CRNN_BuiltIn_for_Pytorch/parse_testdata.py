@@ -14,6 +14,7 @@
 # ============================================================================
 
 import os
+import stat
 import sys
 import re
 import six
@@ -52,7 +53,7 @@ def gen_data_label(test_dir, data_dir):
         print('origin nSamples is:', nSamples)
         filtered_index_list = []
 
-        with open('label.txt', 'w') as f:
+        with os.fdopen(os.open('label.txt', os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR), 'w') as f:
             for index in range(nSamples):
                 index += 1
                 # images
@@ -90,11 +91,4 @@ def gen_data_label(test_dir, data_dir):
 
 
 if __name__ == '__main__':
-
-    test_dir = sys.argv[1]
-    output_bin = sys.argv[2]
-
-    if not os.path.exists(output_bin):
-        os.mkdir(output_bin)
-
-    gen_data_label(test_dir, output_bin)
+    gen_data_label(sys.argv[1], sys.argv[2])

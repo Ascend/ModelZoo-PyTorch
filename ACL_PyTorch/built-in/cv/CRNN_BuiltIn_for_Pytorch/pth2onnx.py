@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-import crnn
-import onnx
-import sys
 from collections import OrderedDict
+import sys
+
+import onnx
+import torch
+
+import crnn
+
 
 def proc_node_module(checkpoint, AttrName):
     new_state_dict = OrderedDict()
     for k, v in checkpoint[AttrName].items():
-        if (k[0:7] == "module."):
+        if k[0:7] == "module.":
             name = k[7:]
         else:
             name = k[0:]
@@ -39,6 +42,7 @@ def lstm_op_adapter(state_dict):
         ret[key] = torch.cat((param[0], param[2], param[1], param[3]), 0)
     return ret
 
+
 def convert(path, out):
     checkpoint = torch.load(path, map_location='cpu')
     checkpoint['state_dict'] = proc_node_module(checkpoint, 'state_dict')
@@ -51,16 +55,14 @@ def convert(path, out):
     dummy_input = torch.randn(1, 1, 32, 100)
     dynamic_axes = {'actual_input_1': {0: '-1'}, 'output1': {1: '-1'}}
     print('\nStarting ONNX export with onnx %s...' % onnx.__version__)
-    torch.onnx.export(model, 
-                    dummy_input, 
-                    out, 
-                    input_names=input_names, 
-                    dynamic_axes = dynamic_axes, 
-                    output_names=output_names, 
-                    opset_version=11)
+    torch.onnx.export(model,
+                      dummy_input,
+                      out,
+                      input_names=input_names,
+                      dynamic_axes=dynamic_axes,
+                      output_names=output_names,
+                      opset_version=11)
 
 
 if __name__ == "__main__":
-    path = sys.argv[1]
-    out = sys.argv[2]
-    convert(path, out)
+    convert(sys.argv[1], sys.argv[2])

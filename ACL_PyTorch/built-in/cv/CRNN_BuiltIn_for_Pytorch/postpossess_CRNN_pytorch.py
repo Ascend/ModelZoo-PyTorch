@@ -13,13 +13,12 @@
 # limitations under the License.
 # ============================================================================
 
-import os
 import sys
 import numpy as np
 import torch
 
 
-class strLabelConverter(object):
+class StrLabelConverter(object):
     """Convert between str and label.
     NOTE:
         Insert `blank` to the alphabet for CTC.
@@ -54,7 +53,6 @@ class strLabelConverter(object):
             r = []
             for char in item:
                 index = self.dict[char]
-                # result.append(index)
                 r.append(index)
             result.append(r)
         max_len = 0
@@ -63,7 +61,7 @@ class strLabelConverter(object):
                 max_len = len(r)
         result_temp = []
         for r in result:
-            for i in range(max_len - len(r)):
+            for _ in range(max_len - len(r)):
                 r.append(0)
             result_temp.append(r)
         text = result_temp
@@ -81,7 +79,8 @@ class strLabelConverter(object):
         """
         if length.numel() == 1:
             length = length[0]
-            assert t.numel() == length, "text with length: {} does not match declared length: {}".format(t.numel(), length)
+            error_message = 'text with length: {} does not match declared length: {}'.format(t.numel(), length)
+            assert t.numel() == length, error_message
             if raw:
                 return ''.join([self.alphabet[i - 1] for i in t])
             else:
@@ -92,7 +91,8 @@ class strLabelConverter(object):
                 return ''.join(char_list)
         else:
             # batch mode
-            assert t.numel() == length.sum(), "texts with length: {} does not match declared length: {}".format(t.numel(), length.sum())
+            error_message = 'texts with length: {} does not match declared length: {}'.format(t.numel(), length.sum())
+            assert t.numel() == length.sum(), error_message
             texts = []
             index = 0
             for i in range(length.numel()):
@@ -107,32 +107,21 @@ class strLabelConverter(object):
 total_img = 3000
 
 def get_Acc(bin_path, label, batch_size):
-    # label
-    keys, vals = [], []
-    with open(label, 'r') as f:
-        content = f.read()
-        contents = content.split('\n')[:-1]
-    for cot in contents:
-        cot = cot.split(':')
-        keys.append(cot[0])
-        vals.append(cot[1])
-
-    labels = dict(zip(keys, vals))
+    contents = open(label, 'r').read().split('\n')[:-1]
+    labels = {line.split(':')[0]: line.split(':')[1] for line in contents}
     count = 0
     for index in range(total_img):
         index += 1
 
         preds = np.fromfile('{}/test_{}_0.bin'.format(bin_path, index), np.float32).reshape(26, -1, 37)
         preds = torch.from_numpy(preds)
-        # print("preds.shape:", preds.shape)
         preds_size = torch.LongTensor([preds.size(0)] * batch_size)
 
         _, preds = preds.max(2)
         preds = preds.transpose(1, 0).contiguous().view(-1)
 
-        converter = strLabelConverter('0123456789abcdefghijklmnopqrstuvwxyz')
+        converter = StrLabelConverter('0123456789abcdefghijklmnopqrstuvwxyz')
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
-        # print("preds_size.data:",preds_size.data)
         key = 'test_{}.bin'.format(index)
         if sim_preds == labels[key]:
             count += 1
@@ -148,6 +137,4 @@ def get_Acc(bin_path, label, batch_size):
 
 
 if __name__ == '__main__':
-    bin_path = sys.argv[1]
-    label = sys.argv[2]
-    get_Acc(bin_path, label, 1)
+    get_Acc(sys.argv[1], sys.argv[2], 1)
