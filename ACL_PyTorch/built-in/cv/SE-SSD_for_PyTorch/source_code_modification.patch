@@ -1,0 +1,409 @@
+diff --git a/det3d/core/bbox/box_torch_ops.py b/det3d/core/bbox/box_torch_ops.py
+index 60b7f5c..3363343 100644
+--- a/det3d/core/bbox/box_torch_ops.py
++++ b/det3d/core/bbox/box_torch_ops.py
+@@ -4,7 +4,7 @@ from functools import reduce
+ import numpy as np
+ import torch
+ from det3d.ops.nms.nms_cpu import rotate_nms_cc, rotate_weighted_nms_cc
+-from det3d.ops.nms.nms_gpu import nms_gpu, rotate_iou_gpu, rotate_nms_gpu
++# from det3d.ops.nms.nms_gpu import nms_gpu, rotate_iou_gpu, rotate_nms_gpu
+ from torch import stack as tstack
+ 
+ 
+@@ -617,5 +617,5 @@ def rotate_weighted_nms(
+         labels_ret_np = np.array(nms_result[2])
+         dir_ret_np = np.array(nms_result[3])
+         keep = np.array(nms_result[4])
+-        return torch.from_numpy(box_ret_np).cuda(), torch.from_numpy(dir_ret_np).cuda(), torch.from_numpy(labels_ret_np).cuda(), \
+-               torch.from_numpy(scores_ret_np).cuda(), indices[keep]
+\ No newline at end of file
++        return torch.from_numpy(box_ret_np).cpu(), torch.from_numpy(dir_ret_np).cpu(), torch.from_numpy(labels_ret_np).cpu(), \
++               torch.from_numpy(scores_ret_np).cpu(), indices[keep]
+diff --git a/det3d/core/iou3d/iou3d_utils.py b/det3d/core/iou3d/iou3d_utils.py
+index 2580c02..56b5192 100644
+--- a/det3d/core/iou3d/iou3d_utils.py
++++ b/det3d/core/iou3d/iou3d_utils.py
+@@ -1,5 +1,5 @@
+ import torch
+-import iou3d_cuda
++# import iou3d_cuda
+ import sys
+ import det3d.core.iou3d.utils as utils
+ 
+diff --git a/det3d/datasets/kitti/eval.py b/det3d/datasets/kitti/eval.py
+index a7d5f7c..616d237 100644
+--- a/det3d/datasets/kitti/eval.py
++++ b/det3d/datasets/kitti/eval.py
+@@ -5,7 +5,7 @@ import numba
+ import numpy as np
+ from scipy.interpolate import interp1d
+ 
+-from det3d.ops.nms.nms_gpu import rotate_iou_gpu_eval
++# from det3d.ops.nms.nms_gpu import rotate_iou_gpu_eval
+ from det3d.core.bbox import box_np_ops
+ from det3d.datasets.utils.eval import box3d_overlap_kernel
+ from det3d.datasets.utils.eval import box3d_overlap
+diff --git a/det3d/datasets/utils/eval.py b/det3d/datasets/utils/eval.py
+index d6b7c9d..014b307 100644
+--- a/det3d/datasets/utils/eval.py
++++ b/det3d/datasets/utils/eval.py
+@@ -1,8 +1,8 @@
+ import numpy as np
+ import numba
+ 
+-from det3d.ops.nms.nms_gpu import rotate_iou_gpu_eval
+-from det3d.ops.nms.nms_gpu import inter
++# from det3d.ops.nms.nms_gpu import rotate_iou_gpu_eval
++# from det3d.ops.nms.nms_gpu import inter
+ from det3d.core.bbox import box_np_ops
+ 
+ 
+@@ -312,7 +312,7 @@ def image_box_overlap(boxes, query_boxes, criterion=-1):
+     return overlaps
+ 
+ 
+-def bev_box_overlap(boxes, qboxes, criterion=-1, stable=False):
++def bev_box_overlap(boxes, qboxes, criterion=-1, stable=True):
+     if stable:
+         riou = box_np_ops.riou_cc(boxes, qboxes)
+     else:
+@@ -320,7 +320,7 @@ def bev_box_overlap(boxes, qboxes, criterion=-1, stable=False):
+     return riou
+ 
+ 
+-@numba.jit(nopython=True, parallel=True)
++@numba.jit(nopython=True, parallel=False)
+ def box3d_overlap_kernel(boxes, qboxes, rinc, criterion=-1, z_axis=1, z_center=1.0):
+     """
+         z_axis: the z (height) axis.
+@@ -362,6 +362,7 @@ def box3d_overlap(boxes, qboxes, criterion=-1, z_axis=1, z_center=1.0):
+     bev_axes = list(range(7))
+     bev_axes.pop(z_axis + 3)
+     bev_axes.pop(z_axis)
+-    rinc = rotate_iou_gpu_eval(boxes[:, bev_axes], qboxes[:, bev_axes], 2)
++    # rinc = rotate_iou_gpu_eval(boxes[:, bev_axes], qboxes[:, bev_axes], 2)
++    rinc = box_np_ops.rinter_cc(boxes[:, bev_axes], qboxes[:, bev_axes])
+     box3d_overlap_kernel(boxes, qboxes, rinc, criterion, z_axis, z_center)
+     return rinc
+diff --git a/det3d/datasets/utils/sa_da_v2.py b/det3d/datasets/utils/sa_da_v2.py
+index 67539fa..4d0de7d 100644
+--- a/det3d/datasets/utils/sa_da_v2.py
++++ b/det3d/datasets/utils/sa_da_v2.py
+@@ -7,7 +7,7 @@ from det3d.core.bbox import box_np_ops
+ from det3d.core.bbox.geometry import points_in_convex_polygon_3d_jit
+ 
+ from scipy.spatial import cKDTree
+-from ifp import ifp_sample
++# from ifp import ifp_sample
+ import traceback
+ 
+ 
+diff --git a/det3d/models/bbox_heads/mg_head_sessd.py b/det3d/models/bbox_heads/mg_head_sessd.py
+index f3a5826..28020dc 100644
+--- a/det3d/models/bbox_heads/mg_head_sessd.py
++++ b/det3d/models/bbox_heads/mg_head_sessd.py
+@@ -1,7 +1,7 @@
+ import logging
+ from collections import defaultdict
+ from enum import Enum
+-import matplotlib.pyplot as plt
++# import matplotlib.pyplot as plt
+ import os
+ import pickle
+ import numpy as np
+@@ -482,9 +482,9 @@ class MultiGroupHead(nn.Module):
+ 
+         logger.info("Finish MultiGroupHead Initialization")
+         post_center_range = [0, -40.0, -5.0, 70.4, 40.0, 5.0]
+-        self.post_center_range = torch.tensor(post_center_range, dtype=torch.float).cuda()
+-        self.thresh = torch.tensor([0.3], dtype=torch.float).cuda()
+-        self.top_labels = torch.zeros([70400], dtype=torch.long, ).cuda()  # [70400]
++        self.post_center_range = torch.tensor(post_center_range, dtype=torch.float)
++        self.thresh = torch.tensor([0.3], dtype=torch.float)
++        self.top_labels = torch.zeros([70400], dtype=torch.long, )  # [70400]
+         self.loss_size_consistency = nn.MSELoss(reduction='mean')
+         self.loss_iou_consistency = build_loss(dict(type="WeightedSmoothL1Loss", sigma=3.0, code_weights=None, codewise=True, loss_weight=1.0, ))
+         self.loss_score_consistency = build_loss(dict(type="WeightedSmoothL1Loss", sigma=3.0, code_weights=None, codewise=True, loss_weight=1.0, ))
+@@ -607,9 +607,9 @@ class MultiGroupHead(nn.Module):
+         return box_consistency_loss, idx1, idx2, mask1, mask2
+ 
+     def per_box_loc_trans(self, boxes, gt_boxes, trans):
+-        gt_indices = iou3d_utils.boxes_iou3d_gpu(boxes.cuda(), torch.from_numpy(gt_boxes).float().cuda()).max(-1)[1]
+-        trans_loc = torch.from_numpy(trans['translation_loc']).float().cuda()[gt_indices]
+-        rot_loc = torch.from_numpy(trans['rotation_loc']).float().cuda()[gt_indices]
++        gt_indices = iou3d_utils.boxes_iou3d_gpu(boxes, torch.from_numpy(gt_boxes).float()).max(-1)[1]
++        trans_loc = torch.from_numpy(trans['translation_loc']).float()[gt_indices]
++        rot_loc = torch.from_numpy(trans['rotation_loc']).float()[gt_indices]
+         boxes[:, :3] += trans_loc
+         boxes[:, 6] += rot_loc
+         return boxes
+@@ -635,10 +635,10 @@ class MultiGroupHead(nn.Module):
+         batch_dir_preds_tea = preds_tea[0]["dir_cls_preds"].view(batch_size, -1, 2)
+         batch_iou_preds_tea = preds_tea[0]["iou_preds"].view(batch_size, -1, 1)
+ 
+-        batch_box_loss = torch.tensor([0.], dtype=torch.float32).cuda()
+-        batch_cls_loss = torch.tensor([0.], dtype=torch.float32).cuda()
+-        batch_iou_loss = torch.tensor([0.], dtype=torch.float32).cuda()
+-        batch_dir_loss = torch.tensor([0.], dtype=torch.float32).cuda()
++        batch_box_loss = torch.tensor([0.], dtype=torch.float32)
++        batch_cls_loss = torch.tensor([0.], dtype=torch.float32)
++        batch_iou_loss = torch.tensor([0.], dtype=torch.float32)
++        batch_dir_loss = torch.tensor([0.], dtype=torch.float32)
+ 
+         batch_id = 0
+         for box_preds_stu_offset, cls_preds_stu, dir_preds_stu, iou_preds_stu, \
+@@ -672,7 +672,7 @@ class MultiGroupHead(nn.Module):
+                 top_box_preds_tea[:, :3] = box_torch_ops.rotation_points_single_angle(top_box_preds_tea[:, :3], trans["noise_rotation"], axis=2)
+                 top_box_preds_tea[:, -1] += trans["noise_rotation"]
+                 top_box_preds_tea[:, :-1] *= trans["noise_scale"]
+-                # top_box_preds_tea[:, :3] += torch.from_numpy(trans['noise_trans']).float().cuda()
++                # top_box_preds_tea[:, :3] += torch.from_numpy(trans['noise_trans']).float()
+ 
+                 # center consistency loss
+                 box_consistency_loss, idx1, idx2, mask1, mask2 = self.nn_distance(top_box_preds_stu, top_box_preds_tea)
+@@ -982,7 +982,7 @@ class MultiGroupHead(nn.Module):
+                 boxes_for_nms = box_preds[:, [0, 1, 3, 4, -1]]
+ 
+                 # REMOVE overlap boxes by bev rotate-nms.
+-                nms_type = "rotate_nms"
++                nms_type = "rotate_weighted_nms"
+                 if nms_type == "rotate_nms":      # DEFAULT NMS
+                     nms_func = box_torch_ops.rotate_nms
+                     selected = nms_func(boxes_for_nms,
+@@ -1054,4 +1054,4 @@ class MultiGroupHead(nn.Module):
+                 }
+             predictions_dicts.append(predictions_dict)
+ 
+-        return predictions_dicts
++        return predictions_dicts
+\ No newline at end of file
+diff --git a/det3d/models/detectors/voxelnet_sessd.py b/det3d/models/detectors/voxelnet_sessd.py
+index 995e792..d9a40dd 100644
+--- a/det3d/models/detectors/voxelnet_sessd.py
++++ b/det3d/models/detectors/voxelnet_sessd.py
+@@ -1,3 +1,4 @@
++import torch
+ from ..registry import DETECTORS
+ from .single_stage import SingleStageDetector
+ 
+@@ -8,36 +9,22 @@ class VoxelNet(SingleStageDetector):
+     def __init__(self, reader, backbone, neck, bbox_head, train_cfg=None, test_cfg=None, pretrained=None,):
+         super(VoxelNet, self).__init__(reader, backbone, neck, bbox_head, train_cfg, test_cfg, pretrained)
+ 
+-    def extract_feat(self, data):
+-        input_features = self.reader(data["voxels"], data["num_points_per_voxel"])  # [69276, 5, 4], [69276]  -> [69276, 4]
+-        x = self.backbone(input_features, data["coors"], data["batch_size"], data["input_shape"])
++    def extract_feat(self, voxels, num_points_per_voxel, coors, batch_size, input_shape=[1408, 1600, 40]):
++        input_features = self.reader(voxels, num_points_per_voxel)  # [69276, 5, 4], [69276]  -> [69276, 4]
++        x = self.backbone(input_features, coors, batch_size, input_shape)
+         if self.with_neck:
+             x = self.neck(x)
+         return x
+ 
+-    def forward(self, example, is_ema=[False, None], return_loss=True, **kwargs):
+-        # todo: how the data change into torch datatype
+-        key_tag = "_raw" if is_ema[0] else ""
+-        voxels = example["voxels" + key_tag]                    # [69276, 5(points per voxel), 4(features per point)]
+-        coordinates = example["coordinates" + key_tag]          # [69276, 4]
+-        num_points_per_voxel = example["num_points" + key_tag]  # [69276], record num_points (non-zeros) in each voxel
+-        num_voxels = example["num_voxels" + key_tag]            # [18278, 18536, 16687, 15775]
+-        batch_size = len(num_voxels)                  # 4
+-        input_shape = example["shape" + key_tag][0]             # [1408, 1600,   40]
++    def forward(self, voxels, coordinates, num_points_per_voxel, **kwargs):
++        batch_size = voxels.shape[0]
+ 
+-        data = dict(voxels=voxels,
+-                    num_points_per_voxel=num_points_per_voxel,
+-                    coors=coordinates,
+-                    batch_size=batch_size,
+-                    input_shape=input_shape)
++        # merge Batch axis
++        voxels = voxels.view(-1, 5, 4)
++        coordinates = coordinates.view(-1, 4)
++        num_points_per_voxel = num_points_per_voxel.view(-1)
+ 
+-        x = self.extract_feat(data)
++        x = self.extract_feat(voxels, num_points_per_voxel, coordinates, batch_size)
++        
+         preds = self.bbox_head(x)
+-
+-        if is_ema[0]:
+-            return preds
+-        else:
+-            if return_loss:
+-                return self.bbox_head.loss(example, preds, is_ema[1])
+-            else:
+-                return self.bbox_head.predict(example, preds, self.test_cfg)
+\ No newline at end of file
++        return preds
+diff --git a/det3d/ops/nms/__init__.py b/det3d/ops/nms/__init__.py
+index 5448ec8..b30ca7b 100644
+--- a/det3d/ops/nms/__init__.py
++++ b/det3d/ops/nms/__init__.py
+@@ -1,3 +1,3 @@
+ from det3d.ops.nms.nms_cpu import nms_jit, soft_nms_jit
+-from det3d.ops.nms.nms_gpu import nms_gpu, rotate_iou_gpu, rotate_nms_gpu
+-from det3d.ops.nms.nms_gpu import rotate_iou_gpu_eval
++# from det3d.ops.nms.nms_gpu import nms_gpu, rotate_iou_gpu, rotate_nms_gpu
++# from det3d.ops.nms.nms_gpu import rotate_iou_gpu_eval
+diff --git a/det3d/ops/nms/nms.cc b/det3d/ops/nms/nms.cc
+index cc72cf2..534af45 100644
+--- a/det3d/ops/nms/nms.cc
++++ b/det3d/ops/nms/nms.cc
+@@ -3,10 +3,10 @@
+ PYBIND11_MODULE(nms, m)
+ {
+     m.doc() = "non_max_suppression asd";
+-    m.def("non_max_suppression", &non_max_suppression<double>, py::return_value_policy::reference_internal, "bbox iou", 
+-          "boxes"_a = 1, "keep_out"_a = 2, "nms_overlap_thresh"_a = 3, "device_id"_a = 4);
+-    m.def("non_max_suppression", &non_max_suppression<float>, py::return_value_policy::reference_internal, "bbox iou", 
+-          "boxes"_a = 1, "keep_out"_a = 2, "nms_overlap_thresh"_a = 3, "device_id"_a = 4);
++//     m.def("non_max_suppression", &non_max_suppression<double>, py::return_value_policy::reference_internal, "bbox iou", 
++//           "boxes"_a = 1, "keep_out"_a = 2, "nms_overlap_thresh"_a = 3, "device_id"_a = 4);
++//     m.def("non_max_suppression", &non_max_suppression<float>, py::return_value_policy::reference_internal, "bbox iou", 
++//           "boxes"_a = 1, "keep_out"_a = 2, "nms_overlap_thresh"_a = 3, "device_id"_a = 4);
+     m.def("non_max_suppression_cpu", &non_max_suppression_cpu<double>, py::return_value_policy::reference_internal, "bbox iou", 
+           "boxes"_a = 1, "order"_a = 2, "nms_overlap_thresh"_a = 3, "eps"_a = 4);
+     m.def("non_max_suppression_cpu", &non_max_suppression_cpu<float>, py::return_value_policy::reference_internal, "bbox iou", 
+diff --git a/det3d/ops/nms/nms_cpu.h b/det3d/ops/nms/nms_cpu.h
+index e87e9bb..2ee8654 100644
+--- a/det3d/ops/nms/nms_cpu.h
++++ b/det3d/ops/nms/nms_cpu.h
+@@ -6,6 +6,7 @@
+ #include <pybind11/numpy.h>
+ #include <vector>
+ #include <algorithm>
++#include <iostream>
+ #include <boost/geometry.hpp>
+ template<typename DType, typename ShapeContainer>
+ inline py::array_t<DType> constant(ShapeContainer shape, DType value){
+diff --git a/det3d/ops/nms/nms_cpu.py b/det3d/ops/nms/nms_cpu.py
+index 238477f..e0a7580 100644
+--- a/det3d/ops/nms/nms_cpu.py
++++ b/det3d/ops/nms/nms_cpu.py
+@@ -4,24 +4,25 @@ import numba
+ import numpy as np
+ 
+ from det3d.core.bbox import box_np_ops
+-from det3d.ops.nms.nms_gpu import rotate_iou_gpu
++# from det3d.ops.nms.nms_gpu import rotate_iou_gpu
++from det3d.utils.buildtools.pybind11_build import load_pb11
+ 
+ try:
+     from det3d.ops.nms.nms import (
+-        non_max_suppression_cpu,
++        # non_max_suppression_cpu,
+         rotate_non_max_suppression_cpu,
+         IOU_weighted_rotate_non_max_suppression_cpu,
+     )
+ except:
+     current_dir = Path(__file__).resolve().parents[0]
+     load_pb11(
+-        ["./nms_kernel.cu.cc", "./nms.cc"],
++        ["./nms.cc"],
+         current_dir / "nms.so",
+         current_dir,
+-        cuda=True,
++        cuda=False,
+     )
+     from det3d.ops.nms.nms import (
+-        non_max_suppression_cpu,
++        # non_max_suppression_cpu,
+         rotate_non_max_suppression_cpu,
+         IOU_weighted_rotate_non_max_suppression_cpu,
+     )
+diff --git a/det3d/ops/sigmoid_focal_loss/sigmoid_focal_loss.py b/det3d/ops/sigmoid_focal_loss/sigmoid_focal_loss.py
+index 981fa74..84047e4 100644
+--- a/det3d/ops/sigmoid_focal_loss/sigmoid_focal_loss.py
++++ b/det3d/ops/sigmoid_focal_loss/sigmoid_focal_loss.py
+@@ -2,7 +2,7 @@ import torch.nn as nn
+ from torch.autograd import Function
+ from torch.autograd.function import once_differentiable
+ 
+-from . import sigmoid_focal_loss_cuda
++# from . import sigmoid_focal_loss_cuda
+ 
+ 
+ class SigmoidFocalLossFunction(Function):
+diff --git a/det3d/ops/syncbn/syncbn.py b/det3d/ops/syncbn/syncbn.py
+index 0ffc6d3..5eaa273 100644
+--- a/det3d/ops/syncbn/syncbn.py
++++ b/det3d/ops/syncbn/syncbn.py
+@@ -5,11 +5,11 @@ import torch
+ import torch.cuda.comm as comm
+ import torch.distributed as dist
+ import torch.nn.functional as F
+-from IPython import embed
++# from IPython import embed
+ from torch.autograd.function import once_differentiable
+ from torch.nn.modules.batchnorm import _BatchNorm
+ 
+-from . import syncbn_gpu
++# from . import syncbn_gpu
+ 
+ 
+ class DistributedSyncBNFucntion(torch.autograd.Function):
+diff --git a/det3d/utils/buildtools/command.py b/det3d/utils/buildtools/command.py
+index 9d5ed56..298f678 100644
+--- a/det3d/utils/buildtools/command.py
++++ b/det3d/utils/buildtools/command.py
+@@ -7,7 +7,7 @@ from enum import Enum
+ from functools import partial
+ from pathlib import Path
+ 
+-import fire
++# import fire
+ from det3d.utils.find import find_cuda, find_cuda_device_arch
+ 
+ 
+diff --git a/det3d/utils/buildtools/pybind11_build.py b/det3d/utils/buildtools/pybind11_build.py
+index 606ebae..92adf3e 100644
+--- a/det3d/utils/buildtools/pybind11_build.py
++++ b/det3d/utils/buildtools/pybind11_build.py
+@@ -90,7 +90,7 @@ def load_pb11(
+     cwd=".",
+     cuda=False,
+     arch=None,
+-    num_workers=4,
++    num_workers=0,
+     includes: list = None,
+     build_directory=None,
+     compiler="g++",
+@@ -99,8 +99,8 @@ def load_pb11(
+     cmds = []
+     outs = []
+     main_sources = []
+-    if arch is None:
+-        arch = find_cuda_device_arch()
++    # if arch is None:
++    #     arch = find_cuda_device_arch()
+ 
+     for s in sources:
+         s = str(s)
+diff --git a/det3d/utils/find.py b/det3d/utils/find.py
+index 3397cff..0c35bd2 100644
+--- a/det3d/utils/find.py
++++ b/det3d/utils/find.py
+@@ -6,7 +6,7 @@ import sys
+ import tempfile
+ from pathlib import Path
+ 
+-import fire
++# import fire
+ 
+ 
+ def _get_info_from_anaconda_info(info, split=":"):
+diff --git a/examples/second/configs/config.py b/examples/second/configs/config.py
+index 17b2b00..7752216 100644
+--- a/examples/second/configs/config.py
++++ b/examples/second/configs/config.py
+@@ -47,7 +47,7 @@ model = dict(
+     type="VoxelNet",
+     pretrained=None,
+     reader=dict(type="VoxelFeatureExtractorV3", num_input_features=4, norm_cfg=norm_cfg,),
+-    backbone=dict(type="SpMiddleFHD", num_input_features=4, ds_factor=8, norm_cfg=norm_cfg,),
++    backbone=dict(type="MiddleFHD", num_input_features=4, ds_factor=8, norm_cfg=norm_cfg,),
+     neck=dict(
+         type="SSFA",
+         layer_nums=[5,],
