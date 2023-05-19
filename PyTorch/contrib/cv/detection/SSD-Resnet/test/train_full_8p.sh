@@ -117,7 +117,7 @@ FPS=`grep -a 'sec:'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_
 echo "Final Performance images/sec : $FPS"
 
 #输出训练精度
-train_accuracy=`grep -a 'Current AP'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $3}'|awk 'END {print}'`
+train_accuracy=`grep -a 'Current AP'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "AP: " '{print $NF}'|awk -F " " '{print $1}'|awk 'END {print}'`
 #打印
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
