@@ -488,7 +488,7 @@ def main():
                         loaders_len=loaders_len,
                         criterion=criterion,
                         optimizer=optimizer_ft,
-                        scheduler=lr_scheduler,
+                        scheduler=lr_schedule,
                         use_gpu=use_gpu)
 
 if __name__ == '__main__':
