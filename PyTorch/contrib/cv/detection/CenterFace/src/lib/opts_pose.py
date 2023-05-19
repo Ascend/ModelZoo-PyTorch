@@ -61,7 +61,7 @@ class opts(object):
                              help='disable when the input size is not fixed.')
     self.parser.add_argument('--seed', type=int, default=317,
                              help='random seed') # from CornerNet
-    self.parser.add_argument('--local_rank', type=int, default=0,
+    self.parser.add_argument('--local_rank', '--local-rank', type=int, default=0,
                              help='the current process id')
     self.parser.add_argument('--port', type=str, default='44444',
                              help='port')
