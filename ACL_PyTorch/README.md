@@ -1005,10 +1005,10 @@ CV-classfication
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Conformer_Ti">  Conformer_Ti </a>
         </td>
         <td>ImageNet</td>
-	<td>80.8%</td>
+	<td>81.09%</td>
         <td></td>
         <td></td>
-	<td>867.716(bs8)</td>
+	<td>907.58(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
