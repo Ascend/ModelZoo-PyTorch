@@ -25,6 +25,9 @@ import numpy as np
 import torch
 from torch import optim
 from torch.cuda.amp import GradScaler
+import torch_npu
+import apex
+from torch_npu.contrib import transfer_to_npu
 
 try:
     import wandb
@@ -294,19 +297,7 @@ def main(args):
                 val = getattr(args, name)
                 logging.info(f"  {name}: {val}")
                 f.write(f"{name}: {val}\n")
-
-    if args.distributed and not args.horovod:
-        if args.use_bn_sync:
-            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        ddp_args = {}
-        if args.ddp_static_graph:
-            # this doesn't exist in older PyTorch, arg only added if enabled
-            ddp_args['static_graph'] = True
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device], **ddp_args)
-    
-        if args.distill:
-            dist_model = torch.nn.parallel.DistributedDataParallel(dist_model, device_ids=[device], **ddp_args)
-
+                
     # create optimizer and scaler
     optimizer = None
     scaler = None
@@ -321,7 +312,7 @@ def main(args):
         gain_or_bias_params = [p for n, p in named_parameters if exclude(n, p) and p.requires_grad]
         rest_params = [p for n, p in named_parameters if include(n, p) and p.requires_grad]
 
-        optimizer = optim.AdamW(
+        optimizer =apex.optimizers.NpuFusedAdamW(
             [
                 {"params": gain_or_bias_params, "weight_decay": 0.},
                 {"params": rest_params, "weight_decay": args.wd},
@@ -336,6 +327,20 @@ def main(args):
             hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
         scaler = GradScaler() if args.precision == "amp" else None
+        model, optimizer = apex.amp.initialize(model, optimizer, opt_level='O2', combine_grad=True)
+
+    if args.distributed and not args.horovod:
+        if args.use_bn_sync:
+            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+        ddp_args = {}
+        if args.ddp_static_graph:
+            # this doesn't exist in older PyTorch, arg only added if enabled
+            ddp_args['static_graph'] = True
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device], **ddp_args)
+    
+        if args.distill:
+            dist_model = torch.nn.parallel.DistributedDataParallel(dist_model, device_ids=[device], **ddp_args)
+
 
     # optionally resume from a checkpoint
     start_epoch = 0
@@ -492,4 +497,5 @@ def copy_codebase(args):
 
 
 if __name__ == "__main__":
+    torch_npu.npu.set_compile_mode(jit_compile=False)
     main(sys.argv[1:])

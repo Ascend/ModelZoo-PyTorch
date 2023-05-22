@@ -21,6 +21,7 @@ import time
 import numpy as np
 import torch
 import torch.nn.functional as F
+from apex import amp
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 try:
@@ -66,9 +67,12 @@ def unwrap_model(model):
         return model
 
 
-def backward(total_loss, scaler):
+def backward(total_loss, scaler, optimizer=None):
     if scaler is not None:
         scaler.scale(total_loss).backward()
+    elif optimizer is not None:
+        with amp.scale_loss(total_loss, optimizer) as scaled_loss:     
+            scaled_loss.backward() 
     else:
         total_loss.backward()
 
@@ -77,7 +81,6 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
     device = torch.device(args.device)
     autocast = get_autocast(args.precision)
     cast_dtype = get_cast_dtype(args.precision)
-
 
     model.train()
     if args.distill:
@@ -122,7 +125,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                 total_loss = sum(losses.values())
                 losses["loss"] = total_loss
 
-            backward(total_loss, scaler)
+            backward(total_loss, scaler, optimizer)
         else:
             # First, cache the features without any gradient tracking.
             with torch.no_grad():
@@ -161,7 +164,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                     del inputs
                     total_loss = sum(losses.values())
                     losses["loss"] = total_loss
-                backward(total_loss, scaler)
+                backward(total_loss, scaler, optimizer)
 
         if scaler is not None:
             if args.horovod:
@@ -216,8 +219,8 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
             samples_per_second_per_gpu = args.accum_freq * args.batch_size / batch_time_m.val
             logging.info(
                 f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] "
-                f"Data (t): {data_time_m.avg:.3f} "
-                f"Batch (t): {batch_time_m.avg:.3f}, {samples_per_second:#g}/s, {samples_per_second_per_gpu:#g}/s/gpu "
+                f"Data_time: {data_time_m.avg:.3f} "
+                f"Time: {batch_time_m.avg:.3f}, {samples_per_second:#g}/s, {samples_per_second_per_gpu:#g}/s/gpu "
                 f"LR: {optimizer.param_groups[0]['lr']:5f} "
                 f"Logit Scale: {logit_scale_scalar:.3f} " + loss_log
             )
@@ -249,8 +252,6 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
 
 def evaluate(model, data, epoch, args, tb_writer=None):
     metrics = {}
-    if not is_master(args):
-        return metrics
     device = torch.device(args.device)
     model.eval()
 
@@ -324,6 +325,9 @@ def evaluate(model, data, epoch, args, tb_writer=None):
                 metrics.update({"val_generative_loss": gen_loss.item()})
 
     if not metrics:
+        return metrics
+
+    if not is_master(args):
         return metrics
 
     logging.info(
