@@ -69,7 +69,7 @@ do
 
 	nohup taskset -c $PID_START-$PID_END python3.7 -u train_cifar10.py  \
         --net swin --bs ${batch_size} --lr ${learning_rate} --n_epoch 11 \
-        --local_rank $RANK_ID \
+        --noamp --local_rank $RANK_ID \
         --world_size $WORLD_SIZE > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log &
 done
 
