@@ -66,7 +66,7 @@ do
 done
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 python3 $cur_path/../tools/train_net.py \
-	--config-file ../configs/COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml \
+	--config-file $cur_path/../configs/COCO-Detection/faster_rcnn_R_50_FPN_1x.yaml \
 	AMP 1 \
 	OPT_LEVEL O2 \
 	LOSS_SCALE_VALUE 128 \
