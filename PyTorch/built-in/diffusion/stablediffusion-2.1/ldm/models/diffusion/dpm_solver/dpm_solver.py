@@ -100,6 +100,9 @@ class NoiseScheduleVP:
             self.T = 1.
             self.t_array = torch.linspace(0., 1., self.total_N + 1)[1:].reshape((1, -1))
             self.log_alpha_array = log_alphas.reshape((1, -1,))
+            self.inter_one = torch.tensor(1)
+            self.inter_zero = torch.tensor(0)
+            self.inter_K = torch.tensor(self.t_array.shape[1] - 2)
         else:
             self.total_N = 1000
             self.beta_0 = continuous_beta_0
@@ -122,8 +125,20 @@ class NoiseScheduleVP:
         Compute log(alpha_t) of a given continuous-time label t in [0, T].
         """
         if self.schedule == 'discrete':
-            return interpolate_fn(t.reshape((-1, 1)), self.t_array.to(t.device),
-                                  self.log_alpha_array.to(t.device)).reshape((-1))
+            # 将多次to操作优化成1次
+            if self.t_array.device != t.device:
+                self.t_array = self.t_array.to(t.device)
+            if self.log_alpha_array.device != t.device:
+                self.log_alpha_array = self.log_alpha_array.to(t.device)
+            if self.inter_one.device != t.device:
+                self.inter_one = self.inter_one.to(t.device)
+            if self.inter_zero.device != t.device:
+                self.inter_zero = self.inter_zero.to(t.device)
+            if self.inter_K.device != t.device:
+                self.inter_K = self.inter_K.to(t.device)
+            return interpolate_fn(t.reshape((-1, 1)), self.t_array,
+                                   self.log_alpha_array, self.inter_one, self.inter_zero, self.inter_K).reshape((-1))
+
         elif self.schedule == 'linear':
             return -0.25 * t ** 2 * (self.beta_1 - self.beta_0) - 0.5 * t * self.beta_0
         elif self.schedule == 'cosine':
@@ -161,9 +176,19 @@ class NoiseScheduleVP:
             return tmp / (torch.sqrt(Delta) + self.beta_0) / (self.beta_1 - self.beta_0)
         elif self.schedule == 'discrete':
             log_alpha = -0.5 * torch.logaddexp(torch.zeros((1,)).to(lamb.device), -2. * lamb)
-            t = interpolate_fn(log_alpha.reshape((-1, 1)), torch.flip(self.log_alpha_array.to(lamb.device), [1]),
-                               torch.flip(self.t_array.to(lamb.device), [1]))
-            return t.reshape((-1,))
+            # 将多次to操作优化成1次
+            if self.t_array.device != lamb.device:
+                self.t_array = self.t_array.to(lamb.device)
+            if self.log_alpha_array.device != lamb.device:
+                self.log_alpha_array = self.log_alpha_array.to(lamb.device)
+            if self.inter_one.device != lamb.device:
+                self.inter_one = self.inter_one.to(lamb.device)
+            if self.inter_zero.device != lamb.device:
+                self.inter_zero = self.inter_zero.to(lamb.device)
+            if self.inter_K.device != lamb.device:
+                self.inter_K = self.inter_K.to(lamb.device)
+            return interpolate_fn(log_alpha.reshape((-1, 1)), torch.flip(self.log_alpha_array, [1]),
+                                  torch.flip(self.t_array, [1]), self.inter_one, self.inter_zero, self.inter_K).reshape((-1))
         else:
             log_alpha = -0.5 * torch.logaddexp(-2. * lamb, torch.zeros((1,)).to(lamb))
             t_fn = lambda log_alpha_t: torch.arccos(torch.exp(log_alpha_t + self.cosine_log_alpha_0)) * 2. * (
@@ -1124,7 +1149,7 @@ class DPM_Solver:
 # other utility functions
 #############################################################
 
-def interpolate_fn(x, xp, yp):
+def interpolate_fn(x, xp, yp, inter_one, inter_zero, inter_K):
     """
     A piecewise linear function y = f(x), using xp and yp as keypoints.
     We implement f(x) in a differentiable way (i.e. applicable for autograd).
@@ -1143,9 +1168,9 @@ def interpolate_fn(x, xp, yp):
     cand_start_idx = x_idx - 1
     start_idx = torch.where(
         torch.eq(x_idx, 0),
-        torch.tensor(1, device=x.device),
+        inter_one,
         torch.where(
-            torch.eq(x_idx, K), torch.tensor(K - 2, device=x.device), cand_start_idx,
+            torch.eq(x_idx, K), inter_K, cand_start_idx,
         ),
     )
     end_idx = torch.where(torch.eq(start_idx, cand_start_idx), start_idx + 2, start_idx + 1)
@@ -1153,9 +1178,9 @@ def interpolate_fn(x, xp, yp):
     end_x = torch.gather(sorted_all_x, dim=2, index=end_idx.unsqueeze(2)).squeeze(2)
     start_idx2 = torch.where(
         torch.eq(x_idx, 0),
-        torch.tensor(0, device=x.device),
+        inter_zero,
         torch.where(
-            torch.eq(x_idx, K), torch.tensor(K - 2, device=x.device), cand_start_idx,
+            torch.eq(x_idx, K), inter_K, cand_start_idx,
         ),
     )
     y_positions_expanded = yp.unsqueeze(0).expand(N, -1, -1)
