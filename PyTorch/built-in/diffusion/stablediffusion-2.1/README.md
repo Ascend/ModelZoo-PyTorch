@@ -61,11 +61,10 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
   ```
   python scripts/txt2img.py \
         --prompt "a professional photograph of an astronaut riding a horse" \
-        --ckpt /xxx/stable_diffusion_v2-1_ckpt/v2-1_768-ema-pruned.ckpt \
+        --ckpt /xxx/xxx.ckpt \
         --config configs/stable-diffusion/v2-inference-v.yaml \
         --H 768 \
         --W 768 \
-        --device cuda \
         --device_id 4 \
         --precision full \
         --n_samples 1 
