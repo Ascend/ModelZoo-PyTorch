@@ -12,26 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse, os
+import argparse
+import os
+import time
+from contextlib import nullcontext
 import cv2
-import torch
 import numpy as np
-from omegaconf import OmegaConf
+import torch
+import torch_npu
 from PIL import Image
 from tqdm import tqdm, trange
 from itertools import islice
 from einops import rearrange
-from torchvision.utils import make_grid
+from imwatermark import WatermarkEncoder
+from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
 from torch import autocast
-from contextlib import nullcontext
-from imwatermark import WatermarkEncoder
+from torchvision.utils import make_grid
 
-from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
-from ldm.models.diffusion.plms import PLMSSampler
 from ldm.models.diffusion.dpm_solver import DPMSolverSampler
-
+from ldm.models.diffusion.plms import PLMSSampler
+from ldm.util import instantiate_from_config
+from torch_npu.contrib import transfer_to_npu
+torch_npu.npu.set_compile_mode(jit_compile=False)
+torch.npu.config.allow_internal_format = False
 torch.set_grad_enabled(False)
 
 def chunk(it, size):
@@ -192,11 +197,17 @@ def parse_args():
         help="repeat each prompt in file this often",
     )
     parser.add_argument(
+        "--device_id",
+        type=int,
+        default=0,
+        help="repeat each prompt in file this often",
+    )
+    parser.add_argument(
         "--device",
         type=str,
         help="Device on which Stable Diffusion will be run",
         choices=["cpu", "cuda"],
-        default="cpu"
+        default="cuda"
     )
     parser.add_argument(
         "--torchscript",
@@ -230,13 +241,17 @@ def main(opt):
 
     config = OmegaConf.load(f"{opt.config}")
     device = torch.device("cuda") if opt.device == "cuda" else torch.device("cpu")
-    model = load_model_from_config(config, f"{opt.ckpt}", device)
 
+    model = load_model_from_config(config, f"{opt.ckpt}", device)
+    print("torch.cuda.current_device() : ", torch.cuda.current_device(), flush=True)
     if opt.plms:
+        print("------------------------ sampler is PLMSSampler")
         sampler = PLMSSampler(model, device=device)
     elif opt.dpm:
+        print("------------------------ sampler is DPMSolverSampler")
         sampler = DPMSolverSampler(model, device=device)
     else:
+        print("------------------------ sampler is DDIMSampler")
         sampler = DDIMSampler(model, device=device)
 
     os.makedirs(opt.outdir, exist_ok=True)
@@ -284,7 +299,8 @@ def main(opt):
             raise ValueError("Use configs/stable-diffusion/intel/ configs with bf16 enabled if " +
                              "you'd like to use bfloat16 with CPU.")
         if unet.dtype == torch.float16 and device == torch.device("cpu"):
-            raise ValueError("Use configs/stable-diffusion/intel/ configs for your model if you'd like to run it on CPU.")
+            raise ValueError(
+                "Use configs/stable-diffusion/intel/ configs for your model if you'd like to run it on CPU.")
 
         if opt.ipex:
             import intel_extension_for_pytorch as ipex
@@ -303,7 +319,8 @@ def main(opt):
                 # get UNET scripted
                 if unet.use_checkpoint:
                     raise ValueError("Gradient checkpoint won't work with tracing. " +
-                    "Use configs/stable-diffusion/intel/ configs for your model or disable checkpoint in your config.")
+                                     "Use configs/stable-diffusion/intel/ configs for your 
+                                     model or disable checkpoint in your config.")
 
                 img_in = torch.ones(2, 4, 96, 96, dtype=torch.float32)
                 t_in = torch.ones(2, dtype=torch.int64)
@@ -344,10 +361,18 @@ def main(opt):
             for _ in range(3):
                 x_samples_ddim = model.decode_first_stage(samples_ddim)
 
-    precision_scope = autocast if opt.precision=="autocast" or opt.bf16 else nullcontext
-    with torch.no_grad(), \
-        precision_scope(opt.device), \
-        model.ema_scope():
+    print("data : ", data)
+    input_t = input("please input the prompt of the picture: ")
+    print(" the prompt of the picture: ", input_t)
+
+    while len(input_t) > 0:
+        start_time = time.time()
+        data = [batch_size * [input_t]]
+
+        precision_scope = autocast if opt.precision == "autocast" or opt.bf16 else nullcontext
+        with torch.no_grad(), \
+                precision_scope(opt.device), \
+                model.ema_scope():
             all_samples = list()
             for n in trange(opt.n_iter, desc="Sampling"):
                 for prompts in tqdm(data, desc="data"):
@@ -359,23 +384,24 @@ def main(opt):
                     c = model.get_learned_conditioning(prompts)
                     shape = [opt.C, opt.H // opt.f, opt.W // opt.f]
                     samples, _ = sampler.sample(S=opt.steps,
-                                                     conditioning=c,
-                                                     batch_size=opt.n_samples,
-                                                     shape=shape,
-                                                     verbose=False,
-                                                     unconditional_guidance_scale=opt.scale,
-                                                     unconditional_conditioning=uc,
-                                                     eta=opt.ddim_eta,
-                                                     x_T=start_code)
+                                                conditioning=c,
+                                                batch_size=opt.n_samples,
+                                                shape=shape,
+                                                verbose=False,
+                                                unconditional_guidance_scale=opt.scale,
+                                                unconditional_conditioning=uc,
+                                                eta=opt.ddim_eta,
+                                                x_T=start_code)
 
                     x_samples = model.decode_first_stage(samples)
+
                     x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
                     for x_sample in x_samples:
                         x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
                         img = Image.fromarray(x_sample.astype(np.uint8))
                         img = put_watermark(img, wm_encoder)
-                        img.save(os.path.join(sample_path, f"{base_count:05}.png"))
+                        img.save(os.path.join(sample_path, f"npu_{base_count:05}.png"))
                         base_count += 1
                         sample_count += 1
 
@@ -392,6 +418,10 @@ def main(opt):
             grid = put_watermark(grid, wm_encoder)
             grid.save(os.path.join(outpath, f'grid-{grid_count:04}.png'))
             grid_count += 1
+            end_time = time.time()
+            print("the prompt generate picture cost time is :", end_time - start_time)
+            input_t = input("please input the prompt of the picture: ")
+            print("the prompt of the picture: ", input_t)
 
     print(f"Your samples are ready and waiting for you here: \n{outpath} \n"
           f" \nEnjoy.")
@@ -399,4 +429,9 @@ def main(opt):
 
 if __name__ == "__main__":
     opt = parse_args()
+
+    if opt.device == "cuda":
+        torch.npu.set_device(opt.device_id)
+    else:
+        print("load model on CPU")
     main(opt)
