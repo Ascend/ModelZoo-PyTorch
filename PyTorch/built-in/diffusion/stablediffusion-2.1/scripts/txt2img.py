@@ -394,8 +394,6 @@ def main(opt):
                                                 x_T=start_code)
 
                     x_samples = model.decode_first_stage(samples)
-      
-                    x_samples_np = x_samples.cpu().numpy()
 
                     x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
