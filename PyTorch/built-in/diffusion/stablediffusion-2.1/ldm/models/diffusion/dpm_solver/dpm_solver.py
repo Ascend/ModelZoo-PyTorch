@@ -188,7 +188,8 @@ class NoiseScheduleVP:
             if self.inter_K.device != lamb.device:
                 self.inter_K = self.inter_K.to(lamb.device)
             return interpolate_fn(log_alpha.reshape((-1, 1)), torch.flip(self.log_alpha_array, [1]),
-                                  torch.flip(self.t_array, [1]), self.inter_one, self.inter_zero, self.inter_K).reshape((-1))
+                                  torch.flip(self.t_array, [1]), self.inter_one, self.inter_zero, 
+                                  self.inter_K).reshape((-1))
         else:
             log_alpha = -0.5 * torch.logaddexp(-2. * lamb, torch.zeros((1,)).to(lamb))
             t_fn = lambda log_alpha_t: torch.arccos(torch.exp(log_alpha_t + self.cosine_log_alpha_0)) * 2. * (

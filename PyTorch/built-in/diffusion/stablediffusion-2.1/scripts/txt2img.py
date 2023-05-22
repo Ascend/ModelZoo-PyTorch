@@ -319,7 +319,8 @@ def main(opt):
                 # get UNET scripted
                 if unet.use_checkpoint:
                     raise ValueError("Gradient checkpoint won't work with tracing. " +
-                                     "Use configs/stable-diffusion/intel/ configs for your model or disable checkpoint in your config.")
+                                     "Use configs/stable-diffusion/intel/ configs for your 
+                                     model or disable checkpoint in your config.")
 
                 img_in = torch.ones(2, 4, 96, 96, dtype=torch.float32)
                 t_in = torch.ones(2, dtype=torch.int64)
@@ -405,8 +406,6 @@ def main(opt):
                         img.save(os.path.join(sample_path, f"npu_{base_count:05}.png"))
                         base_count += 1
                         sample_count += 1
-                    np.save(f'./out_tensor/npu_np_out_picture_tensor_{base_count:05}', x_samples_np)
-                    print("numpy tensor save success")
 
                     all_samples.append(x_samples)
 
