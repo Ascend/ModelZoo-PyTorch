@@ -27,9 +27,8 @@ class PatchMergingFixed(PatchMerging):
         b, c, h, w = x.shape
         new_h, new_w = h // self.downscaling_factor, w // self.downscaling_factor
 
-        # TODO Im2col OP ERROR currently.. Calculate it on CPU temporarily.
         raw_device = x.device
-        x = self.patch_merge(x.cpu()).view(b, -1, new_h, new_w).permute(0, 2, 3, 1).to(raw_device)
+        x = self.patch_merge(x).view(b, -1, new_h, new_w).permute(0, 2, 3, 1).to(raw_device)
 
         x = self.linear(x)
 

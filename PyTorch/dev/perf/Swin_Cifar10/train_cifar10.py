@@ -40,6 +40,10 @@ import torchvision.transforms as transforms
 import bugfix
 from randomaug import RandAugment
 
+import apex
+from apex import amp
+
+
 class LabelSmoothing(nn.Module):
     """
     NLL loss with label smoothing.
@@ -64,8 +68,7 @@ class LabelSmoothing(nn.Module):
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         return loss.mean()
 
-def train(net, device, use_amp, optimizer, 
-          epoch, scaler, criterion_ls, trainloader):
+def train(net, device, optimizer, epoch, criterion_ls, trainloader):
     print('\nEpoch: %d' % epoch)
     net.train()
     train_loss = 0
@@ -73,14 +76,13 @@ def train(net, device, use_amp, optimizer,
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
-        # Train with amp
-        with torch.cuda.amp.autocast(enabled=use_amp):
-            outputs = net(inputs)
-            loss = criterion_ls(outputs, targets)
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
         optimizer.zero_grad()
+        # Train with amp
+        outputs = net(inputs)
+        loss = criterion_ls(outputs, targets)
+        with amp.scale_loss(loss, optimizer) as scaled_loss:
+            scaled_loss.backward()
+        optimizer.step()
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -96,7 +98,7 @@ def train(net, device, use_amp, optimizer,
     return train_loss/(batch_idx+1), avg_step_time
 
 ##### Validation
-def test(args, net, device, optimizer, scaler, 
+def test(args, net, device, optimizer,
          epoch, best_acc, criterion, testloader):
     net.eval()
     test_loss = 0
@@ -125,8 +127,7 @@ def test(args, net, device, optimizer, scaler,
     if acc > best_acc:
         print('Saving..')
         state = {"model": net.state_dict(),
-              "optimizer": optimizer.state_dict(),
-              "scaler": scaler.state_dict()}
+              "optimizer": optimizer.state_dict()}
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
 
@@ -148,9 +149,6 @@ def get_args():
     parser.add_argument('--opt', default="adam")
     parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
     parser.add_argument('--noaug', action='store_true', help='disable use randomaug')
-    parser.add_argument('--noamp', action='store_true', help='disable mixed precision \
-                        training. for older pytorch versions')
-    parser.add_argument('--wandb', action='store_true', help='disable wandb')
     parser.add_argument('--mixup', action='store_true', help='add mixup augumentations')
     parser.add_argument('--net', default='vit')
     parser.add_argument('--bs', default='512')
@@ -300,7 +298,6 @@ def main():
     imsize = int(args.size)
 
     # Fixed the error judgment about bool type in the source code
-    use_amp = not args.noamp
     aug = not args.noaug
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -336,6 +333,7 @@ def main():
         transform_train.transforms.insert(0, RandAugment(N, M))
 
     # ddp init
+    torch.cuda.set_device(args.local_rank)
     torch.distributed.init_process_group(backend='nccl',  init_method='tcp://127.0.0.1:23333',
                             world_size=args.world_size, rank=args.local_rank)
 
@@ -351,18 +349,7 @@ def main():
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
     net = get_net(args)
-
-    # For Multi-GPU
-    if 'cuda' in device:
-        print(device)
-        print("using distributed data parallel")
-        torch.cuda.set_device(args.local_rank)
-
-        # set jit_compile=True avoiding unexpected ERROR
-        torch.npu.set_compile_mode(jit_compile=True)
-
-        net = torch.nn.parallel.DistributedDataParallel(net.cuda(), device_ids=[args.local_rank])
-        cudnn.benchmark = True
+    net = net.cuda()
 
     if args.resume:
         # Load checkpoint.
@@ -378,23 +365,36 @@ def main():
     criterion_ls = LabelSmoothing()
 
     if args.opt == "adam":
-        optimizer = optim.Adam(net.parameters(), lr=args.lr)
+        optimizer = apex.optimizers.NpuFusedAdam(net.parameters(), lr=args.lr)
     elif args.opt == "sgd":
-        optimizer = optim.SGD(net.parameters(), lr=args.lr)
+        optimizer = apex.optimizers.NpuFusedSGD(net.parameters(), lr=args.lr)
 
     # use cosine scheduling
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.n_epochs)
 
+    # use apex O2 level
+    net, optimizer = amp.initialize(net, optimizer, opt_level='O2', combine_grad=True)
+
+    # For Multi-GPU
+    if 'cuda' in device:
+        print(device)
+        print("using distributed data parallel")
+
+        # set jit_compile=True avoiding unexpected ERROR
+        torch.npu.set_compile_mode(jit_compile=True)
+
+        net = torch.nn.parallel.DistributedDataParallel(net, device_ids=[args.local_rank])
+        cudnn.benchmark = True
+
     ##### Training
-    scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
 
     for epoch in range(start_epoch, args.n_epochs):
         start = time.time()
-        trainloss, train_step_time = train(net, device, use_amp, optimizer,
-                                           epoch, scaler, criterion_ls, trainloader)
+        trainloss, train_step_time = train(net, device,  optimizer,
+                                           epoch, criterion_ls, trainloader)
 
         if (epoch + 1) % args.eval_interval == 0 or epoch > int(args.n_epochs * 0.9):
-            val_loss, acc, best_acc, val_step_time = test(args, net, device, optimizer,scaler,
+            val_loss, acc, best_acc, val_step_time = test(args, net, device, optimizer,
                                                           epoch, best_acc, criterion, testloader)
         else:
             val_loss, acc, best_acc, val_step_time = -1, -1, -1, None

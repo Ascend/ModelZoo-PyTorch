@@ -10,6 +10,6 @@ do
 	PID_START=$((KERNEL_NUM * $RANK_ID))
 	PID_END=$((PID_START + KERNEL_NUM - 1))
 
-	taskset -c $PID_START-$PID_END nohup python -u train_cifar10.py --net swin --bs 512 --lr 4e-4 --n_epoch 400 --local_rank $RANK_ID --world_size $WORLD_SIZE --noamp &
+	taskset -c $PID_START-$PID_END nohup python -u train_cifar10.py --net swin --bs 512 --lr 4e-4 --n_epoch 400 --local_rank $RANK_ID --world_size $WORLD_SIZE &
 
 done
