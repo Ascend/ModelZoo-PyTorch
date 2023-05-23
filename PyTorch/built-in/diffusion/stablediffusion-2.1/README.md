@@ -67,9 +67,10 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
         --W 768 \
         --device_id 4 \
         --precision full \
-        --n_samples 1 
-        --n_iter 1 
-        --dpm 
+        --bf16 \
+        --n_samples 1 \
+        --n_iter 1 \
+        --dpm \
         --steps 15 
 
   # 注：生成的图像在outputs目录下 
@@ -79,7 +80,7 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
   或者使用shell脚本启动：
 
   ```
-  bash ./test/run_infer_full_1p.sh --ckpt_path=/data/xxx/ --n_samples=1 --device_id=0 # 单卡推理
+  bash ./test/run_infer_full_1p.sh  #单卡推理，请将脚本里的ckpt权重路径更换成实际的路径
   ```
 
   
@@ -87,15 +88,15 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
   
   ```
   
-   --ckpt_path 模型文件目录，需要指定到具体的ckpt文件
+   --ckpt_path #模型文件目录，需要指定到具体的ckpt文件
 
-   --n_samples 每次生成图片的batch数
+   --n_samples #每次生成图片的batch数
 
-   --n_iter 每个prompt生成的图片数，每个prompt生成的图片总数为：（n_samples * n_iter）
+   --n_iter #每个prompt生成的图片数，每个prompt生成的图片总数为：（n_samples * n_iter）
 
-   --devive 除`cpu`外，默认为`cuda`
+   --devive #除`cpu`外，默认为`cuda`
 
-   --device_id 运行的设备ID
+   --device_id #运行的设备ID
   
   ```
 
