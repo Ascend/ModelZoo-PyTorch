@@ -53,7 +53,7 @@ def gen_data_label(test_dir, data_dir):
         print('origin nSamples is:', nSamples)
         filtered_index_list = []
 
-        with os.fdopen(os.open('label.txt', os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR), 'w') as f:
+        with os.fdopen(os.open('label.txt', os.O_WRONLY | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as f:
             for index in range(nSamples):
                 index += 1
                 # images

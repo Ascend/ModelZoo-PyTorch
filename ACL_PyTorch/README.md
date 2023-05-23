@@ -321,6 +321,15 @@ CV-detection
 	<td>bs x 1 x 32 x len</td>
     </tr>
     <tr>
+        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_Sierkinhane_for_Pytorch">CRNN_Sierkinhane_for_Pytorch</a></td>
+        <td>GitHub 仓库提供的 360 万数据集</td>
+	    <td>78.37%</td>
+        <td></td>
+        <td></td>
+	    <td>6011(bs64)</td>
+	    <td>bs x 1 x 32 x 160</td>
+    </tr>
+    <tr>
         <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DBNet_MobileNetV3">  DBNet_MobileNetV3 </a>
         </td>
