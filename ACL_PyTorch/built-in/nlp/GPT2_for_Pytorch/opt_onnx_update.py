@@ -20,9 +20,9 @@ from auto_optimizer.graph_refactor.interface.base_node import BaseNode, Node, In
 
 def get_config(graph):
     input_ph = graph.inputs[0]
-    bs = input_ph.shape[0]
-    seq_len = input_ph.shape[1]
-    return bs, seq_len
+    batch_size = input_ph.shape[0]
+    seq_length = input_ph.shape[1]
+    return batch_size, seq_length
 
 def clip_outs(graph):
     outputs = graph.outputs[1:]
@@ -88,7 +88,10 @@ def fix_attention_qkv(graph, bs, seq_len):
     first_add = graph.get_nodes('Add')[0]
     add_init = graph.get_node(first_add.inputs[0], node_type=Initializer) or \
             graph.get_node(first_add.inputs[1], node_type=Initializer)
-    add_init_value = np.tile(graph[add_init.name].value, (bs, 1, 1)).reshape([-1, 768])
+    if add_init.value.shape[0] == 1:
+        add_init_value = np.tile(graph[add_init.name].value, (bs, 1, 1)).reshape([-1, 768])
+    else:
+        add_init_value = graph[add_init.name].value.reshape([-1, 768])
     graph[add_init.name].value = add_init_value
 
     graph.insert_node(first_add.name, reshape_before_add, mode='before')
@@ -225,10 +228,10 @@ if __name__ == '__main__':
     save_path = sys.argv[2]
       
     onnx_graph = OnnxGraph.parse(input_path)
-    bs, seq_len = get_config(onnx_graph)
+    graph_bs, graph_seq_len = get_config(onnx_graph)
     clip_outs(onnx_graph)
     fix_ubfusion(onnx_graph)
-    fix_attention_qkv(onnx_graph, bs, seq_len)
+    fix_attention_qkv(onnx_graph, graph_bs, graph_seq_len)
     fix_attention_score(onnx_graph)
     clip_muls(onnx_graph)
     onnx_graph.save(save_path)
