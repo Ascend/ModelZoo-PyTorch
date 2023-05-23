@@ -2606,7 +2606,7 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-	<td>3290(bs4)</td>
+	<td>2923(bs4)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
     </tr>
