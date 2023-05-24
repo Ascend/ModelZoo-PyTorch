@@ -989,20 +989,18 @@ class CRF(nn.Module):
 
     def _create_idxs(self, batch_size, seq_length, num_tags, device):
         if seq_length not in self.index1:
-            self.index1[seq_length] = torch.arange(batch_size, dtype=torch.long, device=device) * seq_length
+            self.index1[(batch_size, seq_length)] = \
+                torch.arange(batch_size, dtype=torch.long, device=device) * seq_length
         if seq_length not in self.index2:
-            self.index2[seq_length] = torch.arange(batch_size, dtype=torch.long, device=device).unsqueeze(1).unsqueeze(2) * seq_length * num_tags + \
-                torch.arange(1, seq_length, dtype=torch.long, device=device).unsqueeze(0).unsqueeze(2) * num_tags
+            self.index2[(batch_size, seq_length)] = \
+                torch.arange(batch_size, dtype=torch.long, device=device)[:, None, None] * seq_length * num_tags \
+                + torch.arange(1, seq_length, dtype=torch.long, device=device)[None, :, None] * num_tags
 
     def _compute_score(self, emissions: torch.Tensor, tags: torch.LongTensor, mask: torch.ByteTensor) -> torch.Tensor:
-        # emissions: (batch_size, seq_length, num_tags)
-        # tags: (batch_size, seq_length)
-        # mask: (batch_size, seq_length)
-        # emissions: (batch_size, seq_length, num_tags)
         batch_size, seq_length, num_tags = emissions.shape
         self._create_idxs(batch_size, seq_length, num_tags, emissions.device)
-        idx1 = self.index1[seq_length]
-        idx2 = self.index2[seq_length]
+        idx1 = self.index1[(batch_size, seq_length)]
+        idx2 = self.index2[(batch_size, seq_length)]
         device = emissions.device
         mask = mask.float()
 
@@ -1155,6 +1153,9 @@ class CRF(nn.Module):
 
         # shape: (batch_size,)
         seq_ends = mask.int().sum(dim=1) - 1
+
+        # expect history_idx.dtype to be equal to end_tag.dtype for tensor.scatter_ when pytorch >= 1.11
+        history_idx = history_idx.to(end_tag.dtype)
 
         # insert the best tag at each sequence end (last position with mask == 1)
         history_idx.scatter_(1, seq_ends.view(-1, 1, 1, 1).expand(-1, 1, self.num_tags, nbest),

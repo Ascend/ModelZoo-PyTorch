@@ -38,6 +38,7 @@
 
 import os
 import time
+import math
 import numpy as np
 import torch
 import torch_npu
@@ -129,6 +130,65 @@ class MyDataset(ListDataset):
 # 建立分词器
 tokenizer = Tokenizer(dict_path, do_lower_case=True)
 
+""" GroupSampler将长度相似的sentence放在一个batch。
+在batch_size很大时显著提升性能，同时保证一定的随机性，已验证不影响精度 """
+class GroupSampler(object):
+    def __init__(self, dataset, batchsize, num_replicas=1, rank=None, shuffle=True, dist=True):
+        self.dataset = dataset
+        self.batch_size = batchsize
+        self.num_replicas = num_replicas
+        self.rank = rank
+        self.epoch = 0
+        self.shuffle = shuffle
+        self.distributed = dist
+        self.num_samples = int(math.ceil(len(self.dataset) * 1.0 / self.num_replicas))
+        self.total_size = self.num_samples * self.num_replicas
+
+    def __iter__(self):
+        # deterministically shuffle based on epoch
+        if self.shuffle:
+            g = torch.Generator()
+            g.manual_seed(self.epoch)
+            indices = torch.randperm(len(self.dataset), generator=g).tolist()
+        else:
+            indices = list(range(len(self.dataset)))
+
+        # add extra samples to make it evenly divisible
+        indices += indices[:(self.total_size - len(indices))]
+        assert len(indices) == self.total_size
+
+        # subsample
+        if self.distributed:
+            indices = indices[self.rank:self.total_size:self.num_replicas]
+        assert len(indices) == self.num_samples
+
+        # sort indices based on sequence length
+        indices = sorted(indices, key=lambda i: len(self.dataset[i][0]))
+        last_length = self.num_samples % self.batch_size
+        last_length = self.batch_size if last_length == 0 else last_length
+        batches = int(math.ceil(self.num_samples * 1.0 / self.batch_size))
+        batches = torch.randperm(batches, generator=g).tolist()
+        last = batches[0]
+        rand_indices = []
+        rand_indices.extend(indices[(self.batch_size * last): (self.batch_size * last + last_length)])
+        for ind in batches[1:]:
+            if ind > last:
+                start = (ind - 1) * self.batch_size + last_length
+                end = ind * self.batch_size + last_length
+            else:
+                start = ind * self.batch_size
+                end = (ind + 1) * self.batch_size
+            rand_indices.extend(indices[start: end])
+        rand_indices = rand_indices[::-1]
+        return iter(rand_indices)
+
+    def __len__(self):
+        return self.num_samples
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
+# InfiniteDataLoader, _RepeatSampler, SeedWorker配合使用，消除每个epoch第一个step预加载数据耗时，保留sampler随机性
 class InfiniteDataLoader(DataLoader):
     """Dataloader that reuses workers
     Uses same syntax as vanilla DataLoader
@@ -150,7 +210,6 @@ class InfiniteDataLoader(DataLoader):
         """Creates a sampler that infinitely repeats."""
         for _ in range(len(self)):
             yield next(self.iterator)
-
 
 class _RepeatSampler:
     """Sampler that repeats forever
@@ -208,18 +267,15 @@ generator = torch.Generator()
 generator.manual_seed(6148914691236517205 + args.local_rank)
 
 # 转换数据集
+train_dataset = MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train')
 if distributed:
-    train_dataset = MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train')
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, \
-        num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank)
-    train_dataloader = InfiniteDataLoader(train_dataset, batch_size=batch_size, generator=generator, \
-        num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, \
-            collate_fn=collate_fn, drop_last=True, pin_memory=True, worker_init_fn=seed_worker)
+    train_sampler = GroupSampler(train_dataset, batchsize=batch_size, \
+        num_replicas=int(os.environ['WORLD_SIZE']), rank=args.local_rank, dist=True)
 else:
-    train_dataloader = InfiniteDataLoader(
-        MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.train'), \
-        batch_size=batch_size, num_workers=args.workers, generator=generator, \
-        shuffle=True, collate_fn=collate_fn, drop_last=True, pin_memory=True, worker_init_fn=seed_worker)
+    train_sampler = GroupSampler(train_dataset, batchsize=batch_size, dist=False)
+train_dataloader = InfiniteDataLoader(train_dataset, batch_size=batch_size, generator=generator, \
+        num_workers=args.workers, shuffle=(train_sampler is None), sampler=train_sampler, \
+            collate_fn=collate_fn, pin_memory=True, worker_init_fn=seed_worker)
 valid_dataloader = DataLoader(MyDataset(f'{args.data_path}/china-people-daily-ner-corpus/example.dev'), \
     batch_size=batch_size, collate_fn=collate_fn)
 
@@ -249,11 +305,11 @@ model = Model().to(device)
 
 print(model)
 if 'npu' in device:
-    optimizer = apex.optimizers.NpuFusedAdamW(model.parameters(), lr=args.lr)
-    model, optimizer = amp.initialize(model, optimizer, \
-        opt_level=args.opt_level, loss_scale=256, combine_grad=True)
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=args.lr)
+    model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, \
+        loss_scale=256, combine_grad=True, combine_ddp=True if distributed else False)
 else:
-    optimizer = optim.AdamW(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 updates_total = len(train_dataloader) * args.train_epochs
 scheduler = get_linear_schedule_with_warmup(optimizer, \
@@ -261,10 +317,7 @@ scheduler = get_linear_schedule_with_warmup(optimizer, \
 
 class Loss(nn.Module):
     def forward(self, outputs, labels, seq_length=None):
-        if distributed:
-            return model.module.crf(*outputs, labels, seq_length=None)
-        else:
-            return model.crf(*outputs, labels, seq_length=None)
+        return model.crf(*outputs, labels, seq_length=None)
 
 def acc(y_pred, y_true):
     y_pred = y_pred[0]
@@ -272,16 +325,9 @@ def acc(y_pred, y_true):
     acc = torch.sum(y_pred.eq(y_true)).item() / y_true.numel()
     return {'acc': acc}
 
-if distributed:
-    model = DDP(model, device_ids=[args.local_rank], output_device=args.local_rank, broadcast_buffers=False)
-
 # 支持多种自定义metrics = ['accuracy', acc, {acc: acc}]均可
-if distributed:
-    model.module.compile(loss=Loss(), optimizer=optimizer, metrics=acc, \
-        use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
-else:
-    model.compile(loss=Loss(), optimizer=optimizer, metrics=acc, \
-        use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
+model.compile(loss=Loss(), optimizer=optimizer, metrics=acc, \
+    use_apex=True, scheduler=scheduler, clip_grad_norm=1.0)
 
 def evaluate(data):
     X, Y, Z = 1e-10, 1e-10, 1e-10
@@ -292,10 +338,7 @@ def evaluate(data):
     for token_ids, label, seq_length in tqdm(data):
         token_ids = token_ids.to('npu', non_blocking=True)
         label = label.to('npu', non_blocking=True)
-        if distributed:
-            scores = model.module.predict(token_ids)  # [btz, seq_len]
-        else:
-            scores = model.predict(token_ids)  # [btz, seq_len]
+        scores = model.predict(token_ids)  # [btz, seq_len]
         attention_mask = label.gt(0)
 
         # token粒度
@@ -356,7 +399,7 @@ class Evaluator(Callback):
             if f2 > self.best_val_f1:
                 self.best_val_f1 = f2
                 if distributed and args.local_rank == 0:
-                    model.module.save_weights('best_model.pt')
+                    model.save_weights('best_model.pt')
                 if not distributed:
                     model.save_weights('best_model.pt')
             print(f'[val-token  level] f1: {f1:.5f}, p: {precision:.5f} r: {recall:.5f}')
@@ -366,12 +409,8 @@ class Evaluator(Callback):
 if __name__ == '__main__':
     torch_npu.npu.set_compile_mode(jit_compile=False)
     evaluator = Evaluator()
-    if distributed:
-        model.module.fit(train_dataloader, train_sampler, epochs=args.train_epochs, \
-            steps_per_epoch=None, callbacks=[evaluator])
-    else:
-        model.fit(train_dataloader, None, epochs=args.train_epochs, \
-            steps_per_epoch=None, callbacks=[evaluator])
+    model.fit(train_dataloader, train_sampler, epochs=args.train_epochs, \
+        steps_per_epoch=None, callbacks=[evaluator])
 
 else:
 

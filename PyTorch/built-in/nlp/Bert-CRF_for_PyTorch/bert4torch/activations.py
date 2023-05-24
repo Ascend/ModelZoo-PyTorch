@@ -14,6 +14,7 @@
 
 import math
 import torch
+import torch_npu
 from packaging import version
 from torch import nn
 
@@ -89,7 +90,7 @@ ACT2FN = {
     "relu": nn.functional.relu,
     "silu": silu,
     "swish": silu,
-    "gelu": gelu,
+    "gelu": torch_npu.fast_gelu,
     "tanh": torch.tanh,
     "gelu_new": gelu_new,
     "gelu_fast": gelu_fast,

@@ -6,10 +6,6 @@
 Network="Bertbase-crf"
 # 训练batch_size
 export BATCH_SIZE=192
-# 训练使用的npu卡数
-export WORLD_SIZE=8
-export MASTER_ADDR=127.0.0.1
-export MASTER_PORT=29500
 # 数据集路径,保持为空,不需要修改
 data_path=""
 
@@ -61,10 +57,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-KERNEL_NUM=$(($(nproc)/8))
-export OMP_NUM_THREADS=$KERNEL_NUM
-for i in $(seq 0 7)
-do
+i=0
 if [ -d ${cur_path}/test/output/${i} ];
 then
         rm -rf ${cur_path}/test/output/${i}
@@ -73,12 +66,7 @@ else
         mkdir -p ${cur_path}/test/output/${i}
 fi
 #################启动训练脚本#################
-export RANK=$i
-export LOCAL_RANK=$i
-PID_START=$((KERNEL_NUM * LOCAL_RANK))
-PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
-        --local_rank $i \
+python3 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
         --train_epochs ${train_epochs} \
         --data_path ${data_path} \
         --workers ${workers} \
@@ -86,7 +74,6 @@ taskset -c $PID_START-$PID_END python3 examples/sequence_labeling/task_sequence_
         --warm_factor ${warm_factor} \
         --opt_level ${opt_level} \
         --eval_interval ${eval_interval} > $cur_path/test/output/${i}/train_${i}.log 2>&1 &
-done
 wait
 ASCEND_DEVICE_ID=0
 ##################获取训练数据################
