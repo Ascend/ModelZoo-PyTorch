@@ -888,7 +888,14 @@ Nlp
         <td>75%</td>
 	<td>172(bs24)</td>
 	<td nowrap="nowrap">24 x 3 x 736 x 1280</td>
-
+    </tr>
+    <tr>
+        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/BiLSTM_CRF_PyTorch">  BiLSTM_CRF_PyTorch </a></td>
+        <td> CLUE_NER </td>
+        <td> f1=0.714 </td>
+        <td> 961(bs32)</td>
+        <td> ids:bs,50;mask:bs,50 </td>
+    </tr>
 </table>
 
 
