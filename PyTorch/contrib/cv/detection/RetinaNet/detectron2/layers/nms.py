@@ -16,6 +16,8 @@
 
 from typing import List
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 #from torchvision.ops import boxes as box_ops
 #from torchvision.ops import nms  # BC-compat
 import numpy as np
@@ -61,9 +63,10 @@ def npu_multiclass_nms(multi_bboxes,
     multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
     multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
 
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              score_thr, nms_thr,
-                                                                              max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                  multi_scores.half(),
+                                                                                  score_thr, nms_thr,
+                                                                                  max_num, max_num)
 
     nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
     nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])
@@ -116,9 +119,10 @@ def npu_batched_multiclass_nms(
     multi_bboxes = multi_bboxes.reshape(batch_size, num_boxes, multi_bboxes.numel() // 4 // num_boxes // batch_size, 4)
     multi_scores = multi_scores.reshape(batch_size, num_boxes, num_classes)
 
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              score_thr, nms_thr,
-                                                                              max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                  multi_scores.half(),
+                                                                                  score_thr, nms_thr,
+                                                                                  max_num, max_num)
 
     return torch.cat([nmsed_boxes, nmsed_scores[..., None]], -1), nmsed_classes
 
@@ -166,7 +170,7 @@ def batched_nms_npu(boxes, scores, idxs, iou_threshold):
     print("boxes",boxes.shape,boxes)
     print("scores",scores.shape,scores)
     _, _, keep_mask = \
-        torch.npu_nms_with_mask(
+        torch_npu.npu_nms_with_mask(
             torch.cat([boxes, scores[..., None]], 1), iou_threshold)
     #keep_mask=keep_mask.npu()
     print("bnn2")
@@ -187,7 +191,7 @@ def batched_nms(
         return batched_nms_npu(boxes, scores, idxs, iou_threshold)
         #return box_ops.batched_nms(boxes.float(), scores, idxs, iou_threshold)
     #nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = \
-    #    torch.npu_batch_nms(boxes, scores, 0.0, iou_threshold, 400, 400)
+    #    torch_npu.npu_batch_nms(boxes, scores, 0.0, iou_threshold, 400, 400)
     
     #return torch.cat([nmsed_boxes, nmsed_scores[..., None]], -1), nmsed_classes
     print("================box2===================")

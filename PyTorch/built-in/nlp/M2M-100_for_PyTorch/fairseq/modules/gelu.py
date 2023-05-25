@@ -10,6 +10,8 @@ the corresponding GitHub repo: https://github.com/hendrycks/GELUs
 import math
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 
@@ -22,4 +24,4 @@ def gelu_accurate(x):
 
 
 def gelu(x: torch.Tensor) -> torch.Tensor:
-    return torch.fast_gelu(x).type_as(x)
+    return torch_npu.fast_gelu(x).type_as(x)

@@ -15,6 +15,8 @@
 
 import math
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from librosa.filters import mel as librosa_mel_fn
 from common.audio_processing import dynamic_range_compression, dynamic_range_decompression
 from common.stft import STFT
@@ -38,7 +40,7 @@ class NpuLSTMCell(torch.nn.Module):
             zeros1 = torch.zeros(input.size(0), self.hidden_size, dtype=input.dtype, device=input.device)
             zeros2 = torch.zeros(input.size(0), self.hidden_size, dtype=input.dtype, device=input.device)
             hx = (zeros1, zeros2)
-        y, h, c, _, _, _, _, _ = torch.npu_lstm(input, self.weight, self.bias, torch.zeros(1).npu(),
+        y, h, c, _, _, _, _, _ = torch_npu.npu_lstm(input, self.weight, self.bias, torch.zeros(1).npu(),
                                                 hx[0], hx[1], True, 1, 0, True, False, False, False, False)
         return h, c
 

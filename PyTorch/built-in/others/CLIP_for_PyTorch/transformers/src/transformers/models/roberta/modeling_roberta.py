@@ -19,6 +19,8 @@ import math
 from typing import List, Optional, Tuple, Union
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.utils.checkpoint
 from packaging import version
 from torch import nn
@@ -190,7 +192,7 @@ class RobertaSelfAttention(nn.Module):
 
     def transpose_for_scores(self, x):
         new_x_shape = (self.bs, x.size()[0] // self.bs) + (self.num_attention_heads, self.attention_head_size)
-        return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
+        return torch_npu.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
 
     def forward(
         self,
@@ -274,7 +276,7 @@ class RobertaSelfAttention(nn.Module):
 
         context_layer = torch.matmul(attention_probs, value_layer)
 
-        context_layer = context_layer.npu_confusion_transpose((0, 2, 1, 3), (
+        context_layer = torch_npu.npu_confusion_transpose(context_layer, (0, 2, 1, 3), (
             context_layer.size()[0] * context_layer.size()[2], self.all_head_size), True)
 
         outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
@@ -378,7 +380,7 @@ class RobertaOutput(nn.Module):
         hidden_states = self.dense(hidden_states)
         hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
-        return hidden_states.npu_format_cast(29)
+        return torch_npu.npu_format_cast(hidden_states, 29)
 
 
 # Copied from transformers.models.bert.modeling_bert.BertLayer with Bert->Roberta
@@ -823,8 +825,10 @@ class RobertaModel(RobertaPreTrainedModel):
         # ourselves in which case we just need to make it broadcastable to all heads.
         extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(attention_mask, input_shape, device)
         bs, from_seq_len = attention_mask.size()
-        extended_attention_mask = extended_attention_mask.expand(bs, self.num_attention_heads, from_seq_len,
-                                                                 from_seq_len).clone().npu_format_cast(29)
+        extended_attention_mask = torch_npu.npu_format_cast(
+            extended_attention_mask.expand(bs, self.num_attention_heads, from_seq_len, from_seq_len).clone(),
+            29
+        )
 
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
@@ -850,7 +854,7 @@ class RobertaModel(RobertaPreTrainedModel):
             inputs_embeds=inputs_embeds,
             past_key_values_length=past_key_values_length,
         )
-        embedding_output = embedding_output.view(-1, embedding_output.size()[-1]).clone().npu_format_cast(29)
+        embedding_output = torch_npu.npu_format_cast(embedding_output.view(-1, embedding_output.size()[-1]).clone(), 29)
         encoder_outputs = self.encoder(
             embedding_output,
             attention_mask=extended_attention_mask,

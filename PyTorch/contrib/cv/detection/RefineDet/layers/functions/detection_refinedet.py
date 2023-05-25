@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.autograd import Function
 from ..box_utils import decode, nms, center_size
 from data import voc_refinedet as cfg
@@ -59,9 +61,10 @@ def npu_multiclass_nms(multi_bboxes,
     multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
     multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
 
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              score_thr, nms_thr,
-                                                                              max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                  multi_scores.half(),
+                                                                                  score_thr, nms_thr,
+                                                                                  max_num, max_num)
 
     nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
     nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])

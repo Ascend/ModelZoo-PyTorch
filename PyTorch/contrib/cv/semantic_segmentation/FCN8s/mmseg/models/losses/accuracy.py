@@ -1,4 +1,20 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 
@@ -46,7 +62,7 @@ def accuracy(pred, target, topk=1, thresh=None):
     # print("[bei's tag] pred.topk(maxk, dim=1)", pred.shape, pred.dtype, pred.storage().npu_format(), maxk)
     # pred_value, pred_label = pred.topk(maxk, dim=1)
     # weik add start
-    pred_label = pred.npu_format_cast(2).argmax(dim=1, keepdim=True)
+    pred_label = torch_npu.npu_format_cast(pred, 2).argmax(dim=1, keepdim=True)
     # print(pred_label.shape, pred_label.dtype, pred_label.storage().npu_format())
     torch.npu.synchronize()
     # pred_label = pred_label.npu_format_cast(2)

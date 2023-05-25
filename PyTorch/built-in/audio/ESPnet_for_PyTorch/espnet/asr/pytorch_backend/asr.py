@@ -18,6 +18,8 @@ from chainer.training import extensions
 from chainer.training.updater import StandardUpdater
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.nn.parallel import data_parallel
 
 from espnet.asr.asr_utils import adadelta_eps_decay
@@ -544,7 +546,7 @@ def train(args):
         from espnet.nets.pytorch_backend.ctc import CTC
         if args.train_dtype == "O1":
             amp.register_float_function(CTC, "loss_fn")
-            amp.register_half_function(torch, 'npu_linear')
+            amp.register_half_function(torch_npu, 'npu_linear')
 
         if args.opt == "noam":
             model, optimizer.optimizer = amp.initialize(
@@ -560,7 +562,7 @@ def train(args):
 
         if args.train_dtype != "O1":
             amp.register_float_function(CTC, "loss_fn")
-            amp.register_half_function(torch, 'npu_linear')
+            amp.register_half_function(torch_npu, 'npu_linear')
             amp.init()
         logging.warning("register ctc as float function")
     else:

@@ -16,6 +16,8 @@ import collections
 from typing import Callable
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import apex_C
 from torch import distributed
 from torch.nn.functional import linear, normalize
@@ -224,7 +226,7 @@ class PartialFC(torch.nn.Module):
 
         norm_embeddings = normalize(embeddings)
         norm_weight_activated = normalize(self.weight_activated)
-        logits = functional.linear(norm_embeddings, norm_weight_activated).npu_format_cast(2)
+        logits = torch_npu.npu_format_cast(functional.linear(norm_embeddings, norm_weight_activated), 2)
         if self.fp16:
             logits = logits.float()
         logits = npu_clamp(logits, -1, 1)
@@ -426,7 +428,7 @@ class PartialFCAdamW(torch.nn.Module):
 
         norm_embeddings = normalize(embeddings)
         norm_weight_activated = normalize(self.weight_activated)
-        logits = functional.linear(norm_embeddings, norm_weight_activated).npu_format_cast(2)
+        logits = torch_npu.npu_format_cast(functional.linear(norm_embeddings, norm_weight_activated), 2)
         if self.fp16:
             logits = logits.float()
         logits = npu_clamp(logits, -1, 1)

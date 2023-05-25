@@ -35,13 +35,9 @@ import os
 import copy
 
 import torch
-if torch.__version__ >= "1.8":
-    import torch_npu
-if torch.__version__ >= "1.8":
+if torch.__version__ >= '1.8':
     import torch_npu
 import torch.npu
-if torch.__version__>= '1.8.1':
-      import torch_npu
 from torch import nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
@@ -130,7 +126,7 @@ if __name__ == '__main__':
             inputs = inputs.npu()
             labels = labels.npu()
             preds = model(inputs)
-            preds = preds.npu_format_cast(2)
+            preds = torch_npu.npu_format_cast(preds, 2)
             loss = criterion(preds, labels)
 
 

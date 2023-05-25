@@ -32,6 +32,8 @@
 
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -320,7 +322,7 @@ class EncoderDecoder(BaseSegmentor):
         torch.npu.synchronize()
         img = img.npu()
         seg_logit = self.inference(img, img_meta, rescale)
-        seg_logit = seg_logit.npu_format_cast(2)
+        seg_logit = torch_npu.npu_format_cast(seg_logit, 2)
         seg_pred = seg_logit.argmax(dim=1)
         if torch.onnx.is_in_onnx_export():
             # our inference backend only support 4D output

@@ -33,8 +33,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 
@@ -44,7 +44,7 @@ def Matmul_transpose(tensor1, tensor2):
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 def clip_grad_norm_fused(combined_grads, combined_grad_masks, max_norm, norm_type):
     max_norm = float(max_norm)

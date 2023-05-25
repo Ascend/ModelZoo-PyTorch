@@ -190,8 +190,8 @@ class Trainer(object):
         assert params.amp == 0 and params.fp16 is False or params.amp in [1, 2, 3] and params.fp16 is True
         opt_names = self.optimizers.keys()
         models = [getattr(self, name) for name in self.MODEL_NAMES]
-        apex.amp.register_half_function(torch, "npu_linear")
-        apex.amp.register_half_function(torch, "fast_gelu")
+        apex.amp.register_half_function(torch_npu, "npu_linear")
+        apex.amp.register_half_function(torch_npu, "fast_gelu")
         models, optimizers = apex.amp.initialize(
             models,
             [self.optimizers[k] for k in opt_names],

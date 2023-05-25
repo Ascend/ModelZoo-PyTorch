@@ -47,6 +47,8 @@
 
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from mmcv.cnn import normal_init
 from mmcv.runner import force_fp32
 
@@ -680,7 +682,7 @@ class FSAFHead(RetinaHead):
                 pos_flags_f = pos_flags_f * neg_indices_reversed
                 loc_weight = loc_weight * neg_indices_reversed
 
-                labels_one_hot = torch.npu_one_hot(labels, -1, 80, 1.0, 0.0)
+                labels_one_hot = torch_npu.npu_one_hot(labels, -1, 80, 1.0, 0.0)
                 # print('labels_one_hot: ', labels_one_hot.shape, labels_one_hot)
                 # Only the weight corresponding to the label is
                 #  zeroed out if not selected

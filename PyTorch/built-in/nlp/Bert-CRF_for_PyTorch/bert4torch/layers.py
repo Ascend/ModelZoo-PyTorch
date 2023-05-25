@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.functional import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,12 +36,12 @@ class NpuSlice(torch.autograd.Function):
             pads[2 * i] = start[i]
             pads[2 * i + 1] = input_shape[i] - end[i]
         ctx.pads = pads
-        result = torch.npu_indexing(input, start, end, strides)
+        result = torch_npu.npu_indexing(input, start, end, strides)
         return result
     @staticmethod
     def backward(ctx, grad):
         pads = ctx.pads
-        self_grad = torch.npu_pad(grad, pads)
+        self_grad = torch_npu.npu_pad(grad, pads)
         return self_grad, None, None
 
 npu_slice = NpuSlice.apply
@@ -56,8 +58,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 matmul_transpose = MatmulApply.apply

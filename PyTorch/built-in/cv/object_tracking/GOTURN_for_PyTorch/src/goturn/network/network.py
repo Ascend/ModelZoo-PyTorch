@@ -35,7 +35,7 @@ except ImportError:
 
 class FastGelu(nn.Module):
     def forward(self, input):
-        return torch.fast_gelu(input)
+        return torch_npu.fast_gelu(input)
 
 #  todo dropout -> NpuDropoutv2
 class DroupoutV2(nn.Module):

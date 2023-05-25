@@ -22,11 +22,11 @@ class NpuLinear(nn.Linear):
         input_shape = input.size()
         if input.dim() == 3:
             input = input.view(-1, self.in_features)
-            return torch.npu_linear(input,self.weight, self.bias).view(input_shape[0],
-                                                                       input_shape[1],
-                                                                       self.out_features)
+            return torch_npu.npu_linear(input,self.weight, self.bias).view(input_shape[0],
+                                                                           input_shape[1],
+                                                                           self.out_features)
         elif input.dim() == 2:
-            return torch.npu_linear(input, self.weight,self.bias)
+            return torch_npu.npu_linear(input, self.weight,self.bias)
         else:
             raise RuntimeError('not support this dim')
 class MatmulApply(torch.autograd.Function):
@@ -38,8 +38,8 @@ class MatmulApply(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad):
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 def Matmul_transpose(tensor1, tensor2):
@@ -146,7 +146,7 @@ class MultiheadAttention(nn.Module):
 
     def transpose_for_scores(self, x):
         new_x_shape = (self.batch_size, self.squence_length) + (self.num_attention_heads, self.attention_head_size)
-        return torch.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
+        return torch_npu.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
 
     def forward(
         self,
@@ -236,12 +236,12 @@ class MultiheadAttention(nn.Module):
         new_shape = (bsz, tgt_len) + (self.num_heads, self.head_dim)
         if k is not None:
             key_shape = (bsz, k.size(0) // bsz) + (self.num_heads, self.head_dim)
-        q = torch.npu_confusion_transpose(q, (0, 2, 1, 3), new_shape, False)
+        q = torch_npu.npu_confusion_transpose(q, (0, 2, 1, 3), new_shape, False)
 
         if k is not None:
-            k = torch.npu_confusion_transpose(k, (0, 2, 1, 3), key_shape, False)
+            k = torch_npu.npu_confusion_transpose(k, (0, 2, 1, 3), key_shape, False)
         if v is not None:
-            v = torch.npu_confusion_transpose(v, (0, 2, 1, 3), key_shape, False)
+            v = torch_npu.npu_confusion_transpose(v, (0, 2, 1, 3), key_shape, False)
 
         if saved_state is not None:
             # saved states are stored with shape (bsz, num_heads, seq_len, head_dim)
@@ -344,7 +344,7 @@ class MultiheadAttention(nn.Module):
             # the transpose is a no-op copy before view, thus unnecessary
             attn = attn.contiguous().view(tgt_len, bsz, embed_dim)
         else:
-            attn = torch.npu_confusion_transpose(attn, (0, 2, 1, 3),
+            attn = torch_npu.npu_confusion_transpose(attn, (0, 2, 1, 3),
                                                (attn.size()[0]* attn.size()[2], embed_dim),
                                                True)
         attn = self.out_proj(attn)

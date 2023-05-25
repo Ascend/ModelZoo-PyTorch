@@ -228,9 +228,9 @@ def combined_init_with_master_weights(stash):
         for model_grad, master in zip(stash.fp16_param_grad_list, stash.all_fp32_from_fp16_params):
             master.grad = torch.empty_like(model_grad.to(torch.float))
             if torch.__version__ >= "1.8":
-                master.data = master.data.npu_format_cast(torch.get_npu_format(model_grad))
+                master.data = torch_npu.npu_format_cast(master.data, torch_npu.get_npu_format(model_grad))
             else:
-                master.data = master.data.npu_format_cast(model_grad.storage().npu_format())
+                master.data = torch_npu.npu_format_cast(master.data, model_grad.storage().npu_format())
 
         stash.combined_tensor_fp32_from_fp16, stash.fp32_from_fp16_param_grad_list = get_grad_combined_tensor_from_param(stash.all_fp32_from_fp16_params)
         stash.combined_tensor_fp32, stash.fp32_param_grad_list = get_grad_combined_tensor_from_param(stash.all_fp32_from_fp32_params)

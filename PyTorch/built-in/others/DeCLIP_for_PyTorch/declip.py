@@ -19,6 +19,8 @@ from random import choice
 
 from torch import nn
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn.functional as F
 
 import linklink as link
@@ -175,8 +177,8 @@ class DECLIP(CLIP):
         logit_scale.data = torch.clamp(logit_scale.data, max=100)
 
         ## TODO there is a bug when nz format tensro do all_gather, avoiding whith nd format..
-        text_features = text_features.npu_format_cast(2)
-        text_features_aug = text_features_aug.npu_format_cast(2)
+        text_features = torch_npu.npu_format_cast(text_features, 2)
+        text_features_aug = torch_npu.npu_format_cast(text_features_aug, 2)
 
         if self.training and self.use_allgather:
             link.barrier()

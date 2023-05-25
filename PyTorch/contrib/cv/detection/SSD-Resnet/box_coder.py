@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 import torch.nn.functional as F
 # from SSD import _C as C
@@ -213,7 +215,7 @@ class Encoder(object):
         N,A,C = probs.shape
         bboxes = bboxes.unsqueeze(-2).repeat([1,1,80,1])
         probs = probs[...,1:]
-        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(bboxes.half(), probs.half(),
+        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(bboxes.half(), probs.half(),
                                                                                   0.05, criteria,
                                                                                   max_output, max_output)
 
@@ -301,9 +303,10 @@ def npu_multiclass_nms(multi_bboxes,
     multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
     multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
 
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              score_thr, nms_thr,
-                                                                              max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                  multi_scores.half(),
+                                                                                  score_thr, nms_thr,
+                                                                                  max_num, max_num)
     print(nmsed_boxes.shape, nmsed_scores.shape, nmsed_classes.shape, nmsed_num.shape)
     nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
     nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])
@@ -363,9 +366,10 @@ def npu_batched_multiclass_nms(
     multi_bboxes = multi_bboxes.reshape(batch_size, num_boxes, multi_bboxes.numel() // 4 // num_boxes // batch_size, 4)
     multi_scores = multi_scores.reshape(batch_size, num_boxes, num_classes)
 
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              score_thr, nms_thr,
-                                                                              max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                  multi_scores.half(),
+                                                                                  score_thr, nms_thr,
+                                                                                  max_num, max_num)
 
     return torch.cat([nmsed_boxes, nmsed_scores[..., None]], -1), nmsed_classes, nmsed_scores
 

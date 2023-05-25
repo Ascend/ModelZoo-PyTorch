@@ -15,6 +15,8 @@
 import logging
 from typing import Dict, Union
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from fvcore.nn import giou_loss, smooth_l1_loss
 from torch import nn
 from torch.nn import functional as F
@@ -125,7 +127,7 @@ def fast_rcnn_inference_single_image(
         scores = scores.reshape(1, scores.shape[0], 80 * num_bbox_reg_classes)
 
     nmsed_boxex, nmsed_scores, nmsed_classes, nmsed_num = \
-        torch.npu_batch_nms(boxes, scores, score_thresh, nms_thresh, 400, 400)
+        torch_npu.npu_batch_nms(boxes, scores, score_thresh, nms_thresh, 400, 400)
 
     result = Instances(image_shape)
     result.pred_boxes = Boxes(nmsed_boxex.reshape(nmsed_boxex.shape[1:]))
@@ -276,7 +278,7 @@ class FastRCNNOutputs:
             fg_inds_all = torch.arange(gt_classes_num, device=device)
 
         if self.box_reg_loss_type == "smooth_l1":
-            gt_proposal_deltas = torch.npu_bounding_box_encode(
+            gt_proposal_deltas = torch_npu.npu_bounding_box_encode(
                 self.proposals.tensor, self.gt_boxes.tensor,
                 0, 0, 0, 0, 0.1, 0.1, 0.2, 0.2)
 

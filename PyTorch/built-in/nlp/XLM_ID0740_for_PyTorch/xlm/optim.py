@@ -24,6 +24,8 @@ import math
 import inspect
 import apex
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import optim
 from apex.optimizers import NpuFusedAdam
 
@@ -62,7 +64,7 @@ class NpuFusedAdamV2(NpuFusedAdam):
             bias_correction2 = 1 - beta2 ** combined_param_state['step']
 
             step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
-            combined_param.data, exp_avg, exp_avg_sq = torch.npu_bert_apply_adam(
+            combined_param.data, exp_avg, exp_avg_sq = torch_npu.npu_bert_apply_adam(
                 group['lr'], beta1,
                 beta2, group['eps'], combined_grad, 0.0, 0.0, group['weight_decay'],
                 step_size, adam_mode=1,

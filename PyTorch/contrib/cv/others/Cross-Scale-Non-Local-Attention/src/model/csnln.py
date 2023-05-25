@@ -15,6 +15,8 @@
 from model import common
 import torch.nn as nn
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from model.attention import CrossScaleAttention,NonLocalAttention
 def make_model(args, parent=False):
     return CSNLN(args)
@@ -34,12 +36,12 @@ class MultisourceProjection(nn.Module):
         self.encoder = common.ResBlock(conv, in_channel, kernel_size, act=nn.PReLU(), res_scale=1)
     
     def forward(self,x):
-        #down_map = self.upsample(self.down_attention(x).npu_format_cast(0))
-        down_map = self.down_attention(x).npu_format_cast(0)
+        #down_map = self.upsample(torch_npu.npu_format_cast(self.down_attention(x), 0))
+        down_map = torch_npu.npu_format_cast(self.down_attention(x), 0)
         for i in range(len(self.upsample)):
             down_map = self.upsample[i](down_map)
             if i==0:
-                down_map = down_map.npu_format_cast(0)
+                down_map = torch_npu.npu_format_cast(down_map, 0)
         up_map = self.up_attention(x)
 
         err = self.encoder(up_map-down_map)
@@ -79,14 +81,14 @@ class RecurrentProjection(nn.Module):
         for i in range(len(self.down_sample_1)):
             x_down = self.down_sample_1[i](x_down)
             if i==0:
-                x_down = x_down.npu_format_cast(0)
+                x_down = torch_npu.npu_format_cast(x_down, 0)
         
         #error_up = self.error_encode((x-x_down).npu_format_cast(0))
-        error_up = (x-x_down).npu_format_cast(0)
+        error_up = torch_npu.npu_format_cast((x-x_down), 0)
         for i in range(len(self.error_encode)):
             error_up = self.error_encode[i](error_up)
             if i==0:
-                error_up = error_up.npu_format_cast(0)
+                error_up = torch_npu.npu_format_cast(error_up, 0)
         h_estimate = x_up + error_up
         if self.scale == 4:
             x_up_2 = self.multi_source_projection_2(h_estimate)
@@ -100,11 +102,11 @@ class RecurrentProjection(nn.Module):
             for i in range(len(self.down_sample_2)):
                 temp_x = self.down_sample_2[i](temp_x)
                 if i==0:
-                    temp_x = temp_x.npu_format_cast(0)
+                    temp_x = torch_npu.npu_format_cast(temp_x, 0)
             for i in range(len(self.post_conv)):
                 temp_x = self.post_conv[i](temp_x)
                 if i==0:
-                    temp_x = temp_x.npu_format_cast(0)
+                    temp_x = torch_npu.npu_format_cast(temp_x, 0)
             x_final = temp_x
 
         return x_final, h_estimate
@@ -153,7 +155,7 @@ class CSNLN(nn.Module):
         for i in range(len(self.head)):
             x = self.head[i](x)
             if i%2 ==0:
-                x = x.npu_format_cast(0)
+                x = torch_npu.npu_format_cast(x, 0)
         bag = []
         for i in range(self.depth):
             x, h_estimate = self.SEM(x)

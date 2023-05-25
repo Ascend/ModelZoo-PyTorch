@@ -1,3 +1,17 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Trainer module."""
 import argparse
 from contextlib import contextmanager
@@ -19,6 +33,8 @@ import copy
 import humanfriendly
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn
 import torch.optim
 from typeguard import check_argument_types
@@ -205,7 +221,7 @@ class Trainer:
                 f"The training has already reached at max_epoch: {start_epoch}"
             )
 
-        amp.register_half_function(torch, 'npu_linear')
+        amp.register_half_function(torch_npu, 'npu_linear')
         if trainer_options.use_amp:
             model, optimizers = amp.initialize(model, optimizers, opt_level="O1", combine_grad=True, loss_scale="512")
 

@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 from torch.utils.checkpoint import checkpoint
 from apex import amp
@@ -55,7 +57,7 @@ class IBasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes, eps=1e-05,)
         self.prelu = nn.PReLU(planes)
         self.prelu.weight.data = self.prelu.weight.data.npu()
-        self.prelu.weight.data = self.prelu.weight.data.npu_format_cast(3)
+        self.prelu.weight.data = torch_npu.npu_format_cast(self.prelu.weight.data, 3)
         self.conv2 = conv3x3(planes, planes, stride)
         self.bn3 = nn.BatchNorm2d(planes, eps=1e-05,)
         self.downsample = downsample
@@ -102,7 +104,7 @@ class IResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(self.inplanes, eps=1e-05)
         self.prelu = nn.PReLU(self.inplanes)
         self.prelu.weight.data = self.prelu.weight.data.npu()
-        self.prelu.weight.data = self.prelu.weight.data.npu_format_cast(3)
+        self.prelu.weight.data = torch_npu.npu_format_cast(self.prelu.weight.data, 3)
         self.layer1 = self._make_layer(block, 64, layers[0], stride=2)
         self.layer2 = self._make_layer(block,
                                        128,

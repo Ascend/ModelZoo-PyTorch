@@ -15,6 +15,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 from torch.autograd import Function
 from torch.nn.modules.utils import _pair, _single
@@ -54,7 +56,7 @@ class ModulatedDeformConv2dFunction(Function):
 
         offset = offset_ori.index_select(1, sort_index_for_npu_fp)
         offset_all = torch.cat([offset, mask], dim=1)
-        output, offset_out = torch.npu_deformable_conv2d(
+        output, offset_out = torch_npu.npu_deformable_conv2d(
             input, weight, offset_all, bias,
             kernel_size=[weight.shape[3], weight.shape[2]],
             stride=[1, 1, ctx.stride, ctx.stride],
@@ -70,7 +72,7 @@ class ModulatedDeformConv2dFunction(Function):
     @staticmethod
     def backward(ctx, grad_output):
         input, weight, offset_out, offset_all = ctx.saved_tensors
-        grad_input, grad_weight, grad_offset_all, grad_bias = torch.npu_deformable_conv2dbk(
+        grad_input, grad_weight, grad_offset_all, grad_bias = torch_npu.npu_deformable_conv2dbk(
             input, grad_output, offset_out, weight, offset_all,
             kernel_size=[weight.shape[3], weight.shape[2]],
             stride=[1, 1, ctx.stride, ctx.stride],

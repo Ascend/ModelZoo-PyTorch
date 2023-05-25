@@ -20,6 +20,8 @@ import copy
 from typing import List, Dict
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 from torch.nn import functional as F
 import datetime
@@ -582,7 +584,7 @@ class CenterNet(nn.Module):
         result_mask[keep] = True
         return result_mask.npu()
 
-        # _, _, keep_mask = torch.npu_nms_with_mask(torch.cat([boxes, scores[..., None]], 1), iou_threshold)
+        # _, _, keep_mask = torch_npu.npu_nms_with_mask(torch.cat([boxes, scores[..., None]], 1), iou_threshold)
         # return keep_mask
 
     def nms_and_topK_v2(self, boxlists, nms=True):

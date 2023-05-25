@@ -14,6 +14,8 @@
 
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn as nn
 from torch.nn import functional as F
 
@@ -44,7 +46,7 @@ class InvertibleConv1x1(nn.Module):
         """
         weight, dlogdet = self.get_weight(input, reverse)
         if not reverse:
-            z = F.conv2d(input, weight).npu_format_cast(0)
+            z = torch_npu.npu_format_cast(F.conv2d(input, weight), 0)
             if logdet is not None:
                 logdet = logdet + dlogdet
             return z, logdet

@@ -17,6 +17,8 @@ import copy
 import warnings
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv import ConfigDict
@@ -301,7 +303,7 @@ class RPNHead(RPNTestMixin, AnchorHead):
             if self.use_sigmoid_cls:
                 rpn_cls_score = rpn_cls_score.reshape(-1)
                 scores = rpn_cls_score.sigmoid()
-#                 rpn_cls_score = rpn_cls_score.npu_format_cast(0)
+#                 rpn_cls_score = torch_npu.npu_format_cast(rpn_cls_score, 0)
 #                 scores = rpn_cls_score.sigmoid()
             else:
                 rpn_cls_score = rpn_cls_score.reshape(-1, 2)

@@ -23,6 +23,9 @@ import os
 import random
 import re
 import shutil
+import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import sys
 import time
 import warnings
@@ -157,7 +160,7 @@ if is_in_notebook():
 
 if is_apex_available():
     from apex import amp
-    amp.register_half_function(torch, 'npu_linear')
+    amp.register_half_function(torch_npu, 'npu_linear')
 
 if version.parse(torch.__version__) >= version.parse("1.6"):
     _is_torch_generator_available = True

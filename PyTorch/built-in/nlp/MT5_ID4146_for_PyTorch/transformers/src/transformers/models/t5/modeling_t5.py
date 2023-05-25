@@ -21,6 +21,8 @@ import os
 import warnings
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.utils.checkpoint import checkpoint
@@ -277,7 +279,7 @@ except Exception:
 class Linear(nn.Linear):
     def forward(self, input):
         if 'npu' in str(input.device):
-            return torch.npu_linear(input, self.weight, self.bias)
+            return torch_npu.npu_linear(input, self.weight, self.bias)
         else:
             return torch.nn.functional.linear(input, self.weight, self.bias)
 
@@ -483,7 +485,7 @@ class T5Attention(nn.Module):
             dim_ = states.numel() // (batch_size * self.n_heads * self.key_value_proj_dim)
             new_states_shape = (batch_size, dim_) + (self.n_heads, self.key_value_proj_dim)
             if 'npu' in str(states.device):
-                return states.npu_confusion_transpose((0, 2, 1, 3), new_states_shape, False)
+                return torch_npu.npu_confusion_transpose(states, (0, 2, 1, 3), new_states_shape, False)
             return states.view(batch_size, -1, self.n_heads, self.key_value_proj_dim).transpose(1, 2)
 
         def unshape(states):
@@ -491,7 +493,7 @@ class T5Attention(nn.Module):
             dim_ = states.numel() // self.inner_dim
             new_states_shape = (dim_,) + (self.inner_dim,)
             if 'npu' in str(states.device):
-                return states.npu_confusion_transpose((0, 2, 1, 3), new_states_shape, True)
+                return torch_npu.npu_confusion_transpose(states, (0, 2, 1, 3), new_states_shape, True)
             return states.transpose(1, 2).contiguous().view(-1, self.inner_dim)
 
         def project(hidden_states, proj_layer, key_value_states, past_key_value):

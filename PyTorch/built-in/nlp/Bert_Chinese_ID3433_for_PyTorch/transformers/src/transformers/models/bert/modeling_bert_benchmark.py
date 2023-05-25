@@ -93,7 +93,7 @@ BERT_PRETRAINED_MODEL_ARCHIVE_LIST = [
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 
 def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
@@ -390,7 +390,7 @@ class BertOutput(nn.Module):
             hidden_states = self.LayerNorm(hidden_states + input_tensor)
         else:
             hidden_states = hidden_states + input_tensor
-        return hidden_states.npu_format_cast(29)
+        return torch_npu.npu_format_cast(hidden_states, 29)
 
 
 class BertLayer(nn.Module):
@@ -626,7 +626,7 @@ class BertLMPredictionHead(nn.Module):
 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
         self.decoder.weight.data = self.decoder.weight.data.npu()
-        self.decoder.weight.data = self.decoder.weight.data.npu_format_cast(29)
+        self.decoder.weight.data = torch_npu.npu_format_cast(self.decoder.weight.data, 29)
 
         # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
         self.decoder.bias = self.bias
@@ -646,7 +646,7 @@ class BertOnlyMLMHead(nn.Module):
 
     def forward(self, sequence_output):
         prediction_scores = self.predictions(sequence_output)
-        return prediction_scores.npu_format_cast(2)
+        return torch_npu.npu_format_cast(prediction_scores, 2)
 
 
 class BertOnlyNSPHead(nn.Module):
@@ -656,7 +656,7 @@ class BertOnlyNSPHead(nn.Module):
 
     def forward(self, pooled_output):
         seq_relationship_score = self.seq_relationship(pooled_output)
-        return seq_relationship_score.npu_format_cast(2)
+        return torch_npu.npu_format_cast(seq_relationship_score, 2)
 
 
 class BertPreTrainingHeads(nn.Module):
@@ -668,7 +668,7 @@ class BertPreTrainingHeads(nn.Module):
     def forward(self, sequence_output, pooled_output):
         prediction_scores = self.predictions(sequence_output)
         seq_relationship_score = self.seq_relationship(pooled_output)
-        return prediction_scores.npu_format_cast(2), seq_relationship_score
+        return torch_npu.npu_format_cast(prediction_scores, 2), seq_relationship_score
 
 
 class BertPreTrainedModel(PreTrainedModel):
@@ -932,8 +932,10 @@ class BertModel(BertPreTrainedModel):
         # ourselves in which case we just need to make it broadcastable to all heads.
         extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(attention_mask, input_shape, device)
         bs, from_seq_len = attention_mask.size()
-        extended_attention_mask = extended_attention_mask.expand(bs, 1, from_seq_len,
-                                                                 from_seq_len).clone().npu_format_cast(29)
+        extended_attention_mask = torch_npu.npu_format_cast(
+            extended_attention_mask.expand(bs, 1, from_seq_len, from_seq_len).clone(),
+            29
+        )
 
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
@@ -960,7 +962,7 @@ class BertModel(BertPreTrainedModel):
             inputs_embeds=inputs_embeds,
             past_key_values_length=past_key_values_length,
         )
-        embedding_output = embedding_output.view(-1, embedding_output.size()[-1]).clone().npu_format_cast(29)
+        embedding_output = embedding_output.view(-1, torch_npu.npu_format_cast(embedding_output.size()[-1]).clone(), 29)
         encoder_outputs = self.encoder(
             embedding_output,
             attention_mask=extended_attention_mask,

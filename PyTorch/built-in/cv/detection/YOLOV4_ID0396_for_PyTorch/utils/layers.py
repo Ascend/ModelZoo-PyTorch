@@ -17,6 +17,8 @@ import torch.nn.functional as F
 from utils.general import *
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 
 # from mish_cuda import MishCuda as Mish
@@ -24,7 +26,7 @@ class Mish(nn.Module):
     def __init__(self):
         super(Mish, self).__init__()
     def forward(self, x):
-        x = torch.npu_mish(x)
+        x = torch_npu.npu_mish(x)
         return x
 
 

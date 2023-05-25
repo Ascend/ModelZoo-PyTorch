@@ -14,6 +14,8 @@
 #
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from ..builder import BBOX_ASSIGNERS
 from ..iou_calculators import build_iou_calculator
@@ -120,10 +122,10 @@ class MaxIoUAssigner(BaseAssigner):
 #         overlaps = self.iou_calculator(gt_bboxes, bboxes)
         if bboxes.shape[1]!=4:
             bboxes = bboxes[:,:4]
-        overlaps = torch.npu_ptiou(bboxes, gt_bboxes)
-#         overlaps = torch.npu_ptiou(gt_bboxes, bboxes)
-        # overlaps = torch.npu_ptiou(gt_bboxes, bboxes)
-        # overlaps = torch.npu_ptiou(bboxes, gt_bboxes)
+        overlaps = torch_npu.npu_ptiou(bboxes, gt_bboxes)
+#         overlaps = torch_npu.npu_ptiou(gt_bboxes, bboxes)
+        # overlaps = torch_npu.npu_ptiou(gt_bboxes, bboxes)
+        # overlaps = torch_npu.npu_ptiou(bboxes, gt_bboxes)
 
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
                 and gt_bboxes_ignore.numel() > 0 and bboxes.numel() > 0):

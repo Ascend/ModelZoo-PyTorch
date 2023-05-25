@@ -26,6 +26,8 @@
 import math
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn.init as init
 from apex.normalization.fused_layer_norm import FusedLayerNorm as LayerNorm
 
@@ -105,7 +107,7 @@ class GPT2ParallelSelfAttention(torch.nn.Module):
         new_tensor_shape = tensor.size()[:-1] + \
                            (self.num_attention_heads_per_partition,
                             self.hidden_size_per_attention_head)
-        return tensor.npu_confusion_transpose((0, 2, 3, 1), [*new_tensor_shape], False)
+        return torch_npu.npu_confusion_transpose(tensor, (0, 2, 3, 1), [*new_tensor_shape], False)
 
     def _transpose_for_scores(self, tensor):
         """Transpose a 3D tensor [b, s, np*hn] into a 4D tensor with
@@ -114,7 +116,7 @@ class GPT2ParallelSelfAttention(torch.nn.Module):
         new_tensor_shape = tensor.size()[:-1] + \
                            (self.num_attention_heads_per_partition,
                             self.hidden_size_per_attention_head)
-        return tensor.npu_confusion_transpose((0, 2, 1, 3), [*new_tensor_shape], False)
+        return torch_npu.npu_confusion_transpose(tensor, (0, 2, 1, 3), [*new_tensor_shape], False)
 
     def forward(self, hidden_states, ltor_mask):
         # hidden_states: [b, s, h]
@@ -150,9 +152,10 @@ class GPT2ParallelSelfAttention(torch.nn.Module):
                                   (context_layer.size()[2],) + \
                                   (self.hidden_size_per_partition,)
         # [b, s, hp]
-        context_layer = context_layer.npu_confusion_transpose((0, 2, 1, 3),
-                                                              [*new_context_layer_shape],
-                                                              True)
+        context_layer = torch_npu.npu_confusion_transpose(context_layer,
+                                                          (0, 2, 1, 3),
+                                                          [*new_context_layer_shape],
+                                                          True)
 
         # Output. [b, s, h]
         output = self.dense(context_layer)

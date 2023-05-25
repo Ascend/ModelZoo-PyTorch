@@ -14,6 +14,8 @@
 
 import os
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import time
 import numpy as np
 import io
@@ -96,8 +98,8 @@ def coco_eval(args, model, coco, cocoGt, encoder, inv_map, epoch, iteration, eva
             # Get predictions
 
             ploc, plabel = model(img)
-            ploc = ploc.npu_format_cast(2)
-            plabel = plabel.npu_format_cast(2)
+            ploc = torch_npu.npu_format_cast(ploc, 2)
+            plabel = torch_npu.npu_format_cast(plabel, 2)
             ploc, plabel = ploc.float(), plabel.float()
             # Handle the batch of predictions produced
             # This is slow, but consistent with old implementation.

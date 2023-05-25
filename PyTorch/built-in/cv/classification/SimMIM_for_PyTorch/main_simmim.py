@@ -46,7 +46,7 @@ try:
     # noinspection PyUnresolvedReferences
     from apex import amp
     amp.register_half_function(torch.nn.functional, 'softmax')
-    amp.register_half_function(torch, 'fast_gelu')
+    amp.register_half_function(torch_npu, 'fast_gelu')
 except ImportError:
     amp = None
 

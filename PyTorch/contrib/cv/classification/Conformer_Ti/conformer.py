@@ -43,6 +43,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from functools import partial
@@ -54,7 +56,7 @@ class FastGELU(nn.Module):
 
     @staticmethod
     def forward(x):
-        return torch.fast_gelu(x)
+        return torch_npu.fast_gelu(x)
 
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FastGELU, drop=0.):

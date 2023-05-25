@@ -39,6 +39,8 @@ from collections import OrderedDict
 from copy import deepcopy
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -152,9 +154,10 @@ class NpuLinear(nn.Linear):
         input_shape = input.size()
         if input.dim() == 3:
             input = input.view(-1, self.in_features)
-            return torch.npu_linear(input, self.weight, self.bias).view(input_shape[0], input_shape[1], self.out_features)
+            return torch_npu.npu_linear(input, self.weight, self.bias)\
+                .view(input_shape[0], input_shape[1], self.out_features)
         elif input.dim == 2:
-            return torch.npu_linear(input, self.weight, self.bias)
+            return torch_npu.npu_linear(input, self.weight, self.bias)
         else:
             raise RuntimeError("this dim is not supported")
 

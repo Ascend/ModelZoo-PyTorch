@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from mmcv.ops.nms import batched_nms
 
 from mmdet.core.bbox.iou_calculators import bbox_overlaps
@@ -33,7 +35,8 @@ class BatchNMSOp(torch.autograd.Function):
             bboxes = bboxes.to("npu")
             scores = scores.to("npu")
             nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = \
-                torch.npu_batch_nms(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size)
+                torch_npu.npu_batch_nms(bboxes, scores, score_threshold,
+                                        iou_threshold, max_size_per_class, max_total_size)
             nmsed_boxes = nmsed_boxes.to("cpu")
             nmsed_scores = nmsed_scores.to("cpu")
             nmsed_classes = nmsed_classes.to("cpu")

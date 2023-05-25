@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from typing import Any, Optional, Tuple, Union
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.utils.checkpoint
 from torch import nn
 
@@ -192,7 +194,8 @@ class CLIPAttention(nn.Module):
         self.out_proj = NpuLinear(self.embed_dim, self.embed_dim)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        return torch.npu_confusion_transpose(tensor, [0, 2, 1, 3], [bsz, seq_len, self.num_heads, self.head_dim], False)
+        return torch_npu.npu_confusion_transpose(tensor, [0, 2, 1, 3], 
+                                                 [bsz, seq_len, self.num_heads, self.head_dim], False)
 
     def forward(
         self,
@@ -204,7 +207,7 @@ class CLIPAttention(nn.Module):
         """Input shape: Batch x Time x Channel"""
 
         bsz, tgt_len, embed_dim = hidden_states.size()
-        hidden_states = hidden_states.view(-1, embed_dim).clone().npu_format_cast(29)
+        hidden_states = torch_npu.npu_format_cast(hidden_states.view(-1, embed_dim).clone(), 29)
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scale
@@ -215,7 +218,7 @@ class CLIPAttention(nn.Module):
         query_states = self._shape(query_states, tgt_len, bsz)
 
         src_len = key_states.size(2)
-        attn_weights = torch.npu_bmmV2(query_states, key_states.permute(0, 1, 3, 2), [])
+        attn_weights = torch_npu.npu_bmmV2(query_states, key_states.permute(0, 1, 3, 2), [])
 
         if attn_weights.size() != (bsz, self.num_heads, tgt_len, src_len):
             raise ValueError(
@@ -250,8 +253,8 @@ class CLIPAttention(nn.Module):
 
         attn_probs = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
 
-        attn_output = torch.npu_bmmV2(attn_probs, value_states, [])
-        attn_output = torch.npu_confusion_transpose(attn_output, [0, 2, 1, 3], [bsz*tgt_len, embed_dim], True)
+        attn_output = torch_npu.npu_bmmV2(attn_probs, value_states, [])
+        attn_output = torch_npu.npu_confusion_transpose(attn_output, [0, 2, 1, 3], [bsz*tgt_len, embed_dim], True)
 
         attn_output = self.out_proj(attn_output)
         attn_output = attn_output.view(bsz, tgt_len, embed_dim)
@@ -269,7 +272,7 @@ class CLIPMLP(nn.Module):
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         bsz, tgt_len, embed_dim = hidden_states.shape
-        hidden_states = hidden_states.view(-1, hidden_states.size()[-1]).clone().npu_format_cast(29)
+        hidden_states = torch_npu.npu_format_cast(hidden_states.view(-1, hidden_states.size()[-1]).clone(), 29)
 
         hidden_states = self.fc1(hidden_states)
         hidden_states = self.activation_fn(hidden_states)
@@ -756,7 +759,7 @@ class CLIPVisionTransformer(nn.Module):
             raise ValueError("You have to specify pixel_values")
 
         hidden_states = self.embeddings(pixel_values)
-        hidden_states = hidden_states.npu_format_cast(29)
+        hidden_states = torch_npu.npu_format_cast(hidden_states, 29)
         hidden_states = self.pre_layrnorm(hidden_states)
 
         encoder_outputs = self.encoder(

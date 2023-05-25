@@ -6,6 +6,8 @@
 import torch.nn as nn
 import math
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 
 class PositionalEncoding(nn.Module):
@@ -67,7 +69,7 @@ class NpuSlice(torch.autograd.Function):
     def forward(ctx, input, x1, x2):
         B, c = input.shape
         ctx.params = (x1, x2)
-        result = torch.npu_indexing(input, [0, x1],
+        result = torch_npu.npu_indexing(input, [0, x1],
                                     [B, x2], [1, 1])
         return result
     @staticmethod
@@ -75,7 +77,7 @@ class NpuSlice(torch.autograd.Function):
         _, c = grad.shape
         x1, x2 = ctx.params
         pads = (0, 0, x1, c - x2)
-        self_grad = torch.npu_pad(grad, pads)
+        self_grad = torch_npu.npu_pad(grad, pads)
         return self_grad, None, None
 
 npu_slice = NpuSlice.apply

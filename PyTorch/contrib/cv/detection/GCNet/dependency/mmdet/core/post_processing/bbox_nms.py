@@ -46,6 +46,8 @@
 # ============================================================================
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from mmcv.ops.nms import batched_nms
 
 from mmdet.core.bbox.iou_calculators import bbox_overlaps
@@ -84,7 +86,14 @@ def npu_multiclass_nms(multi_bboxes,
     multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
     # N, K, C, 4 ==> 1, K, 1, 4
     # N, K, C ==> 1, K, 1
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(), score_thr, nms_cfg['iou_threshold'], max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(
+        multi_bboxes.half(),
+        multi_scores.half(),
+        score_thr,
+        nms_cfg['iou_threshold'],
+        max_num,
+        max_num
+    )
     nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
     nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])
     nmsed_classes = nmsed_classes.reshape(nmsed_classes.shape[1])
@@ -132,9 +141,10 @@ def npu_multiclass_nms_tst(multi_bboxes,
     multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
     multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
 
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              score_thr, nms_thr,
-                                                                              max_num, max_num)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(), 
+                                                                                  multi_scores.half(),
+                                                                                  score_thr, nms_thr,
+                                                                                  max_num, max_num)
 
     nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
     nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])

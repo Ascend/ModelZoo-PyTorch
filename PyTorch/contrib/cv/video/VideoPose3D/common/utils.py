@@ -38,6 +38,8 @@
 #
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.distributed as dist
 import numpy as np
 import hashlib
@@ -173,9 +175,9 @@ def evaluate(test_generator, model_pos, model_traj, joints_left, joints_right, g
                 predicted_3d_pos[1, :, :, 0] *= -1
                 if not use_trajectory_model:
                     # due to certain mechanism in npu, cast type before and after assignment
-                    predicted_3d_pos = predicted_3d_pos.npu_format_cast(0)
+                    predicted_3d_pos = torch_npu.npu_format_cast(predicted_3d_pos, 0)
                     predicted_3d_pos[1, :, joints_left + joints_right] = predicted_3d_pos[1, :, joints_right + joints_left]
-                    predicted_3d_pos = predicted_3d_pos.npu_format_cast(3)
+                    predicted_3d_pos = torch_npu.npu_format_cast(predicted_3d_pos, 3)
                 predicted_3d_pos = torch.mean(predicted_3d_pos, dim=0, keepdim=True)
                 
             if return_predictions:

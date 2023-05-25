@@ -82,18 +82,18 @@ class NpuFusedBertAdamV2(NpuFusedBertAdam):
             else:
                 lr_scheduled = group['lr']
             if torch.__version__ >= "1.8":
-                combined_param.data, exp_avg, exp_avg_sq = torch.npu_bert_apply_adam(lr_scheduled, beta1, beta2,
-                                                                                 group['e'], combined_grad.data,
-                                                                                 group['max_grad_norm'], 0,
-                                                                                 group['weight_decay'],
-                                                                                 out=(combined_param.data, exp_avg,
-                                                                                 exp_avg_sq))
+                combined_param.data, exp_avg, exp_avg_sq = torch_npu.npu_bert_apply_adam(lr_scheduled, beta1, beta2,
+                                                                                         group['e'], combined_grad.data,
+                                                                                         group['max_grad_norm'], 0,
+                                                                                         group['weight_decay'],
+                                                                                         out=(combined_param.data, exp_avg,
+                                                                                         exp_avg_sq))
             else:
-                combined_param.data, exp_avg, exp_avg_sq = torch.npu_bert_apply_adam(combined_param.data, exp_avg,
-                                                                                 exp_avg_sq, lr_scheduled, beta1, beta2,
-                                                                                 group['e'], combined_grad.data,
-                                                                                 group['max_grad_norm'], 0,
-                                                                                 group['weight_decay'])
+                combined_param.data, exp_avg, exp_avg_sq = torch_npu.npu_bert_apply_adam(combined_param.data, exp_avg,
+                                                                                         exp_avg_sq, lr_scheduled, beta1, beta2,
+                                                                                         group['e'], combined_grad.data,
+                                                                                         group['max_grad_norm'], 0,
+                                                                                         group['weight_decay'])
             combined_param_state['step'] += 1
 
 

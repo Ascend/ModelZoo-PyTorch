@@ -6,13 +6,16 @@
 
 from torch import nn
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
+
 
 class NpuSlice(torch.autograd.Function):
     @staticmethod
     def forward(ctx, input, c):
         B, c1, c3 = input.shape
         ctx.input_shape = input.shape
-        result = torch.npu_indexing(input, [0, 0, 0],
+        result = torch_npu.npu_indexing(input, [0, 0, 0],
                                     [B, c1, c3 + c], [1, 1, 1])
         return result
     @staticmethod
@@ -21,7 +24,7 @@ class NpuSlice(torch.autograd.Function):
         input_shape = ctx.input_shape
         _, _, c3 = input_shape
         pads = (0, 0, 0, 0, 0, c3 - c)
-        self_grad = torch.npu_pad(grad, pads)
+        self_grad = torch_npu.npu_pad(grad, pads)
         return self_grad, None
 
 npu_slice = NpuSlice.apply
@@ -31,7 +34,7 @@ class NpuSlice2(torch.autograd.Function):
     def forward(ctx, input, c):
         B, c1, c3 = input.shape
         ctx.input_shape = input.shape
-        result = torch.npu_indexing(input, [0, 0, 0],
+        result = torch_npu.npu_indexing(input, [0, 0, 0],
                                     [B, c1 + c, c3], [1, 1, 1])
         return result
     @staticmethod
@@ -40,7 +43,7 @@ class NpuSlice2(torch.autograd.Function):
         input_shape = ctx.input_shape
         _, c1, _ = input_shape
         pads = (0, 0, 0, c1 - c, 0, 0)
-        self_grad = torch.npu_pad(grad, pads)
+        self_grad = torch_npu.npu_pad(grad, pads)
         return self_grad, None
 
 npu_slice2 = NpuSlice2.apply
@@ -53,7 +56,7 @@ class FastGELU(nn.Module):
         super(FastGELU, self).__init__()
 
     def forward(self, x):
-        return torch.fast_gelu(x)
+        return torch_npu.fast_gelu(x)
 
 class DropOutTask:
     def __init__(self, shape, dtype, device, p):

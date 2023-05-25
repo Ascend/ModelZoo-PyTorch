@@ -13,6 +13,8 @@
 # limitations under the License.
 # ============================================================================
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
@@ -89,4 +91,4 @@ class SlowFastHead(BaseHead):
         # [N x num_classes]
         cls_score = self.fc_cls(x)
 
-        return cls_score.npu_format_cast(0)
+        return torch_npu.npu_format_cast(cls_score, 0)

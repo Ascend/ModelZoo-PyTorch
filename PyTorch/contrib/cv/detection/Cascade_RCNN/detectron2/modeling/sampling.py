@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from detectron2.layers import nonzero_tuple
 
@@ -96,9 +98,9 @@ def subsample_labels_anchors(
     positive = (labels != -1) & (labels != bg_label)
     negative = labels == bg_label
     num_pos = int(num_samples * positive_fraction)
-    pos_idx, pos_mask = torch.npu_random_choice_with_mask(positive, num_pos)
+    pos_idx, pos_mask = torch_npu.npu_random_choice_with_mask(positive, num_pos)
     num_pos = pos_mask.sum()
-    neg_idx, neg_mask = torch.npu_random_choice_with_mask(negative, num_samples)
+    neg_idx, neg_mask = torch_npu.npu_random_choice_with_mask(negative, num_samples)
     num_neg = min(neg_mask.sum(), num_samples - num_pos)
     return pos_idx.reshape((-1,)).cpu()[:num_pos], neg_idx.reshape((-1,)).cpu()[:num_neg]
 
@@ -132,9 +134,9 @@ def subsample_labels_proposals(
     positive = (labels != -1) & (labels != bg_label)
     negative = labels == bg_label
     num_pos = int(num_samples * positive_fraction)
-    pos_idx, pos_mask = torch.npu_random_choice_with_mask(positive, num_pos)
+    pos_idx, pos_mask = torch_npu.npu_random_choice_with_mask(positive, num_pos)
     num_pos = pos_mask.sum()
-    neg_idx, neg_mask = torch.npu_random_choice_with_mask(negative, num_samples)
+    neg_idx, neg_mask = torch_npu.npu_random_choice_with_mask(negative, num_samples)
     num_neg = min(neg_mask.sum(), num_samples - num_pos)
     sampled_idxs = torch.cat([pos_idx, neg_idx], dim=0).reshape((-1,))
     sampled_mask = torch.cat([pos_mask, neg_mask])

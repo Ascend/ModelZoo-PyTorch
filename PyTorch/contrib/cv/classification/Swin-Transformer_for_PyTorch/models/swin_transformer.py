@@ -8,6 +8,8 @@
 
 from unittest import result
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
@@ -28,7 +30,7 @@ class FastGELU(nn.Module):
 
     @staticmethod
     def forward(x):
-        return torch.fast_gelu(x)
+        return torch_npu.fast_gelu(x)
 
 
 def npu_drop_path(x, random_tensor, keep_prob: float = 0.):
@@ -127,8 +129,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 matmul_transpose = MatmulApply.apply
@@ -203,7 +205,7 @@ def window_reverse(windows, window_size, H, W):
 
     # x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
     C = int((B_ * H_ * W_ * C_) / (B * H * W))
-    x = x.npu_confusion_transpose([0, 1, 3, 2, 4, 5], (B, H, W, C), True)
+    x = torch_npu.npu_confusion_transpose(x, [0, 1, 3, 2, 4, 5], (B, H, W, C), True)
 
     return x
 
@@ -264,7 +266,10 @@ class WindowAttention(nn.Module):
             mask: (0/-inf) mask with shape of (num_windows, Wh*Ww, Wh*Ww) or None
         """
         B_, N, C = x.shape
-        qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous().npu_format_cast(2)
+        qkv = torch_npu.npu_format_cast(
+            self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous(),
+            2
+        )
         q, k, v = qkv[0].clone(), qkv[1].clone(), qkv[2].clone()  # make torchscript happy (cannot use tensor as tuple)
 
         if not self.scale.device == q.device:
@@ -295,7 +300,7 @@ class WindowAttention(nn.Module):
         attn = self.attn_drop(attn)
 
         # x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
-        x = (attn @ v).npu_format_cast(2).npu_confusion_transpose([0, 2, 1, 3], (B_, N, C), True)
+        x = torch_npu.npu_confusion_transpose(torch_npu.npu_format_cast((attn @ v), 2), [0, 2, 1, 3], (B_, N, C), True)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -426,9 +431,9 @@ class SwinTransformerBlock(nn.Module):
 
         shortcut = x
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-            x = x.npu_format_cast(29)
+            x = torch_npu.npu_format_cast(x, 29)
         x = self.norm1(x)
-        x = x.view(B, H, W, C).npu_format_cast(2)
+        x = torch_npu.npu_format_cast(x.view(B, H, W, C), 2)
 
         # cyclic shift
         if self.shift_size > 0:
@@ -465,7 +470,7 @@ class SwinTransformerBlock(nn.Module):
 
         # x = x + self.drop_path(self.mlp(self.norm2(x)))
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-            x = x + self.drop_path(self.mlp(self.norm2(x.npu_format_cast(29))))
+            x = x + self.drop_path(self.mlp(self.norm2(torch_npu.npu_format_cast(x, 29))))
         else:
             x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
@@ -528,7 +533,7 @@ class PatchMerging(nn.Module):
         x = x.reshape(B, int(H * W / 4), C * 4)
 
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-            x = x.npu_format_cast(2).npu_format_cast(29).contiguous()
+            x = torch_npu.npu_format_cast(torch_npu.npu_format_cast(x, 2), 29).contiguous()
 
         x = self.norm(x)
         x = self.reduction(x)
@@ -654,7 +659,7 @@ class PatchEmbed(nn.Module):
         x = self.proj(x).flatten(2).transpose(1, 2).contiguous()  # B Ph*Pw C
         if self.norm is not None:
             if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-                x = x.npu_format_cast(2).npu_format_cast(29)
+                x = torch_npu.npu_format_cast(torch_npu.npu_format_cast(x, 2), 29)
             x = self.norm(x)
         return x
 

@@ -16,6 +16,8 @@ import math
 import numpy as np
 from typing import List
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from fvcore.nn import sigmoid_focal_loss_jit, smooth_l1_loss
 from torch import nn
 from torch.nn import functional as F
@@ -380,7 +382,7 @@ class RetinaNet(nn.Module):
         
         # scores_all_input
         #class_idxs_all = F.one_hot(class_idxs_all, 80) # [K, ] --> [K, 80]
-        class_idxs_all = torch.npu_one_hot(class_idxs_all.int(), -1, 80, 1.0, 0.0)
+        class_idxs_all = torch_npu.npu_one_hot(class_idxs_all.int(), -1, 80, 1.0, 0.0)
         scores_all_input = class_idxs_all * scores_all.unsqueeze(-1) # [K, 80] * [K, 1] --> [K, 80]
         scores_all_output = scores_all_input.unsqueeze(0) # [K, 80] --> [1, K, 80]
 
@@ -389,7 +391,8 @@ class RetinaNet(nn.Module):
         boxes_all_out = boxes_all.unsqueeze(0) # [K, 80, 4] --> [1, K, 80, 4]
         torch.npu.synchronize()
         nmsed_boxex, nmsed_scores, nmsed_classes, nmsed_num = \
-            torch.npu_batch_nms(boxes_all_out.half(), scores_all_output.half(), self.score_threshold, self.nms_threshold, 400, 400)
+            torch_npu.npu_batch_nms(boxes_all_out.half(), scores_all_output.half(),
+                                    self.score_threshold, self.nms_threshold, 400, 400)
         result = Instances(image_size)
         result.pred_boxes = Boxes(nmsed_boxex.reshape(nmsed_boxex.shape[1:]))
         result.scores = nmsed_scores.reshape(nmsed_scores.shape[1])
@@ -455,9 +458,10 @@ class RetinaNet(nn.Module):
         multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
         multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
 
-        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                                  score_thr, nms_thr,
-                                                                                  max_num, max_num)
+        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                      multi_scores.half(),
+                                                                                      score_thr, nms_thr,
+                                                                                      max_num, max_num)
 
         nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
         nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])

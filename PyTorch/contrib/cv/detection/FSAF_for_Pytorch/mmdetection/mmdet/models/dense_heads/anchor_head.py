@@ -46,6 +46,8 @@
 # ============================================================================
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 from mmcv.cnn import normal_init
 from mmcv.runner import force_fp32
@@ -723,7 +725,7 @@ class AnchorHead(BaseDenseHead, BBoxTestMixin):
             if self.use_sigmoid_cls:
                 # NPU - zhouzhou
                 # npu_format 3 sigmoid 计算错误
-                cls_score = cls_score.npu_format_cast(0)
+                cls_score = torch_npu.npu_format_cast(cls_score, 0)
                 scores = cls_score.sigmoid()
             else:
                 scores = cls_score.softmax(-1)

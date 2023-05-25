@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from ..builder import BBOX_ASSIGNERS
 from ..iou_calculators import build_iou_calculator
@@ -88,7 +90,7 @@ class GridAssigner(BaseAssigner):
 
         # compute iou between all gt and bboxes
         # overlaps = self.iou_calculator(gt_bboxes, bboxes)
-        overlaps = torch.npu_ptiou(bboxes, gt_bboxes)
+        overlaps = torch_npu.npu_ptiou(bboxes, gt_bboxes)
 
 
         # 1. assign -1 by default
@@ -119,8 +121,8 @@ class GridAssigner(BaseAssigner):
         # for each anchor, the max iou of all gts
         # shape of max_overlaps == argmax_overlaps == num_bboxes
 
-        # torch.npu_max returns index as int32
-        max_overlaps, argmax_overlaps = torch.npu_max(overlaps, dim=0)
+        # torch_npu.npu_max returns index as int32
+        max_overlaps, argmax_overlaps = torch_npu.npu_max(overlaps, dim=0)
 
         if isinstance(self.neg_iou_thr, float):
             # assigned_gt_inds[(max_overlaps >= 0)
@@ -154,14 +156,14 @@ class GridAssigner(BaseAssigner):
 
         # calculate max_overlaps again, but this time we only consider IOUs
         # for anchors responsible for prediction
-        max_overlaps, argmax_overlaps = torch.npu_max(overlaps, dim=0)
+        max_overlaps, argmax_overlaps = torch_npu.npu_max(overlaps, dim=0)
 
         # for each gt, which anchor best overlaps with it
         # for each gt, the max iou of all proposals
         # shape of gt_max_overlaps == gt_argmax_overlaps == num_gts
-        gt_max_overlaps, gt_argmax_overlaps = torch.npu_max(overlaps, dim=1)
+        gt_max_overlaps, gt_argmax_overlaps = torch_npu.npu_max(overlaps, dim=1)
 
-        assigned_gt_inds = torch.npu_grid_assign_positive(
+        assigned_gt_inds = torch_npu.npu_grid_assign_positive(
             assigned_gt_inds, overlaps, box_responsible_flags,
             max_overlaps, argmax_overlaps, gt_max_overlaps, gt_argmax_overlaps,
             num_gts, self.pos_iou_thr, self.min_pos_iou, self.gt_max_assign_all)

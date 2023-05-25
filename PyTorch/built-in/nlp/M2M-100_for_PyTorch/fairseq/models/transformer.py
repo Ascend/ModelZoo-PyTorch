@@ -422,13 +422,15 @@ class TransformerEncoder(FairseqEncoder):
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
         encoder_padding_mask = (encoder_padding_mask.to(torch.float16) * -65504).unsqueeze(1).unsqueeze(2)
-        encoder_padding_mask = encoder_padding_mask.repeat(1,self.encoder_attention_heads,
-                                                           tgt_len, 1).clone().npu_format_cast(29)
+        encoder_padding_mask = torch_npu.npu_format_cast(
+            encoder_padding_mask.repeat(1,self.encoder_attention_heads, tgt_len, 1).clone(),
+            29
+        )
         encoder_states = [] if return_all_hiddens else None
         if len(x.shape) == 3:
-            x = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
+            x = torch_npu.npu_format_cast(x.view(-1, x.shape[2]).clone(), 29)
         else:
-            x = x.npu_format_cast(29)
+            x = torch_npu.npu_format_cast(x, 29)
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask, bsz, tgt_len, s_len)
@@ -796,21 +798,25 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.cross_self_attention or prev_output_tokens.eq(self.padding_idx).any():
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
             self_attn_padding_mask = (self_attn_padding_mask.to(torch.float16) * -65504).unsqueeze(1).unsqueeze(2)
-            self_attn_padding_mask = self_attn_padding_mask.repeat(1, self.decoder_attention_heads,
-                                                               tgt_len, 1).clone().npu_format_cast(
-                29)
+            self_attn_padding_mask = torch_npu.npu_format_cast(
+                self_attn_padding_mask.repeat(1, self.decoder_attention_heads, tgt_len, 1).clone(),
+                29
+            )
 
         if encoder_out is not None:
             encoder_padding_mask = encoder_out.encoder_padding_mask.unsqueeze(1).unsqueeze(2)\
                 .repeat(1, self.decoder_attention_heads, tgt_len, 1)
             if len(encoder_out.encoder_out.shape) == 3:
-                encoder_out_ = encoder_out.encoder_out.view(-1, encoder_out.encoder_out.shape[2]).clone().npu_format_cast(29)
+                encoder_out_ = torch_npu.npu_format_cast(
+                    encoder_out.encoder_out.view(-1, encoder_out.encoder_out.shape[2]).clone(),
+                    29
+                )
             else:
-                encoder_out_ = encoder_out.encoder_out.npu_format_cast(29)
+                encoder_out_ = torch_npu.npu_format_cast(encoder_out.encoder_out, 29)
         if len(x.shape) == 3:
-            x = x.view(-1, x.shape[2]).clone().npu_format_cast(29)
+            x = torch_npu.npu_format_cast(x.view(-1, x.shape[2]).clone(), 29)
         else:
-            x = x.npu_format_cast(29)
+            x = torch_npu.npu_format_cast(x, 29)
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
@@ -820,9 +826,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 if self_attn_padding_mask is not None:
                     self_attn_padding_mask = self_attn_padding_mask + self_attn_mask
                 else:
-                    self_attn_padding_mask = self_attn_mask.unsqueeze(0).unsqueeze(1).repeat(bsz, self.decoder_attention_heads,
-                                                               1, 1).clone().npu_format_cast(
-                29)
+                    self_attn_padding_mask = torch_npu.npu_format_cast(
+                        self_attn_mask.unsqueeze(0).unsqueeze(1).repeat(bsz, self.decoder_attention_heads, 1, 1).clone(),
+                        29
+                    )
 
             x, layer_attn, _ = layer(
                 x, bsz, tgt_len, s_len,

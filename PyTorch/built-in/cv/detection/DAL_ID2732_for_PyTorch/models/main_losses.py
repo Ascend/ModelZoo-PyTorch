@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 from main_utils import BoxCoder
@@ -43,8 +45,8 @@ class IntegratedLoss(nn.Module):
         gt_bool = (gt_label != -1)
         gt_boxes_num = gt_bool.sum(1)
 
-        sa = torch.npu_rotated_iou(anchors, gt_boxes, True, 0, True)
-        fa = torch.npu_rotated_iou(refined_achors, gt_boxes, True, 0, True)
+        sa = torch_npu.npu_rotated_iou(anchors, gt_boxes, True, 0, True)
+        fa = torch_npu.npu_rotated_iou(refined_achors, gt_boxes, True, 0, True)
         md = torch.abs((alpha * sa + beta * fa) - torch.abs(fa - sa) ** var)
 
         iou_max, iou_argmax = md.max(2)
