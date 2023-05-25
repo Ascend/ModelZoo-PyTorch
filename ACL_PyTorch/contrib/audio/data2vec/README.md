@@ -69,14 +69,7 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 ## 获取源码<a name="section4622531142816"></a>
-1. 获取源码
-   ```
-   git clone https://github.com/huggingface/transformers.git
-   cd transformers
-   git reset --hard a6937898c117a2f75c3ee354eb2e4916f428f441
-   cd ..
-   ```
-2. 安装依赖。
+1. 安装依赖。
 
    ```
    pip3 install -r requirement.txt
@@ -145,7 +138,7 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
       2. 优化ONNX文件。(安装[auto-optimzer](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)工具)
 
          ```
-         python3 data2vec_modify.py -m1 data2vec.onnx -m2 data2ve_new.onnx
+         python3 data2vec_modify.py -m1 data2vec.onnx -m2 data2vec_new.onnx
          ```
          - 参数说明：
             - --input_name(m1)：onnx文件路径。
@@ -196,10 +189,9 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
            - --model：为ONNX模型文件。
            - --framework：5代表ONNX模型。
            - --output：输出的OM模型。
-           - --input\_format：输入数据的格式。  
            - --input\_shape：输入数据的shape。
-           - --log：日志级别。
            - --soc\_version：处理器型号。 
+           - --op_precision_mode：设置算子精度模式。
            
          运行成功后生成data2vec_bs${bs}.om模型文件。
 
@@ -256,6 +248,11 @@ Data2Vec是一个对语音、语言或计算机视觉使用相同学习方法的
 
    | NPU芯片型号 | Batch Size     | 数据集      | 精度(wer)  | 性能 (fps)      |
    | ---------  | -------------- | ----------  | ---------- | --------------- |
-   |Ascend310P3 |      1         | LibriSpeech |    0.94  |     11.154         |
+   |Ascend310P3 |      1         | LibriSpeech |    0.938  |     11.154       |
+   |Ascend310P3 |      4         | LibriSpeech |    0.938  |     10.351       |
+   |Ascend310P3 |      8         | LibriSpeech |    0.938  |     10.391       |
+   |Ascend310P3 |      16        | LibriSpeech |    0.938  |     10.561       |
+   |Ascend310P3 |      32        | LibriSpeech |    0.938  |     10.561       |
+   |Ascend310P3 |      64        | LibriSpeech |    0.938  |     10.292       |
 
 
