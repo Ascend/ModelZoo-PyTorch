@@ -14,8 +14,13 @@
 
 # coding=utf-8
 
+import os
+import sys
+
 import yaml
 from easydict import EasyDict
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import lib.config.alphabets as alphabets
 

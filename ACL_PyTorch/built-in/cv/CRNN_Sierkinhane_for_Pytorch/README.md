@@ -23,7 +23,7 @@ branch=stable
 commit_id=a565687c4076b729d4059593b7570dd388055af4
 ```
 
-输入输出:
+输入输出：
 
 | 输入数据 | 数据类型 | 大小 | 数据排布格式 |
 | ---- | ---- | ---- | ---- |
@@ -48,27 +48,36 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
    git reset --hard a565687c4076b729d4059593b7570dd388055af4
    ```
 
-2. 在 CRNN_Chinese_Characters_Rec 目录下新建一个 my 文件夹，把 Gitee 仓库 CRNN_sierkinhane_for_Pytorch 目录下的所有文件复制到 my 文件夹。
+2. 在 CRNN_Chinese_Characters_Rec 目录下新建一个 npu_infer 文件夹，把 Gitee 仓库 CRNN_sierkinhane_for_Pytorch 目录下的所有文件复制到 npu_infer 文件夹。
 
 ### 准备数据集
 
-1. 从 GitHub 仓库获取数据集，把图片数据放在 images/images 路径下，把 char_std_5990.txt、test.txt 放在 lib/dataset/txt 路径下。
+1. 从 GitHub 仓库获取数据集，把图片数据放在 images/total_images 路径下。
 
    ```bash
-   ll images/images | grep "^-" | wc -l # 输出训练集和测试集的图片总数量为 3644007
+   ll images/total_images | grep "^-" | wc -l # 输出训练集和测试集的图片总数量为 3644007
    wc -l lib/dataset/txt/test.txt # 输出测试集标签数量为 364400
    ```
 
-2. 把 train.txt 文件中对应的图片复制出来。运行后生成 images/test_images.py 文件夹。
+2. 把 test.txt 文件中对应的图片复制出来。运行后生成 images/test_images.py 文件夹。
 
    ```bash
-   python3 my/extract_test_images.py
+   python3 npu_infer/extract_test_images.py # 可以使用 -h 查看参数用法
    ll images/test_images | grep "^-" | wc -l # 输出测试集的图片数量为 364400
    ```
 
 ### 搭建环境
 
-1. 新建 conda 环境，安装依赖。
+1. 环境版本。
+
+   | 环境 | 版本 | 安装指导 |
+   | ---- | ---- | ---- |
+   | NPU 驱动和固件 | 23.0.rc1 | [安装指导](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/63RC2alpha002/softwareinstall/instg/instg_000018.html) |
+   | CANN | 6.2.T200 | [安装指导](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/63RC2alpha002/softwareinstall/instg/instg_000036.html) |
+   | Python | 3.7.5 | |
+   | PyTorch | 1.13.1 | |
+
+2. 新建 conda 环境，安装依赖。
 
    ```bash
    conda create -n crnn python=3.7.5
@@ -76,11 +85,10 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
    pip3 install -r my/requirements.txt
    ```
 
-2. 设置环境变量。
+3. 设置环境变量。
 
    ```bash
    source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   export PYTHONPATH=${PYTHONPATH}:.
    ```
 
 ### 转换模型
@@ -88,10 +96,31 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
 1. 导出 .onnx 文件。运行后生成 crnn.onnx 文件。
 
    ```bash
-   python3 my/pth2onnx.py
+   python3 npu_infer/pth2onnx.py # 可以使用 -h 查看参数用法
    ```
 
-2. 转换 .om 模型。运行后生成 om/crnn_bs${batch_size}.om 文件。
+2. 运行以下命令，从 Name 列查看芯片名称。
+
+   ```bash
+   npu-smi info
+   ```
+
+   比如，执行后可能显示如下信息，则芯片名称为 310P3。
+
+   ```
+   +-------------------+-----------------+------------------------------------------------------+
+   | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
+   | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
+   +===================+=================+======================================================+
+   | 0       310P3     | OK              | 15.8         42                0    / 0              |
+   | 0       0         | 0000:82:00.0    | 0            1074 / 21534                            |
+   +===================+=================+======================================================+
+   | 1       310P3     | OK              | 15.4         43                0    / 0              |
+   | 0       1         | 0000:89:00.0    | 0            1070 / 21534                            |
+   +===================+=================+======================================================+
+   ```
+
+3. 转换 .om 模型。运行后生成 om/crnn_bs${batch_size}.om 文件。
 
    ```bash
    atc \
@@ -102,9 +131,11 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
        --input_shape="input:${batch_size},1,32,160" \
        --soc_version=Ascend${chip_name}
    ```
-   
+
+   备注：${chip_name} 请根据实际芯片名称填写。比如，芯片名称为 310P3，则传入参数 --soc_version=Ascend310P3。
+
    参数说明：
-   
+
    - --framework：原始框架类型。
    - --model：原始模型文件路径与文件名。
    - --output：如果是开源框架的网络模型，存放转换后的离线模型的路径以及文件名。如果是单算子描述文件，存放转换后的单算子模型的路径。
@@ -118,7 +149,7 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
 1. 前处理。运行后生成 images/preprocessed_test_images 文件夹和 preprocess_test.txt 文件。
 
    ```bash
-   python3 my/preprocess.py
+   python3 npu_infer/preprocess.py # 可以使用 -h 查看参数用法
    ```
 
 2. 推理。运行后生成 ais_bench_output 文件夹。
@@ -146,7 +177,7 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
 3. 后处理。运行后在控制台输出精度。
 
    ```bash
-   python3 my/postprocess.py --predict-dir=ais_bench_output/result
+   python3 npu_infer/postprocess.py # 可以使用 -h 查看参数用法
    ```
 
 ### 纯推理性能验证

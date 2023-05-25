@@ -17,27 +17,30 @@
 import argparse
 import os
 import stat
+import sys
 
 import cv2
 import numpy as np
 from tqdm import tqdm
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import config
-from default_arguments import CONFIG_FILE, TEST_IMAGE_DIR, LABEL_FILE
+from argument_parser import ArgumentParser
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default=CONFIG_FILE)
-    parser.add_argument('--image-dir', type=str, default=TEST_IMAGE_DIR)
-    parser.add_argument('--label', type=str, default=LABEL_FILE)
+    parser = ArgumentParser()
+    parser.add_config_argument()
+    parser.add_test_image_dir_argument()
+    parser.add_test_label_argument()
     return parser.parse_args()
 
 
 class ImagePreprocessor:
     def __init__(self, config_, image_dir):
         self.__config = config_
-        self.__image_dir = image_dir
+        self.__image_dir = image_dir.rstrip('/')
         self.__preprocessed_image_dir = self.__get_preprocessed_image_dir()
         if not os.path.exists(self.__preprocessed_image_dir):
             os.makedirs(self.__preprocessed_image_dir)
@@ -81,7 +84,7 @@ class ImagePreprocessor:
     @staticmethod
     def __reshape(image):
         height, width = image.shape
-        return np.reshape(image, (1, height, width))
+        return np.reshape(image, (1, 1, height, width))
 
     @staticmethod
     def __write_data_to_file(image, filepath):
@@ -102,7 +105,6 @@ class LabelPreprocessor:
 
     def preprocess(self):
         lines = LabelPreprocessor.__read_lines_from_file(self.__label_file)
-        lines.sort(key=lambda line: line.split(' ')[0])
         char_dict = LabelPreprocessor.__load_char_dict_from_file(self.__config.DATASET.CHAR_FILE)
         preprocessed_lines = LabelPreprocessor.__convert_lines_using_char_dict(lines, char_dict)
         LabelPreprocessor.__write_lines_to_file(

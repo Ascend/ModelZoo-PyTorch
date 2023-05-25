@@ -17,17 +17,20 @@
 import argparse
 import os
 import shutil
+import sys
 
 from tqdm import tqdm
 
-from default_arguments import TEST_IMAGE_DIR, LABEL_FILE, TOTAL_IMAGE_DIR
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from argument_parser import ArgumentParser
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--test-label', type=str, default=LABEL_FILE)
-    parser.add_argument('--total-image-dir', type=str, default=TOTAL_IMAGE_DIR)
-    parser.add_argument('--test-image-dir', type=str, default=TEST_IMAGE_DIR)
+    parser = ArgumentParser()
+    parser.add_test_label_argument()
+    parser.add_total_image_dir_argument()
+    parser.add_test_image_dir_argument()
     return parser.parse_args()
 
 

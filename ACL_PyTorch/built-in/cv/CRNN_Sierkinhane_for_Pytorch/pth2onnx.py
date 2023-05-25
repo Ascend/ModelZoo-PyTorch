@@ -15,18 +15,22 @@
 # coding=utf-8
 
 import argparse
+import os
+import sys
 
 import torch
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import config
-from default_arguments import CHECKPOINT_FILE, CONFIG_FILE
+from argument_parser import ArgumentParser
 import lib.models.crnn as crnn
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default=CONFIG_FILE)
-    parser.add_argument('--checkpoint', type=str, default=CHECKPOINT_FILE)
+    parser = ArgumentParser()
+    parser.add_config_argument()
+    parser.add_checkpoint_argument()
     return parser.parse_args()
 
 
