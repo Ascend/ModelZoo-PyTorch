@@ -473,8 +473,8 @@ def data_main():
         input_mask_np = input_mask.numpy()
         segment_ids_np = segment_ids.numpy()
         input_ids_np.tofile(os.path.join(input_ids_path, "Bert_" + str(i) + '.bin'))
-        segment_ids_np.tofile(os.path.join(input_mask_path, "segment_ids_" + str(i) + '.bin'))
-        input_mask_np.tofile(os.path.join(segment_ids_path, "input_mask_" + str(i) + '.bin'))
+        segment_ids_np.tofile(os.path.join(segment_ids_path, "segment_ids_" + str(i) + '.bin'))
+        input_mask_np.tofile(os.path.join(input_mask_path, "input_mask_" + str(i) + '.bin'))
 
 if __name__ == "__main__":
     data_main()
