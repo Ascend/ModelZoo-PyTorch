@@ -1,0 +1,42 @@
+diff --git a/models.py b/models.py
+index 6e767f4..2874a04 100644
+--- a/models.py
++++ b/models.py
+@@ -108,7 +108,7 @@ class Encoder(nn.Module):
+         """
+         # (seq_len, batch) => (seq_len, batch, input_size)
+         embed = self.embedding(input)
+-        lengths = lengths.data.view(-1).tolist()
++        lengths = lengths.data.view(-1)
+         if lengths is not None:
+             embed = pack_padded_sequence(embed, lengths)
+         output, hn = self.rnn(embed, h0)
+@@ -193,7 +193,7 @@ class EncoderDecoder(nn.Module):
+         else:
+             return h
+ 
+-    def forward(self, src, lengths, trg):
++    def forward(self, src, lengths):
+         """
+         Input:
+         src (src_seq_len, batch): source tensor
+@@ -206,6 +206,7 @@ class EncoderDecoder(nn.Module):
+         """
+         encoder_hn, H = self.encoder(src, lengths)
+         decoder_h0 = self.encoder_hn2decoder_h0(encoder_hn)
+-        ## for target we feed the range [BOS:EOS-1] into decoder
+-        output, decoder_hn = self.decoder(trg[:-1], decoder_h0, H)
+-        return output
++        # ## for target we feed the range [BOS:EOS-1] into decoder
++        # output, decoder_hn = self.decoder(trg[:-1], decoder_h0, H)
++        # return output
++        return decoder_h0
+diff --git a/pkg-install.jl b/pkg-install.jl
+index f1d04ef..645b1e4 100644
+--- a/pkg-install.jl
++++ b/pkg-install.jl
+@@ -10,3 +10,4 @@ Pkg.add("CSV")
+ Pkg.add("DataFrames")
+ Pkg.add("Distances")
+ Pkg.add("IJulia")
++Pkg.add("ArgParse")

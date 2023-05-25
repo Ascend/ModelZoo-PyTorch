@@ -662,6 +662,15 @@ CV-tracking
 	<td>30.1%</td>
 	<td>yolov3:467(bs1) <br> deep:2950(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 416 x 416</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/T2vec_for_PyTorch">  T2vec_for_PyTorch </a>
+        </td>
+        <td>Proto</td>
+	<td>/</td>
+	<td>9.85ms</td>
+	<td nowrap="nowrap">动态输入</td>
 </table>
 
 CV-image_registration
