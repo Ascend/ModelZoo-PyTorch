@@ -1489,7 +1489,7 @@ CV-classfication
 	<td>78.31%</td>
         <td>94.05%</td>
 	<td></td>
-	<td>1908(bs16)</td>
+	<td>1844(bs8)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
