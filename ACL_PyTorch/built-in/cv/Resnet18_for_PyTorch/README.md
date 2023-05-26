@@ -66,10 +66,10 @@
    
    
 
-2. 请用户根据依赖列表和提供的requirments.txt以及自身环境准备依赖。
+2. 请用户根据依赖列表和提供的requirements.txt以及自身环境准备依赖。
 
    ```
-   pip3 install  -r requirments.txt
+   pip3 install -r requirements.txt
    ```
    
 
@@ -147,13 +147,13 @@ python3 imagenet_torch_preprocess.py --data_path ./ImageNet/val/ --save_dir ./pr
          参数说明：
 
          - --model：为ONNX模型文件。
-      - --framework：5代表ONNX模型。
+         - --framework：5代表ONNX模型。
          - --output：输出的OM模型。
-      - --input_format：输入数据的格式。
+         - --input_format：输入数据的格式。
          - --input_shape：输入数据的shape。
-      - --log：日志级别。
+         - --log：日志级别。
          - --soc_version：处理器型号，支持Ascend310系列。
-      - --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的卷积层会有性能收益。
+         - --enable_small_channel：是否使能small channel的优化，使能后在channel<=4的卷积层会有性能收益。
          - --insert_op_conf=aipp.config: AIPP插入节点，通过config文件配置算子信息，功能包括图片色域转换、裁剪、归一化，主要用于处理原图输入数据，常与DVPP配合使用，详见下文数据预处理。
 
    
@@ -203,11 +203,11 @@ python3 imagenet_torch_preprocess.py --data_path ./ImageNet/val/ --save_dir ./pr
 
 | 芯片型号    | Batch size | 精度                     | 性能(fps) |
 | :---------: | :--------: |:------------------------:|:---------:|
-| Ascend310P3 | 1          |Top1: 69.75%, Top5: 89.10%|  3222.06  |
-| Ascend310P3 | 4          |                          |  7587.69  |
-| Ascend310P3 | 8          |                          | 10672.90  |
-| Ascend310P3 | 16         |Top1: 69.75%, Top5: 89.10%| 10796.21  |
-| Ascend310P3 | 32         |                          |  9983.37  |
-| Ascend310P3 | 64         |                          | 10111.24  |
-| Ascend310P3 | 128        |                          |  9676.27  |
-| Ascend310P3 | 256        |                          |  9697.05  |
+| Ascend310P3 | 1          |Top1: 69.75%, Top5: 89.10%|  2864.96  |
+| Ascend310P3 | 4          |                          |  6821.99  |
+| Ascend310P3 | 8          |                          |  9450.12  |
+| Ascend310P3 | 16         |                          |  9705.72  |
+| Ascend310P3 | 32         |                          |  9678.07  |
+| Ascend310P3 | 64         |                          |  9816.71  |
+| Ascend310P3 | 128        |Top1: 69.75%, Top5: 89.10%|  9827.83  |
+| Ascend310P3 | 256        |                          |  9803.72  |
