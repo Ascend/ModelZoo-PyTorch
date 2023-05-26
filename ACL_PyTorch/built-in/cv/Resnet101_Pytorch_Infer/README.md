@@ -78,10 +78,10 @@ commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
    |-- resnet101_pth2onnx.py            //用于转换pth模型文件到onnx模型文件
    ```
 
-2. 请用户根据依赖列表和提供的requirments.txt以及自身环境准备依赖。
+2. 请用户根据依赖列表和提供的requirements.txt以及自身环境准备依赖。
    
    ```bash
-   pip3 install -r requirments.txt
+   pip3 install -r requirements.txt
    ```
 
 ## 准备数据集
@@ -210,11 +210,11 @@ python3 imagenet_torch_preprocess.py --data_path ./ImageNet/val/ --save_dir ./pr
 
 | 芯片型号    | Batch size | 精度                     | 性能(fps) |
 | :---------: | :--------: |:------------------------:|:---------:|
-| Ascend310P3 | 1          |Top1: 77.38%, Top5: 93.56%|  1024.26  |
-| Ascend310P3 | 4          |                          |  2468.16  |
-| Ascend310P3 | 8          |Top1: 77.38%, Top5: 93.56%|  2793.40  |
-| Ascend310P3 | 16         |                          |  2584.88  |
-| Ascend310P3 | 32         |                          |  2464.79  |
-| Ascend310P3 | 64         |                          |  2358.69  |
-| Ascend310P3 | 128        |                          |  2356.88  |
-| Ascend310P3 | 256        |                          |  1781.40  |
+| Ascend310P3 | 1          |Top1: 77.38%, Top5: 93.56%|   971.86  |
+| Ascend310P3 | 4          |                          |  2168.89  |
+| Ascend310P3 | 8          |Top1: 77.38%, Top5: 93.56%|  2547.92  |
+| Ascend310P3 | 16         |                          |  2453.68  |
+| Ascend310P3 | 32         |                          |  2403.78  |
+| Ascend310P3 | 64         |                          |  2305.32  |
+| Ascend310P3 | 128        |                          |  2323.51  |
+| Ascend310P3 | 256        |                          |  1761.95  |
