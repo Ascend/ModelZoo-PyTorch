@@ -14,7 +14,10 @@
 
 import torch
 
-from dlrm.cuda_ext import dotBasedInteract
+try:
+    from dlrm.cuda_ext import dotBasedInteract
+except:
+    pass
 
 
 def padding_size(n: int) -> int:

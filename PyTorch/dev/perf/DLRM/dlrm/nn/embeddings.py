@@ -18,9 +18,11 @@ from typing import Sequence, List, Iterable
 import torch
 from absl import logging
 from torch import nn
-
-from dlrm import cuda_ext
-from dlrm.cuda_ext.fused_gather_embedding import BuckleEmbeddingFusedGatherFunction
+try:
+    from dlrm import cuda_ext
+    from dlrm.cuda_ext.fused_gather_embedding import BuckleEmbeddingFusedGatherFunction
+except:
+    pass
 
 
 class Embeddings(nn.Module):

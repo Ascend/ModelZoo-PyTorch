@@ -31,6 +31,9 @@ from time import time
 import dllogger
 import numpy as np
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+import apex
 from absl import app, flags
 
 import dlrm.scripts.utils as utils
@@ -127,7 +130,7 @@ flags.DEFINE_integer("inference_benchmark_steps", 200,
 
 # Miscellaneous
 flags.DEFINE_float("auc_threshold", None, "Stop the training after achieving this AUC")
-flags.DEFINE_boolean("optimized_mlp", True, "Use an optimized implementation of MLP from apex")
+flags.DEFINE_boolean("optimized_mlp", False, "Use an optimized implementation of MLP from apex")
 flags.DEFINE_enum("auc_device", default="GPU", enum_values=['GPU', 'CPU'],
                   help="Specifies where ROC AUC metric is calculated")
 
@@ -468,7 +471,7 @@ def main(argv):
     if FLAGS.Adam_MLP_optimizer:
         mlp_optimizer = apex_optim.FusedAdam(mlp_params)
     else:
-        mlp_optimizer = apex_optim.FusedSGD(mlp_params)
+        mlp_optimizer = apex.optimizers.NpuFusedSGD(mlp_params)
 
     embedding_params = [{
         'params': list(model.bottom_model.embeddings.parameters()),
@@ -479,7 +482,7 @@ def main(argv):
     if FLAGS.Adam_embedding_optimizer:
         embedding_optimizer = torch.optim.SparseAdam(embedding_params)
     else:
-        embedding_optimizer = torch.optim.SGD(embedding_params)
+        embedding_optimizer = torch_npu.optim.NpuFusedSGD(embedding_params)
 
     checkpoint_writer = make_distributed_checkpoint_writer(
         device_mapping=device_mapping,
