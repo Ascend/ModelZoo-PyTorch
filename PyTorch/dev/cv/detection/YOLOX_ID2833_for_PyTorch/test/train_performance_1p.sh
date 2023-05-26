@@ -33,11 +33,10 @@ for para in $*
 do
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
-    fi
-    if [[ $para == --conda_name* ]];then
-      conda_name=`echo ${para#*=}`
-      source set_conda1
-      source activate $conda_name
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda1
+        source activate $conda_name
     fi
 done
 
