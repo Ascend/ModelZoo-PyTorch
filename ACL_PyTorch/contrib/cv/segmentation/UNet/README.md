@@ -194,7 +194,7 @@ UNet是由FCN改进而来的图像分割模型，其网络结构像U型，分为
       1. 处理summary.json文件，依据json文件信息更改推理输出文件名称。
 
          ```
-         python3 json_parse.py --output=result/bs${batch_size}
+         python3 json_parse.py --output=result/bs${batch_size}/
          ```
 
          - 参数说明：
