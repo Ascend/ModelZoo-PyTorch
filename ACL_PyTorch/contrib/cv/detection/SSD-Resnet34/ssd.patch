@@ -1,6 +1,6 @@
 diff -Naur pytorch/base_model.py ssd/base_model.py
 --- pytorch/base_model.py	1970-01-01 00:00:00.000000000 +0000
-+++ ssd/base_model.py	2021-12-03 10:41:59.146120967 +0000
++++ ssd/base_model.py	2023-05-25 11:57:14.175370603 +0000
 @@ -0,0 +1,198 @@
 +# Copyright (c) 2018-2019, NVIDIA CORPORATION. All rights reserved.
 +#
@@ -201,8 +201,8 @@ diff -Naur pytorch/base_model.py ssd/base_model.py
 +        ret = (total_loss*num_mask/pos_num).mean(dim=0)
 +        return ret
 diff -Naur pytorch/box_coder.py ssd/box_coder.py
---- pytorch/box_coder.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/box_coder.py	2021-12-03 10:41:58.742117678 +0000
+--- pytorch/box_coder.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/box_coder.py	2023-05-25 11:57:14.179370604 +0000
 @@ -1,12 +1,43 @@
  import torch
  
@@ -582,7 +582,7 @@ diff -Naur pytorch/box_coder.py ssd/box_coder.py
      feat_size = [38, 19, 10, 5, 3, 1]
 diff -Naur pytorch/coco_pipeline.py ssd/coco_pipeline.py
 --- pytorch/coco_pipeline.py	1970-01-01 00:00:00.000000000 +0000
-+++ ssd/coco_pipeline.py	2021-12-03 10:41:58.622116701 +0000
++++ ssd/coco_pipeline.py	2023-05-25 11:57:14.179370604 +0000
 @@ -0,0 +1,267 @@
 +# Copyright (c) 2018-2019, NVIDIA CORPORATION. All rights reserved.
 +#
@@ -852,8 +852,8 @@ diff -Naur pytorch/coco_pipeline.py ssd/coco_pipeline.py
 +        else:
 +            logging.warning("DALI iterator does not support resetting while epoch is not finished. Ignoring...")
 diff -Naur pytorch/data/build_pipeline.py ssd/data/build_pipeline.py
---- pytorch/data/build_pipeline.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/data/build_pipeline.py	2021-12-03 10:41:56.454099069 +0000
+--- pytorch/data/build_pipeline.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/data/build_pipeline.py	2023-05-25 11:57:14.179370604 +0000
 @@ -15,9 +15,8 @@
  import torch
  
@@ -892,8 +892,8 @@ diff -Naur pytorch/data/build_pipeline.py ssd/data/build_pipeline.py
              train_loader = FakeInputIterator(train_loader, epoch_size, args.N_gpu)
  
 diff -Naur pytorch/data/dali_iterator.py ssd/data/dali_iterator.py
---- pytorch/data/dali_iterator.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/data/dali_iterator.py	2021-12-03 10:41:56.322097997 +0000
+--- pytorch/data/dali_iterator.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/data/dali_iterator.py	2023-05-25 11:57:14.179370604 +0000
 @@ -56,6 +56,7 @@
                  num_shards = num_gpus,
                  ratio=True,
@@ -911,8 +911,8 @@ diff -Naur pytorch/data/dali_iterator.py ssd/data/dali_iterator.py
                                         num_attempts=1)
          decoder_device = 'mixed' if use_nvjpeg else 'cpu'
 diff -Naur pytorch/data/input_iterators.py ssd/data/input_iterators.py
---- pytorch/data/input_iterators.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/data/input_iterators.py	2021-12-03 10:41:56.070095949 +0000
+--- pytorch/data/input_iterators.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/data/input_iterators.py	2023-05-25 11:57:14.179370604 +0000
 @@ -13,7 +13,7 @@
  # limitations under the License.
  
@@ -923,8 +923,8 @@ diff -Naur pytorch/data/input_iterators.py ssd/data/input_iterators.py
  
  class ConvertDaliInputIterator(object):
 diff -Naur pytorch/data/native_pipeline.py ssd/data/native_pipeline.py
---- pytorch/data/native_pipeline.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/data/native_pipeline.py	2021-12-03 10:41:55.954095006 +0000
+--- pytorch/data/native_pipeline.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/data/native_pipeline.py	2023-05-25 11:57:14.179370604 +0000
 @@ -2,7 +2,7 @@
  import os
  
@@ -1001,8 +1001,8 @@ diff -Naur pytorch/data/native_pipeline.py ssd/data/native_pipeline.py
      inv_map = {v:k for k,v in val_coco.label_map.items()}
  
 diff -Naur pytorch/data/prefetcher.py ssd/data/prefetcher.py
---- pytorch/data/prefetcher.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/data/prefetcher.py	2021-12-03 10:41:55.842094097 +0000
+--- pytorch/data/prefetcher.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/data/prefetcher.py	2023-05-25 11:57:14.179370604 +0000
 @@ -1,16 +1,17 @@
  import torch
  
@@ -1033,22 +1033,28 @@ diff -Naur pytorch/data/prefetcher.py ssd/data/prefetcher.py
          next_img, next_img_id, next_img_size = _prefetch()
          yield current_img, current_img_id, current_img_size
 diff -Naur pytorch/eval.py ssd/eval.py
---- pytorch/eval.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/eval.py	2021-12-03 10:41:55.358090167 +0000
-@@ -38,11 +38,10 @@
-     from apex.parallel import DistributedDataParallel as DDP
-     from apex.fp16_utils import *
-     from apex.multi_tensor_apply import multi_tensor_applier
--    import amp_C
- except ImportError:
-     raise ImportError("Please install APEX from https://github.com/nvidia/apex")
+--- pytorch/eval.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/eval.py	2023-05-25 11:59:11.003372035 +0000
+@@ -31,18 +31,6 @@
+ import torch.utils.data.distributed
+ import torch.distributed as dist
  
+-# Apex imports
+-try:
+-    import apex_C
+-    import apex
+-    from apex.parallel import DistributedDataParallel as DDP
+-    from apex.fp16_utils import *
+-    from apex.multi_tensor_apply import multi_tensor_applier
+-    import amp_C
+-except ImportError:
+-    raise ImportError("Please install APEX from https://github.com/nvidia/apex")
+-
 -from SSD import _C as C
-+# from SSD import _C as C
  
  def print_message(rank, *print_args):
      if rank == 0:
-@@ -56,9 +55,8 @@
+@@ -56,9 +44,8 @@
  """
  def evaluate_coco(final_results, cocoGt, local_rank, threshold):
      from pycocotools.cocoeval import COCOeval
@@ -1060,7 +1066,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
      E.evaluate()
      E.accumulate()
      E.summarize()
-@@ -86,7 +84,7 @@
+@@ -86,7 +73,7 @@
  
      # Wrap dataloader for prefetching
      coco = eval_prefetcher(iter(coco),
@@ -1069,7 +1075,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
                             args.pad_input,
                             args.nhwc,
                             args.use_fp16)
-@@ -95,8 +93,9 @@
+@@ -95,8 +82,9 @@
          with torch.no_grad():
              # Get predictions
              ploc, plabel = model(img)
@@ -1080,7 +1086,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
              # Handle the batch of predictions produced
              # This is slow, but consistent with old implementation.
              for idx in range(ploc.shape[0]):
-@@ -104,17 +103,16 @@
+@@ -104,17 +92,16 @@
                  ploc_i = ploc[idx, :, :].unsqueeze(0)
                  plabel_i = plabel[idx, :, :].unsqueeze(0)
  
@@ -1101,7 +1107,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
  
      # Now we have all predictions from this rank, gather them all together
      # if necessary
-@@ -123,11 +121,11 @@
+@@ -123,11 +110,11 @@
      # Multi-GPU eval
      if distributed:
          # NCCL backend means we can only operate on GPU tensors
@@ -1116,7 +1122,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
  
          # Get the maximum results size, as all tensors must be the same shape for
          # the all_gather call we need to make
-@@ -138,10 +136,10 @@
+@@ -138,10 +125,10 @@
              sizes.append(s.item())
  
          # Need to pad my output to max_size in order to use in all_gather
@@ -1129,7 +1135,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
          # Everyone exchanges (padded) results
          torch.distributed.all_gather(other_ret, ret_pad)
  
-@@ -182,7 +180,7 @@
+@@ -182,7 +169,7 @@
          args.distributed = int(os.environ['WORLD_SIZE']) > 1
  
      if args.distributed:
@@ -1138,7 +1144,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
          torch.distributed.init_process_group(backend='nccl',
                                               init_method='env://')
      args.local_seed = 0 # set_seeds(args)
-@@ -212,8 +210,8 @@
+@@ -212,8 +199,8 @@
      val_coco_root = os.path.join(args.data, "val2017")
  
      cocoGt = COCO(annotation_file=val_annotate)
@@ -1149,7 +1155,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
  
      model_options = {
          'use_nhwc' : args.nhwc,
-@@ -222,7 +220,7 @@
+@@ -222,7 +209,7 @@
          'pretrained' : False,
      }
  
@@ -1158,7 +1164,7 @@ diff -Naur pytorch/eval.py ssd/eval.py
      if args.use_fp16:
          convert_network(ssd300_eval, torch.half)
      ssd300_eval.eval()
-@@ -245,6 +243,14 @@
+@@ -245,6 +232,14 @@
      res = evaluator.task_result(0)
  
  if __name__ == "__main__":
@@ -1174,8 +1180,8 @@ diff -Naur pytorch/eval.py ssd/eval.py
      validate_arguments(args)
  
 diff -Naur pytorch/mlperf_logger.py ssd/mlperf_logger.py
---- pytorch/mlperf_logger.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/mlperf_logger.py	2021-12-03 10:41:55.010087341 +0000
+--- pytorch/mlperf_logger.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/mlperf_logger.py	2023-05-25 11:57:14.179370604 +0000
 @@ -63,8 +63,8 @@
      Calls all_reduce on dummy tensor and synchronizes with GPU.
      """
@@ -1200,7 +1206,7 @@ diff -Naur pytorch/mlperf_logger.py ssd/mlperf_logger.py
      log_event(key=mllog.constants.SEED, value=args.seed)
 diff -Naur pytorch/new.py ssd/new.py
 --- pytorch/new.py	1970-01-01 00:00:00.000000000 +0000
-+++ ssd/new.py	2021-12-03 10:41:54.766085361 +0000
++++ ssd/new.py	2023-05-25 11:57:14.179370604 +0000
 @@ -0,0 +1,40 @@
 +
 +import sys
@@ -1245,7 +1251,7 @@ diff -Naur pytorch/new.py ssd/new.py
 \ No newline at end of file
 diff -Naur pytorch/nms.py ssd/nms.py
 --- pytorch/nms.py	1970-01-01 00:00:00.000000000 +0000
-+++ ssd/nms.py	2021-12-03 10:41:53.514075205 +0000
++++ ssd/nms.py	2023-05-25 11:57:14.179370604 +0000
 @@ -0,0 +1,146 @@
 +# Copyright (c) 2020, Huawei Technologies.All rights reserved.
 +#
@@ -1394,8 +1400,8 @@ diff -Naur pytorch/nms.py ssd/nms.py
 +    print(det_labels.shape)
 +
 diff -Naur pytorch/opt_loss.py ssd/opt_loss.py
---- pytorch/opt_loss.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/opt_loss.py	2021-12-03 10:41:53.386074167 +0000
+--- pytorch/opt_loss.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/opt_loss.py	2023-05-25 11:57:14.183370604 +0000
 @@ -30,7 +30,7 @@
          # http://jany.st/post/2017-11-05-single-shot-detector-ssd-from-scratch-in-tensorflow.html
          self.con_loss = torch.nn.CrossEntropyLoss(reduce=False)
@@ -1436,7 +1442,7 @@ diff -Naur pytorch/opt_loss.py ssd/opt_loss.py
          pos_num = pos_num.type_as(closs).clamp(min=1e-6)
 diff -Naur pytorch/opt_loss.pyc ssd/opt_loss.pyc
 --- pytorch/opt_loss.pyc	1970-01-01 00:00:00.000000000 +0000
-+++ ssd/opt_loss.pyc	2021-12-03 10:41:53.266073195 +0000
++++ ssd/opt_loss.pyc	2023-05-25 11:57:14.183370604 +0000
 @@ -0,0 +1,26 @@
 +ó
 +u¶5ac           @   s,   d  d l  Z  d e  j j f d „  ƒ  YZ d S(   iÿÿÿÿNt   OptLossc           B   s    e  Z d  Z d „  Z d „  Z RS(   sé   
@@ -1466,8 +1472,8 @@ diff -Naur pytorch/opt_loss.pyc ssd/opt_loss.pyc
 +   __module__t   __doc__R   R4   (    (    (    s'   /home/yzc/pytorch3/pytorch2/opt_loss.pyR       s   		(   R   R   t   ModuleR    (    (    (    s'   /home/yzc/pytorch3/pytorch2/opt_loss.pyt   <module>   s   
 \ No newline at end of file
 diff -Naur pytorch/parse_config.py ssd/parse_config.py
---- pytorch/parse_config.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/parse_config.py	2021-12-03 10:41:53.146072221 +0000
+--- pytorch/parse_config.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/parse_config.py	2023-05-25 11:57:14.183370604 +0000
 @@ -42,32 +42,39 @@
                          help='path to COCO meta files')
      data_group.add_argument('--batch-size', '-b', type=int, default=32,
@@ -1526,16 +1532,16 @@ diff -Naur pytorch/parse_config.py ssd/parse_config.py
      solver_group.add_argument('--iteration', type=int, default=0,
                          help='iteration to start from')
 diff -Naur pytorch/prepare-json.py ssd/prepare-json.py
---- pytorch/prepare-json.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/prepare-json.py	2021-12-03 10:41:53.030071281 +0000
+--- pytorch/prepare-json.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/prepare-json.py	2023-05-25 11:57:14.183370604 +0000
 @@ -72,4 +72,3 @@
  #     cat = a['category_id']
  #     myid = a['id']
  #     print(imid, myid, bbox[0], bbox[1], bbox[2], bbox[3], cat)
 -
 diff -Naur pytorch/resnet.py ssd/resnet.py
---- pytorch/resnet.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/resnet.py	2021-12-03 10:41:52.642068138 +0000
+--- pytorch/resnet.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/resnet.py	2023-05-25 11:57:14.183370604 +0000
 @@ -15,16 +15,8 @@
  import torch                    # for torch.cat and torch.zeros
  import torch.nn as nn
@@ -1644,8 +1650,8 @@ diff -Naur pytorch/resnet.py ssd/resnet.py
          state_dict = {k:orig_state_dict[k] for k in orig_state_dict if (not k.startswith('layer4') and not k.startswith('fc'))}
  
 diff -Naur pytorch/ssd300.py ssd/ssd300.py
---- pytorch/ssd300.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/ssd300.py	2021-12-03 10:41:51.722060685 +0000
+--- pytorch/ssd300.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/ssd300.py	2023-05-25 11:57:14.183370604 +0000
 @@ -17,7 +17,6 @@
  # from base_model import L2Norm, ResNet
  from resnet import ResNet, resnet34
@@ -1741,8 +1747,8 @@ diff -Naur pytorch/ssd300.py ssd/ssd300.py
          locs, confs = torch.cat(locs, cat_dim), torch.cat(confs, cat_dim)
  
 diff -Naur pytorch/test.py ssd/test.py
---- pytorch/test.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/test.py	2021-12-03 10:41:51.206056508 +0000
+--- pytorch/test.py	2023-05-25 11:56:08.099369794 +0000
++++ ssd/test.py	2023-05-25 11:57:14.183370604 +0000
 @@ -49,8 +49,6 @@
                          help='path to test and training data files')
      parser.add_argument('--batch-size', '-b', type=int, default=128,
@@ -1808,7 +1814,7 @@ diff -Naur pytorch/test.py ssd/test.py
                  M = bbox.shape[0] // N
 diff -Naur pytorch/tmp.py ssd/tmp.py
 --- pytorch/tmp.py	1970-01-01 00:00:00.000000000 +0000
-+++ ssd/tmp.py	2021-12-03 10:41:51.098055634 +0000
++++ ssd/tmp.py	2023-05-25 11:57:14.183370604 +0000
 @@ -0,0 +1,9 @@
 +
 +import torch
@@ -1820,8 +1826,8 @@ diff -Naur pytorch/tmp.py ssd/tmp.py
 +torch.npu.set_option(option)
 +torch.multiprocessing.set_start_method('spawn')
 diff -Naur pytorch/train.py ssd/train.py
---- pytorch/train.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/train.py	2021-12-03 10:41:50.978054663 +0000
+--- pytorch/train.py	2023-05-25 11:56:08.103369794 +0000
++++ ssd/train.py	2023-05-25 11:57:14.183370604 +0000
 @@ -11,9 +11,11 @@
  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  # See the License for the specific language governing permissions and
@@ -2161,8 +2167,8 @@ diff -Naur pytorch/train.py ssd/train.py
 +    sys.stderr = Logger("log1.log")
      main()
 diff -Naur pytorch/utils.py ssd/utils.py
---- pytorch/utils.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/utils.py	2021-12-03 10:41:50.862053724 +0000
+--- pytorch/utils.py	2023-05-25 11:56:08.103369794 +0000
++++ ssd/utils.py	2023-05-25 11:57:14.183370604 +0000
 @@ -84,10 +84,8 @@
  from math import sqrt, ceil, cos, sin, pi
  from mlperf_logging.mllog import constants
@@ -2333,8 +2339,8 @@ diff -Naur pytorch/utils.py ssd/utils.py
 +        return img, img_id, (htot, wtot), bbox_sizes, bbox_labels
 \ No newline at end of file
 diff -Naur pytorch/visualize.py ssd/visualize.py
---- pytorch/visualize.py	2021-12-03 10:28:10.553776939 +0000
-+++ ssd/visualize.py	2021-12-03 10:41:50.726052624 +0000
+--- pytorch/visualize.py	2023-05-25 11:56:08.103369794 +0000
++++ ssd/visualize.py	2023-05-25 11:57:14.183370604 +0000
 @@ -12,9 +12,6 @@
  # See the License for the specific language governing permissions and
  # limitations under the License.

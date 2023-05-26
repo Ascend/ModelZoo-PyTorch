@@ -88,24 +88,10 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
    ```
 
 2. 安装依赖。
-    1. 获取昇腾版本工具安装包
-    - 可通过下述百度云网盘下载
-   ```
-   链接：https://pan.baidu.com/s/1xH3ZSP63NRukAPMlI4ePNw 
-   提取码：rcof
-   ```
-   >**说明：** 
-   >网盘里只有x86架构的工具包，用户如需arm架构的工具包请自行编译（网址如下）。
-   >https://www.hiascend.com/software/ai-frameworks/commercial
-
-    2. 安装环境
    ```
    pip3 install -r requirements.txt
    git clone https://github.com/mlperf/logging.git mlperf-logging
    pip3 install -e mlperf-logging
-   pip3 install torch-1.5.0+ascend.post3.20210930-cp37-cp37m-linux_x86_64.whl
-   pip3 install apex-0.1+ascend.20210930-cp37-cp37m-linux_x86_64.whl
-   pip3 install tensor_fused_plugin-0.1+ascend-cp37-cp37m-linux_x86_64.whl
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -132,7 +118,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
    执行ssd_preprocess.py脚本，完成预处理。
 
    ```
-   python3 ssd_preprocess.py --data=${data_path}/coco --bin-output=./ssd_bin
+   python3 ssd_preprocess.py --val_annotation=./coco/annotations/bbox_only_instances_val2017.json --data_root=./coco/val2017/ --save_path=./ssd_bin
    ```
    - 参数说明：
       -  --data：数据集路径。
@@ -162,7 +148,6 @@ https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH
 
          ```
          python3 ssd_pth2onnx.py --bs=1 --resnet34-model=./models/resnet34-333f7ec4.pth --pth-path=./models/iter_183250.pt --onnx-path=./ssd.onnx
-
          ```
          - 参数说明：
             -  --resnet34-model : resnet34 骨干网络权重路径
@@ -229,17 +214,12 @@ https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
-   2. 执行推理。
-
-    ```
-    mkdir result
-    ```
-
-        
+   2. 执行推理。 
     ```
     python3 -m ais_bench --model ${om_path}/ssd_bs1.om\  
                                   --input /path/to/ssd_bin/\ 
-                                  --output ${out_path}\ 
+                                  --output ./\ 
+                                  --output_dirname result \
                                   --batchsize ${n}\
                                   --outfmt BIN
     ```
@@ -249,10 +229,11 @@ https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH
       - --model: OM模型路径。
       - --input: 存放预处理bin文件的目录路径
       - --output: 存放推理结果的目录路径
+      - --output_dirname：存放推理结果的目录文件名
       - --batchsize：每次输入模型的样本数
       - --outfmt: 推理结果数据的格式
 
-        推理后的输出默认在当前目录result下。
+        推理后的输出保存在当前目录result下。
 
 
    3. 精度验证。
@@ -260,13 +241,12 @@ https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH
       调用“ssd_postprocess.py”评测模型的精度。
 
     ```
-    python3 ssd_postprocess.py --data=${data_path}/coco --bin-input=${output_path}
-
+    python3 ssd_postprocess.py --val_annotation=./coco/annotations/bbox_only_instances_val2017.json --bin_path=${output_path}
     ```
     - 参数说明：
 
-      - --bin-input：生成推理结果所在路径。
-      - --data：数据集路径。
+      - --val_annotation：生成推理结果所在路径。
+      - --bin_path：推理结果保存路径
     
    4. 性能验证。
 
