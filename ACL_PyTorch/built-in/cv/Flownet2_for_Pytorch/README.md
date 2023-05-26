@@ -266,6 +266,6 @@ FlowNet提出了第一个基于CNN的光流预测算法，虽然具有快速的�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|     Ascend310P3      |        1          |      MPI-Sintel      |     EPE:2.15       |       15.26          |
-|     Ascend310P3      |       4         |      MPI-Sintel      |            |       5.94        |
+|     Ascend310P3      |        1          |      MPI-Sintel      |     EPE:2.15       |      14.36 |
+|     Ascend310P3      |       4         |      MPI-Sintel      |            |       6.10        |
 |     Ascend310P3      |        8          |      MPI-Sintel      |     内存超出       |
