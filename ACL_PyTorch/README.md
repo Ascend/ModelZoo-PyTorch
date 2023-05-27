@@ -1541,6 +1541,17 @@ CV-classfication
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
+        <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_mlperf">  Resnet50_mlperf </a>
+        </td>
+        <td>ImageNet</td>
+    <td>76.44%</td>
+    <td></td>
+    <td>3940.45(bs64)</td>
+        <td></td>
+    <td>bs x 3 x 256 x 256</td>
+    </tr>
     <tr>
         <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet101_Pytorch_Infer">  ResNet101_Pytorch_Infer </a>
