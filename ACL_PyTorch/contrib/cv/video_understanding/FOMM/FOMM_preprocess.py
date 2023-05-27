@@ -11,87 +11,73 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import matplotlib
-matplotlib.use('Agg')
-import os, sys
-sys.path.append('./first-order-model')
-import yaml
+import os
 from argparse import ArgumentParser
-from time import gmtime, strftime
-from shutil import copy
+
+import numpy as np
+from tqdm import tqdm
+from torch.utils.data import DataLoader
+import yaml
+
 from frames_dataset import FramesDataset
-from modules.generator import OcclusionAwareGenerator
-from modules.discriminator import MultiScaleDiscriminator
-from modules.keypoint_detector import KPDetector
-import torch
-from data_pre_processing import pre_processing
+
+
+def mkdir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+
+def pre_processing():
+    with open(opt.config) as f:
+        config = yaml.safe_load(f)
+
+    dataset = FramesDataset(is_train=False, **config['dataset_params'])
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
+
+    out_dir = opt.out_dir
+    mkdir(out_dir)
+
+    source_dir = os.path.join(out_dir, "source")
+    driving_dir = os.path.join(out_dir, "driving")
+    mkdir(source_dir)
+    mkdir(driving_dir)
+
+    print("pre processing...")
+    num_file = []
+    cnt  = 0
+    for it, x in tqdm(enumerate(dataloader)):
+        if config['reconstruction_params']['num_videos'] is not None:
+            if it > config['reconstruction_params']['num_videos']:
+                break
+        x_video = x['video']
+        num = x_video.shape[2]
+        num_file.append(num)
+        source = x_video[:, :, 0].numpy()
+        for frame_idx in range(x['video'].shape[2]):
+            driving = x_video[:, :, frame_idx].numpy()
+            if opt.data_type == "npy":
+                file_name = str(cnt) + ".npy"
+                source_save_path = os.path.join(source_dir, file_name)
+                driving_save_path = os.path.join(driving_dir, file_name)
+                np.save(source_save_path, source)
+                np.save(driving_save_path, driving)
+                cnt += 1
+            else:
+                file_name = str(cnt) + ".bin"
+                source_save_path = os.path.join(source_dir, file_name)
+                driving_save_path = os.path.join(driving_dir, file_name)
+                source.tofile(f'{source_save_path}')
+                driving.tofile(f'{driving_save_path}')
+                cnt += 1
+    num_file = np.array(num_file)
+    np.save(out_dir + "frame_num.npy", num_file)
 
 
 if __name__ == "__main__":
-    if torch.cuda.is_available():
-        print("CUDA IS AVAILABLE √")
-    else:
-        print("CUDA IS NOT AVAILABLE ×")
-
-    if sys.version_info[0] < 3:
-        raise Exception("You must use Python 3 or higher. Recommended version is Python 3.7")
-
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-
-    parser.add_argument("--log_dir", default='log', help="path to log into")
-    parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
     parser.add_argument("--out_dir", default="pre_data/", help="path to checkpoint to restore")
     parser.add_argument("--data_type", default="npy", help="out put file type", choices=["npy", "bin"])
-    parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
-                        help="Names of the devices comma separated.")
-    parser.add_argument("--verbose", dest="verbose", action="store_true", help="Print model architecture")
-    parser.set_defaults(verbose=False)
-
     opt = parser.parse_args()
-    with open(opt.config) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
 
-    if opt.checkpoint is not None:
-        log_dir = os.path.join(*os.path.split(opt.checkpoint)[:-1])
-    else:
-        log_dir = os.path.join(opt.log_dir, os.path.basename(opt.config).split('.')[0])
-        log_dir += ' ' + strftime("%d_%m_%y_%H.%M.%S", gmtime())
-
-    generator = OcclusionAwareGenerator(**config['model_params']['generator_params'],
-                                        **config['model_params']['common_params'])
-
-    if torch.cuda.is_available():
-        generator.to(opt.device_ids[0])
-    if opt.verbose:
-        print(generator)
-
-    discriminator = MultiScaleDiscriminator(**config['model_params']['discriminator_params'],
-                                            **config['model_params']['common_params'])
-    if torch.cuda.is_available():
-        discriminator.to(opt.device_ids[0])
-    if opt.verbose:
-        print(discriminator)
-
-    kp_detector = KPDetector(**config['model_params']['kp_detector_params'],
-                             **config['model_params']['common_params'])
-
-    if torch.cuda.is_available():
-        kp_detector.to(opt.device_ids[0])
-
-    if opt.verbose:
-        print(kp_detector)
-
-    dataset = FramesDataset(is_train=False, **config['dataset_params'])
-
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    if not os.path.exists(os.path.join(log_dir, os.path.basename(opt.config))):
-        copy(opt.config, log_dir)
-
-    print("pre processing...")
-    pre_processing(config, generator, kp_detector, opt.checkpoint, log_dir, dataset, opt.data_type, opt.out_dir)
-
-
-
-
+    pre_processing()

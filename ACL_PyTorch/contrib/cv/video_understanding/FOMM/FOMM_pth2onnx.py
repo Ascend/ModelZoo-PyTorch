@@ -11,12 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
-sys.path.append('./first-order-model')
-import torch
-from utils import load_checkpoints
 from argparse import ArgumentParser
-from torch import onnx
+
+import torch
+import yaml
+
+from modules.generator import OcclusionAwareGenerator
+from modules.keypoint_detector import KPDetector
+
+
+def load_checkpoints(config_path, checkpoint_path):
+
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+
+    generator = OcclusionAwareGenerator(**config['model_params']['generator_params'],
+                                        **config['model_params']['common_params'])
+
+    kp_detector = KPDetector(**config['model_params']['kp_detector_params'],
+                             **config['model_params']['common_params'])
+
+    checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+
+    generator.load_state_dict(checkpoint['generator'])
+    kp_detector.load_state_dict(checkpoint['kp_detector'])
+
+    generator.eval()
+    kp_detector.eval()
+
+    return generator, kp_detector
 
 
 if __name__ == "__main__":
@@ -28,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("--kpname", required=True, help="name of the kp-detector.onnx model file")
 
     opt = parser.parse_args()
-    generator, kp_detector = load_checkpoints(config_path=opt.config, checkpoint_path=opt.checkpoint)
+    generator_model, kp_detector_model = load_checkpoints(config_path=opt.config, checkpoint_path=opt.checkpoint)
     data_name = opt.checkpoint.split('/')[1].split('-')[0]
     if opt.checkpoint.split('/')[1].__contains__('adv'):
         data_name += '-adv'
@@ -44,7 +67,7 @@ if __name__ == "__main__":
     output_names = ["output"]
     kp_input_names = ["input"]
 
-    torch.onnx.export(kp_detector, kpdet_dummy_input, kpdet_save_path, input_names=kp_input_names,
+    torch.onnx.export(kp_detector_model, kpdet_dummy_input, kpdet_save_path, input_names=kp_input_names,
                       output_names=output_names, opset_version=11)
-    torch.onnx.export(generator, gen_dummy_input, gen_save_path, input_names=gen_input_names,
+    torch.onnx.export(generator_model, gen_dummy_input, gen_save_path, input_names=gen_input_names,
                       output_names=output_names, opset_version=11)

@@ -11,85 +11,121 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import matplotlib
-matplotlib.use('Agg')
-import os, sys
-sys.path.append('./first-order-model')
-import yaml
+import os
 from argparse import ArgumentParser
-from time import gmtime, strftime
 from shutil import copy
-from frames_dataset import FramesDataset
-from modules.generator import OcclusionAwareGenerator
-from modules.discriminator import MultiScaleDiscriminator
-from modules.keypoint_detector import KPDetector
+
 import torch
-from reconstruction import reconstruction
+from torch.utils.data import DataLoader
+import yaml
+import numpy as np
+import imageio
+from tqdm import tqdm
+
+from frames_dataset import FramesDataset
+
+
+def reconstruction():
+    with open(opt.config) as f:
+        config = yaml.safe_load(f)
+
+    pre_data = opt.pre_data
+    data_dir = opt.data_dir
+    png_dir = opt.png_dir
+
+    dataset = FramesDataset(is_train=False, **config['dataset_params'])
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1)
+
+    if not os.path.exists(png_dir):
+        os.makedirs(png_dir)
+
+    if not data_dir[-1] == '/':
+        data_dir += "/"
+
+    if not pre_data[-1] == '/':
+        pre_data += "/"
+        
+    kpdv_path = data_dir + "kpdv/"
+    kpdj_path = data_dir + "kpdj/"
+    kpsv_path = data_dir + "kpsv/"
+    kpsj_path = data_dir + "kpsj/"
+    source_path = pre_data + "source/"
+    driving_path = pre_data + "driving/"
+    out_path = data_dir + "out/"
+
+    cnt = 0
+    print("Reconstruction...")
+
+    for it, x in tqdm(enumerate(dataloader)):
+        if config['reconstruction_params']['num_videos'] is not None:
+            if it > config['reconstruction_params']['num_videos']:
+                break
+        num = x['video'].shape[2]
+        del x['video']
+        file_num_file = np.load(pre_data + "frame_num.npy")
+        file_num = file_num_file[it]
+        if num != file_num:
+            raise ValueError("{}:file num != num, num is {}, but file num is {}".format(it, num, file_num))
+        predictions = []
+        visualizations = []
+        for i in range(num):
+            out = dict()
+            kp_driving = dict()
+            kp_source = dict()
+            for j in range(5):
+                if j == 1:
+                    continue
+                outi_path = out_path + str(cnt) + "_" + str(j) + ".npy"
+                outi = np.load(outi_path)
+                if j == 0:
+                    out['mask'] = torch.from_numpy(outi).to(torch.float64)
+                elif j == 2:
+                    out['occlusion_map'] = torch.from_numpy(outi).to(torch.float64)
+                elif j == 3:
+                    out['deformed'] = torch.from_numpy(outi).to(torch.float64)
+                elif j == 4:
+                    out['prediction'] = torch.from_numpy(outi).to(torch.float64)
+
+            kp_driving_value_name = kpdv_path + str(cnt) + ".npy"
+            kp_driving_jac_name = kpdj_path + str(cnt) + ".npy"
+            kp_source_value_name = kpsv_path + str(cnt) + ".npy"
+            kp_source_jac_name = kpsj_path + str(cnt) + ".npy"
+            source_name = source_path + str(cnt) + ".npy"
+            driving_name = driving_path + str(cnt) + ".npy"
+
+            kp_driving_value = np.load(kp_driving_value_name)
+            kp_driving_jac = np.load(kp_driving_jac_name)
+            kp_source_value = np.load(kp_source_value_name)
+            kp_source_jac = np.load(kp_source_jac_name)
+            source = np.load(source_name)
+            driving = np.load(driving_name)
+
+            cnt += 1
+
+            kp_driving['value'] = torch.from_numpy(kp_driving_value).to(torch.float64)
+            kp_driving['jacobian'] = torch.from_numpy(kp_driving_jac).to(torch.float64)
+            kp_source['value'] = torch.from_numpy(kp_source_value).to(torch.float64)
+            kp_source['jacobian'] = torch.from_numpy(kp_source_jac).to(torch.float64)
+
+            out['kp_source'] = kp_source
+            out['kp_driving'] = kp_driving
+
+            source = torch.from_numpy(source).to(torch.float64)
+            driving = torch.from_numpy(driving).to(torch.float64)
+
+            predictions.append(np.transpose(out['prediction'].data.cpu().numpy(), [0, 2, 3, 1])[0])
+
+        predictions = np.concatenate(predictions, axis=1)
+        imageio.imsave(os.path.join(png_dir, x['name'][0] + '.png'), (255 * predictions).astype(np.uint8))
 
 
 if __name__ == "__main__":
-    if torch.cuda.is_available():
-        print("CUDA IS AVAILABLE √")
-    else:
-        print("CUDA IS NOT AVAILABLE ×")
-
-    if sys.version_info[0] < 3:
-        raise Exception("You must use Python 3 or higher. Recommended version is Python 3.7")
-
     parser = ArgumentParser()
     parser.add_argument("--config", required=True, help="path to config")
-
-    parser.add_argument("--log_dir", default='log', help="path to log into")
-    parser.add_argument("--checkpoint", default=None, help="path to checkpoint to restore")
+    parser.add_argument("--png_dir", default='checkpoint/reconstruction/png', help="path to png")
     parser.add_argument("--data_dir", default="infer_out/", help="root path of infer output")
     parser.add_argument("--pre_data", default="pre_data/", help="path to data preprocessed")
-    parser.add_argument("--data_type", default="npy", help="out put file type", choices=["npy", "bin"])
-    parser.add_argument("--device_ids", default="0", type=lambda x: list(map(int, x.split(','))),
-                        help="Names of the devices comma separated.")
-    parser.add_argument("--verbose", dest="verbose", action="store_true", help="Print model architecture")
-    parser.set_defaults(verbose=False)
 
     opt = parser.parse_args()
-    with open(opt.config) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
 
-    if opt.checkpoint is not None:
-        log_dir = os.path.join(*os.path.split(opt.checkpoint)[:-1])
-    else:
-        log_dir = os.path.join(opt.log_dir, os.path.basename(opt.config).split('.')[0])
-        log_dir += ' ' + strftime("%d_%m_%y_%H.%M.%S", gmtime())
-
-    generator = OcclusionAwareGenerator(**config['model_params']['generator_params'],
-                                        **config['model_params']['common_params'])
-
-    if torch.cuda.is_available():
-        generator.to(opt.device_ids[0])
-    if opt.verbose:
-        print(generator)
-
-    discriminator = MultiScaleDiscriminator(**config['model_params']['discriminator_params'],
-                                            **config['model_params']['common_params'])
-    if torch.cuda.is_available():
-        discriminator.to(opt.device_ids[0])
-    if opt.verbose:
-        print(discriminator)
-
-    kp_detector = KPDetector(**config['model_params']['kp_detector_params'],
-                             **config['model_params']['common_params'])
-
-    if torch.cuda.is_available():
-        kp_detector.to(opt.device_ids[0])
-
-    if opt.verbose:
-        print(kp_detector)
-
-    dataset = FramesDataset(is_train=False, **config['dataset_params'])
-
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    if not os.path.exists(os.path.join(log_dir, os.path.basename(opt.config))):
-        copy(opt.config, log_dir)
-
-    print("Reconstruction...")
-    reconstruction(config, generator, kp_detector, opt.checkpoint, log_dir, dataset, data_dir=opt.data_dir, pre_data=opt.pre_data)
-
+    reconstruction()

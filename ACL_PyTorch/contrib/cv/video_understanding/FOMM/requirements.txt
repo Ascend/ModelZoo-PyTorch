@@ -12,6 +12,7 @@ matplotlib
 networkx
 numpy
 onnx
+onnx-simplifier==0.4.10
 onnxruntime
 opencv-python
 pandas
