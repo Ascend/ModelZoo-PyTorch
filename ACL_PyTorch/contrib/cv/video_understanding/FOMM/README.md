@@ -290,7 +290,7 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 
    3. 精度验证。
 
-      调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+      运行下列命令验证模型精度。
 
       ```
       python3 FOMM_reconstruction.py --config first-order-model/config/taichi-256.yaml --png_dir checkpoint/reconstruction/png
@@ -332,6 +332,6 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | ------- | ------------ | ---------- | ---------- | --------------- |
-|  310P   | 1 | taichi | ADK：6.7975；<br />MKR：0.036 | kp detector：957.81<br />generator：7.75 |
+|  310P   | 1 | taichi | ADK：6.8；<br />MKR：0.036 | kp detector：957.81<br />generator：7.75 |
 
 该模型只支持batch size 1

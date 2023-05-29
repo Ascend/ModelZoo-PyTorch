@@ -4093,7 +4093,7 @@ CV-video_understanding
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/FOMM">  FOMM </a>
         </td>
         <td>taichi</td>
-        <td>6.7975</td>
+        <td>6.8</td>
         <td>0.036</td>
         <td></td>
         <td></td>
