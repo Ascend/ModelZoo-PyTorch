@@ -28,7 +28,7 @@ def l2norm(inputs):
     '''get L2 norm result'''
     sums = 0
     for data in inputs:
-        sums += data * data
+        sums += data ** 2
     return math.sqrt(sums)
 
 def dot(array1, array2):
