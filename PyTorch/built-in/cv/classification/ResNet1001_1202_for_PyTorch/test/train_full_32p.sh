@@ -88,7 +88,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 ./DistributedResnet/main_apex_npu.py \
+nohup python3 ./DistributedResnet/main_apex_npu.py \
         --arch ${arch} \
         --data ${data_path} \
         --addr=${master_ip} \

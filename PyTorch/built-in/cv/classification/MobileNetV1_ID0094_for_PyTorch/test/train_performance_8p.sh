@@ -100,7 +100,7 @@ do
     let a=RANK_ID*${corenum}/${RANK_SIZE}
     let b=RANK_ID+1
     let c=b*${corenum}/${RANK_SIZE}-1
-    nohup taskset -c $a-$c python3.7 ${cur_path}/main.py \
+    nohup taskset -c $a-$c python3 ${cur_path}/main.py \
         --arch=mobilenet \
         --data=${data_path} \
         --batch_size=${batch_size} \

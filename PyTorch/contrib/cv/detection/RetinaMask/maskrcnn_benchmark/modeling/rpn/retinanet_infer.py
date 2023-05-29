@@ -1,4 +1,20 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from maskrcnn_benchmark.modeling.box_coder import BoxCoder
 from maskrcnn_benchmark.structures.bounding_box import BoxList
@@ -36,10 +52,12 @@ def batched_nms(boxes, scores, max_output_size, iou_threshold, scores_threshold)
     num_boxes = scores.size(0)
     multi_bboxes = boxes.reshape(1, num_boxes, -1, 4)
     multi_scores = scores.reshape(1, num_boxes, num_classes)
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
-                                                                              scores_threshold,
-                                                                              iou_threshold, max_output_size,
-                                                                              max_output_size)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(),
+                                                                                  multi_scores.half(),
+                                                                                  scores_threshold,
+                                                                                  iou_threshold,
+                                                                                  max_output_size,
+                                                                                  max_output_size)
     nmsed_boxes = nmsed_boxes.reshape(nmsed_boxes.shape[1:])
     nmsed_scores = nmsed_scores.reshape(nmsed_scores.shape[1])
     nmsed_classes = nmsed_classes.reshape(nmsed_classes.shape[1])

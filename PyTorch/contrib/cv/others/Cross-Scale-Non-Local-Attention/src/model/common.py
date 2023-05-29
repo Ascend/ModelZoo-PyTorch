@@ -15,6 +15,8 @@
 import math
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -71,7 +73,7 @@ class ResBlock(nn.Module):
         for i in range(len(self.body)):
             res = self.body[i](res)
             if i==0:
-                res = res.npu_format_cast(0)
+                res = torch_npu.npu_format_cast(res, 0)
         res = res.mul(self.res_scale)
         res += x
 

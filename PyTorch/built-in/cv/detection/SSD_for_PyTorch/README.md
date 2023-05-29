@@ -57,8 +57,8 @@ SSD 是利用不同尺度的特征图进行目标的检测的模型。
   export MMCV_WITH_OPS=1
   export MAX_JOBS=8
   cd mmcv
-  python3.7 setup.py build_ext
-  python3.7 setup.py develop
+  python3 setup.py build_ext
+  python3 setup.py develop
   ```
 - 安装MMDET。
 

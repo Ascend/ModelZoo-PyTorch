@@ -96,7 +96,7 @@ fi
 
 #################启动训练脚本#################
 
-nohup python3.7 -u ../test.py  --arch ${arch_network} \
+nohup python3 -u ../test.py  --arch ${arch_network} \
                 --test_dataset_dir ${test_dataset_dir} \
                 --outputs_dir ${outputs_dir} \
                 --checkpoint_path ${checkpoint_path} \

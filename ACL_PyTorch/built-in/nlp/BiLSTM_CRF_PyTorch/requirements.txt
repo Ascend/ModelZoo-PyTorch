@@ -1,0 +1,6 @@
+torch==1.13.0
+numpy==1.24.2
+Pillow==9.3.0
+decorator==5.1.1
+sympy==1.11.1
+tqdm

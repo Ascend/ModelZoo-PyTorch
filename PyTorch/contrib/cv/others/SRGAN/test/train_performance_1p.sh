@@ -73,7 +73,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 echo "=============start training==================="
-python3.7 ./train1p.py \
+python3 ./train1p.py \
     --nproc=${workers} \
     --use_npu=True \
     --train_data_path=${data_path}/VOC2012/train \

@@ -93,12 +93,12 @@
     训练前需要进行数据集预处理，对原始数据集进行裁剪保存，请在源码包根目录下执行以下命令。
 
     ```
-    python3.7 ./dataset_make.py --input_zip_path=raw_data_path --dataset_path=real_traindata_path
+    python3 ./dataset_make.py --input_zip_path=raw_data_path --dataset_path=real_traindata_path
 
     # raw_data_path为下载的两个DIV2K压缩包所在的目录路径。
     # real_traindata_path为存储最终增强数据集的路径。
 
-    示例：python3.7 ./dataset_make.py --input_zip_path=/home/dataset/dataset_RCAN/DIV2K/ --dataset_path=/home/dataset/dataset_RCAN/dataset_DIV2K/
+    示例：python3 ./dataset_make.py --input_zip_path=/home/dataset/dataset_RCAN/DIV2K/ --dataset_path=/home/dataset/dataset_RCAN/dataset_DIV2K/
     ```
 
 # 开始训练

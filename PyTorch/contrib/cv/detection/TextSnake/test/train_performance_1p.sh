@@ -79,7 +79,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export HCCL_CONNECT_TIMEOUT=1800
 export WORLD_SIZE=$RANK_SIZE
-python3.7 -u train_textsnake_npu.py \
+python3 -u train_textsnake_npu.py \
     example \
     --dataset=${data_path} \
     --num_workers=${workers} \

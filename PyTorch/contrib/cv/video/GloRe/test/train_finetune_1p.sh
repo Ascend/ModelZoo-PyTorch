@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source ./test/env_npu.sh
 
-python3.7 train_kinetics.py \
+python3 train_kinetics.py \
 	--batch-size 4 \
 	--gpus 0 \
 	--dataset ucf101 \

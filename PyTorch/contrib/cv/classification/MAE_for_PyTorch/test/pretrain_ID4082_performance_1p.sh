@@ -81,7 +81,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 -u main_pretrain.py \
+nohup python3 -u main_pretrain.py \
              --data_path ${data_path} \
              --output_dir ${output_dir} \
              --model mae_vit_base_patch16 \

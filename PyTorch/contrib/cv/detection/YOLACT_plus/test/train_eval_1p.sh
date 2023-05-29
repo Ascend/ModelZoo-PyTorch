@@ -87,7 +87,7 @@ TRAIN_LOG_FILE_0=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVI
 ##################计算并获取精度################
 LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log
 
-python3.7 eval.py --trained_model=${pth_path} \
+python3 eval.py --trained_model=${pth_path} \
                   --data_path=${data_path} > $LOG_FILE 2>&1 &
 
 wait

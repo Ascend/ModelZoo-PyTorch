@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 from torch.autograd import Function
 from torch.nn.modules.utils import _pair, _single
@@ -74,7 +76,7 @@ class ModulatedDeformConv2dFunction(Function):
         offset_y = offset_ori[:, 1::2, :, :]
         offset = torch.cat([offset_y, offset_x], dim=1)
         offset_all = torch.cat([offset, mask], dim=1)
-        output, offset_out = torch.npu_deformable_conv2d(
+        output, offset_out = torch_npu.npu_deformable_conv2d(
             input, weight, offset_all, bias,
             kernel_size=[weight.shape[3], weight.shape[2]],
             stride=[1, 1, ctx.stride, ctx.stride],
@@ -92,7 +94,7 @@ class ModulatedDeformConv2dFunction(Function):
         input, offset, mask, weight, bias, offset_out = ctx.saved_tensors
         grad_offset = torch.zeros_like(offset)
         offset_all = torch.cat([offset, mask], dim=1)
-        grad_input, grad_weight, grad_offset_all, grad_bias = torch.npu_deformable_conv2dbk(
+        grad_input, grad_weight, grad_offset_all, grad_bias = torch_npu.npu_deformable_conv2dbk(
             input, grad_output, offset_out, weight, offset_all,
             kernel_size=[weight.shape[3], weight.shape[2]],
             stride=[1, 1, ctx.stride, ctx.stride],

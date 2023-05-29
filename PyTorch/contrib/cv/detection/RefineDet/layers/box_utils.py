@@ -15,7 +15,8 @@
 
 # -*- coding: utf-8 -*-
 import torch
-
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 
 def box_dtype_check(box):
@@ -42,7 +43,7 @@ def npu_ptiou(boxes1, boxes2):
     boxes1 = box_dtype_check(boxes1)
     boxes2 = box_dtype_check(boxes2)
 
-    out = torch.npu_ptiou(boxes2, boxes1)
+    out = torch_npu.npu_ptiou(boxes2, boxes1)
     return out
 
 
@@ -65,7 +66,7 @@ def npu_iou(boxes1, boxes2):
     boxes1 = box_dtype_check(boxes1)
     boxes2 = box_dtype_check(boxes2)
 
-    out = torch.npu_iou(boxes2, boxes1)
+    out = torch_npu.npu_iou(boxes2, boxes1)
     return out
 
 def point_form(boxes):

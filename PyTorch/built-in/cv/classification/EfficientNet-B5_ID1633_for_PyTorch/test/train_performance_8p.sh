@@ -105,7 +105,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 ${test_path_dir}/../examples/imagenet/main.py \
+nohup python3 ${test_path_dir}/../examples/imagenet/main.py \
         --data=${data_path} \
         --arch=efficientnet-b5 \
         --batch-size=${batch_size} \

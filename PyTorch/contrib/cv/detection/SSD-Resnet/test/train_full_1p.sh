@@ -83,7 +83,7 @@ else
 fi
 export HCCL_CONNECT_TIMEOUT=1800
 export WORLD_SIZE=$RANK_SIZE
-python3.7 ./train.py \
+python3 ./train.py \
     --data=${data_path} \
     --num-workers=${workers} \
     --lr=2.68e-3 \

@@ -21,6 +21,8 @@ import time
 import sys
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
@@ -62,7 +64,7 @@ def train_one_epoch(model, criterion, optimizer, train_dataloader, device, epoch
         labels = labels.to(device)
         
         preds = model(inputs)
-        preds = preds.npu_format_cast(2)
+        preds = torch_npu.npu_format_cast(preds, 2)
         loss = criterion(preds, labels)
         epoch_losses.update(loss.item(), len(inputs))
 
@@ -99,7 +101,7 @@ def evaluate(model, criterion, eval_dataloader, device):
         with torch.no_grad():
             preds = model(inputs).clamp(0.0, 1.0)
         
-        preds = preds.npu_format_cast(2)
+        preds = torch_npu.npu_format_cast(preds, 2)
         preds = preds.cpu().numpy()
         labels = labels.cpu().numpy()
         eval_psnr.update(peak_signal_noise_ratio(preds, labels), len(inputs))
@@ -128,7 +130,7 @@ def profiling(data_loader, model, criterion, optimizer, device, args):
 
     def update(model, inputs, labels, optimizer):
         output = model(inputs)
-        output = output.npu_format_cast(2)
+        output = torch_npu.npu_format_cast(output, 2)
         loss = criterion(output, labels)
         if args.apex:
             with amp.scale_loss(loss, optimizer) as scaled_loss:

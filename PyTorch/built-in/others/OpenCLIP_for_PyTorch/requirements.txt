@@ -1,0 +1,16 @@
+webdataset>=0.2.5
+pandas
+braceexpand
+transformers
+fsspec
+regex
+ftfy
+tqdm
+huggingface_hub
+sentencepiece
+protobuf<4
+timm
+sympy
+scipy
+decorator
+attrs

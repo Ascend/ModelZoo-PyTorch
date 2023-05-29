@@ -77,7 +77,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 train_1p.py \
+python3 train_1p.py \
 	--data ${data_path} \
 	--npu 0 \
 	--amp \

@@ -55,7 +55,7 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
     cd warp-ctc
     git checkout -b pytorch_bindings origin/pytorch_bindings
     mkdir build; cd build; cmake ..; make
-    cd ../pytorch_binding && python3.7 setup.py install
+    cd ../pytorch_binding && python3 setup.py install
     ```
 
 - 安装依赖。
@@ -78,7 +78,7 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
    ```shell
    cd data
-   python3.7 an4.py
+   python3 an4.py
    ```
 
 2. 或者您还可以自行下载数据集解压至源码包根目录下的 `data/` 文件夹下。

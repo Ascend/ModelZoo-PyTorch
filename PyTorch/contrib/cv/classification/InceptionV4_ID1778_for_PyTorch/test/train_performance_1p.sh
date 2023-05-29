@@ -99,7 +99,7 @@ worker=$(nproc)
 fi
 echo $worker
 
-taskset -c 0-42 python3.7 train_1p.py \
+taskset -c 0-42 python3 train_1p.py \
 --npu ${ASCEND_DEVICE_ID} \
 --amp \
     	--data ${data_path} \

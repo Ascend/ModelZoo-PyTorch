@@ -21,7 +21,8 @@ from typing import Dict
 
 import numpy as np
 import torch
-
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 class NpuLinear(torch.nn.Linear):
     def forward(self, input):
@@ -31,11 +32,11 @@ class NpuLinear(torch.nn.Linear):
         input_shape = input.size()
         if input.dim() == 3:
             input = input.view(-1, self.in_features)
-            return torch.npu_linear(input, self.weight, self.bias).view(input_shape[0],
-                                                                        input_shape[1],
-                                                                        self.out_features)
+            return torch_npu.npu_linear(input, self.weight, self.bias).view(input_shape[0],
+                                                                            input_shape[1],
+                                                                            self.out_features)
         elif input.dim() == 2:
-            return torch.npu_linear(input, self.weight, self.bias)
+            return torch_npu.npu_linear(input, self.weight, self.bias)
         else:
             raise RuntimeError('not support this dim')
 

@@ -59,7 +59,7 @@ WORKERS_NUM=$((KERNEL_NUM - 1))
 echo "WORKERS_NUM: $WORKERS_NUM"
 
 nohup taskset -c $PID_START-$PID_END \
-      python3.7 -u train_8p.py mot --exp_id mot17_dla34  \
+      python3 -u train_8p.py mot --exp_id mot17_dla34  \
             --load_model '../models/ctdet_coco_dla_2x.pth' \
             --data_cfg '../src/lib/cfg/mot17.json'   \
             --world_size 8 \

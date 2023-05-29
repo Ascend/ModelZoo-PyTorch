@@ -3,23 +3,23 @@
 currentDir=$(cd "$(dirname "$0")";pwd)
 echo 'Current directory is: '$currentDir
 
-N_NPUS=$(python3.7 -c """
+N_NPUS=$(python3 -c """
 from config import conf_1p as conf
 device_str = conf['ASCEND_VISIBLE_DEVICES']
 print(len(device_str) // 2 + 1)
 """
 )
-Device_id=$(python3.7 -c """
+Device_id=$(python3 -c """
 from config import conf_1p as conf
 print(conf['ASCEND_VISIBLE_DEVICES'])
 """
 )
-Total_iter=$(python3.7 -c """
+Total_iter=$(python3 -c """
 from config import conf_1p as conf
 print(conf['model']['total_iter'])
 """
 )
-Data_path=$(python3.7 -c """
+Data_path=$(python3 -c """
 from config import conf_1p as conf
 print(conf['data']['dataset_path'])
 """
@@ -112,7 +112,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 
-python3.7 -u train_main.py \
+python3 -u train_main.py \
     --data_path ${data_path} \
     --dist_backend='hccl' \
     --world_size=$N_NPUS \

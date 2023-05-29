@@ -35,10 +35,10 @@ bash test/train_full_1p.sh --data_path=/data/imagenet
 bash test/train_full_8p.sh --data_path=/data/imagenet
 
 # online inference demo 
-python3.7.5 demo.py
+python3 demo.py
 
 # To ONNX
-python3.7.5 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 # 多机多卡性能数据获取流程
      ```

@@ -95,7 +95,7 @@ then
     export LOCAL_RANK=$i
     PID_START=$((KERNEL_NUM * LOCAL_RANK))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 tools/train_net.py \
+    taskset -c $PID_START-$PID_END python3 tools/train_net.py \
             --config-file configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
             --num-gpus 8 \
             AMP 1 \
@@ -111,7 +111,7 @@ then
             SOLVER.BASE_LR 0.02 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     done
 else
-    nohup python3.7 tools/train_net.py \
+    nohup python3 tools/train_net.py \
             --config-file configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
             --device-ids 0 1 2 3 4 5 6 7 \
             --num-gpus 8 \

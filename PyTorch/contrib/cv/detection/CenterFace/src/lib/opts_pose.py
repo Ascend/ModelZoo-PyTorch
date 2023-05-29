@@ -61,7 +61,7 @@ class opts(object):
                              help='disable when the input size is not fixed.')
     self.parser.add_argument('--seed', type=int, default=317,
                              help='random seed') # from CornerNet
-    self.parser.add_argument('--local_rank', type=int, default=0,
+    self.parser.add_argument('--local_rank', '--local-rank', type=int, default=0,
                              help='the current process id')
     self.parser.add_argument('--port', type=str, default='44444',
                              help='port')
@@ -123,6 +123,10 @@ class opts(object):
     self.parser.add_argument('--trainval', action='store_true',
                              help='include validation in training and '
                                   'test on test set')
+    self.parser.add_argument('--hf32', action='store_true',
+                             help='enable_hi_float_32_execution')
+    self.parser.add_argument('--fp32', action='store_true',
+                             help='disble_hi_float_32_execution')
     self.parser.add_argument(
         "--pretrained",
         dest="pretrained",

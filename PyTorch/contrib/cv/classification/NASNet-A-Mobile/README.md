@@ -28,11 +28,11 @@ bash scripts/eval_8p.sh
 
 # O2 online inference demo
 source scripts/env_npu.sh
-python3.7.5 demo.py
+python3 demo.py
 
 # O2 To ONNX
 source scripts/set_npu_env.sh
-python3.7.5 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 # NasNet-A-Mobile training result
 

@@ -33,7 +33,7 @@ bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=real_pre_train_
 bash test/train_finetune_1p.sh --data_path=real_data_path --pth_path=real_pre_train_model_path --num_classes=num_classes
 
 # online inference demo 
-python3.7 demo.py
+python3 demo.py
 ```
 
 ### PointNet training result

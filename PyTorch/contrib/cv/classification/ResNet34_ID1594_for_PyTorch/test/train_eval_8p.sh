@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./main.py \
+python3 ./main.py \
     ${data_path} \
 	  --evaluate \
 	  --resume ${resume} \

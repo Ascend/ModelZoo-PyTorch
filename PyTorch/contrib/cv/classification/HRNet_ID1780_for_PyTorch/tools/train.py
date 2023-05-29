@@ -193,11 +193,6 @@ def main():
 
     loc = 'npu:{}'.format(device_id)
     torch.npu.set_device(loc)
-    option = {}
-    # 二进制下BN算子精度不达标，加入黑名单走静态编译
-    option["NPU_FUZZY_COMPILE_BLACKLIST"] = "BNTrainingReduce,BNTrainingUpdate,BNTrainingReduceGrad,BNTrainingUpdateGrad"
-    torch.npu.set_option(option)
-    
     model = model.npu()
   
     # define loss function (criterion) and optimizer

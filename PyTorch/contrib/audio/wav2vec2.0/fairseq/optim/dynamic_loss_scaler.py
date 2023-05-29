@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 
 class DynamicLossScaler(object):
@@ -43,7 +45,7 @@ class DynamicLossScaler(object):
 
     def get_npu_overflow_flag(self):
         float_status = torch.zeros(8).npu()
-        result = torch.npu_get_float_status(float_status)
+        result = torch_npu.npu_get_float_status(float_status)
         if float_status.cpu()[0] != 0:
             return True
         else:

@@ -79,7 +79,7 @@ source ${test_path_dir}/env_npu.sh
 #修改参数
 sed -i "s|pass|break|g" main.py
 
-python3.7 ./main.py \
+python3 ./main.py \
         --data ${data_path} \
         --npu ${ASCEND_DEVICE_ID} \
 	      -a googlenet \

@@ -53,7 +53,7 @@ fi
 #数据集处理
 ln -nsf $data_path .
 
-nohup python3.7 -u test.py \
+nohup python3 -u test.py \
        configs/tusimple.py \
        --test_model model_par/ep099.pth \
        --test_work_dir ./tmp > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

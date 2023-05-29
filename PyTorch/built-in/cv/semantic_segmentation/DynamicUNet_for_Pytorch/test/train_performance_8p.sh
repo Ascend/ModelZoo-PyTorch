@@ -10,6 +10,9 @@ data_path=""
 # 预训练模型路径
 more_path1=""
 
+#精度参数
+precision_mode="allow_mix_precision"
+
 #参数校验，不需要修改
 for para in $*
 do
@@ -19,6 +22,12 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -33,6 +42,12 @@ if [[ $more_path1 == "" ]];then
 else
 	pretrained_model=${more_path1}/resnet50-19c8e357.pth 
 fi 
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+   prec=""
+else
+   prec="--amp"
+fi
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -69,14 +84,15 @@ fi
 export PYTHONPATH=./awesome-semantic-segmentation-pytorch:$PYTHONPATH
 
 NGPUS=8
-nohup python3.7 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
---model dynamicunet --amp \
+nohup python3 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
+--model dynamicunet ${prec} \
 --dataset pascal_voc --dataset-path ${data_path} \
 --lr 0.0001 --epochs 50 --worker 8 \
 --log-iter 1 --val-epoch 5 --perf-only \
 --pretrained ${pretrained_model} \
 --batch-size ${batch_size} \
->${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+--precision_mode ${precision_mode} \
+${hf32} ${fp32} >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -99,7 +115,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+fi
 
 ##获取性能数据，不需要修改
 #吞吐量

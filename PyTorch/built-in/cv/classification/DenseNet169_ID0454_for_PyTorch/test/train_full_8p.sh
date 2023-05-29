@@ -81,7 +81,7 @@ do
     fi
 
 
-    nohup python3.7 train.py  \
+    nohup python3 train.py  \
         --model densenet169 \
         --epochs ${epochs} \
         --data-path=$data_path \

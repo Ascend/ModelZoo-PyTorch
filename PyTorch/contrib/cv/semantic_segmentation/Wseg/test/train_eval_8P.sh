@@ -129,7 +129,7 @@ SAVE_DIR=${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_8P_${ASCEND_DEVICE_ID
 LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_8P_${ASCEND_DEVICE_ID}.log
 ##echo 1
 #
-python3.7 infer_val.py --dataset $DS \
+python3 infer_val.py --dataset $DS \
                          --cfg $CONFIG \
                          --exp $EXP \
                          --run $RUN_ID \
@@ -149,7 +149,7 @@ LISTNAME=`basename $FILELIST .txt`
 # without CRF
 data_path_len=${#data_path}
 data_path=${data_path:1:data_path_len-2}
-python3.7 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
+python3 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
 
 wait
 

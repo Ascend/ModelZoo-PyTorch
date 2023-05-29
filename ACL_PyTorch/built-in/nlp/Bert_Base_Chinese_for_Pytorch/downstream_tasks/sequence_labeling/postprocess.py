@@ -23,21 +23,19 @@ from seqeval.metrics import classification_report
 from seqeval.scheme import IOB2
 from bert4torch.layers import CRF
 import torch.nn as nn
-from bert4torch.models import build_transformer_model, BaseModel
 
 
-class Model(BaseModel):
-    def __init__(self, args):
-        super().__init__()
-        self.bert = build_transformer_model(config_path=args.config_path, checkpoint_path=None, segment_vocab_size=0)
-        # embedding_dims:768, len_categories: 7
-        self.fc = nn.Linear(768, 7)  # 包含首尾
-        self.crf = CRF(7)
-
-
-def load_bin_file(path, shape, dtype="float32"):
-    data = np.fromfile(path, dtype).reshape(shape)
-    return torch.tensor(data)
+def pad_data(path, seq=256):
+    data = np.load(path)
+    if len(data.shape) == 1:
+        return np.pad(data, ((0, seq-data.shape[0])),
+                      "constant", constant_values=(0))
+    elif len(data.shape) == 2:
+        return np.pad(data, ((0, 0), (0, seq-data.shape[1])),
+                      "constant", constant_values=(0))
+    else:
+        return np.pad(data, ((0, 0), (0, seq-data.shape[1]), (0, 0)),
+                      "constant", constant_values=(0))
 
 
 def evaluate(result_dir, label_dir):
@@ -47,16 +45,18 @@ def evaluate(result_dir, label_dir):
     data_num = len(os.listdir(label_dir))
     for data_idx in tqdm(range(data_num)):
         emission_score_path = os.path.join(
-            result_dir, "{}_0.bin".format(data_idx))
+            result_dir, "{}_0.npy".format(data_idx))
         attention_mask_path = os.path.join(
-            result_dir, "{}_1.bin".format(data_idx))
+            result_dir, "{}_1.npy".format(data_idx))
         label_path = os.path.join(
-            label_dir, "{}.bin".format(data_idx))
-        labels = load_bin_file(label_path, [1, 256], dtype="int64")
-        emission_score = torch.Tensor(
-            load_bin_file(emission_score_path, [1, 256, 7]))
-        attention_mask = torch.Tensor(
-            load_bin_file(attention_mask_path, [1, 256], dtype="int64"))
+            label_dir, "{}.npy".format(data_idx))
+        labels = torch.Tensor(pad_data(label_path))
+        # mask last data
+        data_mask = labels[:, 0] >= 0
+        labels = labels[data_mask]
+        emission_score = torch.Tensor(pad_data(emission_score_path))[data_mask]
+        attention_mask = torch.Tensor(pad_data(attention_mask_path))[data_mask]
+
         scores = crf.decode(emission_score, attention_mask)
         true_labels += [[categories_id2label[int(l)] for
                          l in label if l != -100] for label in labels]
@@ -113,7 +113,7 @@ def trans_entity2tuple(scores):
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='SwinTransformer onnx export.')
+    parser = argparse.ArgumentParser(description='Bert_Base_Chinese postprocess for sequence labeling task.')
     parser.add_argument('-i', '--result_dir', type=str, required=True,
                         help='result dir for prediction results')
     parser.add_argument('-o', '--out_path', type=str, required=True,
@@ -134,9 +134,10 @@ if __name__ == '__main__':
     args = parse_arguments()
     categories = ['O', 'B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG']
     categories_id2label = {i: k for i, k in enumerate(categories)}
-    model = Model(args).to("cpu")
-    model.load_weights(args.ckpt_path, strict=False)
-    crf = model.crf
+    crf_transitions = [torch.Tensor(np.load(".crf.npy"))]
+    crf_se_transitions = [torch.Tensor(_) for _ in np.load(".crf_se.npy")]
+    crf = CRF(len(categories),
+              init_transitions=crf_transitions + crf_se_transitions)
 
     seqeval_result, f1_score, precision, recall, \
         f2_score, precision2, recall2 = evaluate(args.result_dir, args.label_dir)

@@ -148,20 +148,20 @@
          python3 mmsegmentation/tools/pytorch2onnx.py \
              mmsegmentation/configs/pspnet/pspnet_r50-d8_512x512_20k_voc12aug.py \
              --checkpoint pspnet_r50-d8_512x512_20k_voc12aug_20200617_101958-ed5dfbd9.pth \
-             --output-file pspnet_dybs.onnx \
+             --output-file pspnet_bs1.onnx \
              --shape 500 500  
          ```
 
          命令使用及参数说明可通过`python3 mmsegmentation/tools/pytorch2onnx.py -h`查看。
 
-         获得pspnet_dybs.onnx文件。
+         获得pspnet_bs1.onnx文件。
 
       2. 优化ONNX文件。
          
          使用onnx-simplifier工具简化onnx模型，onnx-simplifier工具说明参考[官方链接](https://github.com/daquexian/onnx-simplifier)。
 
          ```
-         onnxsim pspnet_dybs.onnx pspnet_sim_bs${batchsize}.onnx --overwrite-input-shape "input:${batchsize},3,500,500"
+         onnxsim pspnet_bs1.onnx pspnet_sim_bs${batchsize}.onnx --overwrite-input-shape "input:${batchsize},3,500,500"
          ```
 
          获得`pspnet_sim_bs${batchsize}.onnx`文件，${batchsize}支持的值为：1，4，8，16，32，64。

@@ -18,7 +18,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-nohup python3.7.5 -u train.py \
+nohup python3 -u train.py \
     --fresume "RepVGG-A0_hello_best.pth.tar" \
     --finetune 1 \
     --fclasses 1000 \

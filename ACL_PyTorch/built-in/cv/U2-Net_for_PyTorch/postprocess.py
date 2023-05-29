@@ -78,4 +78,5 @@ if __name__ == '__main__':
     bin_files = os.listdir(out_dir)
     os.makedirs(save_dir_path, exist_ok=True)
     img_name_list = glob.glob(image_dir + os.sep + '*')
+    img_name_list.sort()
     postprocess(img_name_list, out_dir, len(bin_files), save_dir_path)

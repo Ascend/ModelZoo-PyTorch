@@ -126,7 +126,7 @@ PraNet是一个新的网络结构，用于从结肠镜图像中自动分割息�
     bash test/train_finetune_1p.sh --train_path=./data/TrainDataset
 
     # online inference demo 
-    python3.7.5 demo.py
+    python3 demo.py
     ```
     --train_path以用户数据集实际存放路径为准。
 

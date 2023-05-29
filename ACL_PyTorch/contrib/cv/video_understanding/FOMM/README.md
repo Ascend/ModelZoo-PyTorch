@@ -32,7 +32,7 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 
   ```
   url=https://github.com/AliaksandrSiarohin/first-order-model.git
-  commit_id=0b04120d53abadf50cc283349e1bb8c6ae693ebc
+  commit_id=3d152de07e51dcd00358475c0defbf8f85b2ab3e
   ```
 
 
@@ -96,10 +96,11 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
    ```
    git clone https://github.com/AliaksandrSiarohin/first-order-model.git
    cd first-order-model
-   git reset 0b04120d53abadf50cc283349e1bb8c6ae693ebc --hard
+   git reset 3d152de07e51dcd00358475c0defbf8f85b2ab3e --hard
    mv ../fomm.patch ./
    git apply fomm.patch
    cd ..
+   export PYTHONPATH=./first-order-model:$PYTHONPATH
    ```
 
 2. 安装依赖。
@@ -133,9 +134,9 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 
 1. 获取原始数据集。
 
-   <u>***写清楚原始数据集名称、下载链接、所用到的文件、存放路径、目录结构***</u>。
+   本模型支持taichi验证集。下载方式参考[开源仓](https://github.com/AliaksandrSiarohin/first-order-model/tree/master/data/taichi-loading)。
 
-   本模型支持taichi验证集。上传数据集到源码包路径下。目录结构如下：
+   上传数据集到源码包路径下。目录结构如下：
 
    ```
    data
@@ -149,22 +150,16 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
    ```
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
-   1. 获取权重文件。
 
-      [FOMM权重下载地址](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FOMM/PTH/taichi-cpk.pth.tar)
-
-   2. 执行FOMM_preprocess.py脚本，完成预处理。
-      ```shell
-      mkdir checkpoint
-      mv taichi-cpk.pth.tar ./checkpoint/
-      python3 FOMM_preprocess.py --config first-order-model/config/taichi-256.yaml --checkpoint checkpoint/taichi-cpk.pth.tar --data_type npy --out_dir pre_data/
-      ```
-      - 参数说明：
-         - config：配置文件路径。
-         - checkpoint：权重文件路径。
-         - data_type：输出数据类型。
-         - out_dir：预处理输出数据存储路径。
-      运行成功后在主目录下生成pre_data文件夹。
+   执行FOMM_preprocess.py脚本，完成预处理。
+   ```shell
+   python3 FOMM_preprocess.py --config first-order-model/config/taichi-256.yaml --data_type npy --out_dir pre_data/
+   ```
+   - 参数说明：
+      - config：配置文件路径。
+      - data_type：输出数据类型。
+      - out_dir：预处理输出数据存储路径。
+   运行成功后在主目录下生成pre_data文件夹。
 
 
 
@@ -174,7 +169,15 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
-   1. 导出onnx文件。
+   1. 获取权重文件。
+
+      ```shell
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FOMM/PTH/taichi-cpk.pth.tar
+      mkdir checkpoint
+      mv taichi-cpk.pth.tar ./checkpoint/
+      ```
+
+   2. 导出onnx文件。
 
       1. 使用FOMM_pth2onnx.py导出onnx文件。
 
@@ -200,7 +203,7 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
 
          获得taichi-gen-bs1_new.onnx文件。
 
-   2. 使用ATC工具将ONNX模型转OM模型。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
@@ -232,11 +235,11 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
          atc --framework=5 --model=taichi-gen-bs1_new.onnx \
             --output=taichi-gen-bs1 --input_format=NCHW \
             --input_shape="source_imgs:1,3,256,256;kp_driving_value:1,10,2;kp_driving_jac:1,10,2,2;kp_source_value:1,10,2;kp_source_jac:1,10,2,2" \
-            --log=debug --soc_version=Ascend${chip_name} \
+            --log=error --soc_version=Ascend${chip_name} \
             --buffer_optimize=off_optimize
          atc --framework=5 --model=taichi-kp-bs1.onnx \
             --output=taichi-kp-bs1 --input_format=NCHW \
-            --input_shape="input:1,3,256,256" --log=debug \
+            --input_shape="input:1,3,256,256" --log=error \
             --soc_version=Ascend${chip_name} --buffer_optimize=off_optimize
          ```
 
@@ -290,7 +293,7 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
 
       ```
-      python3 FOMM_reconstruction.py --config first-order-model/config/taichi-256.yaml --checkpoint checkpoint/taichi-cpk.pth.tar --data_type npy
+      python3 FOMM_reconstruction.py --config first-order-model/config/taichi-256.yaml --png_dir checkpoint/reconstruction/png
       cd pose-evaluation/
       python3 extract.py --in_folder ../data/taichi/test/ --out_file pose_gt.pkl --is_video --type body_pose --image_shape 256,256
       python3 extract.py --in_folder ../checkpoint/reconstruction/png --out_file pose_gen.pkl --is_video --type body_pose --image_shape 256,256
@@ -300,14 +303,13 @@ FOMM模型最早是Aliaksandr Siarohin等人在发表的《First Order Motion Mo
       - 参数说明：
          - FOMM_reconstruction.py
             - config：配置文件路径。
-            - checkpoint：权重文件保存路径。
-            - data_type：数据格式。
+            - png_dir：图片信息保存路径。
             - data_dir：推理输出的数据保存的目录，对应前面推理命令中的--output参数，默认为infer_out。
             - pre_data：预处理后数据保存的目录，对应前面预处理命令中的--out_dir参数，默认为pre_data。
          - extract.py
-            - in_folder：输入的视频或图片的保存目录；
-            - out_file：输出的.pkl文件的文件名；
-            - type：使用的函数的类型；
+            - in_folder：输入的视频或图片的保存目录。
+            - out_file：输出的.pkl文件的文件名。
+            - type：使用的函数的类型。
             - image_shape：帧图片的shape。
 
    4. 性能验证。

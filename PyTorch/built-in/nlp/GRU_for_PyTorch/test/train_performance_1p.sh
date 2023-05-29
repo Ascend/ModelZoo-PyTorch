@@ -112,7 +112,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-taskset -c 0-32 nohup python3.7 ${cur_path}/gru_1p.py \
+taskset -c 0-32 nohup python3 ${cur_path}/gru_1p.py \
     --data-dir $data_path \
     --workers 12 \
     --dist-url 'tcp://127.0.0.1:50000' \

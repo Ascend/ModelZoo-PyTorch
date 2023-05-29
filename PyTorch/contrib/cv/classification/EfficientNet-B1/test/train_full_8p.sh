@@ -62,7 +62,7 @@ do
     KERNEL_NUM=$(($(nproc)/8))
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 ./tools/train_net.py \
+    taskset -c $PID_START-$PID_END python3 ./tools/train_net.py \
         --device npu \
         --cfg ./configs/dds_baselines/effnet/EN-B1_dds_8npu_full.yaml \
         --rank_id $RANK_ID \

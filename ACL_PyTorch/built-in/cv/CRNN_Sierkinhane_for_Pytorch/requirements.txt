@@ -1,0 +1,9 @@
+torch==1.13.1
+pyyaml
+easydict
+onnx
+opencv-python==4.7.0.72
+tqdm
+decorator
+scipy
+attrs

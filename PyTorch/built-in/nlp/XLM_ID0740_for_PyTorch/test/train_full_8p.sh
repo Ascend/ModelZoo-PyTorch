@@ -157,7 +157,7 @@ do
     then
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END nohup python3.7 ${cur_path}/train.py --exp_name xlm_en_zh \
+        taskset -c $PID_START-$PID_END nohup python3 ${cur_path}/train.py --exp_name xlm_en_zh \
             --dump_path ./dumped        \
             --data_path $data_path/50k      \
             --lgs 'en-zh'          \
@@ -182,7 +182,7 @@ do
             --local_rank $RANK > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${i}.log 2>&1 &
     let RANK++
     else
-        nohup python3.7 ${cur_path}/train.py --exp_name xlm_en_zh \
+        nohup python3 ${cur_path}/train.py --exp_name xlm_en_zh \
             --dump_path ./dumped        \
             --data_path $data_path/50k      \
             --lgs 'en-zh'          \

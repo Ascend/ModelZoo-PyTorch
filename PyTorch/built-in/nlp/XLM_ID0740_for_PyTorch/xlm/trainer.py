@@ -31,7 +31,7 @@ if torch.__version__ >= "1.8":
 from torch import nn
 from torch.nn import functional as F
 #from torch.nn.utils import clip_grad_norm_
-from torch._six import inf
+from math import inf
 import apex
 
 from .optim import get_optimizer
@@ -190,8 +190,8 @@ class Trainer(object):
         assert params.amp == 0 and params.fp16 is False or params.amp in [1, 2, 3] and params.fp16 is True
         opt_names = self.optimizers.keys()
         models = [getattr(self, name) for name in self.MODEL_NAMES]
-        apex.amp.register_half_function(torch, "npu_linear")
-        apex.amp.register_half_function(torch, "fast_gelu")
+        apex.amp.register_half_function(torch_npu, "npu_linear")
+        apex.amp.register_half_function(torch_npu, "fast_gelu")
         models, optimizers = apex.amp.initialize(
             models,
             [self.optimizers[k] for k in opt_names],

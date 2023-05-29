@@ -68,7 +68,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 main_8p.py \
+python3 main_8p.py \
 	--dir_data ${data_path} \
 	--save ${output_dir}/npu_8p \
 	--seed 49 \

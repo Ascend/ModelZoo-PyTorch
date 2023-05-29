@@ -66,7 +66,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u train.py \
+python3 -u train.py \
     --resume-from . \
     --cfg-options total_epochs=1 \
     --config_name $config \

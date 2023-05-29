@@ -78,7 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u main.py \
+python3 -u main.py \
     --data=${data_path} \
     --workers 24 \
     --epoch=${train_epochs} \

@@ -30,6 +30,8 @@ from io import open
 import numpy as np
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.utils import checkpoint
@@ -75,7 +77,7 @@ class MatmulApply(torch.autograd.Function):
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 def Matmul_transpose(tensor1, tensor2):
     return MatmulApply.apply(tensor1, tensor2)
@@ -150,7 +152,7 @@ def bias_gelu(bias, x):
 # used specifically for training since torch.nn.functional.gelu breaks ONNX export
 def bias_gelu_training(bias, x):
     #return torch.nn.functional.gelu(x) # Breaks ONNX export
-    return torch.fast_gelu(x)
+    return torch_npu.fast_gelu(x)
 
 def bias_tanh(bias, x):
     return torch.tanh(x)
@@ -189,7 +191,7 @@ class LinearActivation(Module):
             self.register_parameter('bias', None)
         self.reset_parameters()
         self.weight.data = self.weight.data.npu()
-        self.weight.data = self.weight.data.npu_format_cast(29)
+        self.weight.data = torch_npu.npu_format_cast(self.weight.data, 29)
 
     def reset_parameters(self):
         init.kaiming_uniform_(self.weight, a=math.sqrt(5))
@@ -200,9 +202,9 @@ class LinearActivation(Module):
 
     def forward(self, input):
         if not self.bias is None:
-            return self.biased_act_fn(self.bias, torch.npu_linear(input, self.weight, self.bias))
+            return self.biased_act_fn(self.bias, torch_npu.npu_linear(input, self.weight, self.bias))
         else:
-            return self.act_fn(torch.npu_linear(input, self.weight, self.bias))
+            return self.act_fn(torch_npu.npu_linear(input, self.weight, self.bias))
 
     def extra_repr(self):
         return 'in_features={}, out_features={}, bias={}'.format(
@@ -386,7 +388,7 @@ class BertSelfAttention(nn.Module):
 
     def transpose_for_qkv(self, x):
         new_x_shape = (self.bs, x.size()[0] // self.bs) + (self.num_attention_heads, self.attention_head_size)
-        return x.npu_confusion_transpose((0, 2, 1, 3), new_x_shape, False)
+        return torch_npu.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
 
     
     def fuse_add_softmax_dropout(self, attn_mask, attn_scores, attn_head_size, p):
@@ -430,7 +432,7 @@ class BertSelfAttention(nn.Module):
                                                         self.attention_head_size, self.attention_probs_dropout_prob)
 
         context_layer = torch.matmul(attention_probs, value_layer)
-        context_layer = context_layer.npu_confusion_transpose((0, 2, 1, 3), (
+        context_layer = torch_npu.npu_confusion_transpose(context_layer, (0, 2, 1, 3), (
         context_layer.size()[0] * context_layer.size()[2], self.all_head_size), True)
         return context_layer
 
@@ -482,7 +484,7 @@ class BertOutput(nn.Module):
         hidden_states = self.dense(hidden_states)
         hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
-        return hidden_states.npu_format_cast(29)
+        return torch_npu.npu_format_cast(hidden_states, 29)
 
 
 class BertLayer(nn.Module):
@@ -580,7 +582,7 @@ class BertLMPredictionHead(nn.Module):
         self.decoder.weight = bert_model_embedding_weights
         self.bias = nn.Parameter(torch.zeros(bert_model_embedding_weights.size(0)))
         self.decoder.weight.data = self.decoder.weight.data.npu()
-        self.decoder.weight.data = self.decoder.weight.data.npu_format_cast(29)
+        self.decoder.weight.data = torch_npu.npu_format_cast(self.decoder.weight.data, 29)
 
     def forward(self, hidden_states):
         hidden_states = self.transform(hidden_states)
@@ -617,7 +619,7 @@ class BertPreTrainingHeads(nn.Module):
     def forward(self, sequence_output, pooled_output):
         prediction_scores = self.predictions(sequence_output)
         seq_relationship_score = self.seq_relationship(pooled_output)
-        return prediction_scores.npu_format_cast(2), seq_relationship_score
+        return torch_npu.npu_format_cast(prediction_scores, 2), seq_relationship_score
 
 
 class BertPreTrainedModel(nn.Module):
@@ -852,10 +854,12 @@ class BertModel(BertPreTrainedModel):
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
         bs, from_seq_len = attention_mask.size()
-        extended_attention_mask = extended_attention_mask.expand(bs, self.num_attention_heads, from_seq_len,
-                                                                 from_seq_len).clone().npu_format_cast(29)
+        extended_attention_mask = torch_npu.npu_format_cast(
+            extended_attention_mask.expand(bs, self.num_attention_heads, from_seq_len, from_seq_len).clone(),
+            29
+        )
         embedding_output = self.embeddings(input_ids, token_type_ids)
-        embedding_output = embedding_output.view(-1, embedding_output.size()[-1]).clone().npu_format_cast(29)
+        embedding_output = torch_npu.npu_format_cast(embedding_output.view(-1, embedding_output.size()[-1]).clone(), 29)
         encoded_layers = self.encoder(embedding_output, extended_attention_mask)
         sequence_output = encoded_layers[-1]
         pooled_output = self.pooler(sequence_output)

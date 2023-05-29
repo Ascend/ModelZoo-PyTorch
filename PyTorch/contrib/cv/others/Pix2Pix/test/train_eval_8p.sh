@@ -73,7 +73,7 @@ fi
 checkpoints_dir=${pth_path%/*}
 name=${pth_path##*/}
 # python test.py --dataroot ./datasets/facades/ --direction BtoA --model pix2pix --name facades_pix2pix_8p_bs1_lr0002_ep200_OnlyNpuFusedAdam --norm instance 
-python3.7 ./test.py \
+python3 ./test.py \
     --dataroot ${data_path} \
     --checkpoints_dir ${checkpoints_dir} \
     --name ${name} \

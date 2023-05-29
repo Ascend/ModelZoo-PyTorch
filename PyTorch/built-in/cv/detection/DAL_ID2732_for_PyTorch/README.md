@@ -69,7 +69,7 @@ DAL模型是一个高效的目标检测模型，它提出了匹配度度量来�
   # 安装torch-warmup-lr
   git clone https://github.com/lehduong/torch-warmup-lr.git
   cd torch-warmup-lr
-  python3.7 setup.py install
+  python3 setup.py install
   cd ..
   ```
 

@@ -1,7 +1,7 @@
 # npu
 source scripts/set_npu_env.sh
 nohup \
-python3.7 -u train_ssd.py \
+python3 -u train_ssd.py \
   --dataset_type voc  \
   --data_path /opt/npu/voc \
   --net mb2-ssd-lite \

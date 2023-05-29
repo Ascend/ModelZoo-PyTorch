@@ -130,7 +130,7 @@ fi
 # 多机多卡
 export HCCL_IF_IP=$local_addr
 
-nohup python3.7 ${test_path_dir}/../examples/imagenet/main.py \
+nohup python3 ${test_path_dir}/../examples/imagenet/main.py \
         --data=${data_path} \
         --arch=efficientnet-b2 \
         --batch-size=${batch_size} \

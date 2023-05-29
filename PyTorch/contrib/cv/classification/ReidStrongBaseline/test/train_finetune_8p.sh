@@ -15,7 +15,7 @@ if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
 fi
-python3.7 tools/finetune.py \
+python3 tools/finetune.py \
 	--config_file='configs/softmax_triplet_with_center.yml' \
 	--npus=8 \
 	--loss_scale="64.0" \

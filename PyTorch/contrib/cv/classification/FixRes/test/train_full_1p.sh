@@ -78,7 +78,7 @@ fi
 
 rm -rf train_full_1p.log
 
-nohup python3.7 main_resnet50_scratch.py \
+nohup python3 main_resnet50_scratch.py \
 	--imnet_path ${data_path} \
 	--epochs ${train_epochs} \
 	--num_tasks 1 \

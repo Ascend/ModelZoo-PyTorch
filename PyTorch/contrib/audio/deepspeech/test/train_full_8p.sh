@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -m torchelastic.distributed.launch \
+python3 -m torchelastic.distributed.launch \
   --standalone \
   --nnodes=1 \
   --nproc_per_node=8 \

@@ -52,7 +52,7 @@ MMOCR是基于PyTorch和MMDetection的开源工具包，支持众多OCR相关模
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   
   pip install mmcv-full -f http://download.openmmlab.com/mmcv/dist/npu/torch1.8.0/index.html
-  pip install mmdet
+  pip install mmdet==2.28.0
   ```
   > **说明：** 
   >只需执行一条对应的PyTorch版本requirements.txt安装命令。

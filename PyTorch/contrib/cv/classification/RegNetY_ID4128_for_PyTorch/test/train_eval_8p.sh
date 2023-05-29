@@ -82,7 +82,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7.5 -u imagenet_fast.py \
+taskset -c $PID_START-$PID_END python3 -u imagenet_fast.py \
   --data ${data_path} \
   --epochs ${train_epochs} \
   --cos \

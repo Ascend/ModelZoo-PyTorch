@@ -111,11 +111,11 @@ do
     let p_start=0+24*i
     let p_end=23+24*i
     TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_8P_${ASCEND_DEVICE_ID}_$i.log
-    taskset -c $p_start-$p_end python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i --workers ${workers} > $TRAIN_LOG_FILE 2>&1 &
+    taskset -c $p_start-$p_end python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i --workers ${workers} > $TRAIN_LOG_FILE 2>&1 &
     echo "LOG: $TRAIN_LOG_FILE"
     else
         workers=8
-        python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i --workers ${workers} > $TRAIN_LOG_FILE 2>&1 &
+        python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i --workers ${workers} > $TRAIN_LOG_FILE 2>&1 &
     fi
 done
 

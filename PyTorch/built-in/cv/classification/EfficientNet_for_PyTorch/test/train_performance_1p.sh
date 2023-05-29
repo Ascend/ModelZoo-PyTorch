@@ -111,14 +111,14 @@ fi
 wait
 
 #修改参数
-sed -i "s|pass|break|g" ${cur_path}/examples/imagenet/main.py
+sed -i "100, $ s|pass|break|g" ${cur_path}/examples/imagenet/main.py
 wait
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
 #训练
-nohup python3.7 ${cur_path}/examples/imagenet/main.py \
+nohup python3 ${cur_path}/examples/imagenet/main.py \
     --data=$data_path \
     --arch=efficientnet-b0 \
     --batch-size=$batch_size \
@@ -140,7 +140,7 @@ e2e_time=$(( $end_time - $start_time ))
 
 #参数改回
 #修改参数
-sed -i "s|break|pass|g" ${cur_path}/examples/imagenet/main.py
+sed -i "100, $ s|break|pass|g" ${cur_path}/examples/imagenet/main.py
 wait
 
 #结果打印，不需要修改

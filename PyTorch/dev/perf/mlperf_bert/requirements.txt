@@ -1,0 +1,7 @@
+# progress bars in model download and training scripts
+boto3==1.14.0
+h5py==2.10.0
+nltk==3.5
+requests==2.23.0
+six==1.15.0
+parameterized

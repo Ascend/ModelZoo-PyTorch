@@ -117,7 +117,7 @@ export WORLD_SIZE=$RANK_SIZE
 expdir=${test_path_dir}/output
 workers=$(($(nproc)/8))
 echo "Network Training"
-nohup python3.7 \
+nohup python3 \
     ../src/bin/train.py \
     --train-json ${feat_train_dir}/data.json \
     --valid-json ${feat_dev_dir}/data.json \

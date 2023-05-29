@@ -72,8 +72,8 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
       source ${模型文件夹名称}/test/env_npu.sh
 
       cd mmcv
-      python3.7 setup.py build_ext
-      python3.7 setup.py develop
+      python3 setup.py build_ext
+      python3 setup.py develop
       pip3.7 list | grep mmcv
       ```
    

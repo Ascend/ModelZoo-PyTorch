@@ -109,7 +109,7 @@ for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-nohup taskset -c $PID_START-$PID_END python3.7.5 -u train.py \
+nohup taskset -c $PID_START-$PID_END python3 -u train.py \
   --data_root=${data_path} \
   --dataset I128_hdf5 --num_workers ${workers} --batch_size ${batch_size} \
   --num_G_accumulations ${accumulations} --num_D_accumulations ${accumulations} \

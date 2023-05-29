@@ -13,6 +13,8 @@
 # limitations under the License.
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from ..builder import BBOX_CODERS
 from .base_bbox_coder import BaseBBoxCoder
@@ -64,7 +66,7 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
             gt_bboxes_fix = gt_bboxes.new_zeros(MAX_SIZE, 4)
             bboxes_fix[:bboxes.size(0)] = bboxes
             gt_bboxes_fix[:gt_bboxes.size(0)] = gt_bboxes
-            encoded_bboxes_fix = torch.npu_bounding_box_encode(bboxes_fix, gt_bboxes_fix, 
+            encoded_bboxes_fix = torch_npu.npu_bounding_box_encode(bboxes_fix, gt_bboxes_fix, 
                                     self.means[0], self.means[1], self.means[2], self.means[3],
                                     self.stds[0], self.stds[1], self.stds[2], self.stds[3])
             return encoded_bboxes_fix[:bboxes.size(0)]

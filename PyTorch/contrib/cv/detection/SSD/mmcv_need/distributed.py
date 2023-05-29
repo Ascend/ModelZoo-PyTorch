@@ -34,6 +34,21 @@ class MMDistributedDataParallel(DistributedDataParallel):
     - It implement two APIs ``train_step()`` and ``val_step()``.
     """
 
+    def _sync_params_and_buffers(self, authoritative_rank=0):
+        module_states = []
+        for name, param in self.module.named_parameters():
+            if name not in self.parameters_to_ignore:
+                module_states.append(param.detach())
+
+        for name, buffer in self.module.named_buffers():
+            if name not in self.parameters_to_ignore:
+                module_states.append(buffer.detach())
+
+        if len(module_states) > 0:
+            self._distributed_broadcast_coalesced(
+                module_states, self.broadcast_bucket_size, authoritative_rank
+            )
+
     def scatter(self, inputs, kwargs, device_ids):
         return scatter_kwargs(inputs, kwargs, device_ids, dim=self.dim)
 

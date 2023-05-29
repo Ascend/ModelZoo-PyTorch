@@ -13,6 +13,8 @@
 from functools import partial
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
@@ -23,7 +25,7 @@ from util.pos_embed import get_2d_sincos_pos_embed
 class FAST_GELU(nn.Module):
     """fast version of nn.GELU()"""
     def forward(self, input):
-        return torch.fast_gelu(input)
+        return torch_npu.fast_gelu(input)
 
 
 class MatmulApply(torch.autograd.Function):
@@ -38,8 +40,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 matmul_transpose = MatmulApply.apply
@@ -80,7 +82,10 @@ class Attention(nn.Module):
     def forward(self, x):
         B, N, C = x.shape
         # qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous()
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous().npu_format_cast(2)
+        qkv = torch_npu.npu_format_cast(
+            self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4).contiguous(),
+            2
+        )
         q, k, v = qkv[0].clone(), qkv[1].clone(), qkv[2].clone()   # make torchscript happy (cannot use tensor as tuple)
 
         if not self.scale.device == q.device:
@@ -93,7 +98,7 @@ class Attention(nn.Module):
         attn = self.attn_drop(attn)
 
         # x = (attn @ v).transpose(1, 2).reshape(B, N, C)
-        x = (attn @ v).npu_format_cast(2).npu_confusion_transpose([0, 2, 1, 3], (B, N, C), True)
+        x = torch_npu.npu_confusion_transpose(torch_npu.npu_format_cast((attn @ v), 2), [0, 2, 1, 3], (B, N, C), True)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x

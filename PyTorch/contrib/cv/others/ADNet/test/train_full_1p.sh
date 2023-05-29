@@ -43,7 +43,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-taskset -c 0-32 python3.7 -u train.py \
+taskset -c 0-32 python3 -u train.py \
       --num_of_layers 17  \
       --mode S \
       --noiseL 25 \

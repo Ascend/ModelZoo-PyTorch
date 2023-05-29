@@ -17,7 +17,7 @@ CUR_PATH=$(realpath $0)
 CUR_DIR=$(dirname ${CUR_PATH})
 DS_CONFIG="${CUR_DIR}/ds_finetune_large.json"
 
-taskset -c 0-25 python3.7 -m torch.distributed.launch --master_port ${1-1122} --nproc_per_node 1 zero-shot_chid.py \
+taskset -c 0-25 python3 -m torch.distributed.launch --master_port ${1-1122} --nproc_per_node 1 zero-shot_chid.py \
        --data_dir ${DATA_DIR} \
        --model-parallel-size ${MPSIZE} \
        --num-layers ${NLAYERS} \

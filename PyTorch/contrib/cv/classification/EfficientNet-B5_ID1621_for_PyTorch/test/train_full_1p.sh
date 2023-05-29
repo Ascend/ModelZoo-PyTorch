@@ -71,7 +71,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./tools/train_net.py \
+python3 ./tools/train_net.py \
     --cfg ./configs/dds_baselines/effnet/EN-B5_dds_1npu_full.yaml \
     --device_id ${ASCEND_DEVICE_ID} \
     OUT_DIR result > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

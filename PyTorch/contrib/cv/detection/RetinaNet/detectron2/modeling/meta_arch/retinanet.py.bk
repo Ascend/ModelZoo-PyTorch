@@ -16,6 +16,8 @@ import math
 import numpy as np
 from typing import List
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from fvcore.nn import sigmoid_focal_loss_jit, smooth_l1_loss
 from torch import nn
 from torch.nn import functional as F
@@ -456,9 +458,9 @@ class RetinaNet(nn.Module):
             # boxes_all = boxes_all.reshape(1, 5000, num_bbox_reg_classes, 4)
             # scores_all = scores_all.reshape(1,scores_all.shape[0],num_bbox_reg_classes)
         #nmsed_boxex, nmsed_scores, nmsed_classes, nmsed_num = \
-        #    torch.npu_batch_nms(boxes_all.unsqueeze(0).unsqueeze(2), scores_all.unsqueeze(1), 0.0, self.nms_threshold, 400, 400)
+        #    torch_npu.npu_batch_nms(boxes_all.unsqueeze(0).unsqueeze(2), scores_all.unsqueeze(1), 0.0, self.nms_threshold, 400, 400)
         #nmsed_boxex, nmsed_scores, nmsed_classes, nmsed_num = \
-        #    torch.npu_batch_nms(boxes_all.unsqueeze(0).unsqueeze(2), scores_all.unsqueeze(1).unsqueeze(0), 0.0, self.nms_threshold, 400, 400)
+        #    torch_npu.npu_batch_nms(boxes_all.unsqueeze(0).unsqueeze(2), scores_all.unsqueeze(1).unsqueeze(0), 0.0, self.nms_threshold, 400, 400)
         #print("nmsed_boxex",nmsed_boxex.shape)
         #print("nmsed_scores",nmsed_scores.shape)
         #print("nmsed_classes",nmsed_classes.shape,nmsed_classes)
@@ -549,7 +551,7 @@ class RetinaNet(nn.Module):
         multi_bboxes = multi_bboxes.reshape(1, num_boxes, multi_bboxes.numel() // 4 // num_boxes, 4)
         multi_scores = multi_scores.reshape(1, num_boxes, num_classes)
 
-        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
+        nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(multi_bboxes.half(), multi_scores.half(),
                                                                                   score_thr, nms_thr,
                                                                                   max_num, max_num)
 

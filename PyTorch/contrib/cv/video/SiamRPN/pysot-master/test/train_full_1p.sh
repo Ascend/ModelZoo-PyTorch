@@ -44,13 +44,13 @@ fi
 npu_VISIBLE_DEVICES=0
 if [ $(uname -m) = "aarch64" ]
 then
-    nohup taskset -c 0-32 python3.7 -m torch.distributed.launch \
+    nohup taskset -c 0-32 python3 -m torch.distributed.launch \
         --nproc_per_node=1 \
         --master_port=2333 \
         ${test_path_dir}/../tools_1p/train.py \
         --cfg ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 else
-    nohup python3.7 -m torch.distributed.launch \
+    nohup python3 -m torch.distributed.launch \
         --nproc_per_node=1 \
         --master_port=2333 \
         ${test_path_dir}/../tools_1p/train.py \
@@ -59,7 +59,7 @@ fi
 wait
 
 
-python3.7  ${test_path_dir}/../tools_1p/test.py 	\
+python3  ${test_path_dir}/../tools_1p/test.py 	\
 	--snapshot ${test_path_dir}/../snapshot_1p/checkpoint_e20.pth \
     --config ${test_path_dir}/../experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml \
 	--datasetdir ${test_path_dir}/../../testing_dataset/VOT2016
@@ -67,7 +67,7 @@ python3.7  ${test_path_dir}/../tools_1p/test.py 	\
 wait
 
 
-python3.7 ${test_path_dir}/../tools_1p/eval.py 	 \
+python3 ${test_path_dir}/../tools_1p/eval.py 	 \
 	--tracker_path ${test_path_dir}/../results > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_acc_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 

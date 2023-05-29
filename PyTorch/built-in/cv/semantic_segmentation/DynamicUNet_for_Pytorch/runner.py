@@ -126,7 +126,7 @@ def parse_args():
     # cuda setting
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--local_rank', '--local-rank', type=int, default=0)
     # checkpoint and log
     parser.add_argument('--resume', type=str, default=None,
                         help='put the path to resuming file if needed')
@@ -164,6 +164,10 @@ def parse_args():
                         help='profiling start step')
     parser.add_argument('--stop_step', type=int, default=100,
                         help='profiling stop_ step')
+    # precision_mode
+    parser.add_argument('--hf32', action='store_true', help='enable_hi_float_32_execution')
+    parser.add_argument('--fp32', action='store_true', help='disable_hi_float_32_execution')
+    parser.add_argument('--precision_mode', default='allow_mix_precision', type=str, help='precision_mode')
     args = parser.parse_args()
     # default settings for epochs, batch_size and lr
     if args.epochs is None:
@@ -427,6 +431,14 @@ def save_checkpoint(model, args, is_best=False):
 
 if __name__ == '__main__':
     args = parse_args()
+    option = {}
+    if args.precision_mode == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
+    torch.npu.set_option(option)
+
     if args.bin_mode:
         torch.npu.set_compile_mode(jit_compile=False)
         print("enble bin mode")

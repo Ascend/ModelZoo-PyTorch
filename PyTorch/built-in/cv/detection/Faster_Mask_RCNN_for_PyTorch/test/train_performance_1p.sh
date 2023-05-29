@@ -133,7 +133,7 @@ sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \
 wait
 
 cd $cur_path
-python3.7 -m pip install -e .
+python3 -m pip install -e .
 
 #性能脚本取消评测，缩短训练时间
 export PERF_ONLY=True
@@ -148,7 +148,7 @@ fi
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3.7 tools/train_net.py \
+nohup python3 tools/train_net.py \
         --config-file  configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml \
         AMP 1 \
         OPT_LEVEL O2 \

@@ -115,7 +115,7 @@ do
     echo run process ${rank}
 
 
-    nohup python3.7 train_8p.py \
+    nohup python3 train_8p.py \
        $data_path \
       --arch transformer_wmt_en_de \
       --share-all-embeddings \

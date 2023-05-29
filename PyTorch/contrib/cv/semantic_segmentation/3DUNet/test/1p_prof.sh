@@ -17,4 +17,4 @@ rm -rf ./runs
 
 
 
-python3.7 -u train_brats2018_new.py --amp --data_path $data_path  --world_size 1 --rank 0 --prof
+python3 -u train_brats2018_new.py --amp --data_path $data_path  --world_size 1 --rank 0 --prof

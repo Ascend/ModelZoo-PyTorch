@@ -78,6 +78,7 @@ start_time=$(date +%s)
 
 nohup bash run.sh \
   --stage ${stage} \
+  --use_lm true \
   --ngpu 8 &
 
 wait

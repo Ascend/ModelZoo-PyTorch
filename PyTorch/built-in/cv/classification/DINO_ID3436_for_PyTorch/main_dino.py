@@ -26,6 +26,8 @@ import numpy as np
 from PIL import Image
 import apex
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -235,7 +237,7 @@ def train_dino(args):
         optimizer = utils.LARS(params_groups)  # to use with convnet and large batches
 
     amp.register_half_function(torch, "softmax")
-    amp.register_half_function(torch, "npu_linear")
+    amp.register_half_function(torch_npu, "npu_linear")
 
     if args.amp:
         [student, teacher], optimizer = amp.initialize([student, teacher], optimizer, opt_level="O1", combine_grad=True)

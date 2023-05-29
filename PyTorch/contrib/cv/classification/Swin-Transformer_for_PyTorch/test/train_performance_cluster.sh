@@ -80,7 +80,7 @@ do
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
     export CLUSTER_RANK_ID=$((RANK_ID + node_rank * device_number))
-    nohup taskset -c $PID_START-$PID_END python3.7 main.py  \
+    nohup taskset -c $PID_START-$PID_END python3 main.py  \
         --cfg configs/swin_tiny_patch4_window7_224.yaml \
         --data-path ${data_path} \
         --addr ${master_addr} \

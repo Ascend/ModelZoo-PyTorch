@@ -20,6 +20,8 @@ import math
 from functools import partial
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 from utils import trunc_normal_
@@ -127,8 +129,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 
@@ -137,12 +139,12 @@ matmul_transpose = MatmulApply.apply
 
 class FastGelu(nn.Module):
     def forward(self, input):
-        return torch.fast_gelu(input)
+        return torch_npu.fast_gelu(input)
 
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 
 def drop_path(x, drop_prob: float = 0., training: bool = False):
@@ -205,7 +207,7 @@ class Attention(nn.Module):
 
     def transpose_for_qkv(self, x):
         new_shape = [self.B, self.N, self.num_heads, self.head_dim]
-        return x.npu_confusion_transpose((0, 2, 1, 3), new_shape, False)
+        return torch_npu.npu_confusion_transpose(x, (0, 2, 1, 3), new_shape, False)
 
     def forward(self, x, x_shape):
         self.B, self.N, self.C = x_shape

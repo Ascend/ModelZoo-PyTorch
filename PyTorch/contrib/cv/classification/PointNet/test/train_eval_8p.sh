@@ -23,7 +23,7 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
-python3.7 ./eval.py \
+python3 ./eval.py \
         --model=${pth_path} \
         --num_points=2500 \
         --workers=32 \

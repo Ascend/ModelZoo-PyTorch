@@ -80,7 +80,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env_npu.sh
-python3.7 ./main.py \
+python3 ./main.py \
         --data ${data_path} \
         --npu ${ASCEND_DEVICE_ID} \
 	      -a googlenet \

@@ -92,14 +92,14 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 -u tools/train.py \
+        taskset -c $a-$b python3 -u tools/train.py \
                          --cfg experiments/coco/transpose_r/TP_R_256x192_d256_h1024_enc3_mh8.yaml \
                          --distributed True \
                          --amp \
                          TRAIN.LR 0.0008 \
                          DATASET.ROOT $data_path > ${test_path_dir}/output/${RANK_ID}/train_${RANK_ID}.log 2>&1 &
     else
-        python3.7 -u tools/train.py \
+        python3 -u tools/train.py \
                          --cfg experiments/coco/transpose_r/TP_R_256x192_d256_h1024_enc3_mh8.yaml \
                          --distributed True \
                          --amp \

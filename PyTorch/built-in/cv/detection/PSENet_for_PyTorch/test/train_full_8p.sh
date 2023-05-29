@@ -84,7 +84,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-nohup python3.7 ./NPU/src/train_ic15_8p.py \
+nohup python3 ./NPU/src/train_ic15_8p.py \
     --lr 0.004 \
     --rank 0 \
     --dist-backend 'hccl' \

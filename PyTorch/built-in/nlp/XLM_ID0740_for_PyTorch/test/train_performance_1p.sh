@@ -156,7 +156,7 @@ do
     #let a=RANK_ID*$cpustep
     #let b=RANK_ID+1
     #let c=b*$cpustep-1
-    nohup python3.7 ${cur_path}/train.py \
+    nohup python3 ${cur_path}/train.py \
         --data_path $data_path/50k \
         --exp_name xlm_en_zh \
         --dump_path ./dumped        \

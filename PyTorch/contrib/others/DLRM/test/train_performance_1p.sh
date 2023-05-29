@@ -80,7 +80,7 @@ fi
 data_file=${data_path}"/train.txt"
 processed_data_file=${data_path}"/kaggleAdDisplayChallenge_processed.npz"
 
-python3.7 dlrm_s_pytorch.py --arch-sparse-feature-size=16 \
+python3 dlrm_s_pytorch.py --arch-sparse-feature-size=16 \
              --arch-mlp-bot="13-512-256-64-16" \
              --arch-mlp-top="512-256-1" \
              --data-generation=dataset \

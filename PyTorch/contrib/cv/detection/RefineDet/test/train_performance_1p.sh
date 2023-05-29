@@ -69,7 +69,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 -u train_1p.py \
+nohup python3 -u train_1p.py \
     --dataset_root ${data_path} \
     --save_folder ./RefineDet320/ \
     --num_workers 8 \

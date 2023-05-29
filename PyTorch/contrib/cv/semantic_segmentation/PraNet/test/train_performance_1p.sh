@@ -76,7 +76,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-nohup python3.7 ./Train.py \
+nohup python3 ./Train.py \
     --train_path=./data/TrainDataset \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \

@@ -224,14 +224,14 @@ SSD-MobileNetV2 采用 SSD 的思想，在MobileNetV2基础上，中间层提取
 
 # 性能&精度
 
-在310P设备上，各batchsize的OM模型在各个类别上的平均精度为精度为  **0.698**，当batchsize设为4时模型性能最优，达 3290.4 fps。
+在310P设备上，各batchsize的OM模型在各个类别上的平均精度为精度为  **0.698**，当batchsize设为4时模型性能最优，达 2923 fps。
 
 | 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
 | --------- | --------- | ----------- | -------------- | ---------- |
-|Ascend310P3| 1         | ILSVRC2012  | 0.698          | 1798.0 fps |
-|Ascend310P3| 4         | ILSVRC2012  | 0.698          | 3290.4 fps |
-|Ascend310P3| 8         | ILSVRC2012  | 0.698          | 3078.5 fps |
-|Ascend310P3| 16        | ILSVRC2012  | 0.698          | 2901.7 fps |
-|Ascend310P3| 32        | ILSVRC2012  | 0.698          | 2655.3 fps |
-|Ascend310P3| 64        | ILSVRC2012  | 0.698          | 2461.7 fps |
+|Ascend310P3| 1         | VOC2007     | 0.698          | 1511 fps   |
+|Ascend310P3| 4         | VOC2007     | 0.698          | 2923 fps   |
+|Ascend310P3| 8         | VOC2007     | 0.698          | 2841 fps   |
+|Ascend310P3| 16        | VOC2007     | 0.698          | 2760 fps   |
+|Ascend310P3| 32        | VOC2007     | 0.698          | 2601 fps   |
+|Ascend310P3| 64        | VOC2007     | 0.698          | 2452 fps   |
 

@@ -76,7 +76,7 @@ fi
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 export NPUID=0
 export RANK=0
-python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
 	--cfg-options \
 	optimizer.lr=0.005 total_epochs=1 data_root=$data_path \
 	--seed 0 \
@@ -134,4 +134,4 @@ echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${Cas
 
 #PORT=27511 ./tools/dist_train.sh configs/gfocal/gfocal_r50_fpn_1x.py 1 --cfg-options optimizer.lr=0.00125 --seed 0 --gpu-ids 0 --opt-level O1
 #PORT=27511 ./tools/dist_test.sh configs/gfocal/gfocal_r50_fpn_1x.py work_dirs/gfocal_r50_fpn_1x/epoch_1.pth 1 --eval bbox
-#nohup python3.7 tools/test.py configs/gfocal/gfocal_r50_fpn_1x.py work_dirs/gfocal_r50_fpn_1x/epoch_1.pth --eval bbox
+#nohup python3 tools/test.py configs/gfocal/gfocal_r50_fpn_1x.py work_dirs/gfocal_r50_fpn_1x/epoch_1.pth --eval bbox

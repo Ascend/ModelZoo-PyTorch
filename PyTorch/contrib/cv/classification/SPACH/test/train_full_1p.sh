@@ -75,7 +75,7 @@ do
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
         taskset -c $PID_START-$PID_END \
-          python3.7 -u main.py \
+          python3 -u main.py \
             --model spach_ms_s_patch4_224_conv \
             --data-path ${data_path} \
             --output_dir ${test_path_dir}/output/${ASCEND_DEVICE_ID} \
@@ -83,7 +83,7 @@ do
             --num_workers 16\
             > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 -u main.py \
+        python3 -u main.py \
         --model spach_ms_s_patch4_224_conv \
         --data-path ${data_path} \
         --output_dir ${test_path_dir}/output/${ASCEND_DEVICE_ID} \

@@ -17,6 +17,8 @@ import numpy as np
 from enum import IntEnum, unique
 from typing import Any, List, Tuple, Union
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 _RawBoxType = Union[List[float], Tuple[float, ...], torch.Tensor, np.ndarray]
 
@@ -350,7 +352,7 @@ def pairwise_iou(boxes1: Boxes, boxes2: Boxes) -> torch.Tensor:
     Returns:
         Tensor: IoU, sized [N,M].
     """
-    out = torch.npu_iou(boxes2.tensor, boxes1.tensor)
+    out = torch_npu.npu_iou(boxes2.tensor, boxes1.tensor)
     return out
 
 

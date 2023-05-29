@@ -43,8 +43,8 @@ def parse_args():
     return args
 
 
-def preprocess(img_name_list, save_dir):
-    test_salobj_dataset = SalObjDataset(img_name_list=img_name_list,
+def preprocess(img_name_lists, save_dirs):
+    test_salobj_dataset = SalObjDataset(img_name_list=img_name_lists,
                                         lbl_name_list=[],
                                         transform=transforms.Compose([RescaleT(320),
                                                                       ToTensorLab(flag=0)])
@@ -55,13 +55,14 @@ def preprocess(img_name_list, save_dir):
                                         num_workers=1)
     for idx, data_test in tqdm(enumerate(test_salobj_dataloader)):
         inputs_test = data_test['image'].numpy().astype(np.float32)
-        inputs_test.tofile(os.path.join(save_dir, '{}.bin'.format(idx)))
+        inputs_test.tofile(os.path.join(save_dirs, '{}.bin'.format(idx)))
 
 
 if __name__ == '__main__':
     args = parse_args()
     image_dir = args.image_dir
     img_name_list = glob.glob(image_dir + os.sep + '*')
+    img_name_list.sort()
     save_dir = args.save_dir
     os.makedirs(save_dir, exist_ok=True)
     preprocess(img_name_list, save_dir)

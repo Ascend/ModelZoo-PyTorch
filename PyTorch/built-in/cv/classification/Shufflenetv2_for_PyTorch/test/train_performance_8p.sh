@@ -124,7 +124,7 @@ then
     PID_END=$((PID_START + KERNEL_NUM - 1))
     export RANK_ID=$RANK_ID
     export DEVICE_ID=$RANK_ID
-    nohup taskset -c $PID_START-$PID_END python3.7 -u ./8p_main_med.py \
+    nohup taskset -c $PID_START-$PID_END python3 -u ./8p_main_med.py \
         --data=$data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49  \
@@ -150,7 +150,7 @@ then
         --benchmark 0 \
         > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 else
-    nohup python3.7 -u ./8p_main_med.py \
+    nohup python3 -u ./8p_main_med.py \
         --data=$data_path \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49  \

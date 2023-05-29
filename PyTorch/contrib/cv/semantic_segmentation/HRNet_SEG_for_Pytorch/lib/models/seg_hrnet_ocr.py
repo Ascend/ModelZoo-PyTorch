@@ -25,6 +25,8 @@ import functools
 import numpy as np
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch._utils
 import torch.nn.functional as F
@@ -134,7 +136,7 @@ class _ObjectAttentionBlock(nn.Module):
 
         query = self.f_pixel(x).view(batch_size, self.key_channels, -1)
         query = query.permute(0, 2, 1)
-        proxy.data = proxy.data.npu_format_cast(0)
+        proxy.data = torch_npu.npu_format_cast(proxy.data, 0)
         key = self.f_object(proxy).view(batch_size, self.key_channels, -1)
         value = self.f_down(proxy).view(batch_size, self.key_channels, -1)
         value = value.permute(0, 2, 1)
@@ -652,7 +654,7 @@ class HighResolutionNet(nn.Module):
 
         context = self.ocr_gather_head(feats, out_aux)
         feats = self.ocr_distri_head(feats, context)
-        feats.data = feats.data.npu_format_cast(0)
+        feats.data = torch_npu.npu_format_cast(feats.data, 0)
         out = self.cls_head(feats)
 
         out_aux_seg.append(out_aux)

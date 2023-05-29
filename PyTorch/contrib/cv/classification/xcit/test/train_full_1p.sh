@@ -61,7 +61,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345 \
+python3 -m torch.distributed.launch --nproc_per_node 1 --master_port 12345 \
           main.py \
           --model xcit_small_12_p16 \
           --input-size 224 \

@@ -79,7 +79,7 @@ for i in $(seq 0 15); do
   let p_start=$((0+KERNEL_NUM*i))
   let p_end=$((p_start+KERNEL_NUM-1))
   taskset -c $p_start-$p_end $CMD \
-    python3.7 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
+    python3 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
     --num_train_epochs ${train_epochs} \
     --model_name_or_path "$model_path" \
     --data_dir $data_path \

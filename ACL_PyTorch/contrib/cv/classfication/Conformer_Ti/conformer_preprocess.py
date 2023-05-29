@@ -1,7 +1,7 @@
 # Copyright 2020 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
+# you may not use this file_name except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -14,10 +14,11 @@
 
 import os
 import sys
-from PIL import Image
-import numpy as np
 import multiprocessing
 from tqdm import tqdm
+
+import numpy as np
+from PIL import Image
 
 
 model_config = {
@@ -70,13 +71,9 @@ def resize(img, size, interpolation=Image.BILINEAR):
 
 
 def gen_input_bin(mode_type, file_batches, batch):
-    i = 0
-    for file in tqdm(file_batches[batch]):
-        i = i + 1
-        # print("batch", batch, file, "===", i)
-
+    for file_name in tqdm(file_batches[batch]):
         # RGBA to RGB
-        image = Image.open(os.path.join(src_path, file)).convert('RGB')
+        image = Image.open(file_name[1]).convert('RGB')
         image = resize(image, model_config[mode_type]['resize']) # Resize
         image = center_crop(image, model_config[mode_type]['centercrop']) # CenterCrop
         img = np.array(image, dtype=np.float32)
@@ -84,15 +81,24 @@ def gen_input_bin(mode_type, file_batches, batch):
         img = img / 255. # ToTensor: div 255
         img -= np.array(model_config[mode_type]['mean'], dtype=np.float32)[:, None, None] # Normalize: mean
         img /= np.array(model_config[mode_type]['std'], dtype=np.float32)[:, None, None] # Normalize: std
-        img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
+        img.tofile(os.path.join(save_path, file_name[0].split('.')[0] + ".bin"))
 
 
-def preprocess(mode_type, src_path, save_path):
-    files = os.listdir(src_path)
-    file_batches = [files[i:i + 500] for i in range(0, 50000, 500) if files[i:i + 500] != []]
+def preprocess(mode, data_path):
+    in_files = sorted(os.listdir(data_path))
+    image_files = []
+    for file_name in in_files:
+        file_path = os.path.join(data_path, file_name)
+        if os.path.isdir(file_path):
+            image_files += [(image_name, 
+                            os.path.join(file_path, image_name)) 
+                            for image_name in os.listdir(file_path)]
+        else:
+            image_files.append((file_name, file_path))
+    file_batches = [image_files[i:i + 500] for i in range(0, 50000, 500) if image_files[i:i + 500] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(mode_type, file_batches, batch))
+        thread_pool.apply_async(gen_input_bin, args=(mode, file_batches, batch))
     thread_pool.close()
     thread_pool.join()
     print("in thread, except will not report! please ensure bin files generated.")
@@ -108,11 +114,11 @@ if __name__ == '__main__':
     save_path = os.path.realpath(save_path)
     if mode_type not in model_config:
         model_type_help = "model type: "
-        for key in model_config.keys():
+        for key in model_config:
             model_type_help += key
             model_type_help += ' '
         raise Exception(model_type_help)
     if not os.path.isdir(save_path):
         os.makedirs(os.path.realpath(save_path))
-    preprocess(mode_type, src_path, save_path)
+    preprocess(mode_type, src_path)
 

@@ -14,7 +14,7 @@ export MASTER_PORT=29500
 data_path=""
 
 # 适配更大batch-size，训练epoch增加到25
-train_epochs=50
+train_epochs=20
 # 加载数据进程数
 workers=24
 # 学习率
@@ -22,7 +22,7 @@ lr=3.2e-4
 # 混合精度模式
 opt_level="O2"
 # warmup factor
-warm_factor=0.3
+warm_factor=0.5
 # 多个epoch做一次eval
 eval_interval=5
 
@@ -77,7 +77,7 @@ export RANK=$i
 export LOCAL_RANK=$i
 PID_START=$((KERNEL_NUM * LOCAL_RANK))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
+taskset -c $PID_START-$PID_END python3 examples/sequence_labeling/task_sequence_labeling_ner_crf.py \
         --local_rank $i \
         --train_epochs ${train_epochs} \
         --data_path ${data_path} \

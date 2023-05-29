@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 ./tools/test_net.py \
+python3 ./tools/test_net.py \
     --cfg configs/dds_baselines/effnet/EN-B3_dds_8npu_full.yaml \
     TEST.WEIGHTS ${pth_path} \
     OUT_DIR result > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

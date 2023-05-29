@@ -1,7 +1,7 @@
 alias python="/usr/bin/python3.7.5"
 source scripts/env_npu.sh
 export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
-nohup python3.7.5 -u main_npu_8p.py \
+nohup python3 -u main_npu_8p.py \
 	"/home/data/imagenet/" \
         --addr=$(hostname -I |awk '{print $1}') \
         --dist-url 'tcp://127.0.0.1:26999' \

@@ -101,7 +101,7 @@ start_time=$(date +%s)
 
 cd ${cur_path}
 # training
-nohup python3.7 -u runner.py \
+nohup python3 -u runner.py \
     --data-path=${data_path} \
     --amp_opt_level=${amp_opt_level:-"O2"} \
     --local_rank=${ASCEND_DEVICE_ID} \

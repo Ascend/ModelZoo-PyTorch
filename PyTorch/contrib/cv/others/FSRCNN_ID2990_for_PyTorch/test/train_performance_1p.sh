@@ -114,14 +114,14 @@ batch_size=16
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 train.py \
+    python3 train.py \
         --train-file=${data_path}/data/91-image_x3.h5 \
         --eval-file=${data_path}/data/Set5_x3.h5 \
         --num-epochs=${train_epochs} \
         --outputs-dir=${output_path} 1>${print_log} 2>&1
 
 else
-    python3.7 train.py \
+    python3 train.py \
 	--train-file=${data_path}/data/91-image_x3.h5 \
 	--eval-file=${data_path}/data/Set5_x3.h5 \
 	--num-epochs=${train_epochs} \

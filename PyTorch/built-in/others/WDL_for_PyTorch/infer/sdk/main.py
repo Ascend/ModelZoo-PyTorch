@@ -75,7 +75,7 @@ if __name__ == '__main__':
         result_path = sys.argv[3]
     except IndexError:
         print("Please enter data files folder | pipeline file path | store result files folder "
-              "Such as: python3.7 main.py ./wdl_input/wdl_infer.txt ./pipeline/Wdl.pipeline ./result")
+              "Such as: python3 main.py ./wdl_input/wdl_infer.txt ./pipeline/Wdl.pipeline ./result")
         exit(1)
 
     # init stream manager

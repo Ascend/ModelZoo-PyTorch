@@ -79,14 +79,82 @@ def dump_data(data_loader, save_dir):
     os.makedirs(label_dir, exist_ok=True)
     for idx, data in tqdm(enumerate(data_loader)):
         token_ids, labels = data
-        data_path = os.path.join(input_data_dir, "{}.bin".format(idx))
-        label_path = os.path.join(label_dir, "{}.bin".format(idx))
-        token_ids.detach().numpy().tofile(data_path)
-        labels.detach().numpy().tofile(label_path)
+        data_path = os.path.join(input_data_dir, "{}.npy".format(idx))
+        label_path = os.path.join(label_dir, "{}.npy".format(idx))
+        np.save(data_path, token_ids.detach().numpy())
+        np.save(label_path, labels.detach().numpy())
+
+
+def dump_data_ranks(data_loader, save_dir, rank_list, batch_size):
+    if isinstance(rank_list, str):
+        rank_list = sorted([int(_) for _ in rank_list.split(",")])
+    input_data_dir = os.path.join(save_dir, "input_data")
+    label_dir = os.path.join(save_dir, "label")
+    os.makedirs(input_data_dir, exist_ok=True)
+    os.makedirs(label_dir, exist_ok=True)
+
+    # basic function
+    def get_max_valid_length(data):
+        valid_num = np.where(data > 0)[1][-1] + 1
+        return np.max(valid_num)
+
+    def get_rank_num(valid_num):
+        _ranks = np.array(rank_list)
+        return _ranks[_ranks >= valid_num][0]
+
+    def pad_data(data, constant_values=(0)):
+        return np.pad(data, ((0, batch_size-data.shape[0]), (0, 0)),
+                      "constant", constant_values=constant_values)
+
+    def dump(token_ids, labels, idx):
+        valid_length = get_max_valid_length(token_ids)
+        chosen_rank = get_rank_num(valid_length)
+        token_ids = token_ids[:, :chosen_rank]
+        labels = labels[:, :chosen_rank]
+        data_path = os.path.join(input_data_dir, "{}.npy".format(idx))
+        label_path = os.path.join(label_dir, "{}.npy".format(idx))
+        if token_ids.shape[0] != batch_size:
+            token_ids = pad_data(token_ids)
+            labels = pad_data(labels, constant_values=(-1))
+        np.save(data_path, token_ids)
+        np.save(label_path, labels)
+        return chosen_rank
+
+    input_datas = []
+    for idx, datas in enumerate(data_loader):
+        token_ids, labels = datas
+        token_ids = token_ids.detach().numpy()
+        labels = labels.detach().numpy()
+        if not args.sorted:
+            dump(token_ids, labels, idx)
+        else:
+            token_ids = token_ids.tolist()
+            labels = labels.tolist()
+            token_ids = [np.array(_) for _ in token_ids]
+            labels = [np.array(_) for _ in labels]
+            for _d in zip(token_ids, labels):
+                input_datas.append(_d)
+
+    if args.sorted:
+        # sorted by valid num
+        input_datas = sorted(input_datas,
+                             key=lambda x:get_max_valid_length(np.expand_dims(x[0], axis=0)))
+        data_num = len(input_datas)
+        if data_num % batch_size == 0:
+            num_list = np.array(list(range(data_num // batch_size)))
+        else:
+            num_list = np.array(list(range(data_num // batch_size + 1)))
+        if args.save_shuffle:
+            np.random.shuffle(num_list)
+        for batch_idx in range(0, data_num, batch_size):
+            input_data = input_datas[batch_idx : batch_idx+batch_size]
+            token_ids = np.array([_[0] for _ in input_data])
+            labels = np.array([_[1] for _ in input_data])
+            dump(token_ids, labels, num_list[batch_idx//batch_size])
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='SwinTransformer onnx export.')
+    parser = argparse.ArgumentParser(description='Bert_Base_Chinese preprocess for sequence labeling task.')
     parser.add_argument('-i', '--input_path', type=str, required=True,
                         help='input dataset path')
     parser.add_argument('-o', '--out_dir', type=str, required=True,
@@ -95,6 +163,16 @@ def parse_arguments():
                         help='vocab dict path for dataset')
     parser.add_argument('-s', '--seq_len', type=int, default=256,
                         help='max sequence length for output model')
+    parser.add_argument('-r', '--rank', type=bool, default=False,
+                        help='enable rank mode')
+    parser.add_argument('--rank_list', type=str, default='32,48,64,96,128,192,224,256',
+                        help='seq ranks for input data')
+    parser.add_argument('-b', '--batch_size', type=int, default=64,
+                        help='batch size for preprocess process')
+    parser.add_argument('--sorted', type=bool, default=True,
+                        help='whether to sort data in preprocess for rank mode')
+    parser.add_argument('--save_shuffle', type=bool, default=True,
+                        help='whether to shuffle preprocessed data')
     args = parser.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
     return args
@@ -106,7 +184,15 @@ if __name__ == '__main__':
     categories_id2label = {i: k for i, k in enumerate(categories)}
     categories_label2id = {k: i for i, k in enumerate(categories)}
     tokenizer = Tokenizer(args.dict_path, do_lower_case=True)
-    valid_dataloader = DataLoader(MyDataset(args.input_path),
-                                  batch_size=1,
-                                  collate_fn=collate_fn)
-    dump_data(valid_dataloader, args.out_dir)
+    if not args.rank:
+        valid_dataloader = DataLoader(MyDataset(args.input_path),
+                                      batch_size=1,
+                                      collate_fn=collate_fn)
+        dump_data(valid_dataloader, args.out_dir)
+    else:
+        if args.batch_size is None:
+            raise ValueError("Batch size should be provided, when ranks mode is on.")
+        valid_dataloader = DataLoader(MyDataset(args.input_path),
+                                      batch_size=args.batch_size,
+                                      collate_fn=collate_fn)
+        dump_data_ranks(valid_dataloader, args.out_dir, args.rank_list, args.batch_size)

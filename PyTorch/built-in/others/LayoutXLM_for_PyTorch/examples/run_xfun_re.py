@@ -30,7 +30,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==========================================================================
-#!/usr/bin/env python
+# !/usr/bin/env python
 # coding=utf-8
 
 import logging
@@ -41,19 +41,13 @@ import numpy as np
 from datasets import ClassLabel, load_dataset
 
 import torch
+
 try:
     import torch_npu
 except Exception as e:
     print('ERROR: Only supports torch >= 1.8 with torch_npu installed.')
     raise e
 from torch_npu.contrib import transfer_to_npu
-
-torch.npu.set_compile_mode(jit_compile=False)
-option = {}
-option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Conv2DBackpropFilter,Conv2DBackpropInput,Conv2D"
-option["MM_BMM_ND_ENABLE"] = 'disable'
-torch.npu.set_option(option)
-
 import layoutlmft.data.datasets.xfun
 import transformers
 from layoutlmft import AutoModelForRelationExtraction
@@ -73,6 +67,12 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from layoutlmft.utils import NPUTrainingArguments
 
+torch.npu.set_compile_mode(jit_compile=False)
+option = {}
+# 二进制场景下，这三个算子前后存在大量aicpu上的transdata，性能较差；加入黑名单后性能提升明显
+option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Conv2DBackpropFilter,Conv2DBackpropInput,Conv2D"
+option["MM_BMM_ND_ENABLE"] = 'disable'
+torch.npu.set_option(option)
 
 logger = logging.getLogger(__name__)
 

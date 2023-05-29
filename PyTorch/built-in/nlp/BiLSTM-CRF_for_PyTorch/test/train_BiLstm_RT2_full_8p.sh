@@ -90,7 +90,7 @@ cd ${cur_path}
 # training
 for i in $(seq 7 -1 0)
     do
-        nohup python3.7 runner.py \
+        nohup python3 runner.py \
             --data-path=${data_path} \
             --amp_opt_level=${amp_opt_level:-"O2"} \
             --local_rank=$i \

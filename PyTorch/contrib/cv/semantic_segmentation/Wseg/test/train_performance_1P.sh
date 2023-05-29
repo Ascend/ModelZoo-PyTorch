@@ -107,11 +107,11 @@ if [ $(uname -m) = "aarch64" ];then
     let p_start=0
     let p_end=23
     TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_1P_${ASCEND_DEVICE_ID}.log
-    taskset -c $p_start-$p_end python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank ${ASCEND_DEVICE_ID} --workers ${workers} --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
+    taskset -c $p_start-$p_end python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank ${ASCEND_DEVICE_ID} --workers ${workers} --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
     echo "LOG: $TRAIN_LOG_FILE"
 else
     workers=8
-    python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank ${ASCEND_DEVICE_ID} --workers ${workers} --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
+    python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank ${ASCEND_DEVICE_ID} --workers ${workers} --world-size ${world_size} > $TRAIN_LOG_FILE 2>&1 &
 fi
 wait
 

@@ -68,7 +68,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-taskset -c 0-23 python3.7 ./train_classification_1P.py \
+taskset -c 0-23 python3 ./train_classification_1P.py \
         --data=${data_path} \
         --batch_size=${batch_size} \
         --epoch=${train_epochs} \

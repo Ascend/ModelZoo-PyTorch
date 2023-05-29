@@ -75,7 +75,7 @@ if [ x"${etp_flag}" != x"true" ];then
 else
     #CI看护
     sed -i "s|./R-101.pkl|${data_path}/R-101.pkl|g" configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml
-    python3.7 setup.py build develop
+    python3 setup.py build develop
 fi
 
 KERNEL_NUM=$(($(nproc)/8))
@@ -94,7 +94,7 @@ then
     export LOCAL_RANK=$i
     PID_START=$((KERNEL_NUM * LOCAL_RANK))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 tools/train_net.py \
+    taskset -c $PID_START-$PID_END python3 tools/train_net.py \
             --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
             --num-gpus 8 \
             AMP 1\
@@ -112,7 +112,7 @@ then
             SOLVER.BASE_LR 0.08 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     done
 else
-    nohup python3.7 tools/train_net.py \
+    nohup python3 tools/train_net.py \
             --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
             --device-ids 0 1 2 3 4 5 6 7 \
             --num-gpus 8 \

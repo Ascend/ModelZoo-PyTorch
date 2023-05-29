@@ -78,7 +78,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 -m torch.distributed.launch --nproc_per_node=${RANK_SIZE} ./main.py \
+python3 -m torch.distributed.launch --nproc_per_node=${RANK_SIZE} ./main.py \
     --dataset=${data_path} \
     --gan_type CGAN \
     --epoch=${train_epochs} \

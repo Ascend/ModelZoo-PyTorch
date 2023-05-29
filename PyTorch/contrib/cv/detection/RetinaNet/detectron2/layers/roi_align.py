@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 
 from torch.nn.modules.utils import _pair
@@ -29,7 +31,7 @@ class _ROIAlign(Function):
         ctx.input_shape = input.size()
         ctx.aligned = aligned
         roi_end_mode = 0
-        output = torch.npu_roi_align(
+        output = torch_npu.npu_roi_align(
             input, roi, spatial_scale,
             output_size[0], output_size[1], sampling_ratio, roi_end_mode)
 
@@ -44,7 +46,7 @@ class _ROIAlign(Function):
         sampling_ratio = ctx.sampling_ratio
         bs, ch, h, w = ctx.input_shape
 
-        grad_input = torch.npu_roi_alignbk(
+        grad_input = torch_npu.npu_roi_alignbk(
             grad_output, rois, ctx.input_shape,
             output_size[0], output_size[1],
             spatial_scale, sampling_ratio)

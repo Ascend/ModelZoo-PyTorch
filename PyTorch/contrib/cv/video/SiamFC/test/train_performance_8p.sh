@@ -66,7 +66,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 # source ${test_path_dir}/set_env.sh
 
-#nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 --master_port 22331  ./bin/my_train.py \
+#nohup python3 -m torch.distributed.launch --nproc_per_node 8 --master_port 22331  ./bin/my_train.py \
 #	--world_size 8 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 
 
@@ -82,7 +82,7 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7 -u ./bin/my_train.py \
+taskset -c $PID_START-$PID_END python3 -u ./bin/my_train.py \
 	--data ${data_path} \
 	--workers $(($(nproc)/8)) \
 	--local_rank $RANK_ID \

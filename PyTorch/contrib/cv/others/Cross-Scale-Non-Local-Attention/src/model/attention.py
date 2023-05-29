@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import spectral_norm as spectral_norm_fn
@@ -40,19 +42,19 @@ class NonLocalAttention(nn.Module):
         for i in range(len(self.conv_match1)):
             x_embed_1 = self.conv_match1[i](x_embed_1)
             if i==0:
-                x_embed_1 = x_embed_1.npu_format_cast(0)
+                x_embed_1 = torch_npu.npu_format_cast(x_embed_1, 0)
         #x_embed_2 = self.conv_match2(input)
         x_embed_2 = input
         for i in range(len(self.conv_match2)):
             x_embed_2 = self.conv_match2[i](x_embed_2)
             if i==0:
-                x_embed_2 = x_embed_2.npu_format_cast(0)
+                x_embed_2 = torch_npu.npu_format_cast(x_embed_2, 0)
         #x_assembly = self.conv_assembly(input)
         x_assembly = input
         for i in range(len(self.conv_assembly)):
             x_assembly = self.conv_assembly[i](x_assembly)
             if i==0:
-                x_assembly = x_assembly.npu_format_cast(0)
+                x_assembly = torch_npu.npu_format_cast(x_assembly, 0)
 
         N,C,H,W = x_embed_1.shape
         x_embed_1 = x_embed_1.permute(0,2,3,1).view((N,H*W,C))
@@ -89,13 +91,13 @@ class CrossScaleAttention(nn.Module):
         for i in range(len(self.conv_assembly)):
             embed_w = self.conv_assembly[i](embed_w)
             if i==0:
-                embed_w = embed_w.npu_format_cast(0)
+                embed_w = torch_npu.npu_format_cast(embed_w, 0)
         #match_input = self.conv_match_1(input)
         match_input = input
         for i in range(len(self.conv_match_1)):
             match_input = self.conv_match_1[i](match_input)
             if i==0:
-                match_input = match_input.npu_format_cast(0)
+                match_input = torch_npu.npu_format_cast(match_input, 0)
         
         # b*c*h*w
         shape_input = list(embed_w.size())   # b*c*h*w
@@ -120,7 +122,7 @@ class CrossScaleAttention(nn.Module):
         for i in range(len(self.conv_match_2)):
             ref = self.conv_match_2[i](ref)
             if i==0:
-                ref = ref.npu_format_cast(0)
+                ref = torch_npu.npu_format_cast(ref, 0)
         w = extract_image_patches(ref, ksizes=[self.ksize, self.ksize],
                                   strides=[self.stride, self.stride],
                                   rates=[1, 1],

@@ -45,7 +45,7 @@ test/output/devie_id/Se-ResNext101_bs1024_8p_acc.log   # 8p training accuracy re
 ```
 
 ## online inference demo
-`python3.7 demo.py`
+`python3 demo.py`
 
 
 ## SE-ResNeXt101_32x4d training result

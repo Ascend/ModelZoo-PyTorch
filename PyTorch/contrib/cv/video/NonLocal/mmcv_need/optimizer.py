@@ -18,13 +18,15 @@ from distutils.version import LooseVersion
 from itertools import chain
 
 from torch.nn.utils import clip_grad
-from torch._six import inf
+from math import inf
 
 from mmcv.utils import TORCH_VERSION
 from ..dist_utils import allreduce_grads
 from ..fp16_utils import LossScaler, wrap_fp16_model
 from .hook import HOOKS, Hook
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from apex import amp
 
 try:
@@ -65,7 +67,7 @@ def clip_grad_norm_(parameters, max_norm, norm_type=2):
                 for p in parameters
             ]), norm_type)
     clip_coef = max_norm / (total_norm + 1e-6)
-    clip_coef = clip_coef.npu_format_cast(2)
+    clip_coef = torch_npu.npu_format_cast(clip_coef, 2)
     if clip_coef < 1:
         for p in parameters:
             p.grad.detach().mul_(clip_coef)

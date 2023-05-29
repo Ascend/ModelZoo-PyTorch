@@ -77,7 +77,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 main-8p.py \
+python3 main-8p.py \
 	-a xception \
 	--amp \
     --data ${data_path} \

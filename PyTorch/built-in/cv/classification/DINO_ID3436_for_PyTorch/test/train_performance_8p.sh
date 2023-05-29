@@ -110,7 +110,7 @@ export WORLD_SIZE=8
 KERNEL_NUM=$(($(nproc)/8))
 
 arch=vit_small
-python3.7 preparation.py --arch ${arch}
+python3 preparation.py --arch ${arch}
 echo "Preparation completed, start to train"
 
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
@@ -120,7 +120,7 @@ do
   export LOCAL_RANK=$RANK_ID
   PID_START=$((KERNEL_NUM * RANK_ID))
   PID_END=$((PID_START + KERNEL_NUM - 1))
-  nohup taskset -c $PID_START-$PID_END python3.7 -u main_dino.py \
+  nohup taskset -c $PID_START-$PID_END python3 -u main_dino.py \
     --arch ${arch} \
     --data_path $data_path \
     --output_dir ./output \

@@ -89,7 +89,7 @@ do
         mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID/ckpt
     fi
 
-    python3.7 ./code/run_squad.py \
+    python3 ./code/run_squad.py \
         --do_train \
         --do_eval \
         --model spanbert-base-cased \

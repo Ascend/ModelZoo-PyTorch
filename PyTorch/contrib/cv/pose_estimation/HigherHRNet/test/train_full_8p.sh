@@ -78,7 +78,7 @@ fi
 start_time=$(date +%s)
 # source 环境变量
 source ${test_path_dir}/env.sh
-python3.7 tools/dist_train.py --cfg experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml \
+python3 tools/dist_train.py --cfg experiments/coco/higher_hrnet/w32_512_adam_lr1e-3.yaml \
                            --amp \
                            TRAIN.END_EPOCH ${train_epochs}\
                            DATASET.ROOT ${data_path} \

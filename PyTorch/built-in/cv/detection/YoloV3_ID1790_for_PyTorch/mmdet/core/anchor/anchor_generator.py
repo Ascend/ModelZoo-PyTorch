@@ -15,6 +15,8 @@
 import mmcv
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.nn.modules.utils import _pair
 
 from .builder import ANCHOR_GENERATORS
@@ -703,7 +705,7 @@ class YOLOAnchorGenerator(AnchorGenerator):
             #     anchor_stride,
             #     self.num_base_anchors[i],
             #     device=device)
-            flags = torch.npu_anchor_response_flags(
+            flags = torch_npu.npu_anchor_response_flags(
                 gt_bboxes,
                 featmap_sizes[i],
                 anchor_stride,

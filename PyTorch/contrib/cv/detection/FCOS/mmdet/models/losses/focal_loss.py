@@ -33,6 +33,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from ..builder import LOSSES
 from .utils import weight_reduce_loss
@@ -78,7 +80,7 @@ def _sigmoid_focal_loss(pred,
                         alpha=0.25, 
                         reduction='mean'):
     pred=pred.float()
-    pred = pred.npu_format_cast(0)
+    pred = torch_npu.npu_format_cast(pred, 0)
     p = torch.sigmoid(pred)
     
     targets_zero = torch.zeros(p.shape[0], p.shape[1] + 1).int().npu()

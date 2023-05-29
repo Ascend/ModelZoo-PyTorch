@@ -120,7 +120,7 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
+        taskset -c $a-$b python3 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
             --gpus 8 \
@@ -133,7 +133,7 @@ do
             --fps_lag=$fps_lag \
             --interval=$interval > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
+        python3 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
             --gpus 8 \

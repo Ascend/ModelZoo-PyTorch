@@ -85,7 +85,7 @@ do
 	PID_START=$((KERNEL_NUM * RANK_ID))
 	PID_END=$((PID_START + KERNEL_NUM - 1))
   export WORLD_SIZE=$RANK_SIZE
-  taskset -c $PID_START-$PID_END python3.7 ./eval8p.py \
+  taskset -c $PID_START-$PID_END python3 ./eval8p.py \
           --data=${data_path} \
           --checkpoint=${checkpoint_path} \
           --num-workers=${workers} \

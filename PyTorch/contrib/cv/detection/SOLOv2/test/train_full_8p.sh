@@ -78,7 +78,7 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
+        taskset -c $a-$b python3 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
             --gpus 8 \
@@ -88,7 +88,7 @@ do
             --data_root=$data_path \
             --total_epochs 12 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
+        python3 ./tools/train.py configs/solov2/solov2_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
             --gpus 8 \
@@ -100,7 +100,7 @@ do
     fi
 done
 wait
-python3.7 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  test/work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
+python3 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  test/work_dirs/solov2_release_r50_fpn_8gpu_1x/latest.pth --show \
       --out  results_solo.pkl --eval segm --data_root=$data_path >> ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
@@ -112,6 +112,8 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
 FPS=`grep -a 'FPS'  $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "FPS: " '{print $NF}'|awk 'NR==1{max=$1;next}{max=max>$1?max:$1}END{print max}'`
+#FPS值小数点后保留2位
+FPS=${FPS:0:$[`expr index $FPS '.'`+2]}
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

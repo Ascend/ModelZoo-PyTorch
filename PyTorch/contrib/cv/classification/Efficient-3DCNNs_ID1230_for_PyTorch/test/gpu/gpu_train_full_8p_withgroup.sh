@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 root_path=$1
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node 8 ../main.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node 8 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu gpu \
     --use_prof 0 \

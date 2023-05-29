@@ -51,7 +51,7 @@ cd X3D  # into source code root
 
 # Switch to your prepared environment
 
-python3.7 setup.py build develop  # build slowfast and install the remaining dependencies 
+python3 setup.py build develop  # build slowfast and install the remaining dependencies 
 ```
 
 

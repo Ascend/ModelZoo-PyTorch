@@ -91,15 +91,15 @@ FCOS是一个全卷积的one-stage目标检测模型，相比其他目标检测�
     cd mmcv
     export MMCV_WITH_OPS=1
     export MAX_JOBS=8
-    python3.7 setup.py build_ext
-    python3.7 setup.py develop
+    python3 setup.py build_ext
+    python3 setup.py develop
     pip3 list | grep mmcv  # 查看版本和路径
     ``` 
   6. 配置安装mmdet。
     ```
     cd Fcos
     pip3 install -r requirements/build.txt
-    python3.7 setup.py develop
+    python3 setup.py develop
     pip3 list | grep mmdet  # 查看版本和路径
     ```
   7. 修改apex中的113行，主要是为了支持O1，参考路径root/archiconda3/envs/fcos/lib/python3.7/site-packages/apex/amp/utils.py。
@@ -203,7 +203,7 @@ FCOS是一个全卷积的one-stage目标检测模型，相比其他目标检测�
 | 8p-竞品V |   X86    | 36.2  | 102.0 |   12   | O1       |  dynamic   |      1.5   |
 | 1p-Npu |   非ARM   | 16.4  | 3.19  |   1    | O1       |    32.0    |      1.8   |
 | 8p-Npu |   非ARM   | 36.2  | 44.81 |   12   | O1       |    32.0    |      1.8   |
-| 8p-Npu |   ARM    | 36.2  | 41.18 |   12   |   O1       |    32.0    |      1.8   |
+| 8p-Npu |   ARM    | 36.2  | 35.69 |   12   |   O1       |    32.0    |      1.8   |
 
 
 # 版本说明

@@ -59,7 +59,7 @@ Cascade R-CNN算法是CVPR2018的文章，通过级联几个检测网络达到�
   ```
   source Cascade_RCNN/test/env_npu.sh
   cd Cascade_RCNN
-  python3.7 setup.py build develop
+  python3 setup.py build develop
   ```
 
 ## 准备数据集

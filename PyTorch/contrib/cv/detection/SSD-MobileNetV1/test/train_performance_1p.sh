@@ -83,7 +83,7 @@ fi
 echo ${data_path}
 echo ${validation_data_path}
 
-nohup python3.7 ./main.py \
+nohup python3 ./main.py \
     --datasets=${data_path} \
     --validation_dataset=${validation_data_path} \
     --num_workers=${workers} \

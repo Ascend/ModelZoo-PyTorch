@@ -93,7 +93,7 @@ wait
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-python3.7 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
+python3 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed 49  \
     --workers 128 \

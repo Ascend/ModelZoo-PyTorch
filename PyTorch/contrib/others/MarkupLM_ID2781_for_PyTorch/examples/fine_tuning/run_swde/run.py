@@ -38,6 +38,8 @@ from utils import get_swde_features, SwdeDataset
 from eval_utils import page_level_constraint
 import constants
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import time
 import copy
 
@@ -127,12 +129,12 @@ def train(args, train_dataset, model, tokenizer, sub_output_dir):
         amp.register_float_function(torch, '_cast_Short')
         amp.register_float_function(torch, '_mkldnn_transpose')
         amp.register_float_function(torch, 'conv_transpose2d')
-        amp.register_float_function(torch, 'npu_transpose')
+        amp.register_float_function(torch_npu, 'npu_transpose')
         amp.register_float_function(torch, 'embedding')
         amp.register_float_function(torch, 'add')
         amp.register_float_function(torch, 'batch_norm_backward_reduce')
-        amp.register_float_function(torch, '_npu_dropout')
-        amp.register_float_function(torch, 'fast_gelu')
+        amp.register_float_function(torch_npu, '_npu_dropout')
+        amp.register_float_function(torch_npu, 'fast_gelu')
         # #amp.register_float_function(torch, 'gelugrad')
         amp.register_float_function(torch, 'relu')   
         model, optimizer = amp.initialize(model, optimizer, opt_level='O2', loss_scale=32.0, combine_grad=True)

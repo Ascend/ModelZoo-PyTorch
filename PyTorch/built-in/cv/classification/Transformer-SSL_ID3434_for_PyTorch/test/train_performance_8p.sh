@@ -93,14 +93,14 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END nohup python3.7 -u moby_main.py \
+        taskset -c $PID_START-$PID_END nohup python3 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
             --epochs 2 \
             --local_rank $RANK_ID \
             --batch-size $batch_size > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        nohup python3.7 -u moby_main.py \
+        nohup python3 -u moby_main.py \
             --cfg configs/moby_swin_tiny.yaml \
             --data-path $data_path \
             --epochs 2 \

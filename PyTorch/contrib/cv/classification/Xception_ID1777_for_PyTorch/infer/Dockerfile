@@ -3,7 +3,7 @@ FROM ${FROM_IMAGE_NAME}
 
 ARG SDK_PKG
 
-RUN ln -s  /usr/local/python3.7.5/bin/python3.7 /usr/bin/python
+RUN ln -s  /usr/local/python3.7.5/bin/python3 /usr/bin/python
 
 RUN apt-get update && \
     apt-get install libglib2.0-dev -y || \

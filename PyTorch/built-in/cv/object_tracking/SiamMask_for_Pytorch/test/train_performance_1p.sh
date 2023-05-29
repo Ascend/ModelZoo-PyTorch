@@ -101,7 +101,7 @@ export WORLD_SIZE=1
 export RANK=$RANK_ID
 export OMP_NUM_THREADS=1
 
-nohup python3.7 -u tools/train_siammask.py \
+nohup python3 -u tools/train_siammask.py \
                 --config=experiments/siammask_base/config.json \
                 --workers 32 \
                 --batch $batch_size \

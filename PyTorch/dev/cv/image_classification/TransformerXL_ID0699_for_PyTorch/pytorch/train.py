@@ -151,6 +151,12 @@ def parse_args():
                          help='type of CPU affinity')
     general.add_argument('--profile', action='store_true',
                          help='Enable profiling with DLProf')
+    general.add_argument('--hf32', action='store_true',
+                         help='Enable_hi_float_32_execution')
+    general.add_argument('--fp32', action='store_true',
+                         help='Disable_hi_float_32_execution')
+    general.add_argument('--precision_mode', default='allow_mix_precision', type=str,
+                         help='precision_mode')
 
     dataset = parser.add_argument_group('dataset setup')
     dataset.add_argument('--data', type=str, default='../data/wikitext-103',
@@ -1229,6 +1235,14 @@ def main():
 
 
 if __name__ == "__main__":
+    args = parse_args()
+    option = {}
+    if args.precision_mode == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format = False  # 全局ND开关，默认值True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False  # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False  # matmul支持HF32开关，默认值True
+    torch.npu.set_option(option)
     # Disable profiling executor
     try:
         torch._C._jit_set_profiling_executor(False)

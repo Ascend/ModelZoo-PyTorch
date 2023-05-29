@@ -86,7 +86,7 @@ CLIP (Contrastive Language-Image Pre-Training，以下简称 CLIP) 模型是 Ope
 
    ```bash
    cd CLIP_for_PyTorch
-   python3.7 save_clip_roberta.py
+   python3 save_clip_roberta.py
    ```
 
 2. 执行以上代码，将会在CLIP_for_PyTorch模型根目录下生成clip-roberta文件夹，目录结构参考如下所示。

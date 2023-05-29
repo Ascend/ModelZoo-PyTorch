@@ -82,7 +82,7 @@ chmod +x ${cur_path}/tools/dist_train.sh
 # 修改数据路径
 sed -i "s|data/cityscapes/|$data_path/|g" configs/_base_/datasets/cityscapes.py
 
-taskset -c 0-95 python3.7 -m torch.distributed.launch --nproc_per_node=1 --master_port=29500 \
+taskset -c 0-95 python3 -m torch.distributed.launch --nproc_per_node=1 --master_port=29500 \
     ${cur_path}/tools/train.py \
     configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes_1p.py \
     --launcher pytorch \

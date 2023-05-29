@@ -78,11 +78,11 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 cd $cur_path
-python3.7 -m pip install -e .
+python3 -m pip install -e .
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3.7 tools/train_net.py \
+nohup python3 tools/train_net.py \
         --config-file  configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
         AMP 1 \
         OPT_LEVEL O2 \

@@ -15,6 +15,8 @@
 
 import math
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 
 
@@ -45,7 +47,7 @@ class Generator(nn.Module):
     def forward(self, x):
         # block1 = self.block1(x)
         block0 = self.block0(x)
-        block1 = self.block1(block0.npu_format_cast(2))
+        block1 = self.block1(torch_npu.npu_format_cast(block0, 2))
         block2 = self.block2(block1)
         block3 = self.block3(block2)
         block4 = self.block4(block3)
@@ -117,7 +119,7 @@ class ResidualBlock(nn.Module):
         residual = self.conv1(x)
         residual = self.bn1(residual)
         # residual = self.prelu(residual)
-        residual = self.prelu(residual.npu_format_cast(2))
+        residual = self.prelu(torch_npu.npu_format_cast(residual, 2))
         residual = self.conv2(residual)
         residual = self.bn2(residual)
 
@@ -135,7 +137,7 @@ class UpsampleBLock(nn.Module):
         x = self.conv(x)
         x = self.pixel_shuffle(x)
         # x = self.prelu(x)
-        x = self.prelu(x.npu_format_cast(2))
+        x = self.prelu(torch_npu.npu_format_cast(x, 2))
         return x
 
 if __name__ == '__main__':

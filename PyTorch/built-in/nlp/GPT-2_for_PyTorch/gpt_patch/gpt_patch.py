@@ -257,7 +257,10 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
         mixed_x_layer = mixed_x_layer.view(*new_tensor_shape)
 
         # NZ: [b * sq, np, 3 * hn] --> 3 [b * sq, np, hn]
-        (query_layer, key_layer, value_layer) = mpu.split_tensor_along_last_dim(mixed_x_layer.npu_format_cast(2), 3)
+        (query_layer, key_layer, value_layer) = mpu.split_tensor_along_last_dim(
+            torch_npu.npu_format_cast(mixed_x_layer, 2),
+            3
+        )
     elif self.attention_type == AttnType.cross_attn:
         # Attention heads [sk, b, h] --> [sk, b, (np * 2 * hn)]
         mixed_kv_layer, _ = self.key_value(encoder_output)
@@ -299,15 +302,21 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
     confusion_transpose = self.hidden_size_per_attention_head % 16 == 0
     if confusion_transpose:
         # NZ: [b * sq, np, hn] -> [b, np, sq, hn]
-        query_layer = query_layer.npu_confusion_transpose((0, 2, 1, 3), (batch_size, query_layer.size(0) // batch_size,
-                                                                         self.num_attention_heads_per_partition,
-                                                                         self.hidden_size_per_attention_head),
-                                                          False)
+        query_layer = torch_npu.npu_confusion_transpose(
+            query_layer,
+            (0, 2, 1, 3),
+            (batch_size, query_layer.size(0) // batch_size,
+             self.num_attention_heads_per_partition, self.hidden_size_per_attention_head),
+            False
+        )
         # # NZ: [b * sq, np, hn] -> [b, np, hn, sq]
-        key_layer = key_layer.npu_confusion_transpose((0, 2, 1, 3), (batch_size, key_layer.size(0) // batch_size,
-                                                                     self.num_attention_heads_per_partition,
-                                                                     self.hidden_size_per_attention_head),
-                                                      False)
+        key_layer = torch_npu.npu_confusion_transpose(
+            key_layer,
+            (0, 2, 1, 3),
+            (batch_size, key_layer.size(0) // batch_size,
+             self.num_attention_heads_per_partition, self.hidden_size_per_attention_head),
+            False
+        )
         matmul_result = matmul_transpose(query_layer, key_layer)
     else:
         query_layer = query_layer.reshape(batch_size, query_layer.size(0) // batch_size,
@@ -349,10 +358,13 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
 
     if confusion_transpose:
         # NZ: [b * sk, np, hn] -> [b, np, sk, hn]
-        value_layer = value_layer.npu_confusion_transpose((0, 2, 1, 3), (batch_size, value_layer.size(0) // batch_size,
-                                                                         self.num_attention_heads_per_partition,
-                                                                         self.hidden_size_per_attention_head),
-                                                          False)
+        value_layer = torch_npu.npu_confusion_transpose(
+            value_layer,
+            (0, 2, 1, 3),
+            (batch_size, value_layer.size(0) // batch_size,
+             self.num_attention_heads_per_partition, self.hidden_size_per_attention_head),
+            False
+        )
     else:
         value_layer = value_layer.reshape(batch_size, value_layer.size(0) // batch_size,
                                           self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
@@ -363,10 +375,11 @@ def ParallelAttentionForward(self, hidden_states, attention_mask, layer_past=Non
 
     # [b * sq, h]
     if confusion_transpose:
-        context_layer = context_layer.npu_confusion_transpose((0, 2, 1, 3),
-                                                              (context_layer.size(0) * context_layer.size(2),
-                                                               context_layer.size(1) * context_layer.size(3)),
-                                                              True)
+        context_layer = torch_npu.npu_confusion_transpose(context_layer,
+                                                          (0, 2, 1, 3),
+                                                          (context_layer.size(0) * context_layer.size(2),
+                                                          context_layer.size(1) * context_layer.size(3)),
+                                                          True)
     else:
         context_layer = context_layer.transpose(1, 2)
         context_layer = context_layer.reshape(context_layer.size(0) * context_layer.size(1), -1)
@@ -422,7 +435,7 @@ def ParallelMLPForward(self, hidden_states):
     intermediate_parallel, bias_parallel = self.dense_h_to_4h(hidden_states)
     intermediate_parallel = intermediate_parallel + bias_parallel if bias_parallel is not None else intermediate_parallel
     if self.bias_gelu_fusion:
-        intermediate_parallel = torch.fast_gelu(intermediate_parallel)
+        intermediate_parallel = torch_npu.fast_gelu(intermediate_parallel)
     else:
         intermediate_parallel = self.activation_func(intermediate_parallel)
 
@@ -454,7 +467,7 @@ def ParallelTransformerLayerForward(self, hidden_states, attention_mask, encoder
     # hidden_states: [b, s, h]
 
     # Layer norm at the beginning of the transformer layer.
-    hidden_states = hidden_states.npu_format_cast(29)
+    hidden_states = torch_npu.npu_format_cast(hidden_states, 29)
     layernorm_output = self.input_layernorm(hidden_states)
     # Self attention.
     attention_output, attention_bias = self.attention(layernorm_output, attention_mask,
@@ -544,9 +557,13 @@ def ColumnParallelLinearForward(self, input_):
     input_shape = input_parallel.size()
     if input_parallel.dim() == 3:
         input_parallel = input_parallel.view(-1, input_shape[2])
-        output_parallel = torch.npu_linear(input_parallel, self.weight, bias).view(input_shape[0], input_shape[1], -1)
+        output_parallel = torch_npu.npu_linear(
+            input_parallel,
+            self.weight,
+            bias
+        ).view(input_shape[0], input_shape[1], -1)
     elif input_parallel.dim() == 2:
-        output_parallel = torch.npu_linear(input_parallel, self.weight, bias)
+        output_parallel = torch_npu.npu_linear(input_parallel, self.weight, bias)
     else:
         output_parallel = torch.nn.functional.linear(input_parallel, self.weight, bias)
 
@@ -570,9 +587,13 @@ def RowParallelLinearForward(self, input_):
     input_shape = input_parallel.size()
     if input_parallel.dim() == 3:
         input_parallel = input_parallel.view(-1, input_shape[2])
-        output_parallel = torch.npu_linear(input_parallel, self.weight, bias).view(input_shape[0], input_shape[1], -1)
+        output_parallel = torch_npu.npu_linear(
+            input_parallel,
+            self.weight,
+            bias
+        ).view(input_shape[0], input_shape[1], -1)
     elif input_parallel.dim() == 2:
-        output_parallel = torch.npu_linear(input_parallel, self.weight, bias)
+        output_parallel = torch_npu.npu_linear(input_parallel, self.weight, bias)
     else:
         output_parallel = torch.nn.functional.linear(input_parallel, self.weight, bias)
     # All-reduce across all the partitions.
@@ -751,10 +772,10 @@ def parallel_lm_logits(input_, word_embeddings_weight, parallel_output,
             logits_parallel = torch.nn.functional.linear(input_parallel, word_embeddings_weight, bias)
     else:
         if bias is None:
-            logits_parallel = torch.npu_linear(input_parallel, word_embeddings_weight)
+            logits_parallel = torch_npu.npu_linear(input_parallel, word_embeddings_weight)
         else:
-            logits_parallel = torch.npu_linear(input_parallel, word_embeddings_weight, bias)
-    logits_parallel = torch.npu_format_cast(logits_parallel, 2)
+            logits_parallel = torch_npu.npu_linear(input_parallel, word_embeddings_weight, bias)
+    logits_parallel = torch_npu.npu_format_cast(logits_parallel, 2)
     if parallel_output:
         return logits_parallel
 
@@ -836,8 +857,13 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
                 "causal mask is only for self attention"
             if self.mask_tri is None:
                 self.mask_tri = torch.triu(
-                    torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
-                    diagonal=1).npu_format_cast(29).bool()
+                    torch_npu.npu_format_cast(torch.ones(
+                        (1, 1, input.shape[2], input.shape[3]), 
+                        dtype=input.dtype,
+                        device=input.device),
+                        diagonal=1
+                    ), 29).bool()
+
             probs = torch.npu_scaled_masked_softmax(input, self.mask_tri, scale * (1.0 / norm_factor), False)
             probs = probs.half()
         else:
@@ -854,8 +880,12 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
         if self.attn_mask_type == AttnMaskType.causal:
             if self.mask_tri is None:
                 self.mask_tri = torch.triu(
-                    torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
-                    diagonal=1).npu_format_cast(29).bool()
+                    torch_npu.npu_format_cast(torch.ones(
+                        (1, 1, input.shape[2], input.shape[3]),
+                        dtype=input.dtype,
+                        device=input.device),
+                        diagonal=1
+                    ), 29).bool()
             mask_output = self.mask_func(input, self.mask_tri)
         else:
             mask_output = self.mask_func(input, mask) if mask is not None else input

@@ -19,6 +19,8 @@
 
 from typing import List
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torchvision.ops import boxes as box_ops
 from torchvision.ops import nms  # BC-compat
 
@@ -60,7 +62,8 @@ def npu_batched_nms(boxes, scores, labels, iou):
     boxes_for_nms = boxes + offsets[:, None]
     boxes_for_nms = boxes_for_nms.reshape(1, boxes_for_nms.shape[0], 1, 4)
     scores = scores.reshape(1, scores.shape[0], 1)
-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(boxes_for_nms.half(), scores.half(), -1000, iou, 400, 400)
+    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(boxes_for_nms.half(), scores.half(),
+                                                                                  -1000, iou, 400, 400)
     return nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num
 
 

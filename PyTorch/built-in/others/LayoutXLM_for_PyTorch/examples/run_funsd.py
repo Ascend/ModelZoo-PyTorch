@@ -1,11 +1,41 @@
-#!/usr/bin/env python
+# coding=utf-8
+# BSD 3-Clause License
+#
+# Copyright (c) 2017
+# All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ==========================================================================
+# !/usr/bin/env python
 # coding=utf-8
 
 import logging
 import os
 import sys
-from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 from datasets import ClassLabel, load_dataset, load_metric
@@ -13,7 +43,6 @@ from datasets import ClassLabel, load_dataset, load_metric
 import layoutlmft.data.datasets.funsd
 import transformers
 from layoutlmft.data import DataCollatorForKeyValueExtraction
-from layoutlmft.data.data_args import DataTrainingArguments
 from layoutlmft.models.model_args import ModelArguments
 from layoutlmft.trainers import FunsdTrainer as Trainer
 from transformers import (
@@ -22,12 +51,27 @@ from transformers import (
     AutoTokenizer,
     HfArgumentParser,
     PreTrainedTokenizerFast,
-    TrainingArguments,
     set_seed,
 )
+
+import torch
+
+try:
+    import torch_npu
+except Exception as e:
+    print('ERROR: Only supports torch >= 1.8 with torch_npu installed.')
+    raise e
+from torch_npu.contrib import transfer_to_npu
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from transformers.utils import check_min_version
+from layoutlmft.data.data_args import XFUNDataTrainingArguments
+from layoutlmft.utils import NPUTrainingArguments
 
+torch.npu.set_compile_mode(jit_compile=False)
+option = {}
+option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Conv2DBackpropFilter,Conv2DBackpropInput,Conv2D"
+option["MM_BMM_ND_ENABLE"] = 'disable'
+torch.npu.set_option(option)
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.5.0")
@@ -40,13 +84,15 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser((ModelArguments, XFUNDataTrainingArguments, NPUTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+
+    training_args.skip_steps = model_args.skip_steps
 
     # Detecting last checkpoint.
     last_checkpoint = None

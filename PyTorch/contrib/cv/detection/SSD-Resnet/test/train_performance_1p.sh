@@ -82,7 +82,7 @@ else
     sed -i "s|orig_state_dict = torch.load('./resnet34-333f7ec4.pth')|orig_state_dict = torch.load('${data_path}/resnet34-333f7ec4.pth')|g" ${cur_path}/resnet.py
 fi
 export WORLD_SIZE=$RANK_SIZE
-python3.7 ./train.py \
+python3 ./train.py \
     --data=${data_path} \
     --num-workers=${workers} \
     --lr=2.68e-3 \

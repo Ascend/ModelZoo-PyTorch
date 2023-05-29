@@ -113,7 +113,7 @@ EDSR是一种增强的深度超分辨率网络，通过从传统的ResNet架构�
     
     # demo
     # 先将待测试图片放到 test 文件夹，输出图片会放在在 output_sr 文件夹
-    python3.7.5 demo.py --cpu --pre_train=/path/to/model_best.pth
+    python3 demo.py --cpu --pre_train=/path/to/model_best.pth
     ```
 日志路径：
 

@@ -93,7 +93,7 @@ PIN_END=$((PID_START + KERNEL_NUM - 1))
 WORKERS_NUM=$((KERNEL_NUM - 1))
 
 nohup taskset -c $PID_START-$PIN_END \
-        python3.7 train.py \
+        python3 train.py \
             ${data_path} \
             ${train_epochs} \
             $CONFIG_YAML_PATH \

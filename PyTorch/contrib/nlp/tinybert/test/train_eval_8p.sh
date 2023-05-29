@@ -10,7 +10,7 @@ device_id='0,1,2,3,4,5,6,7'
 
 ################ compiling ##################
 source ./test/env_npu_8p.sh
-python3.7 main.py \
+python3 main.py \
   		 --do_eval \
 		   --student_model ./TinyBERT_dir \
 		   --data_dir ./glue_dir/SST-2 \

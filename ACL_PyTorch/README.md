@@ -289,7 +289,7 @@ CV-detection
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_sierkinhane_for_Pytorch">  CRNN_sierkinhane_for_Pytorch </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_BuiltIn_for_Pytorch">  CRNN_BuiltIn_for_Pytorch </a>
         </td>
         <td>IIIT5K_lmdb</td>
 	<td>74.87%</td>
@@ -319,6 +319,15 @@ CV-detection
         <td></td>
 	<td>5.9~6.1s(E2E)</td>
 	<td>bs x 1 x 32 x len</td>
+    </tr>
+    <tr>
+        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_Sierkinhane_for_Pytorch">CRNN_Sierkinhane_for_Pytorch</a></td>
+        <td>GitHub 仓库提供的 360 万数据集</td>
+	    <td>78.37%</td>
+        <td></td>
+        <td></td>
+	    <td>6011(bs64)</td>
+	    <td>bs x 1 x 32 x 160</td>
     </tr>
     <tr>
         <td>
@@ -653,6 +662,15 @@ CV-tracking
 	<td>30.1%</td>
 	<td>yolov3:467(bs1) <br> deep:2950(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 416 x 416</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/T2vec_for_Pytorch">  T2vec_for_PyTorch </a>
+        </td>
+        <td>Proto</td>
+	<td>/</td>
+	<td>9.85ms</td>
+	<td nowrap="nowrap">动态输入</td>
 </table>
 
 CV-image_registration
@@ -879,7 +897,14 @@ Nlp
         <td>75%</td>
 	<td>172(bs24)</td>
 	<td nowrap="nowrap">24 x 3 x 736 x 1280</td>
-
+    </tr>
+    <tr>
+        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/BiLSTM_CRF_PyTorch">  BiLSTM_CRF_PyTorch </a></td>
+        <td> CLUE_NER </td>
+        <td> f1=0.714 </td>
+        <td> 961(bs32)</td>
+        <td> ids:bs,50;mask:bs,50 </td>
+    </tr>
 </table>
 
 
@@ -1005,10 +1030,10 @@ CV-classfication
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Conformer_Ti">  Conformer_Ti </a>
         </td>
         <td>ImageNet</td>
-	<td>80.8%</td>
+	<td>81.09%</td>
         <td></td>
         <td></td>
-	<td>867.716(bs8)</td>
+	<td>907.58(bs8)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1218,13 +1243,13 @@ CV-classfication
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/GoogleNet">  GoogleNet </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/GoogleNet_for_Pytorch">  GoogleNet </a>
         </td>
         <td>ImageNet</td>
-	<td>69.77%</td>
-	<td>89.51%</td>
+	<td>69.78%</td>
+	<td>89.53%</td>
         <td></td>
-	<td>6287.326287(bs8)</td>
+	<td>6308.38(bs8)</td>
         <td></td>
 	<td>bs x 3 x 8 x 224 x 224</td>
     </tr>
@@ -1464,7 +1489,7 @@ CV-classfication
 	<td>78.31%</td>
         <td>94.05%</td>
 	<td></td>
-	<td>1908(bs16)</td>
+	<td>1844(bs8)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
@@ -1500,7 +1525,7 @@ CV-classfication
 	<td>69.75%</td>
         <td>89.10%</td>
 	<td></td>
-	<td>10796(bs16)</td>
+	<td>9828(bs128)</td>
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
@@ -1516,6 +1541,17 @@ CV-classfication
         <td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
+        <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet50_mlperf">  Resnet50_mlperf </a>
+        </td>
+        <td>ImageNet</td>
+    <td>76.44%</td>
+    <td></td>
+    <td>3940.45(bs64)</td>
+        <td></td>
+    <td>bs x 3 x 256 x 256</td>
+    </tr>
     <tr>
         <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Resnet101_Pytorch_Infer">  ResNet101_Pytorch_Infer </a>
@@ -1524,7 +1560,7 @@ CV-classfication
 	<td>77.38%</td>
         <td>93.56%</td>
 	<td></td>
-        <td>2793(bs8)</td>
+        <td>2548(bs8)</td>
 	<td></td>
 	<td>bs x 3 x 256 x 256</td>
     </tr>
@@ -2606,7 +2642,7 @@ CV-detection
         <td></td>
         <td></td>
         <td></td>
-	<td>3290(bs4)</td>
+	<td>2923(bs4)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
     </tr>

@@ -123,7 +123,7 @@ def select_foreground_proposals_fix_shape(
         if fg_selection_mask_num < fix_num:
             bg_index_all = nonzero_tuple(~fg_selection_mask)[0]
             bg_index_index_keep = torch.randperm(
-                bg_index_all.numel(), device=bg_index_all.device
+                bg_index_all.numel(), dtype=torch.int64, device=bg_index_all.device
             )[:(fix_num-fg_selection_mask_num)].cpu()
             bg_index_keep = bg_index_all.cpu()[bg_index_index_keep]
             fg_selection_mask = fg_selection_mask.cpu()

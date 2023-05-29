@@ -46,6 +46,8 @@ limitations under the License.
 """
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 # from torchvision.ops.roi_align import roi_align
 
 from torch.nn.modules.utils import _pair
@@ -63,7 +65,7 @@ class _ROIAlign(Function):
         ctx.input_shape = input_tensor.size()
         ctx.aligned = aligned
         roi_end_mode = 0
-        output = torch.npu_roi_align(
+        output = torch_npu.npu_roi_align(
             input_tensor, roi, spatial_scale,
             output_size[0], output_size[1], sampling_ratio, roi_end_mode)
 
@@ -78,7 +80,7 @@ class _ROIAlign(Function):
         sampling_ratio = ctx.sampling_ratio
         bs, ch, h, w = ctx.input_shape
 
-        grad_input = torch.npu_roi_alignbk(
+        grad_input = torch_npu.npu_roi_alignbk(
             grad_output, rois, ctx.input_shape,
             output_size[0], output_size[1],
             spatial_scale, sampling_ratio)
@@ -152,7 +154,7 @@ def get_label(label_maps, batch_coords, label_size=1, device='cpu'):
         target_label = target_label.view(B,C,H*W)
         target_label = torch.cat([target_label_cls.view(B,C,1),target_label],dim=2)
         
-    target_label = torch.nn.functional.softmax(target_label.squeeze().npu_format_cast(29), 1)
+    target_label = torch.nn.functional.softmax(torch_npu.npu_format_cast(target_label.squeeze(), 29), 1)
     return target_label
 
 #def get_labelmaps_with_coords(label_maps_topk, num_classes, on_value=1., off_value=0.,label_size=1, device='cuda'):

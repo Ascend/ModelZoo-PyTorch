@@ -1,6 +1,6 @@
 source scripts/set_env.sh
 
-python3.7 train.py \
+python3 train.py \
     --device npu \
     --device_num 1 \
     --world_size 1 \

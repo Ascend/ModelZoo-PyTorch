@@ -78,7 +78,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-nohup taskset -c 0-32 python3.7 -u ./train.py \
+nohup taskset -c 0-32 python3 -u ./train.py \
     --train-file ${data_path}/91-image_x2.h5 \
     --eval-file ${data_path}/Set5_x2.h5 \
     --outputs-dir ${test_path_dir}/npu_1p \

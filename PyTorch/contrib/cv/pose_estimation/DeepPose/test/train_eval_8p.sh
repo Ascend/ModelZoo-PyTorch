@@ -72,7 +72,7 @@ PORT=${PORT:-29500}
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * 0))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-taskset -c $PID_START-$PID_END python3.7 -m torch.distributed.launch --nproc_per_node=8 --master_port=$PORT \
+taskset -c $PID_START-$PID_END python3 -m torch.distributed.launch --nproc_per_node=8 --master_port=$PORT \
     ./test.py configs/top_down/deeppose/coco/npu_deeppose_res50_coco_256x192.py \
     ${checkpoint} --launcher pytorch-npu ${@:3} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

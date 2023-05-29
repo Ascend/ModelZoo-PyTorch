@@ -36,7 +36,7 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+        taskset -c $a-$b python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
             --launcher pytorch \
             --cfg-options \
             optimizer.lr=0.04 \
@@ -44,7 +44,7 @@ do
             --gpu-ids 0 \
             --opt-level O1 &
     else
-        python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+        python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
             --launcher pytorch \
             --cfg-options \
             optimizer.lr=0.04 \

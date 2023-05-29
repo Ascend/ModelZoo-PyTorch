@@ -93,7 +93,7 @@ do
     fi
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END nohup python3.7 train.py \
+    taskset -c $PID_START-$PID_END nohup python3 train.py \
         --backbone resnet \
         --lr ${learning_rate} \
         --workers 64 \

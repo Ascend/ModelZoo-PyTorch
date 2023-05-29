@@ -1,4 +1,4 @@
-imgaug
+imgaug==0.4.0
 lanms-neo==1.0.2
 lmdb
 matplotlib
@@ -8,4 +8,3 @@ pyclipper
 pycocotools
 rapidfuzz>=2.0.0
 scikit-image
-mmdet

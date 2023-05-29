@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 
@@ -36,8 +38,8 @@ class LabelSmoothingCrossEntropy(nn.Module):
         self.off_value = 1.0 * smooth_factor / (num_classes - 1)
 
     def forward(self, input, target):
-        one_hot_label = torch.npu_one_hot(target.int(), -1, input.size(1), self.on_value, self.off_value)
-        loss = torch.npu_softmax_cross_entropy_with_logits(input, one_hot_label)
+        one_hot_label = torch_npu.npu_one_hot(target.int(), -1, input.size(1), self.on_value, self.off_value)
+        loss = torch_npu.npu_softmax_cross_entropy_with_logits(input, one_hot_label)
 
         loss = torch.mean(loss, [0], keepdim=False, dtype=torch.float32)
         return loss

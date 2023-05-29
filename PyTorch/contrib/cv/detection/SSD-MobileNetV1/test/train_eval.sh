@@ -73,7 +73,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./eval_ssd.py \
+python3 ./eval_ssd.py \
     --dataset=${data_path} \
     --trained_model=${pth_path} \
     --label_file=models/voc-model-labels.txt > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/test_${ASCEND_DEVICE_ID}.log 2>&1 &

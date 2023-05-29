@@ -85,7 +85,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 echo ${data_path}
 echo ${validation_data_path}
-python3.7 ./main.py \
+python3 ./main.py \
     --datasets=${data_path} \
     --validation_dataset=${validation_data_path} \
     --num_workers=${workers} \

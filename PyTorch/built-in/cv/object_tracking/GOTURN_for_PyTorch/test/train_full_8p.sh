@@ -53,7 +53,7 @@ if [ x"${etp_flag}" != x"true" ]; then
 	source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -u ./src/scripts/train.py \
+python3 -u ./src/scripts/train.py \
   --imagenet_path $IMAGENET_PATH \
   --alov_path $ALOV_PATH \
   --save_path $SAVE_PATH \

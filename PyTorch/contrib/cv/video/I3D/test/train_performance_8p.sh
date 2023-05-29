@@ -15,6 +15,6 @@ currentDir=$(cd "$(dirname "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
-taskset -c 0-47 python3.7 -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
+taskset -c 0-47 python3 -m torch.distributed.launch --nproc_per_node=$gpus --master_port=$port \
     ${currentDir}/../train.py --resume-from . --launcher pytorch --cfg-options total_epochs=1 \
     --gpu-ids 0 --data_root ${data_path} > ${currentDir}/../i3d_performance_8p.log 2>&1 &

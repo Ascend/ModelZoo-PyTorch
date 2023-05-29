@@ -13,7 +13,7 @@ asr_config=conf/tuning/train_asr_conformer.yaml
 inference_config=conf/decode_asr_rnn.yaml
 
 lm_config=conf/tuning/train_lm_transformer.yaml
-use_lm=true
+
 use_wordlm=false
 
 # speed perturbation related
@@ -32,7 +32,6 @@ fi
     --audio_format wav                                 \
     --feats_type raw                                   \
     --token_type char                                  \
-    --use_lm ${use_lm}                                 \
     --use_word_lm ${use_wordlm}                        \
     --lm_config "${lm_config}"                         \
     --asr_config "${asr_config}"                       \

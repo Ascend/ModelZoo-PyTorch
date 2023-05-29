@@ -63,8 +63,8 @@ SOLOv1框架的核心思想是按位置分割对象。输入图像在概念上�
   ```
   cd mmcv
   source test/env_npu.sh  
-  python3.7 setup.py build_ext
-  python3.7 setup.py develop
+  python3 setup.py build_ext
+  python3 setup.py develop
   cd ..
   pip3 list | grep mmcv  # 查看版本和路径
   ```

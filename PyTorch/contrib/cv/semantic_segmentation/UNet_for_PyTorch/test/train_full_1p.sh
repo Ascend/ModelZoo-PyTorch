@@ -20,6 +20,9 @@ device_id=0
 # 学习率
 learning_rate=0.001
 
+#精度参数
+precision_mode="allow_mix_precision"
+
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
 do
@@ -29,6 +32,12 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --more_path1* ]];then
         more_path1=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
+    elif [[ $para == --precision_mode* ]];then
+        precision_mode=`echo ${para#*=}`
     fi
 done
 
@@ -36,6 +45,12 @@ done
 if [[ $data_path == "" ]];then
     echo "[Error] para \"data_path\" must be confing"
     exit 1
+fi
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+   prec="SGD"
+else
+   prec="Adam"
 fi
 
 ###############指定训练脚本执行路径###############
@@ -50,6 +65,10 @@ else
     test_path_dir=${cur_path}/test
 fi
 
+#根据precision_mode修改amp默认值
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    sed -i "s|'--amp', default=True|'--amp', default=False|g" train.py
+fi
 
 #################创建日志输出目录，不需要修改#################
 if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
@@ -71,16 +90,22 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7.5 -u train.py \
+nohup python3 -u train.py \
     --device_id $device_id \
     ${data_path} \
-    --optimizer Adam \
+    --optimizer ${prec} \
     --epochs 100 \
     --batch_size 16 \
     --lr 1e-3 \
-    --num_workers 4  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+    --num_workers 4 \
+    --precision_mode ${precision_mode} \
+    ${hf32} ${fp32} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    sed -i "s|'--amp', default=False|'--amp', default=True|g" train.py
+fi
 
 ##################获取训练数据################
 # 训练结束时间，不需要修改
@@ -104,7 +129,13 @@ echo "E2E Training Duration sec : $e2e_time"
 # 训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 # 获取性能数据，不需要修改
 # 吞吐量

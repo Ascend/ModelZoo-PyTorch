@@ -100,7 +100,7 @@ fi
 
 echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 echo "$data_path"
-python3.7 -m torch.distributed.launch --nproc_per_node 1 main.py \
+python3 -m torch.distributed.launch --nproc_per_node 1 main.py \
     --data ${data_path} \
     --model CSWin_64_12211_tiny_224 \
     -j 16 \

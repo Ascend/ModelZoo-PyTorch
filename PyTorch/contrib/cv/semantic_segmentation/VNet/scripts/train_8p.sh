@@ -1,6 +1,6 @@
 source scripts/set_env.sh
 export PYTHONWARNINGS='ignore:semaphore_tracker:UserWarning'
-python3.7 train.py \
+python3 train.py \
     --device npu \
     --device_num 8 \
     --world_size 1 \

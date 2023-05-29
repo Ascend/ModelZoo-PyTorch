@@ -59,7 +59,7 @@ do
     echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
     #################启动训练脚本#################
     export RANK_ID=$RANK_ID
-    nohup python3.7 -u ./train.py \
+    nohup python3 -u ./train.py \
         --data=${data_path} \
         --seed=1234 \
         --max_iter=${max_iter} \

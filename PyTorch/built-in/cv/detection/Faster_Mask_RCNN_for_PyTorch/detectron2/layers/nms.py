@@ -16,6 +16,8 @@
 
 from typing import List
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 # from torchvision.ops import boxes as box_ops
 # from torchvision.ops import nms  # BC-compat
 import numpy as np
@@ -60,7 +62,7 @@ def batched_nms_npu(boxes, scores, idxs, iou_threshold):
     selected_mask	tensor	当前候选框是否可用的标志
     '''
     _, _, keep_mask = \
-        torch.npu_nms_with_mask(
+        torch_npu.npu_nms_with_mask(
             torch.cat([boxes.float(), scores[..., None]], 1), iou_threshold)
     return keep_mask
 

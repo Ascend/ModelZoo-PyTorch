@@ -202,7 +202,7 @@ class Adam(torch.optim.Optimizer):
                 step_size = group["lr"] * math.sqrt(bias_correction2) / bias_correction1
                 # Decay the first and second moment running average coefficient
                 p_data_fp32, exp_avg, exp_avg_sq = \
-                    torch.npu_bert_apply_adam(group["lr"], beta1,
+                    torch_npu.npu_bert_apply_adam(group["lr"], beta1,
                                               beta2, group["eps"], grad, 0.0, 0.0,
                                               group["weight_decay"], step_size, adam_mode=1,
                                               out = (p_data_fp32, exp_avg,exp_avg_sq)

@@ -67,7 +67,7 @@ fi
 
 rm -rf train_performance_8p.log
 
-nohup python3.7 -m torch.distributed.launch --nproc_per_node=8 main_resnet50_scratch.py \
+nohup python3 -m torch.distributed.launch --nproc_per_node=8 main_resnet50_scratch.py \
 	--imnet_path ${data_path} \
 	--epochs ${train_epochs} \
 	--num_tasks 8 \

@@ -243,9 +243,9 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
 | 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
 | -------- | ---------- | ------ | ---- | ---- |
-|     310P3     |    1        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  1931    |
-|     310P3     |    4        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  4436    |
-|     310P3     |    8        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5499    |
-|     310P3     |    16        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5857    |
-|     310P3     |    32        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5967    |
-|     310P3     |    64        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5215    |
+|     310P3     |    1        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  1775.08 |
+|     310P3     |    4        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  4113.16 |
+|     310P3     |    8        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5140.21 |
+|     310P3     |    16        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5455.38 |
+|     310P3     |    32        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5527.69 |
+|     310P3     |    64        |  imagenet      |   acc-Top1:73.31<br>acc-Top5:91.44   |  5082.96 |

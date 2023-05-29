@@ -17,6 +17,8 @@
 import warnings
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import ConvModule, normal_init
@@ -341,7 +343,7 @@ class YOLOV3Head(BaseDenseHead, BBoxTestMixin):
             multi_lvl_bboxes = multi_lvl_bboxes.reshape(1, num_boxes, 1, 4)
             multi_lvl_cls_scores = multi_lvl_cls_scores.reshape(1, num_boxes, num_classes)
 
-            nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch.npu_batch_nms(
+            nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = torch_npu.npu_batch_nms(
                 multi_lvl_bboxes.half(), multi_lvl_cls_scores.half(), cfg.score_thr,
                 cfg.nms['iou_threshold'], cfg.max_per_img, cfg.max_per_img
             )
@@ -549,14 +551,14 @@ class YOLOV3Head(BaseDenseHead, BBoxTestMixin):
         #     anchor_strides[sampling_result.pos_inds])
         # target_map[sampling_result.pos_inds, 4] = 1
 
-        target_map[:, :4] = torch.npu_yolo_boxes_encode(pos_bboxes,
-                                                        pos_gt_bboxes,
-                                                        anchor_strides,
-                                                        performance_mode=False)
+        target_map[:, :4] = torch_npu.npu_yolo_boxes_encode(pos_bboxes,
+                                                            pos_gt_bboxes,
+                                                            anchor_strides,
+                                                            performance_mode=False)
 
         target_map[:, 4] = pos_inds_f
 
-        gt_labels_one_hot = torch.npu_one_hot(
+        gt_labels_one_hot = torch_npu.npu_one_hot(
             gt_labels, -1, self.num_classes, 1, 0).float()
         if self.one_hot_smoother != 0:  # label smooth
             gt_labels_one_hot = gt_labels_one_hot * (

@@ -87,7 +87,7 @@ do
 	PID_START=$((KERNEL_NUM * RANK_ID))
 	PID_END=$((PID_START + KERNEL_NUM - 1))
   export WORLD_SIZE=$RANK_SIZE
-  taskset -c $PID_START-$PID_END python3.7 ./train.py \
+  taskset -c $PID_START-$PID_END python3 ./train.py \
           --data=${data_path} \
           --num-workers=${workers} \
           --lr=3.2e-3 \

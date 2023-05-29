@@ -22,7 +22,7 @@ import torch
 if torch.__version__ >= "1.8":
     import torch_npu
 import torch.distributed as dist
-from mmcv.runner import (DistSamplerSeedHook, Fp16OptimizerHook, EpochBaseRunner,
+from mmcv.runner import (DistSamplerSeedHook, Fp16OptimizerHook, EpochBasedRunner,
                          build_optimizer, build_runner, get_dist_info)
 
 from mmcls.core import DistEvalHook, DistOptimizerHook, EvalHook

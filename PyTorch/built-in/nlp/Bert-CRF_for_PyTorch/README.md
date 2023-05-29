@@ -125,9 +125,10 @@ $data_path
      
      bash ./test/train_performance_8p.sh --data_path=$data_path # 8卡性能
      ```
-     启动高性能8卡训练。
+     启动高性能训练。
 
      ```
+     bash ./test/train_full_1p_fast.sh --data_path=$data_path  # 单卡精度
      bash ./test/train_full_8p_fast.sh --data_path=$data_path  # 8卡精度
      ```
    --data_path参数填写数据集路径，需写到数据集的一级目录。
@@ -153,23 +154,25 @@ $data_path
 |   1p-竞品A    | X86   | best_F1: 0.95499 |    97     |   20   |    O1    |      1.5      |
 |   8p-竞品A    | X86   | best_F1: 0.92541 |   719.1   |   20   |    O1    |      1.5      |
 |   1p-NPU    | 非arm  | best_F1: 0.96499 |    145    |   20   |    O1    |      1.8      |
-|   8p-NPU    |非arm   | best_F1: 0.92388 |   944.5   |   20   |    O1    |      1.8      |
-| 8p-NPU      | arm   | best_F1: 0.92388                 |   651.2   |   20   |    O1    |     1.11      |
+|   8p-NPU    |非arm   | best_F1: 0.95729 |   944.5   |   20   |    O1    |      1.8      |
+| 8p-NPU      | arm   | best_F1: 0.95729                 |   651.2   |   20   |    O1    |     1.11      |
 
-**表 3**  高性能8卡训练结果展示表
+**表 3**  高性能单卡，8卡训练结果展示表
 
 | NAME     | Accuracy-Highest |  samples/s | Epochs | AMP_Type | Torch_Version |
 | :------: | :-----:  | :---: | :-------: | :-----: | :-----------: |
-| 8p-NPU   | best_F1: 0.92723 | 2802 | 20 |      O2 | 1.8 |
+| 1p-NPU   | best_F1: 0.95690 | 1010 | 20 |      O2 | 1.11 |
+| 8p-NPU   | best_F1: 0.94647 | 7738 | 20 |      O2 | 1.11 |
 
 > **说明：**
-> 高性能8卡训练脚本与普通8卡脚本在参数设置上有区别：1、每张卡的batchsize由16提升为128；2、混合精度模式采用O2。
+> 高性能训练脚本与普通脚本在参数设置上有区别：1、每张卡的batchsize由16提升为192；2、混合精度模式采用O2。
 
 # 版本说明
 
 ## 变更
 
 2022.10.12：首次发布。
+2023.05.23：首次变更。
 
 ## FAQ
 

@@ -78,7 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 train_1p.py \
+nohup python3 train_1p.py \
   --preprocess True \
   --data_path=${data_path}  \
   --num_of_layers 17 \

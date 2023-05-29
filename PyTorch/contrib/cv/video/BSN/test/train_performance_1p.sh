@@ -22,7 +22,7 @@ else
 fi
 
 
-taskset -c 0-23 python3.7 -u main_1p.py --module PERF --tem_epoch 2 --pem_epoch 2 --data_path ${data_path} > ${test_path_dir}/output/0/train_perfomance_1p.log 2>&1 &
+taskset -c 0-23 python3 -u main_1p.py --module PERF --tem_epoch 2 --pem_epoch 2 --data_path ${data_path} > ${test_path_dir}/output/0/train_perfomance_1p.log 2>&1 &
 
 wait
 

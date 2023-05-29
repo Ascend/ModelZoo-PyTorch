@@ -25,5 +25,5 @@ if [ x"${etp_flag}" != x"true" ];then
     source test/env_npu.sh
 fi
 
-python3.7.5 make_hdf5.py --dataset I128 --batch_size 256 --data_root ${data_path}
-python3.7.5 calculate_inception_moments.py --dataset I128_hdf5 --data_root ${data_path}
+python3 make_hdf5.py --dataset I128 --batch_size 256 --data_root ${data_path}
+python3 calculate_inception_moments.py --dataset I128_hdf5 --data_root ${data_path}

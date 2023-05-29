@@ -90,7 +90,7 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 
 
 
-nohup taskset -c $PID_START-$PID_END python3.7 -u train_8p.py "$@"  \
+nohup taskset -c $PID_START-$PID_END python3 -u train_8p.py "$@"  \
     --dataset_root ${data_path} \
     --save_folder ./RefineDet320_bn/ \
     --num_workers $KERNEL_NUM \

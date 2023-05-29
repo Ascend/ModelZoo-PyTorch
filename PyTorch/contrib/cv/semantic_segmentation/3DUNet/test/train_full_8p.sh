@@ -61,7 +61,7 @@ do
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python3.7 -u train_brats2018_new.py \
+nohup taskset -c $PID_START-$PID_END python3 -u train_brats2018_new.py \
 --data_path $data_path \
 --amp --world_size $RANK_SIZE --rank $RANK_ID --workers $KERNEL_NUM \
 --batchSz 8 --lr 1e-2 --nEpochs 100 \

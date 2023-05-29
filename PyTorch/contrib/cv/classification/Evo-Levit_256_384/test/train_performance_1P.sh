@@ -55,7 +55,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7  -m torch.distributed.launch --nproc_per_node=1   main_levit.py \
+nohup python3  -m torch.distributed.launch --nproc_per_node=1   main_levit.py \
     --model EvoLeViT_256_384 \
     --input-size 384 \
     --batch-size 128 \

@@ -49,7 +49,7 @@ do
     export RANK_ID=$i
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 -u train.py \
+    nohup taskset -c $PID_START-$PID_END python3 -u train.py \
         --is_distributed 1 \
         --DeviceID 0,1,2,3,4,5,6,7 \
         --num_gpus 8 \

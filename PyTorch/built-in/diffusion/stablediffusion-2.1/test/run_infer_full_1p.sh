@@ -1,0 +1,13 @@
+ python scripts/txt2img.py \
+        --prompt "a professional photograph of an astronaut riding a horse" \
+        --ckpt /xxx.ckpt \
+        --config configs/stable-diffusion/v2-inference-v.yaml \
+        --H 768 \
+        --W 768 \
+        --device_id 4 \
+        --precision full \
+	--bf16 \
+        --n_samples 1 \
+        --n_iter 1 \
+        --dpm \
+        --steps 15

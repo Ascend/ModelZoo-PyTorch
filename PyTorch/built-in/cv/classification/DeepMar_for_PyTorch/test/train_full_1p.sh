@@ -123,11 +123,11 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 # 绑核，不需要的绑核的模型删除，需要模型审视修改
-taskset -c 0-23 python3.7 ${cur_path}/transform_peta.py \
+taskset -c 0-23 python3 ${cur_path}/transform_peta.py \
 	--save_dir=$data_path \
 	--traintest_split_file=$data_path/peta_partition.pkl
 
-nohup  taskset -c 0-23 python3.7 ${cur_path}/train_deepmar_resnet50.py \
+nohup  taskset -c 0-23 python3 ${cur_path}/train_deepmar_resnet50.py \
       --save_dir=$data_path \
       --workers=32 \
       --npu=$ASCEND_DEVICE_ID \

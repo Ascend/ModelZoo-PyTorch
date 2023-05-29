@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 set -x
-python3.7 ./scripts/validate.py \
+python3 ./scripts/validate.py \
     --cfg ./configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml \
     --batch 32 \
     --gpus 0 \

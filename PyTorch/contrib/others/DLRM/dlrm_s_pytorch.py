@@ -132,7 +132,7 @@ exc = getattr(builtins, "IOError", "FileNotFoundError")
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 def time_wrap(use_npu):
     if use_npu:
@@ -496,7 +496,7 @@ class DLRM_Net(nn.Module):
             (batch_size, d) = x.shape
             T = torch.cat([x] + ly, dim=1).view((batch_size, -1, d))
             # perform a dot product
-            Z = torch.npu_bmmV2(T, T.permute(0, 2, 1), [])
+            Z = torch_npu.npu_bmmV2(T, T.permute(0, 2, 1), [])
             # append dense feature with the interactions (into a row vector)
             # approach 1: all
             # Zflat = Z.view((batch_size, -1))

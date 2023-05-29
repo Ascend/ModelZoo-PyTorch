@@ -42,6 +42,14 @@ def pth2onnx(args):
     model = Model(args).to("cpu")
     model.load_weights(args.input_path, strict=False)
 
+    # dump crf weights for postprocess
+    init_se_transitions_crf = [
+        model.crf.state_dict()['start_transitions'].detach().numpy(),
+        model.crf.state_dict()['end_transitions'].detach().numpy(),
+    ]
+    np.save(".crf.npy", model.crf.state_dict()['transitions'].detach().numpy())
+    np.save(".crf_se.npy", init_se_transitions_crf)
+
     # build data
     def build_input_data(shape=(1, 256), low=1, high=1024, dtype="int64"):
         input_data = np.random.uniform(low, high, shape).astype(dtype)
@@ -67,7 +75,7 @@ def pth2onnx(args):
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='SwinTransformer onnx export.')
+    parser = argparse.ArgumentParser(description='Bert_Base_Chinese onnx export.')
     parser.add_argument('-i', '--input_path', type=str, required=True,
                         help='input path for pth model')
     parser.add_argument('-o', '--out_path', type=str, required=True,

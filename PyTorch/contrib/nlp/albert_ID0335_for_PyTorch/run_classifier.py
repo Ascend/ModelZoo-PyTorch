@@ -140,100 +140,41 @@ def train(args, train_dataset, model, tokenizer):
                            profile_type=os.getenv("PROFILE_TYPE"))
         for step, batch in enumerate(train_dataloader):
             print('=====iter%d' % global_step)
-            if args.local_rank == -1 and step == 30:  # 单卡模式生成prof
-                if 'npu' in str(args.device):
-                    model.train()
-                    batch = tuple(t.to(args.device) for t in batch)
-                    inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'labels': batch[3]}
-                    inputs['token_type_ids'] = batch[2]
-                    profiler.start()
-                    outputs = model(**inputs)
-                    loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
-                    if args.n_gpu > 1:
-                        loss = loss.mean()  # mean() to average on multi-gpu parallel training
-                    if args.gradient_accumulation_steps > 1:
-                        loss = loss / args.gradient_accumulation_steps
-                    if args.fp16:
-                        with amp.scale_loss(loss, optimizer) as scaled_loss:
-                            scaled_loss.backward()
-                        torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-                    else:
-                        loss.backward()
-                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-                    tr_loss += loss.item()
-                    if (step + 1) % args.gradient_accumulation_steps == 0:
-                        optimizer.step()
-                        scheduler.step()  # Update learning rate schedule
-                        model.zero_grad()
-                        global_step += 1
-                    profiler.end()
-                    logger.info("npu profiler dump to {}{}npu.prof".format(args.output_dir, args.model_type))
-                    prof.export_chrome_trace("{}{}npu.prof".format(args.output_dir, args.model_type))
-                else:
-                    with torch.autograd.profiler.profile(use_cuda=False if 'cpu' in str(args.device) else True) as prof:
-                        model.train()
-                        batch = tuple(t.to(args.device) for t in batch)
-                        inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'labels': batch[3]}
-                        inputs['token_type_ids'] = batch[2]
+            model.train()
+            batch = tuple(t.to(args.device) for t in batch)
+            inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'labels': batch[3]}
+            inputs['token_type_ids'] = batch[2]
 
-                        outputs = model(**inputs)
-                        loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+            if step > 5:
+                fps.begin()
+            profiler.start()
+            outputs = model(**inputs)
+            loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
 
-                        if args.n_gpu > 1:
-                            loss = loss.mean()  # mean() to average on multi-gpu parallel training
-                        if args.gradient_accumulation_steps > 1:
-                            loss = loss / args.gradient_accumulation_steps
+            if args.n_gpu > 1:
+                loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            if args.gradient_accumulation_steps > 1:
+                loss = loss / args.gradient_accumulation_steps
 
-                        if args.fp16:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                            torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-                        else:
-                            loss.backward()
-                            torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-
-                        tr_loss += loss.item()
-                        if (step + 1) % args.gradient_accumulation_steps == 0:
-                            optimizer.step()
-                            scheduler.step()  # Update learning rate schedule
-                            model.zero_grad()
-                            global_step += 1
-                    logger.info("cuda profiler dump to {}{}gpu.prof".format(args.output_dir, args.model_type))
-                    prof.export_chrome_trace("{}/{}.prof".format(args.output_dir, args.model_type))
+            if args.fp16:
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+                torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
             else:
-                model.train()
-                batch = tuple(t.to(args.device) for t in batch)
-                inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'labels': batch[3]}
-                inputs['token_type_ids'] = batch[2]
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
 
-                if step > 5:
-                    fps.begin()
+            tr_loss += loss.item()
+            if (step + 1) % args.gradient_accumulation_steps == 0:
+                optimizer.step()
+                scheduler.step()  # Update learning rate schedule
+                model.zero_grad()
+                global_step += 1
 
-                outputs = model(**inputs)
-                loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+            if step > 5:
+                fps.end()
 
-                if args.n_gpu > 1:
-                    loss = loss.mean()  # mean() to average on multi-gpu parallel training
-                if args.gradient_accumulation_steps > 1:
-                    loss = loss / args.gradient_accumulation_steps
-
-                if args.fp16:
-                    with amp.scale_loss(loss, optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
-                else:
-                    loss.backward()
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
-
-                tr_loss += loss.item()
-                if (step + 1) % args.gradient_accumulation_steps == 0:
-                    optimizer.step()
-                    scheduler.step()  # Update learning rate schedule
-                    model.zero_grad()
-                    global_step += 1
-
-                if step > 5:
-                    fps.end()
+            profiler.end()
 
             if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
                 evaluate(args, model, tokenizer)

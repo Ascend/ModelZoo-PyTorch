@@ -84,7 +84,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7.5 tools/train_npu.py \
+taskset -c $PID_START-$PID_END python3 tools/train_npu.py \
     --data_path=${data_path} \
     --epoches=2 \
     --cfg=experiments/cityscapes/seg_hrnet_ocr_w48_train_512x1024_sgd_lr1e-2_wd5e-4_bs_12_epoch484.yaml \

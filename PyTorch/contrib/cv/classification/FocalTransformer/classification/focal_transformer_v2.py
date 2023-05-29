@@ -17,6 +17,8 @@ import math
 import time
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
@@ -53,7 +55,7 @@ def fast_gather_4d_v2(input, dim, index):
 class FastGELU(nn.Module):
     @staticmethod
     def forward(x):
-        return torch.fast_gelu(x)
+        return torch_npu.fast_gelu(x)
 
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FastGELU, drop=0.):
@@ -83,8 +85,8 @@ class MatmulApply(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad):
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 matmul_transpose = MatmulApply.apply

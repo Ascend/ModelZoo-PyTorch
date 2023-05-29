@@ -102,7 +102,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 
-python3.7.5 -u train.py \
+python3 -u train.py \
   --data_root=${data_path} \
   --dataset I128_hdf5 --num_workers ${workers} --batch_size ${batch_size} \
   --num_G_accumulations ${accumulations} --num_D_accumulations ${accumulations} \

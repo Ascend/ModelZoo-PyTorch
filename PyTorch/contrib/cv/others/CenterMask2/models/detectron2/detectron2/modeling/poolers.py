@@ -16,6 +16,8 @@ import math
 import sys
 from typing import List
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 # from torchvision.ops import RoIPool
 
@@ -258,7 +260,7 @@ class ROIPooler(nn.Module):
             inds_mask = (level_assignments == level)
             inds_num = inds_mask.sum().item()
             if inds_num != 0:
-                temp = pooler(x[level], pooler_fmt_boxes).npu_format_cast(0)
+                temp = torch_npu.npu_format_cast(pooler(x[level], pooler_fmt_boxes), 0)
                 if dtype == torch.float16:
                     output = torch.where(
                         inds_mask[:, None, None, None].repeat(

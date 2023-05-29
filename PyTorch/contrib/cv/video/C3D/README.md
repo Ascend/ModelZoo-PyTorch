@@ -61,7 +61,7 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
   export GIT_SSL_NO_VERIFY=1
   git config --global http.sslVerify false
   git clone -b v1.3.9 --depth=1 https://github.com/open-mmlab/mmcv.git
-  source ./test/env_npu.sh; cd mmcv; python3.7 setup.py build_ext; python3.7 setup.py develop
+  source ./test/env_npu.sh; cd mmcv; python3 setup.py build_ext; python3 setup.py develop
   ```
 - 修改mmcv。
 

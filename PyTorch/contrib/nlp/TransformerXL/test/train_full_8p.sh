@@ -77,7 +77,7 @@ for i in $(seq 0 7)
 do
     PID_START=$((KERNEL_NUM * i))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7 -u $(dirname $currentDir)/train_8p_npu.py \
+    taskset -c $PID_START-$PID_END python3 -u $(dirname $currentDir)/train_8p_npu.py \
         --addr=$(hostname -I |awk '{print $1}') \
         --workers=$(nproc) \
         --multiprocessing-distributed \

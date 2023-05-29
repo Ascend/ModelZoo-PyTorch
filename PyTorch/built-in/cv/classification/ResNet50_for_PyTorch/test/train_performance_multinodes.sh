@@ -82,7 +82,7 @@ fi
 export HCCL_IF_IP=$local_addr
 export NODE_RANK=$node_rank
 
-nohup python3.7 ./DistributedResnet50/main_apex_d76_npu.py \
+nohup python3 ./DistributedResnet50/main_apex_d76_npu.py \
 	--data ${data_path} \
 	--addr=$master_addr \
 	--seed=49 \

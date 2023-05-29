@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import utils
 import torch.nn as nn
 
@@ -353,8 +355,8 @@ class  MatmulApply(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad):
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 matmul_transpose = MatmulApply.apply
@@ -433,7 +435,7 @@ class Attention(torch.nn.Module):
                     global_attn[:, :N - 2] = (1 - tradeoff) * global_attn[:, :N - 2] + tradeoff * cls_attn
 
         # x = (attn @ v).transpose(1, 2).reshape(B, N, self.dh)
-        x = (attn @ v).npu_confusion_transpose([0, 2, 1, 3], (B, N, self.dh), True)  # todo
+        x = torch_npu.npu_confusion_transpose((attn @ v), [0, 2, 1, 3], (B, N, self.dh), True)  # todo
         x = self.proj(x)
         return x
 

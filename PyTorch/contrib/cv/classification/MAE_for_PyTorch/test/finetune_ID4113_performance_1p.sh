@@ -88,7 +88,7 @@ else
     finetune_pth=/npu/traindata/${pth_dirname}/checkpoint-0.pth
 fi
 
-nohup python3.7 -u main_finetune.py \
+nohup python3 -u main_finetune.py \
              --data_path ${data_path} \
              --finetune ${finetune_pth} \
              --output_dir ${output_dir} \

@@ -66,7 +66,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 -m torch.distributed.launch --nproc_per_node=4 --master_port=29111 train.py \
+python3 -m torch.distributed.launch --nproc_per_node=4 --master_port=29111 train.py \
     --resume-from . \
     --launcher pytorch \
     --cfg-options total_epochs=1 \

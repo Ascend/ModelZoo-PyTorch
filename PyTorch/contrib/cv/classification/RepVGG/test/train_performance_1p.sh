@@ -68,7 +68,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 -u train.py \
+nohup python3 -u train.py \
     -a RepVGG-A0 \
     --data ${data_path} \
     --workers 32 \

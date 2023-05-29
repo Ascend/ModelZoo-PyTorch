@@ -76,7 +76,7 @@ do
     export RANK=$RANK_ID
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 main_finetune.py  \
+    nohup taskset -c $PID_START-$PID_END python3 main_finetune.py  \
         --cfg configs/swin_base__100ep/simmim_finetune__swin_base__img192_window6__100ep.yaml \
         --opts TRAIN.EPOCHS $train_epochs \
         --pretrained ${ckpt_path} \

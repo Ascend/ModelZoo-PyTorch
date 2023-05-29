@@ -6,6 +6,8 @@
 # --------------------------------------------------------
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
@@ -25,7 +27,7 @@ class FastGELU(nn.Module):
 
     @staticmethod
     def forward(x):
-        return torch.fast_gelu(x)
+        return torch_npu.fast_gelu(x)
 
 def npu_drop_path(x, random_tensor, keep_prob: float = 0.):
     """
@@ -140,8 +142,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 matmul_transpose = MatmulApply.apply
@@ -197,7 +199,7 @@ def window_reverse(windows, window_size, H, W):
 
     # x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
     C = int((B_ * H_ * W_ * C_) / (B * H * W))
-    x = x.npu_confusion_transpose([0, 1, 3, 2, 4, 5], (B, H, W, C), True)
+    x = torch_npu.npu_confusion_transpose(x, [0, 1, 3, 2, 4, 5], (B, H, W, C), True)
 
     return x
 
@@ -284,7 +286,7 @@ class WindowAttention(nn.Module):
         #attn = self.attn_drop(attn)
 
         # x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
-        x = (attn @ v).npu_format_cast(2).npu_confusion_transpose([0, 2, 1, 3], (B_, N, C), True)
+        x = torch_npu.npu_confusion_transpose(torch_npu.npu_format_cast((attn @ v), 2), [0, 2, 1, 3], (B_, N, C), True)
         x = self.proj(x)
         #x = self.proj_drop(x)
         return x
@@ -319,7 +321,7 @@ class NpuSlice(torch.autograd.Function):
     def forward(ctx, input, H, W):
         B, Hp, Wp, C = input.shape
         ctx.input = input
-        result = torch.npu_indexing(input, [0, 0, 0, 0], [B, H, W, C], [1, 1, 1, 1])
+        result = torch_npu.npu_indexing(input, [0, 0, 0, 0], [B, H, W, C], [1, 1, 1, 1])
         return result
     @staticmethod
     def backward(ctx, grad):
@@ -327,7 +329,7 @@ class NpuSlice(torch.autograd.Function):
         input = ctx.input
         _, Hp, Wp, _ = input.shape
         pads = (0, 0, 0, Hp - H, 0, Wp - W, 0, 0)
-        self_grad = torch.npu_pad(grad, pads)
+        self_grad = torch_npu.npu_pad(grad, pads)
         return self_grad, None, None
 
 npu_slice = NpuSlice.apply
@@ -475,7 +477,7 @@ class SwinTransformerBlock(nn.Module):
         # FFN
         x = shortcut + self.drop_path(x)
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-            x = x + self.drop_path(self.mlp(self.norm2(x.npu_format_cast(29))))
+            x = x + self.drop_path(self.mlp(self.norm2(torch_npu.npu_format_cast(x, 29))))
         else:
             x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
@@ -744,7 +746,7 @@ class PatchMerging(nn.Module):
         x = x.reshape(B, int(H * W / 4), C * 4)
 
         if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-            x = x.npu_format_cast(2).npu_format_cast(29).contiguous()
+            x = torch_npu.npu_format_cast(torch_npu.npu_format_cast(x, 2), 29).contiguous()
 
         x = self.norm(x)
         x = self.reduction(x)
@@ -910,7 +912,7 @@ class PatchEmbed(nn.Module):
         if self.norm is not None:
             x = x.flatten(2).transpose(1, 2)
             if _LAYERNORM_FORMAT_NZ and x.size(-1) not in _LAYERNORM_FORMAT_NZ_BLACKLIST:
-                x = x.npu_format_cast(2).npu_format_cast(29)
+                x = torch_npu.npu_format_cast(torch_npu.npu_format_cast(x, 2), 29)
             x = self.norm(x)
 
         return x, Wh, Ww

@@ -99,7 +99,7 @@ do
     then
         let a=0+RANK_ID*24
         let b=23+RANK_ID*24
-        taskset -c $a-$b python3.7 -u ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
+        taskset -c $a-$b python3 -u ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level $apex \
             --addr ${master_addr} \
@@ -110,7 +110,7 @@ do
             --total_epochs 1 \
             --cfg-options data.imgs_per_gpu=${batch_size} > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 -u ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
+        python3 -u ./tools/train.py configs/solo/solo_r50_fpn_8gpu_1x.py \
             --launcher pytorch \
             --opt-level O1 \
             --addr ${master_addr} \

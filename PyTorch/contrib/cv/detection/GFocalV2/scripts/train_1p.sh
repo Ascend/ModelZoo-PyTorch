@@ -26,7 +26,7 @@ export NPUID=0
 export HCCL_WHITELIST_DISABLE=1
 
 export RANK=0
-python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
+python3 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
 	--cfg-options \
 	optimizer.lr=0.005 \
 	--seed 0 \
@@ -36,4 +36,4 @@ python3.7 ./tools/train.py configs/gfocal/gfocal_r50_fpn_1x.py \
 
 #PORT=27511 ./tools/dist_train.sh configs/gfocal/gfocal_r50_fpn_1x.py 1 --cfg-options optimizer.lr=0.00125 --seed 0 --gpu-ids 0 --opt-level O1
 #PORT=27511 ./tools/dist_test.sh configs/gfocal/gfocal_r50_fpn_1x.py work_dirs/gfocal_r50_fpn_1x/epoch_1.pth 1 --eval bbox
-#nohup python3.7 tools/test.py configs/gfocal/gfocal_r50_fpn_1x.py work_dirs/gfocal_r50_fpn_1x/epoch_1.pth --eval bbox
+#nohup python3 tools/test.py configs/gfocal/gfocal_r50_fpn_1x.py work_dirs/gfocal_r50_fpn_1x/epoch_1.pth --eval bbox

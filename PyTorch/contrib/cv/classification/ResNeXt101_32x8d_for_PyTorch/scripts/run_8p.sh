@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source scripts/set_npu_env.sh
-python3.7.5 ./main.py \
+python3 ./main.py \
 	/opt/npu/imagenet/ \
         --addr=$(hostname -I |awk '{print $1}') \
         --seed=49 \

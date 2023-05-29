@@ -26,7 +26,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7.5 -u ./train.py ./data/SST-2/ "$@"  \
+taskset -c $PID_START-$PID_END python3 -u ./train.py ./data/SST-2/ "$@"  \
     --restore-file $ROBERTA_PATH \
     --max-positions 512 \
     --batch-size $MAX_SENTENCES \

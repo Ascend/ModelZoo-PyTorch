@@ -8,6 +8,8 @@
 import numpy as np
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
@@ -29,7 +31,7 @@ def check_keywords_in_name(name, keywords=()):
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 
 def dist_collect(x):

@@ -77,7 +77,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./main.py \
+python3 ./main.py \
     ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \

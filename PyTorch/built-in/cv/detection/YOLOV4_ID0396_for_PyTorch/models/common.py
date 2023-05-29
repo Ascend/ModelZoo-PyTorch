@@ -16,6 +16,8 @@
 import math
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 # from mish_cuda import MishCuda as Mish
@@ -23,7 +25,7 @@ class Mish(nn.Module):
     def __init__(self):
         super(Mish, self).__init__()
     def forward(self, x):
-        x = torch.npu_mish(x)
+        x = torch_npu.npu_mish(x)
         return x
 
 def autopad(k, p=None):  # kernel, padding

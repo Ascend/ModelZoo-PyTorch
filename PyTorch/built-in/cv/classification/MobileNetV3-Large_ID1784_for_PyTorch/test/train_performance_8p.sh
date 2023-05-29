@@ -95,7 +95,7 @@ do
 
      # 绑核，不需要的绑核的模型删除，需要模型审视修改
     
-	nohup python3.7 ${cur_path}/main.py \
+	nohup python3 ${cur_path}/main.py \
         --arch=mobilenet \
         --data=${data_path} \
         --batch_size=${batch_size} \
@@ -123,7 +123,7 @@ ASCEND_DEVICE_ID=0
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep -a 'img/s'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $9}'|awk 'END {print}'`
+FPS=`grep -a 'img/s'  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk '{print $9}'| tail -n 60 | awk '{sum+=$1} END {print sum/NR}'`
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 

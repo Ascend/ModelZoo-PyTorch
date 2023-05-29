@@ -81,8 +81,8 @@ PSPNet，利用FCN中嵌入了不同场景的上下文特征。相比于FCN，�
     cd $YOURMMVCPATH
     export MMCV_WITH_OPS=1
     export MAX_JOBS=8
-    python3.7.5 setup.py build_ext
-    python3.7.5 setup.py develop
+    python3 setup.py build_ext
+    python3 setup.py develop
     pip3.7.5 list | grep mmcv
     
     cd /${模型文件夹名称}

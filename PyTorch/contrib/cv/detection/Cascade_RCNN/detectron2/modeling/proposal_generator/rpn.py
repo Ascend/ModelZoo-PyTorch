@@ -14,6 +14,8 @@
 # limitations under the License.
 from typing import Dict, List, Optional, Tuple, Union
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn.functional as F
 from fvcore.nn import giou_loss, smooth_l1_loss
 from torch import nn
@@ -390,7 +392,7 @@ class RPN(nn.Module):
 
         if self.box_reg_loss_type == "smooth_l1":
             anchors = type(anchors[0]).cat(anchors).tensor  # Ax(4 or 5)
-            gt_anchor_deltas = [torch.npu_bounding_box_encode
+            gt_anchor_deltas = [torch_npu.npu_bounding_box_encode
                                 (anchors, k, 0, 0, 0, 0, 1, 1, 1, 1)
                                 for k in gt_boxes]
             gt_anchor_deltas = torch.stack(
@@ -468,12 +470,13 @@ class RPN(nn.Module):
         # Transpose the Hi*Wi*A dimension to the middle:
         pred_objectness_logits = [
             # (N, A, Hi, Wi) -> (N, Hi, Wi, A) -> (N, Hi*Wi*A)
-            score.npu_format_cast(0).permute(0, 2, 3, 1).flatten(1)
+            torch_npu.npu_format_cast(score, 0).permute(0, 2, 3, 1).flatten(1)
             for score in pred_objectness_logits
         ]
         pred_anchor_deltas = [
             # (N, A*B, Hi, Wi) -> (N, A, B, Hi, Wi) -> (N, Hi, Wi, A, B) -> (N, Hi*Wi*A, B)
-            x.npu_format_cast(0).view(x.shape[0], -1, self.anchor_generator.box_dim, x.shape[-2], x.shape[-1])
+            torch_npu.npu_format_cast(x, 0)\
+                .view(x.shape[0], -1, self.anchor_generator.box_dim, x.shape[-2], x.shape[-1])
             .permute(0, 3, 4, 1, 2)
             .flatten(1, -2)
             for x in pred_anchor_deltas
@@ -544,7 +547,7 @@ class RPN(nn.Module):
             pred_anchor_deltas_i = pred_anchor_deltas_i.reshape(-1, B)
             # Expand anchors to shape (N*Hi*Wi*A, B)
             anchors_i = anchors_i.tensor.unsqueeze(0).expand(N, -1, -1).reshape(-1, B)
-            proposals_i = torch.npu_bounding_box_decode(
+            proposals_i = torch_npu.npu_bounding_box_decode(
                 anchors_i, pred_anchor_deltas_i, 0, 0, 0, 0, 1, 1, 1, 1,
                 (self.fix_shape[1], self.fix_shape[0]), 16/1000)
             # Append feature map proposals with shape (N, Hi*Wi*A, B)

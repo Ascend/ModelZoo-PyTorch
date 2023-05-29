@@ -68,7 +68,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 train.py \
+python3 train.py \
     --DataPath=${data_path} \
     --eval \
     --resume='checkpoints/model_best.pth.tar' \

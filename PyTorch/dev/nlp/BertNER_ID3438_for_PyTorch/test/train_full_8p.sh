@@ -51,11 +51,12 @@ for para in $*
 do
     if [[ $para == --precision_mode* ]];then
         apex_opt_level=`echo ${para#*=}`
-        if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
-            echo "[Error] para \"precision_mode\" must be config O1 or O2 or O3"
+        if [[ $apex_opt_level != "O0" ]] && [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
+            echo "[Error] para \"precision_mode\" must be config O0 or O1 or O2 or O3"
             exit 1
         fi
-        PREC="--fp16 --fp16_opt_level "$apex_opt_level
+        PREC=$apex_opt_level
+    
     elif [[ $para == --over_dump* ]];then
         over_dump=`echo ${para#*=}`
         over_dump_path=${cur_path}/output/overflow_dump
@@ -64,6 +65,10 @@ do
         data_dump_flag=`echo ${para#*=}`
         data_dump_path=${cur_path}/output/data_dump
         mkdir -p ${data_dump_path}
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --data_dump_step* ]];then
         data_dump_step=`echo ${para#*=}`
     elif [[ $para == --profiling* ]];then
@@ -74,6 +79,12 @@ do
         data_path=`echo ${para#*=}`
     fi
 done
+
+if [[ $PREC == "O0" ]];then
+    prec=" "
+else
+    prec="--fp16 --fp16_opt_level "$PREC
+fi
 
 #校验是否传入data_path,不需要修改
 if [[ $data_path == "" ]];then
@@ -100,7 +111,7 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../run_ner_crf.py \
   --task_name=$TASK_NAME \
   --do_train \
   --do_eval \
-  ${PREC} \
+  ${prec} \
   --do_lower_case \
   --data_dir=$data_path/datasets/${TASK_NAME}/ \
   --train_max_seq_length=128 \
@@ -114,6 +125,9 @@ nohup python3 ${DISTRIBUTED}  ${cur_path}/../run_ner_crf.py \
   --save_steps=-1 \
   --output_dir=${cur_path}/output/0/ckpt \
   --overwrite_output_dir \
+  --precision_mode=${precision_mode} \
+  ${fp32} \
+  ${hf32} \
   --seed=42 > ${cur_path}/output/0/train_0.log 2>&1 &
 
 wait
@@ -137,7 +151,13 @@ train_accuracy=`grep -E "f1:.*loss:" $cur_path/output/0/train_0.log|awk 'END{pri
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+fi
 
 ##获取性能数据
 #吞吐量，不需要修改

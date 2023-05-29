@@ -122,7 +122,7 @@ mkdir -p results/SQUAD
 
 for i in $(seq 0 7)
 do
-    python3.7 run_squad.py \
+    python3 run_squad.py \
             --init_checkpoint ${ckpt_path}/bert_large_pretrained_amp.pt \
             --bert_model bert-large-uncased \
             --do_train \

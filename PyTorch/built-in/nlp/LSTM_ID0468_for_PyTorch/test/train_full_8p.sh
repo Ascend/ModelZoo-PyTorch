@@ -79,6 +79,8 @@ do
         mkdir -p ${profiling_dump_path}
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+        batch_size=`echo ${para#*=}`
     fi
 done
 
@@ -104,6 +106,7 @@ fi
 cd $cur_path/NPU/8p/
 
 #训练前修改参数配置
+sed -i "s|batch_size: 1024|batch_size: ${batch_size}|g" conf/ctc_config.yaml
 sed -i "s|data|${data_path}|g" conf/ctc_config.yaml
 sed -i "s|from torch.utils.tensorboard import SummaryWriter|from tensorboardX import SummaryWriter|g" steps/train_ctc.py
 sed -i "s|data|${data_path}|g" ${data_path}/train/fbank.scp
@@ -139,7 +142,7 @@ fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
 #--data_dir, --model_dir, --precision_mode, --over_dump, --over_dump_path，--data_dump_flag，--data_dump_step，--data_dump_path，--profiling，--profiling_dump_path
-nohup python3.7 -u steps/train_ctc.py \
+nohup python3 -u steps/train_ctc.py \
 --rank 0 \
 --world_size 1 \
 --dist_backend 'hccl' \
@@ -159,6 +162,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #训练完恢复参数配置
+sed -i "s|batch_size: ${batch_size}|batch_size: 1024|g" conf/ctc_config.yaml
 sed -i "s|${data_path}|data|g" conf/ctc_config.yaml
 sed -i "s|from tensorboardX import SummaryWriter|from torch.utils.tensorboard import SummaryWriter|g"  steps/train_ctc.py
 sed -i "s|${data_path}|data|g" ${data_path}/train/fbank.scp

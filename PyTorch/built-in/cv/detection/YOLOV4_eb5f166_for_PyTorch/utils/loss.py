@@ -34,6 +34,8 @@
 # Loss functions
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 from utils.general import bbox_iou
@@ -153,7 +155,7 @@ def compute_loss(p, targets, model):  # predictions, targets, model
             #pwh = torch.exp(ps[:, 2:4]).clamp(max=1E3) * anchors[i]
             pbox = torch.cat((pxy, pwh), 1).to(device)  # predicted box
             giou = bbox_iou(pbox.T, tbox[i], x1y1x2y2=False, CIoU=True)  # giou(prediction, target)
-            # giou = torch.npu_giou(pbox.T, tbox[i].T, trans=True, is_cross=False).squeeze()
+            # giou = torch_npu.npu_giou(pbox.T, tbox[i].T, trans=True, is_cross=False).squeeze()
             giou = giou.mul(mask)
             lbox += (1.0 * mask - giou).sum() / mask_sum
             #lbox += (1.0 - giou).mean()  # giou loss
@@ -205,7 +207,7 @@ def build_targets(p, targets, model):
             na = anchors.shape[0]  # number of anchors
             at = torch.arange(na, device=targets.device).view(na, 1).repeat(1, nt_all)  # anchor tensor, same as .repeat_interleave(nt)
             r = t[None, :, 4:6] / anchors[:, None]  # wh ratio
-            # mask = torch.npu_max(torch.max(r, 1. / r), dim=2)[0] < model.hyp['anchor_t']  # compare
+            # mask = torch_npu.npu_max(torch.max(r, 1. / r), dim=2)[0] < model.hyp['anchor_t']  # compare
             mask = torch.max(r, 1. / r).max(2)[0] < model.hyp['anchor_t']  # compare
             # j = wh_iou(anchors, t[:, 4:6]) > model.hyp['iou_t']  # iou(3,n) = wh_iou(anchors(3,2), gwh(n,2))
             a, t = (at * mask).view(-1), (t.repeat(na, 1, 1) * mask.unsqueeze(2)).view(-1, 6)

@@ -93,7 +93,7 @@ def gelu(x):
     """
     # return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
     # return 0.5 * x * (1.0 + torch.erf(x / math.sqrt(2.0)))
-    return torch.fast_gelu(x)
+    return torch_npu.fast_gelu(x)
 
 
 def get_masks(slen, lengths, causal):
@@ -162,7 +162,7 @@ class PredLayer(nn.Module):
 
 class NpuLinear(nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 
 class MatmulApply(torch.autograd.Function):
@@ -178,8 +178,8 @@ class MatmulApply(torch.autograd.Function):
         # da: grad * b
         # db: grad^T * a
         self, mat2 = ctx.saved_tensors
-        self_grad = torch.npu_bmmV2(grad, mat2, [])
-        mat2_grad = torch.npu_bmmV2(grad.transpose(-2, -1), self, [])
+        self_grad = torch_npu.npu_bmmV2(grad, mat2, [])
+        mat2_grad = torch_npu.npu_bmmV2(grad.transpose(-2, -1), self, [])
         return self_grad, mat2_grad
 
 
@@ -206,7 +206,7 @@ class MultiHeadAttention(nn.Module):
 
     def _transpose_for_scores(self, x, bs, qlen):
         new_x_shape = (bs, qlen) + (self.n_heads, self.dim // self.n_heads)
-        return torch.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
+        return torch_npu.npu_confusion_transpose(x, (0, 2, 1, 3), new_x_shape, False)
 
     def forward(self, input, bs, qlen, mask, kv=None, cache=None):
         """
@@ -246,7 +246,8 @@ class MultiHeadAttention(nn.Module):
         weights = F.dropout(weights, p=self.dropout, training=self.training)  # (bs, n_heads, qlen, klen)
         context = torch.matmul(weights, v)                                    # (bs, n_heads, qlen, dim_per_head)
         # context = unshape(context)                                            # (bs, qlen, dim)
-        context = torch.npu_confusion_transpose(context, (0, 2, 1, 3), (context.size()[0] * context.size()[2], dim), True)
+        context = torch_npu.npu_confusion_transpose(context, (0, 2, 1, 3), 
+                                                    (context.size()[0] * context.size()[2], dim), True)
 
         return self.out_lin(context)
 
@@ -468,14 +469,14 @@ class TransformerModel(nn.Module):
         tensor *= mask.unsqueeze(-1).to(tensor.dtype)
 
         bs, qlen, dim = tensor.size()
-        tensor = tensor.view(-1, dim).clone().npu_format_cast(29)
+        tensor = torch_npu.npu_format_cast(tensor.view(-1, dim).clone(), 29)
         mask2 = mask.view(-1).unsqueeze(-1).repeat(1, self.dim)
-        mask2 = mask2.to(tensor.dtype).npu_format_cast(29)
+        mask2 = torch_npu.npu_format_cast(mask2.to(tensor.dtype), 29)
         attn_mask = (attn_mask==0).unsqueeze(-2).unsqueeze(-2)
 
         attn_mask = attn_mask.repeat(1, self.n_heads, slen, 1).half()
         attn_mask = attn_mask*(-65504.0)
-        attn_mask = attn_mask.npu_format_cast(29)
+        attn_mask = torch_npu.npu_format_cast(attn_mask, 29)
 
         # transformer layers
         for i, layer_module in enumerate(self.attentionlayer):

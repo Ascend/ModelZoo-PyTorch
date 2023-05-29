@@ -34,8 +34,8 @@ export MMCV_WITH_OPS=1
 export MAX_JOBS=8
 source NasFPN/test/env_npu.sh
 cd mmcv
-python3.7 setup.py build_ext
-python3.7 setup.py develop
+python3 setup.py build_ext
+python3 setup.py develop
 pip3 list | grep mmcv
 
 # 安装mmdetection

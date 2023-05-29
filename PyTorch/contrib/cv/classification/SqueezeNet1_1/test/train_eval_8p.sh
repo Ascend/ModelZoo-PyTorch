@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 main_8p.py \
+nohup python3 main_8p.py \
     -a ${Network} \
     --amp \
     --data ${data_path} \

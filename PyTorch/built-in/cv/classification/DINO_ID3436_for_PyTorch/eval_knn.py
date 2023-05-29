@@ -17,6 +17,8 @@ import sys
 import argparse
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -70,7 +72,7 @@ def extract_feature_pipeline(args):
         sys.exit(1)
     model.npu()
     utils.load_pretrained_weights(model, args.pretrained_weights, args.checkpoint_key, args.arch, args.patch_size)
-    amp.register_half_function(torch, "npu_linear")
+    amp.register_half_function(torch_npu, "npu_linear")
     model = amp.initialize(model, opt_level="O1", loss_scale="32")
     model.eval()
 

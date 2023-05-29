@@ -10,7 +10,7 @@ then
 fi
 
 
-python3.7 -u ./fairseq_cli/validate.py ./data/SST-2/ \
+python3 -u ./fairseq_cli/validate.py ./data/SST-2/ \
     --valid-subset $VALID_SPLIT \
     --path $ROBERTA_PATH \
     --batch-size 64 \

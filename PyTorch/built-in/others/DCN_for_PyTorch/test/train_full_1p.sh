@@ -73,7 +73,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-nohup python3.7 -u run_classification_criteo_dcn.py \
+nohup python3 -u run_classification_criteo_dcn.py \
 --npu_id=${ASCEND_DEVICE_ID} \
 --trainval_path=${data_path}/train_after_preprocess_trainval_0.93.txt \
 --test_path=${data_path}/train_after_preprocess_test_0.07.txt \

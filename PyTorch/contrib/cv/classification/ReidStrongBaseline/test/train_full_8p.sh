@@ -87,7 +87,7 @@ do
 	KERNEL_NUM=$(($(nproc)/8))
 	PID_START=$((KERNEL_NUM * RANK_ID))
 	PID_END=$((PID_START + KERNEL_NUM - 1))
-	nohup taskset -c $PID_START-$PID_END python3.7 tools/train_8P.py \
+	nohup taskset -c $PID_START-$PID_END python3 tools/train_8P.py \
 		--config_file='configs/8P_tri_with_cen.yml' \
 		--local_rank=$RANK_ID \
 		--npus=8 \

@@ -56,7 +56,7 @@ do
     export RANK=$RANK_ID
     let a=0+RANK_ID*24
     let b=23+RANK_ID*24
-    taskset -c $a-$b python3.7 ./tools/train.py ./configs/gcnet/mask_rcnn_r50_fpn_r4_gcb_c3-c5_1x_coco.py \
+    taskset -c $a-$b python3 ./tools/train.py ./configs/gcnet/mask_rcnn_r50_fpn_r4_gcb_c3-c5_1x_coco.py \
         --launcher pytorch \
         --work-dir gcnet_out/work_dirs8p \
         --no-validate \

@@ -36,7 +36,7 @@ bash test/train_eval_8p.sh --data_path=real_data_path --pre_train_path=real_pre_
 
 # demo
 # 输出图片在real_image_path文件夹，xxxx_srcnn_x2.bmp
-python3.7.5 demo.py --pre-train-path=real_pre_train_model_path --image-file=real_image_path
+python3 demo.py --pre-train-path=real_pre_train_model_path --image-file=real_image_path
 ```
 
 Log path:

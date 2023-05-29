@@ -18,7 +18,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup python3.7 -u train/main.py \
+nohup python3 -u train/main.py \
     --datadir ${data_path} \
     --decoder \
     --pretrainedEncoder "trained_models/erfnet_encoder_pretrained.pth.tar" \

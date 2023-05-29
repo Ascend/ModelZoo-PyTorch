@@ -82,7 +82,7 @@ export WORLD_SIZE=${RANK_SIZE}
 export RANK=$RANK_ID
 export OMP_NUM_THREADS=1
 
-nohup python3.7 -u ./tools/train.py configs/bisenetv1/bisenetv1_r50-d32_4x4_1024x1024_160k_cityscapes_1p_perf.py \
+nohup python3 -u ./tools/train.py configs/bisenetv1/bisenetv1_r50-d32_4x4_1024x1024_160k_cityscapes_1p_perf.py \
                 --work-dir=work_dirs/bisenetv1_1p_perf \
                 --seed 36436756 \
                 --gpu-ids 0 \

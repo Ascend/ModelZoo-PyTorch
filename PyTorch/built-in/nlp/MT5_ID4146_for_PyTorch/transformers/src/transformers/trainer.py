@@ -23,6 +23,9 @@ import os
 import random
 import re
 import shutil
+import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import sys
 import time
 import warnings
@@ -31,7 +34,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from tqdm.auto import tqdm
-
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 # Integrations must be imported before ML frameworks:
 from .integrations import (  # isort: split
@@ -147,7 +160,7 @@ if is_in_notebook():
 
 if is_apex_available():
     from apex import amp
-    amp.register_half_function(torch, 'npu_linear')
+    amp.register_half_function(torch_npu, 'npu_linear')
 
 if version.parse(torch.__version__) >= version.parse("1.6"):
     _is_torch_generator_available = True
@@ -1403,6 +1416,8 @@ class Trainer:
             self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
 
             step = -1
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                               profile_type=os.getenv("PROFILE_TYPE"))
             for step, inputs in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
@@ -1420,6 +1435,7 @@ class Trainer:
                 if step % args.gradient_accumulation_steps == 0:
                     self.control = self.callback_handler.on_step_begin(args, self.state, self.control)
 
+                profiler.start()
                 if (
                     ((step + 1) % args.gradient_accumulation_steps != 0)
                     and args.local_rank != -1
@@ -1524,6 +1540,7 @@ class Trainer:
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
+                profiler.end()
             if step < 0:
                 logger.warning(
                     f"There seems to be not a single sample in your epoch_iterator, stopping training at step"

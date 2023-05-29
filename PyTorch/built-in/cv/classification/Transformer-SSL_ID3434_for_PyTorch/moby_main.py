@@ -18,7 +18,7 @@ if torch.__version__ >= "1.8":
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 from timm.utils import AverageMeter
-from torch._six import inf
+from math import inf
 
 from config import get_config
 from models import build_model
@@ -47,8 +47,8 @@ try:
     # noinspection PyUnresolvedReferences
     from apex import amp
     amp.register_half_function(torch.nn.functional, 'softmax')
-    amp.register_half_function(torch, 'fast_gelu')
-    amp.register_half_function(torch, 'npu_linear')
+    amp.register_half_function(torch_npu, 'fast_gelu')
+    amp.register_half_function(torch_npu, 'npu_linear')
 except ImportError:
     amp = None
 

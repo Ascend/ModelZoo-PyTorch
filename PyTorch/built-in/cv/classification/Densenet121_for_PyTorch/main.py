@@ -147,6 +147,8 @@ parser.add_argument('--pretrained_weight', default='', type=str, metavar='PATH',
                     help='path to pretrained weight')
 parser.add_argument('--stop-step-num', default=None, type=int,
                     help='after the stop-step,killing the training task.')
+parser.add_argument('--hf32', action='store_true', help='enable_hi_float_32_execution')
+parser.add_argument('--fp32', action='store_true', help='disble_hi_float_32_execution')
 
 warnings.filterwarnings('ignore')
 best_acc1 = 0
@@ -169,6 +171,14 @@ def main():
     print("===============main()=================")
     print(args)
     print("===============main()=================")
+
+    option = {}
+    if args.opt_level == 'O0':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
+    torch.npu.set_option(option) 
 
     if args.seed is not None:
         random.seed(args.seed)
@@ -310,12 +320,15 @@ def main_worker(gpu, ngpus_per_node, args):
     optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-
     if args.amp:
         model, optimizer = amp.initialize(model, optimizer, 
                                           opt_level=args.opt_level, 
                                           loss_scale=args.loss_scale, 
                                           combine_grad=True)
+    else:
+        optimizer = torch.optim.SGD(model.parameters(), args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], broadcast_buffers=False)
 
@@ -586,10 +599,4 @@ def accuracy(output, target, topk=(1,)):
 
 if __name__ == '__main__':
     
-    option = {}
-    option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
-    option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
-    print("option:", option)
-    torch.npu.set_option(option)
-
     main()

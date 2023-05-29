@@ -74,4 +74,4 @@ def convert():
 
 if __name__ == "__main__":
     convert()
-# python3.7 ./scripts/pthtar2onnx.py --cfg ./configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml
+# python3 ./scripts/pthtar2onnx.py --cfg ./configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml

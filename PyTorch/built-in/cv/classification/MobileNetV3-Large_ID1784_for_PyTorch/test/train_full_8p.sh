@@ -96,7 +96,7 @@ do
     #let a=RANK_ID*12
     #let b=RANK_ID+1
     #let c=b*12-1
-    nohup python3.7 ${cur_path}/main.py \
+    nohup python3 ${cur_path}/main.py \
         --arch=mobilenet \
         --data=${data_path} \
         --batch_size=${batch_size} \

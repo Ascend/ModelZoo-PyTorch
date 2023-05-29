@@ -83,13 +83,13 @@ do
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
         taskset -c $PID_START-$PID_END \
-          python3.7.5 -u tools/test_net.py \
+          python3 -u tools/test_net.py \
             --config-file ./configs/retina/retinanet_mask_R-50-FPN_2x_adjust_std011_ms.yaml --data_path ${data_path} \
             --weight ${weight_path} \
             SOLVER.IMS_PER_BATCH 1 N_GPU 8 \
             > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7.5 -u tools/test_net.py \
+        python3 -u tools/test_net.py \
             --config-file ./configs/retina/retinanet_mask_R-50-FPN_2x_adjust_std011_ms.yaml --data_path ${data_path} \
             --weight ${weight_path} \
             SOLVER.IMS_PER_BATCH ${batch_size} N_GPU ${RANK_SIZE} \

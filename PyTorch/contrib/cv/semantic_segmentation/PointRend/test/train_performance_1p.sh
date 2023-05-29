@@ -21,7 +21,7 @@ if [[ $data_path == "" ]];then
 fi
 
 export DETECTRON2_DATASETS=${data_path}
-python3.7 -u projects/PointRend/train_net.py \
+python3 -u projects/PointRend/train_net.py \
          --config-file projects/PointRend/configs/SemanticSegmentation/pointrend_semantic_R_101_FPN_1x_cityscapes.yaml \
          --solver-steps 40000 55000 \
          --num-gpus 1 \

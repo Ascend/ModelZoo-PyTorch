@@ -27,7 +27,7 @@ pip3.7 install apex-0.1+ascend.20210930-cp37-cp37m-linux_x86_64.whl
 pip3.7 install -r Cascade_RCNN/requirements.txt
 source Cascade_RCNN/test/env_npu.sh
 cd Cascade_RCNN
-python3.7 setup.py build develop
+python3 setup.py build develop
 ```
 - 下载 COCO 数据集，放在 datasets 中。如已有下载可通过设置环境变量DETECTRON2_DATASETS=“coco 所在数据集路径”进行设置，如 export DETECTRON2_DATASETS=/opt/npu/，则 coco 数据集放在 /opt/npu/ 目录中
 - 下载预训练模型 R-101.pkl ,configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml配置文件中MODEL.WEIGHTS 设置为R-101.pkl的绝对路径

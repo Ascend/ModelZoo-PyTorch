@@ -97,7 +97,7 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-nohup taskset -c 0-19 python3.7 ./trainval_net.py \
+nohup taskset -c 0-19 python3 ./trainval_net.py \
     --net=res101 \
     --nw=${workers} \
     --lr=${learning_rate} \
@@ -114,7 +114,7 @@ nohup taskset -c 0-19 python3.7 ./trainval_net.py \
     --loss_scale=1024.0 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
-nohup python3.7 ./test_net.py \
+nohup python3 ./test_net.py \
     --arch=rfcn \
     --dataset=pascal_voc \
     --net=res101 \

@@ -79,7 +79,7 @@ do
     then
         PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END nohup python3.7 train.py \
+        taskset -c $PID_START-$PID_END nohup python3 train.py \
             configs/tusimple.py \
             --epoch=$train_epochs \
             --batch_size=$batch_size \
@@ -87,7 +87,7 @@ do
             --data_root=$data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
     else
-        nohup python3.7 -u train.py \
+        nohup python3 -u train.py \
             configs/tusimple.py \
             --epoch=$train_epochs \
             --batch_size=$batch_size \

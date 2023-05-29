@@ -72,7 +72,7 @@ fi
 cd code
 KERNEL_NUM=$(nproc)
 export WORLD_SIZE=$RANK_SIZE
-taskset -c 0-$KERNEL_NUM python3.7 -u ./train.py --opt=./confs/SRFlow_DF2K_8X.yml \
+taskset -c 0-$KERNEL_NUM python3 -u ./train.py --opt=./confs/SRFlow_DF2K_8X.yml \
     --performance \
     --finetune=../pretrained_models/SRFlow_DF2K_8X.pth \
     --local_rank 0  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

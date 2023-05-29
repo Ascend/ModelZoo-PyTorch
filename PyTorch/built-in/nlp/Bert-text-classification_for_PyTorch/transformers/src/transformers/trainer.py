@@ -29,7 +29,7 @@ import warnings
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
-from torch._six import inf
+from math import inf
 
 from tqdm.auto import tqdm
 

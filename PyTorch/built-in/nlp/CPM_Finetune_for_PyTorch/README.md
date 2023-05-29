@@ -47,7 +47,7 @@ export ASCEND_AICPU_PATH=/usr/local/Ascend/
 ### 2.1 数据预处理
 
 ```[bash]
-python3.7 preprocess_chid_zeroshot.py --data_dir ${PATH_TO_DATA_DIR} --tokenizer_path ${PATH_TO_TOKENIZER} --output_dir ${PATH_TO_OUTPUT}
+python3 preprocess_chid_zeroshot.py --data_dir ${PATH_TO_DATA_DIR} --tokenizer_path ${PATH_TO_TOKENIZER} --output_dir ${PATH_TO_OUTPUT}
 ```
 
 该文件会将每个候选的成语填入文章相应的空白中，每个空白生成10个新的候选文章。最终，该文件生成的数据格式为：

@@ -71,7 +71,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7.5 train.py \
+python3 train.py \
     --train-images-folder ${data_path}/train2017/ \
     --prepared-train-labels ./prepared_train_annotation.pkl \
     --val-labels ${data_path}/annotations/person_keypoints_val2017.json \

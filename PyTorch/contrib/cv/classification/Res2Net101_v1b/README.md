@@ -32,11 +32,11 @@ bash ./test/train_eval_8p.sh  --data_path=xxx
 
 # O2 online inference demo
 source scripts/set_npu_env.sh
-python3.7.5 demo.py
+python3 demo.py
 
 # O2 To ONNX
 source scripts/set_npu_env.sh
-python3.7.5 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 # Res2Net101_v1b training result
 

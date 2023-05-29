@@ -15,6 +15,8 @@
 #
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.autograd import Function
 from torch.nn.modules.utils import _pair
 
@@ -150,7 +152,7 @@ class ModulatedDeformConvFunction(Function):
         offset_y = offset_ori[:, 1::2, :, :]
         offset = torch.cat([offset_y, offset_x], dim=1)
         offset_all = torch.cat([offset, mask], dim=1)
-        output, offset_out = torch.npu_deformable_conv2d(
+        output, offset_out = torch_npu.npu_deformable_conv2d(
             input, weight, offset_all, bias, 
             kernel_size=[weight.shape[3], weight.shape[2]],
             stride=[1, 1, ctx.stride, ctx.stride],
@@ -173,7 +175,7 @@ class ModulatedDeformConvFunction(Function):
         grad_weight = torch.zeros_like(weight)
         grad_bias = torch.zeros_like(bias)
         offset_all = torch.cat([offset, mask], dim=1)
-        grad_input, grad_weight, grad_offset_all, grad_bias = torch.npu_deformable_conv2dbk(
+        grad_input, grad_weight, grad_offset_all, grad_bias = torch_npu.npu_deformable_conv2dbk(
             input, grad_output, offset_out, weight, offset_all,
             kernel_size=[weight.shape[3], weight.shape[2]],
             stride=[1, 1, ctx.stride, ctx.stride],

@@ -78,7 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 mobilenet.py \
+python3 mobilenet.py \
         --data=${data_path} \
         --batch_size=${batch_size} \
         --ngpu 1 \

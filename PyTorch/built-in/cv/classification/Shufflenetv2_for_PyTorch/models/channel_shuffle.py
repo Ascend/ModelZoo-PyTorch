@@ -14,6 +14,8 @@
 
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 
 
@@ -140,7 +142,7 @@ class IndexSelectFullImplementation(torch.autograd.Function):
             stream = torch.npu.current_stream()
             stream.synchronize()
             # convert to NCHW to avoid extra 5HD --> 4D
-            grad_output.data = grad_output.data.npu_format_cast(0)
+            grad_output.data = torch_npu.npu_format_cast(grad_output.data, 0)
 
         out1 = grad_output.index_select(1, ctx.bp_index1)
         out2 = grad_output.index_select(1, ctx.bp_index2)

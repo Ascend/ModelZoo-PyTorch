@@ -112,10 +112,10 @@ do
     let p_start=0+24*i
     let p_end=23+24*i
     TRAIN_LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_8P_${ASCEND_DEVICE_ID}_$i.log
-    taskset -c $p_start-$p_end python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i > $TRAIN_LOG_FILE 2>&1 &
+    taskset -c $p_start-$p_end python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i > $TRAIN_LOG_FILE 2>&1 &
     echo "LOG: $TRAIN_LOG_FILE"
     else
-        python3.7 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i > $TRAIN_LOG_FILE 2>&1 &
+        python3 train.py --dataset $DS --cfg configs/voc_resnet38.yaml --exp $EXP --run $RUN_ID --local_rank $i > $TRAIN_LOG_FILE 2>&1 &
     fi
 done
 
@@ -153,7 +153,7 @@ SAVE_DIR=${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_8P_${ASCEND_DEVICE_ID
 LOG_FILE=${test_path_dir}/output/${ASCEND_DEVICE_ID}/infer_8P_${ASCEND_DEVICE_ID}.log
 ##echo 1
 #
-python3.7 infer_val.py --dataset $DS \
+python3 infer_val.py --dataset $DS \
                          --cfg $CONFIG \
                          --exp $EXP \
                          --run $RUN_ID \
@@ -171,7 +171,7 @@ LISTNAME=`basename $FILELIST .txt`
 # without CRF
 data_path_len=${#data_path}
 data_path=${data_path:1:data_path_len-2}
-python3.7 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
+python3 eval_seg.py --data $data_path --filelist $FILELIST --masks $SAVE_DIR > $SAVE_DIR.eval 2>&1 &
 wait
 echo "Log: ${SAVE_DIR}.eval"
 

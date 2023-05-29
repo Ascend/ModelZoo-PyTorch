@@ -29,7 +29,7 @@ KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
-nohup taskset -c $PID_START-$PID_END python3.7 -u train/main.py \
+nohup taskset -c $PID_START-$PID_END python3 -u train/main.py \
 --datadir ${data_path} \
 --decoder \
 --pretrainedEncoder "trained_models/erfnet_encoder_pretrained.pth.tar" \

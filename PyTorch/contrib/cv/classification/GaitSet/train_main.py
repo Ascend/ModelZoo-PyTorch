@@ -45,7 +45,7 @@ parser.add_argument('--rank', default=-1, type=int,
                     help='node rank for distributed training')
 parser.add_argument('--device_num',default=-1,type=int,help='device_num')
 
-parser.add_argument('--local_rank', default=0, type=int)
+parser.add_argument('--local_rank', '--local-rank', default=0, type=int)
 parser.add_argument('--batch_size_p', default=8, type=int, help='batch_size_p')
 parser.add_argument('--batch_size_m', default=16, type=int, help='batch_size_m')
 parser.add_argument('--addr',default='192.168.88.168',type=str,help='masterip')

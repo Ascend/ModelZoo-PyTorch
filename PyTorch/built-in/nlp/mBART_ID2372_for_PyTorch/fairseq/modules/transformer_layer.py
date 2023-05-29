@@ -6,6 +6,8 @@
 from typing import Dict, List, Optional
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 from fairseq import utils
 from fairseq.modules import LayerNorm, MultiheadAttention
@@ -17,7 +19,7 @@ dropout_class = get_dropout_class()
 
 class NpuLinear(torch.nn.Linear):
     def forward(self, input):
-        return torch.npu_linear(input, self.weight, self.bias)
+        return torch_npu.npu_linear(input, self.weight, self.bias)
 
 class TransformerEncoderLayer(nn.Module):
     """Encoder layer block.

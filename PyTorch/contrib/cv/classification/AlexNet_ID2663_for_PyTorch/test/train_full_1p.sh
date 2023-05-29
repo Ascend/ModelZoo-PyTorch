@@ -110,7 +110,7 @@ fi
 
 
 echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
-python3.7 ./main.py \
+python3 ./main.py \
 	${data_path} \
 	-a alexnet \
 	--addr=$(hostname -I |awk '{print $1}') \

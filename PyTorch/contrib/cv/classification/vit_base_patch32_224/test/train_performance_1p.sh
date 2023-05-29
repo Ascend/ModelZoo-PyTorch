@@ -3,7 +3,7 @@
 ################基础配置参数，需要模型审视修改##################
 # 必选字段(必须在此处定义的参数): Network batch_size RANK_SIZE
 # 网络名称，同目录名称
-Network="vit_base_patch32_224_for pytorch"
+Network="vit_base_patch32_224_for_PyTorch"
 # 训练batch_size
 batch_size=256
 # 训练使用的npu卡数
@@ -79,7 +79,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./vit_train.py \
+python3 ./vit_train.py \
     ${data_path} \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed=49 \

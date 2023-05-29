@@ -22,6 +22,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --batch_size* ]];then
         batch_size=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+        hf32=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
     fi
@@ -90,7 +94,7 @@ do
     KERNEL_NUM=$(($(nproc)/8))
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    taskset -c $PID_START-$PID_END python3.7  main.py $PREC \
+    taskset -c $PID_START-$PID_END python3  main.py $PREC \
     --device_list='0,1,2,3,4,5,6,7' \
     --world_size=8 \
     --batch_size=$batch_size \
@@ -98,6 +102,8 @@ do
     --lr=2.5e-3 \
     --lr_step='85,120' \
     --num_epochs=2 \
+    ${fp32} \
+    ${hf32} \
     --distributed_launch > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 
@@ -123,10 +129,12 @@ echo "E2E Training Duration sec : $e2e_time"
 BatchSize=${batch_size}
 DeviceType=`uname -m`
 
-if [[ $precision_mode == "must_keep_origin_dtype" ]];then
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
 else
-        CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
 fi
 
 #获取性能数据，不需要修改

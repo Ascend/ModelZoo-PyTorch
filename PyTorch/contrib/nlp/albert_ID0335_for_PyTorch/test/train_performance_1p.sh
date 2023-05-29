@@ -76,7 +76,7 @@ export DEVICE=npu
 TASK_NAME="SST-2"
 #训练开始时间，不需要修改
 start_time=$(date +%s)
-nohup python3.7 ./run_classifier.py \
+nohup python3 ./run_classifier.py \
   --device=$DEVICE \
   --model_type=SST \
   --model_name_or_path=$BERT_BASE_DIR/ \

@@ -44,8 +44,8 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
   |  输入数据 | 数据类型 | 大小             | 数据排布格式 |
   | :-------: | :----: | :-------------: | :-------: |
   |input_ids  | INT64  | batchsize × 512 | ND          |
-  |input_mask | INT64  | batchsize × 512 | ND          |
   |segment_ids| INT64  | batchsize × 512 | ND          |
+  |input_mask | INT64  | batchsize × 512 | ND          |
 
 
 - 输出数据
@@ -244,7 +244,7 @@ BERT，即Bidirectional Encoder Representations from Transformers，是一种基
 
         ```bash
       #完整推理
-      python3 -m ais_bench --model ./bert_base_batch_8_auto.om --input ./bert_bin/input_ids,./bert_bin/input_mask,./bert_bin/segment_ids --batchsize 8 --output ./bert_bin --output_dirname outputs
+      python3 -m ais_bench --model ./bert_base_batch_8_auto.om --input ./bert_bin/input_ids,./bert_bin/segment_ids,./bert_bin/input_mask --batchsize 8 --output ./bert_bin --output_dirname outputs
       ```
 
         -   参数说明：

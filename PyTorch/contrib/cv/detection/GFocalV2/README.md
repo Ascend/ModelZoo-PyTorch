@@ -72,7 +72,7 @@ pip3 list | grep mmcv  # 查看版本和路径
 ```
 cd GFocalV2
 pip3 install -r requirements/build.txt
-python3.7 setup.py develop
+python3 setup.py develop
 cd ..
 ```
 3. 修改apex中的113行，主要是为了支持O1，参考路径root/archiconda3/envs/fcos/lib/python3.7/site-packages/apex/amp/utils.py
@@ -114,7 +114,7 @@ bash ./test/train_finetune_1p.sh --data_path=./data/coco --checkpoint=xxx（可�
 
 ```
 source ./test/env_npu.sh
-python3.7.5 demo.py --checkpoint xxx(可选，gfocal模型的权重文件，默认./work_dirs/gfocal_r50_fpn_1x/latest.pth） --img xxx(可选，测试图片）
+python3 demo.py --checkpoint xxx(可选，gfocal模型的权重文件，默认./work_dirs/gfocal_r50_fpn_1x/latest.pth） --img xxx(可选，测试图片）
 ```
 ## GFocalV2 training result 
 

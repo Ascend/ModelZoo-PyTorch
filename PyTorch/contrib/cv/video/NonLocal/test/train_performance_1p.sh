@@ -69,7 +69,7 @@ currentDir=$(cd "$(dirname -- "$0")";pwd)
 
 source ${currentDir}/env_npu.sh
 
-python3.7.5 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options optimizer.lr=0.005 total_epochs=1 data.videos_per_gpu=${batch_size} \
+python3 -u ${currentDir}/../train.py --data_root ${data_path} --cfg-options optimizer.lr=0.005 total_epochs=1 data.videos_per_gpu=${batch_size} \
 --resume-from . > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/tsm_nl_train_per_1p_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 

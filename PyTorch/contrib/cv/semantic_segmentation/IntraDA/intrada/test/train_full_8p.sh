@@ -6,7 +6,7 @@ for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
     export RANK_ID=$RANK_ID
     echo $RANK_ID 
-    nohup python3.7.5 -u train.py \
+    nohup python3 -u train.py \
         --cfg ./intrada_8p.yml \
         --rank $RANK_ID \
         --device_type npu \

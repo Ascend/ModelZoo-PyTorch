@@ -69,7 +69,7 @@ fi
 
 # for i in $(seq 0 7)
 # do
-python3.7 ./main.py \
+python3 ./main.py \
 	${data_path} \
 	-a alexnet \
 	--addr=$(hostname -I |awk '{print $1}') \

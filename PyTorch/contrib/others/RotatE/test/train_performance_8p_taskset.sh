@@ -35,7 +35,7 @@ do
     export RANK_ID=$RANK_ID
     let a=0+RANK_ID*24
     let b=23+RANK_ID*24
-    nohup taskset -c $a-$b python3.7 codes/apex_run_mp.py \
+    nohup taskset -c $a-$b python3 codes/apex_run_mp.py \
         --do_train \
         --npu \
         --data_path data/FB15k-237 \

@@ -84,7 +84,7 @@ else
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-python3.7 -u train.py \
+python3 -u train.py \
     --optimizer Adam \
     --epochs 2 \
     --batch_size $batch_size \

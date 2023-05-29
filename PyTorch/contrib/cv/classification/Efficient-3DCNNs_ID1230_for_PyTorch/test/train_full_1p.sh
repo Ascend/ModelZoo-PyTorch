@@ -26,7 +26,7 @@ start_time=$(date +%s)
 KERNEL_NUM=$(($(nproc)/8))
 PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
-nohup python3.7 ../main.py \
+nohup python3 ../main.py \
     --root_path ${root_path} \
     --gpu_or_npu npu \
     --use_prof 1 \

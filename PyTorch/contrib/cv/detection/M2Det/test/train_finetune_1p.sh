@@ -84,7 +84,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 ./finetune.py \
+python3 ./finetune.py \
         --c=configs/m2det512_vgg.py \
         --ngpu=1 \
         --amp \

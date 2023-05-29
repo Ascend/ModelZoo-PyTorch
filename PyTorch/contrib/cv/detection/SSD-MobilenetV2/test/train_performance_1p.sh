@@ -79,7 +79,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 nohup \
-python3.7 -u train_ssd.py \
+python3 -u train_ssd.py \
   --dataset_type voc  \
   --data_path $data_path \
   --base_net models/mb2-imagenet-71_8.pth  \

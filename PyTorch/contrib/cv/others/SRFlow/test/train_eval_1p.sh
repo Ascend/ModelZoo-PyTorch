@@ -71,7 +71,7 @@ else ln -sb $data_path ./
 fi
 cd code
 rm -rf ../results
-python3.7 -u ./test.py  ./confs/SRFlow_DF2K_8X.yml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 -u ./test.py  ./confs/SRFlow_DF2K_8X.yml > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 cd ../

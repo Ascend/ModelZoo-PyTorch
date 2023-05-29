@@ -11,6 +11,8 @@ from argparse import Namespace
 from typing import Any, Callable, Dict, List
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import shutil
 from fairseq import metrics, search, tokenizer, utils
 from fairseq.data import Dictionary, FairseqDataset, data_utils, encoders, iterators
@@ -485,11 +487,11 @@ class FairseqTask(object):
         )
     def clear_npu_overflow_flag(self):
         float_status = torch.zeros(8).npu()
-        result = torch.npu_clear_float_status(float_status)
+        result = torch_npu.npu_clear_float_status(float_status)
 
     def get_npu_overflow_flag(self):
         float_status = torch.zeros(8).npu()
-        result = torch.npu_get_float_status(float_status)
+        result = torch_npu.npu_get_float_status(float_status)
         if float_status.cpu()[0] != 0:
             return True
         else:

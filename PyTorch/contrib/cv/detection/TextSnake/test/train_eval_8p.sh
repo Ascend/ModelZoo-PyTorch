@@ -76,7 +76,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 eval_textsnake.py \
+python3 eval_textsnake.py \
     example \
     --dataset=${data_path} \
     --checkepoch 50 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

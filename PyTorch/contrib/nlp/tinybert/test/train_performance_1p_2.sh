@@ -12,7 +12,7 @@ device_id='3'
 
 ################ compiling ##################
 source ./test/env_npu_1p.sh
-python3.7 ./main.py \
+python3 ./main.py \
 	      --pred_distill  \
         --teacher_model ./bert_base_uncased_ft_sst \
         --student_model ./tmp_tinybert_performance \

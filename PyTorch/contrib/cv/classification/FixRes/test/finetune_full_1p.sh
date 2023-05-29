@@ -80,7 +80,7 @@ fi
 
 rm -rf finetune_full_1p.log
 
-nohup python3.7 main_finetune.py \
+nohup python3 main_finetune.py \
     --input_size 384 \
     --architecture 'ResNet50' \
 	--imnet_path ${data_path} \

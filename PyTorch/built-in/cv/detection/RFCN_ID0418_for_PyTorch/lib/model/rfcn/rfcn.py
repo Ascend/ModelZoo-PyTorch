@@ -14,7 +14,8 @@
 
 
 import torch
-import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -131,7 +132,7 @@ class _RFCN(nn.Module):
         # gpu psroipool
         # pooled_feat_cls = self.RCNN_psroi_pool_cls(cls_feat, rois.view(-1, 5))
         # npu psroipool
-        pooled_feat_cls = torch.npu_ps_roi_pooling(
+        pooled_feat_cls = torch_npu.npu_ps_roi_pooling(
             cls_feat.float(), rois.permute(0, 2, 1).float(), 1/16.0, cfg.POOLING_SIZE, self.n_classes)
         cls_score = self.pooling(pooled_feat_cls)
         cls_score = cls_score.squeeze()
@@ -140,7 +141,7 @@ class _RFCN(nn.Module):
         # gpu psroipool
         # pooled_feat_loc = self.RCNN_psroi_pool_loc(bbox_base, rois.view(-1, 5))
         # npu psroipool
-        pooled_feat_loc = torch.npu_ps_roi_pooling(
+        pooled_feat_loc = torch_npu.npu_ps_roi_pooling(
             bbox_base.float(), rois.permute(0, 2, 1).float(), 1/16.0, cfg.POOLING_SIZE, self.box_num_classes * 4)
         pooled_feat_loc = self.pooling(pooled_feat_loc)
         bbox_pred = pooled_feat_loc.squeeze()

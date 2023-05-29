@@ -29,7 +29,7 @@ do
             --device npu \
             --local_rank 0 &
     else
-        python3.7 ./tools/train.py configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
+        python3 ./tools/train.py configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes.py \
             --launcher pytorch \
             --seed 1 \
             --deterministic \

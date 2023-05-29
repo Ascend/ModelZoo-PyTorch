@@ -181,7 +181,7 @@ do
     #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
     echo $cur_path
     PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
-    taskset -c 0-96 python3.7 -m torch.distributed.launch  --nnodes=$nnodes --node_rank=$node_rank --nproc_per_node=$RANK_SIZE --master_addr=$master_addr --master_port=$master_port \
+    taskset -c 0-96 python3 -m torch.distributed.launch  --nnodes=$nnodes --node_rank=$node_rank --nproc_per_node=$RANK_SIZE --master_addr=$master_addr --master_port=$master_port \
         ${cur_path}/tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py --launcher pytorch --cfg-options data.samples_per_gpu=${batch_size} optimizer.lr=0.04 --seed 0 \
         --gpu-ids 0 --no-validate --opt-level O1 \
         > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1

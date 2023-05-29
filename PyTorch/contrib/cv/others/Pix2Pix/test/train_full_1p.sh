@@ -76,7 +76,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 ########测试############
-python3.7  -m torch.distributed.launch  --nproc_per_node 1 train.py \
+python3  -m torch.distributed.launch  --nproc_per_node 1 train.py \
     --dataroot ${data_path} \
     --name facades_pix2pix_npu_1p_full \
     --model ${Network} \

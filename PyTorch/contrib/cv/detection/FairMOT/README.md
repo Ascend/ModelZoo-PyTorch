@@ -83,7 +83,7 @@ FairMOT是一阶段多目标跟踪器（one-shot MOT），检测模型和Re-ID�
    其次将文件中的label_root参数修改为 dataset文件夹的目录+'MOT16/labels_with_ids/train' ，例如/root/dataset/MOT17/labels_with_ids/train，然后在当前目录下执行以下命令：
 
    ```
-   python3.7 gen_labels_16.py
+   python3 gen_labels_16.py
    ```
 
    最后下载参考实现的模型源码，将下载的FairMOT/src下的data文件夹放至本模型的src目录下。

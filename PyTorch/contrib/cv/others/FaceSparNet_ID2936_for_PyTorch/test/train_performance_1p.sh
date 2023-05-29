@@ -120,9 +120,9 @@ batch_size=32
 
 if [ x"${modelarts_flag}" != x ];
 then
-    python3.7 train.py --data_path=${data_path} --output_path=${output_path}/ --train_epochs=${train_epochs}
+    python3 train.py --data_path=${data_path} --output_path=${output_path}/ --train_epochs=${train_epochs}
 else
-    python3.7 newtrain.py --data_url=${data_path} --train_url=${output_path}/ --total_epochs=${train_epochs} --batch_size=${batch_size} 1>${print_log} 2>&1
+    python3 newtrain.py --data_url=${data_path} --train_url=${output_path}/ --total_epochs=${train_epochs} --batch_size=${batch_size} 1>${print_log} 2>&1
 fi
 
 # 性能相关数据计算

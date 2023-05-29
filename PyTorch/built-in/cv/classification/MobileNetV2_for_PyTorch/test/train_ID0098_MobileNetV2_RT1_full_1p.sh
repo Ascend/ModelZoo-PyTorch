@@ -122,7 +122,7 @@ wait
 start_time=$(date +%s)
 
 # 绑核，不需要的绑核的模型删除，需要模型审视修改
-nohup python3.7 ${cur_path}/train/mobilenetv2_8p_main_anycard.py \
+nohup python3 ${cur_path}/train/mobilenetv2_8p_main_anycard.py \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed 49  \
     --workers 128 \

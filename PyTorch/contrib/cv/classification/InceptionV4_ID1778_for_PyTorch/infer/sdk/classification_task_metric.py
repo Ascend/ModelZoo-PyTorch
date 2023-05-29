@@ -164,7 +164,7 @@ if __name__ == '__main__':
         json_file_name = sys.argv[4]
     except IndexError:
         print("Please enter target file folder | groud truth file | result folder | result json file name, such as"
-              "Such as: python3.7 classfication_task_metric.py result/ ./val_label.txt . ./result.json")
+              "Such as: python3 classfication_task_metric.py result/ ./val_label.txt . ./result.json")
         exit(1)
 
     if not os.path.exists(folder_davinci_target):

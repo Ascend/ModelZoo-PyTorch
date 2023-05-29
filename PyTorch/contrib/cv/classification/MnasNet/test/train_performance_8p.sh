@@ -74,7 +74,7 @@ do
 	PID_START=$((KERNEL_NUM * RANK_ID))
 	PID_END=$((PID_START + KERNEL_NUM - 1))
 	
-	taskset -c $PID_START-$PID_END python3.7 -u train.py \
+	taskset -c $PID_START-$PID_END python3 -u train.py \
 	  ${data_path} \
 	  --device 'npu'\
 	  --device-list '0,1,2,3,4,5,6,7' \

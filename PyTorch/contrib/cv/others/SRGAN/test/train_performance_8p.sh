@@ -78,7 +78,7 @@ fi
 
 echo "=============start training==================="
 
-python3.7 -u train8p.py \
+python3 -u train8p.py \
 	--addr=$(hostname -I |awk '{print $1}') \
 	--seed=49  \
 	--workers=${workers} \

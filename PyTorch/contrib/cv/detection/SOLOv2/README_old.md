@@ -56,8 +56,8 @@ source test/env_npu.sh
 
 ```
 cd mmcv
-python3.7 setup.py build_ext
-python3.7 setup.py develop
+python3 setup.py build_ext
+python3 setup.py develop
 cd ..
 pip list | grep mmcv  # 查看版本和路径
 ``` 

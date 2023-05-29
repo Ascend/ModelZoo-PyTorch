@@ -256,10 +256,10 @@
 
 |   芯片型号    | Batch Size |  数据集  |            精度             |   性能   |
 | ------------ | ---------- | ---------| -------------------------- | -------- |
-|  Ascend310P3 | 1          | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 1211.210 |
-|  Ascend310P3 | 4          | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 2333.395 |
-|  Ascend310P3 | 8          | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 2103.159 |
-|  Ascend310P3 | 16         | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 1696.836 |
-|  Ascend310P3 | 32         | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 1675.869 |
-|  Ascend310P3 | 64         | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 1,617.538 |
+|  Ascend310P3 | 1          | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 1064.92 |
+|  Ascend310P3 | 4          | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 2113.68 |
+|  Ascend310P3 | 8          | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 2348.42 |
+|  Ascend310P3 | 16         | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 2358.25 |
+|  Ascend310P3 | 32         | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 2479.68 |
+|  Ascend310P3 | 64         | ImageNet | Acc@1:77.64%; Acc@5:93.74% | 1494.32|
 注：模型最优batchsize=4。

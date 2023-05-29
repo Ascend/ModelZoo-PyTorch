@@ -61,7 +61,7 @@ GRU（Gate Recurrent Unit）是循环神经网络（Recurrent Neural Network, RN
 
 - 解压并在分词包目录下，使用以下命令安装：
   ```pycon
-  python3.7 setup.py install
+  python3 setup.py install
   ```
   
 - 安装torchtext。

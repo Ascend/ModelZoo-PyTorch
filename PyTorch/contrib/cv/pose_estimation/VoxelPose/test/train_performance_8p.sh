@@ -66,7 +66,7 @@ fi
 for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++));
 do
 export RANK_ID=$RANK_ID
-python3.7 run/train_3d.py \
+python3 run/train_3d.py \
     --cfg configs/shelf/prn64_cpn80x80x20.yaml \
     --data_path ${data_path} \
     --distributed \

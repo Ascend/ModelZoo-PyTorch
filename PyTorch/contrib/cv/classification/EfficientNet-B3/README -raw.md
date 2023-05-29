@@ -34,10 +34,10 @@ bash test/train_performance_8p.sh --data_path={data/path} # train performance
 bash test/train_eval_8p.sh --data_path={data/path}
 
 # online inference demo 
-python3.7 demo.py
+python3 demo.py
 
 # To ONNX
-python3.7.5 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 ```
 

@@ -96,7 +96,7 @@ RANK_SIZE=8
 for((RANK_ID=$RANK_ID_START;RANK_ID<$((RANK_SIZE+RANK_ID_START));RANK_ID++));
 do
 
-python3.7 ./tools/train.py \
+python3 ./tools/train.py \
       ${data_path} \
       --cfg ./experiments/cls_hrnet_w18_sgd_lr5e-2_wd1e-4_bs32_x100.yaml \
       --addr=$(hostname -I |awk '{print $1}') \

@@ -372,7 +372,10 @@ if __name__ == '__main__':
                 # cls_dets = torch.cat((cls_boxes, cls_scores), 1)
                 cls_dets = cls_dets[order]
                 # keep = nms(cls_boxes[order, :].float().cpu(), cls_scores[order].float().cpu(), cfg.TEST.NMS)
-                _, keep_idx_i, mask = torch.npu_nms_with_mask(torch.cat([cls_boxes[order, :].half(), cls_scores[order].unsqueeze(1).half()], 1), cfg.TEST.NMS)
+                _, keep_idx_i, mask = torch_npu.npu_nms_with_mask(
+                    torch.cat([cls_boxes[order, :].half(), cls_scores[order].unsqueeze(1).half()], 1),
+                    cfg.TEST.NMS
+                )
                 keep = torch.nonzero(mask).squeeze(1)
                 cls_dets = cls_dets[keep.view(-1).long()]
                 if vis:

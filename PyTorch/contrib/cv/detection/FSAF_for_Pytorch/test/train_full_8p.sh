@@ -78,7 +78,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 rm -rf ./work_dirs/fsaf_r50_fpn_1x_coco/
-fps_list=$(python3.7 ../calc_fps.py ./work_dirs/fsaf_r50_fpn_1x_coco/*.json ${RANK_SIZE} ${batch_size})
+fps_list=$(python3 ../calc_fps.py ./work_dirs/fsaf_r50_fpn_1x_coco/*.json ${RANK_SIZE} ${batch_size})
 FPS=`echo ${fps_list##* }`
 FPS=${FPS%\}*}
 # 打印，不需要修改

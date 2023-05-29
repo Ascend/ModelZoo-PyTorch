@@ -71,7 +71,7 @@ EfficientNet-B1是一个经典的图像分类网络，是一个设计具有兼�
 
    在模型源码包根目录下运行以下命令移动验证图片到标签子目录下。
    ```
-   python3.7 ImageNet_val_split.py ${val_set_path} ${ILSVRC2012_devkit_t12_path}  # val_set_path 和 ILSVRC2012_devkit_t12_path 为解压后对应的数据集路径
+   python3 ImageNet_val_split.py ${val_set_path} ${ILSVRC2012_devkit_t12_path}  # val_set_path 和 ILSVRC2012_devkit_t12_path 为解压后对应的数据集路径
    ```
    最终数据集目录结构参考如下所示。
    ```

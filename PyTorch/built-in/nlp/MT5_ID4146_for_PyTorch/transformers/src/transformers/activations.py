@@ -50,7 +50,7 @@ class GELUActivation(nn.Module):
         if version.parse(torch.__version__) < version.parse("1.4") or use_gelu_python:
             self.act = self._gelu_python
         elif is_torch_ascend_available():
-            self.act = torch.fast_gelu
+            self.act = torch_npu.fast_gelu
         else:
             self.act = nn.functional.gelu
 

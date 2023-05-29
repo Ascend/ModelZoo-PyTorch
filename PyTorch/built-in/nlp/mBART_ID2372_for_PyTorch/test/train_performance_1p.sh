@@ -99,7 +99,7 @@ wait
 
 
 start=$(date +%s)
-nohup python3.7 ${cur_path}/train.py $data_path/ \
+nohup python3 ${cur_path}/train.py $data_path/ \
   --distributed-world-size 1 --npu --npu-id $ASCEND_DEVICE_ID --fp16 --encoder-normalize-before --decoder-normalize-before \
   --arch mbart_large --layernorm-embedding \
   --task translation_from_pretrained_bart \

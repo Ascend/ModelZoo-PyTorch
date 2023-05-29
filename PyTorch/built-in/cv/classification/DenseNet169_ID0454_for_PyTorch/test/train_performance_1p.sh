@@ -79,7 +79,7 @@ check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
-    nohup taskset -c 0-23 python3.7 train.py  \
+    nohup taskset -c 0-23 python3 train.py  \
         --model densenet169 \
         --epochs ${epochs} \
         --data-path=$data_path \
@@ -95,7 +95,7 @@ if [ x"${etp_flag}" != x"true" ];then
         --device_id=$ASCEND_DEVICE_ID \
         --print-freq 10 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 else
-    nohup python3.7 train_mp.py  \
+    nohup python3 train_mp.py  \
         --model densenet169 \
         --epochs ${epochs} \
         --data-path=$data_path \

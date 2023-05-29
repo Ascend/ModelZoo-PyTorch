@@ -78,7 +78,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 #执行训练脚本，以下传参不需要修改，其他需要模型审视修改
-nohup python3.7 train.py  \
+nohup python3 train.py  \
     --model densenet201 \
      --epochs ${epochs} \
      --data-path=$data_path \

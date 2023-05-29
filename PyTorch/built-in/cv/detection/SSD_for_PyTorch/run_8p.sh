@@ -16,13 +16,13 @@ do
     then
        PID_START=$((KERNEL_NUM * RANK_ID))
         PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END python3.7 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
+        taskset -c $PID_START-$PID_END python3 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
             --launcher pytorch \
             --seed 0 \
             --gpu-ids 0 \
             --opt-level O1 &
     else
-        python3.7 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
+        python3 ./tools/train.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py \
             --launcher pytorch \
             --seed 0 \
             --gpu-ids 0 \
@@ -30,4 +30,4 @@ do
     fi
 done
 wait
-python3.7 ./tools/test.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py ./work_dirs/ssdlite_mobilenetv2_scratch_600e_coco_8p/epoch_120.pth --eval=bbox
+python3 ./tools/test.py configs/ssd/ssdlite_mobilenetv2_scratch_600e_coco_8p.py ./work_dirs/ssdlite_mobilenetv2_scratch_600e_coco_8p/epoch_120.pth --eval=bbox

@@ -66,7 +66,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py \
+python3 train.py ./configs/recognition/c3d/c3d_sports1m_16x1x1_45e_ucf101_rgb_1p_perf.py \
     --validate \
     --seed 0 \
     --deterministic \

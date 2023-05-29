@@ -75,7 +75,7 @@ do
         PID_START=$((KERNEL_NUM * i))
         PID_END=$((PID_START + KERNEL_NUM - 1))
         taskset -c $PID_START-$PID_END \
-          python3.7 -u main.py \
+          python3 -u main.py \
             --model smlpnet_tiny \
             --data-path ${data_path} \
             --batch-size 112  \
@@ -85,7 +85,7 @@ do
             --epochs 1 \
             > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        python3.7 -u main.py \
+        python3 -u main.py \
         --model smlpnet_tiny \
         --data-path ${data_path} \
         --batch-size 112  \

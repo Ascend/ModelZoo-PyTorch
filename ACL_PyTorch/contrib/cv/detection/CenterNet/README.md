@@ -97,7 +97,7 @@ CenterNet 是在 2019 年提出的用于目标检测的模型，相比传统依�
     cd ../models/networks/DCNv2
     python setup.py build develop
     cd ../../../../../../
-    export PATH=./CenterNet/src/:$PATH
+    export PYTHONPATH=./CenterNet/src/:$PYTHONPATH
 
    ```
 

@@ -11,6 +11,8 @@ from __future__ import absolute_import
 # --------------------------------------------------------
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import numpy as np
 import math
@@ -158,7 +160,10 @@ class _ProposalLayer(nn.Module):
             # 7. take after_nms_topN (e.g. 300)
             # 8. return the top proposals (-> RoIs top)
             # keep_idx_i = nms(proposals_single, scores_single.squeeze(1), nms_thresh)
-            _, keep_idx_i, mask = torch.npu_nms_with_mask(torch.cat([proposals_single.half(), scores_single.half()], 1), nms_thresh)
+            _, keep_idx_i, mask = torch_npu.npu_nms_with_mask(
+                torch.cat([proposals_single.half(), scores_single.half()], 1),
+                nms_thresh
+            )
             
             # keep_idx_i = torch.nonzero(mask).squeeze(1)
 

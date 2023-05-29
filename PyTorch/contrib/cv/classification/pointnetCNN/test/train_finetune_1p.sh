@@ -86,7 +86,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 export RANK_ID=${ASCEND_DEVICE_ID}
 echo 0
-python3.7 ./train_pytorch.py \
+python3 ./train_pytorch.py \
     --data_path=${data_path} \
     --epoch=1 \
     --multi=0  > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

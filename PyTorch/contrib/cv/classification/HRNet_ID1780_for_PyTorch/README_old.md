@@ -68,10 +68,10 @@
 ```bash
 
 # online inference demo 
-python3.7 demo.py
+python3 demo.py
 
 # pth转换onnx
-python3.7 pthtar2onnx.py
+python3 pthtar2onnx.py
 
 ```
 

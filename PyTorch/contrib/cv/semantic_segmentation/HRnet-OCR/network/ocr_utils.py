@@ -7,6 +7,8 @@
 # ------------------------------------------------------------------------------
 
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -41,7 +43,7 @@ class SpatialGather_Module(nn.Module):
 
         x = self.scale * probs
         # probs = F.softmax(x, dim=2)  # batch x k x hw
-        # x = x.npu_format_cast(2)
+        # x = torch_npu.npu_format_cast(x, 2)
         probs = F.softmax(x.float().cpu(), dim=2).to(x.device)  # batch x k x hw
         # probs = F.softmax(x.float(), dim=2)
         # print("after softmax probs.storage().npu_format(): ", probs.storage().npu_format())

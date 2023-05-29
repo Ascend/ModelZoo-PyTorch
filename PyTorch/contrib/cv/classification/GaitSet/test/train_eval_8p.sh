@@ -3,7 +3,7 @@
 currentDir=$(cd "$(dirname "$0")";pwd)
 echo 'Current directory is: '$currentDir
 
-Data_path=$(python3.7 -c """
+Data_path=$(python3 -c """
 from config import conf_8p as conf
 print(conf['data']['dataset_path'])
 """

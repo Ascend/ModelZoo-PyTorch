@@ -24,7 +24,7 @@ if torch.__version__ >= "1.8":
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as data
-from torch._six import inf
+from math import inf
 import torch.distributed as dist
 import torch.multiprocessing as mp
 from apex import amp

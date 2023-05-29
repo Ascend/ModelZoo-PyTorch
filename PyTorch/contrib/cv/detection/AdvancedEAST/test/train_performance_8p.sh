@@ -54,9 +54,9 @@ do
         PID_END=$((PID_START+KERNEL_NUM-1))
         if [ $RANK_ID == $((WORLD_SIZE+RANK_ID_START-1)) ]
         then
-            taskset -c $PID_START-$PID_END python3.7 -u train.py --size $SIZE --local_rank $RANK_ID --apex --epoch_num 3 --val_interval 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1
+            taskset -c $PID_START-$PID_END python3 -u train.py --size $SIZE --local_rank $RANK_ID --apex --epoch_num 3 --val_interval 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1
         else
-            taskset -c $PID_START-$PID_END python3.7 -u train.py --size $SIZE --local_rank $RANK_ID --apex --epoch_num 3 --val_interval 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1 &
+            taskset -c $PID_START-$PID_END python3 -u train.py --size $SIZE --local_rank $RANK_ID --apex --epoch_num 3 --val_interval 1 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${SIZE}.log 2>&1 &
         fi
     done
     sleep 5s

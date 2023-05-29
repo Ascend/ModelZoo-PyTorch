@@ -1,7 +1,7 @@
 #!/bin/bash
 source ./test/env_npu.sh
 
-taskset -c 0-23 python3.7 train.py \
+taskset -c 0-23 python3 train.py \
     --cfg cfg/yolor_p6_finetune.cfg \
     --data data/coco.yaml \
     --weights 'pretrained/yolor_p6.pt' \

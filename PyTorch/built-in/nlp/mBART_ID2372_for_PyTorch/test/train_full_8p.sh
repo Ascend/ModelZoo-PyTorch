@@ -161,8 +161,8 @@ for f in $HYP $REF
 	perl $REPLACE_UNICODE_PUNCT | \
 	perl $NORM_PUNC -l ro | \
 	perl $REM_NON_PRINT_CHAR | \
-	python3.7 $NORMALIZE_ROMANIAN | \
-	python3.7 $REMOVE_DIACRITICS | \
+	python3 $NORMALIZE_ROMANIAN | \
+	python3 $REMOVE_DIACRITICS | \
 	perl $TOKENIZER -no-escape -threads 16 -a -l ro >"en_ro."$f
 	done
 sacrebleu -tok 'none' -s 'none' en_ro.ref < en_ro.hyp > res.log

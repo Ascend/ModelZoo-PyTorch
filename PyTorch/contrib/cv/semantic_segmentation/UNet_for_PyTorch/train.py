@@ -177,6 +177,9 @@ def parse_args():
     parser.add_argument('--stop_step', default=20, type=int, help='stop_step')
     parser.add_argument('--profiling', type=str, default='False', help='choose profiling way--CANN,GE,False')
     parser.add_argument('--bin_mode', type=int, default=0, help='enable bin compile')
+    parser.add_argument('--hf32', action='store_true', help='enable_hi_float_32_execution')
+    parser.add_argument('--fp32', action='store_true', help='disable_hi_float_32_execution')
+    parser.add_argument('--precision_mode', default='allow_mix_precision', type=str, help='precision_mode')
     config = parser.parse_args()
 
     return config
@@ -387,6 +390,13 @@ def validate(config, val_loader, model, criterion):
 
 def main():
     config = vars(parse_args())
+    option = {}
+    if config['precision_mode'] == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+        if config['fp32']:
+            torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
+    torch.npu.set_option(option)
     if config['bin_mode']:
         torch.npu.set_compile_mode(jit_compile=False)
     if config['name'] is None:
@@ -458,7 +468,7 @@ def main():
     if config["num_gpus"] > 1:
         #Make model replica operate on the current device
         ddp = torch.nn.parallel.DistributedDataParallel
-        model = ddp(model, device_ids=[cur_device],  broadcast_buffers=False)
+        model = ddp(model, device_ids=[cur_device],  broadcast_buffers=False, find_unused_parameters=True)
 
     if config['scheduler'] == 'CosineAnnealingLR':
         scheduler = lr_scheduler.CosineAnnealingLR(

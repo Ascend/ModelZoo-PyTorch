@@ -1,33 +1,3 @@
-# BSD 3-Clause License
-#
-# Copyright (c) 2017,
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-#
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 # Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
@@ -42,68 +12,70 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import argparse
 import numpy as np
-from magiconnx import OnnxGraph
+from auto_optimizer import OnnxGraph
 
-onnx_name = sys.argv[1]
-batch_size = sys.argv[2]
-onnx_name_bs = sys.argv[3]
 
-bs = int(batch_size)
+def add_pad(model, bs):
+    # add initialzer
+    concat_pad = 'pad_concat'
+    gather_pad = 'pad_gather'
+    slice_starts = 'start'
+    slice_ends = 'end'
+    slice_axes = 'axis'
+    slice_steps = 'step'
+    pad_concat = np.zeros((bs, 11, 384), dtype=np.float32)
+    model.add_initializer(concat_pad, pad_concat)
+    pad_gatehr = np.zeros((bs, 6, 11, 64), dtype=np.float32)
+    model.add_initializer(gather_pad, pad_gatehr)
+    model.add_initializer(slice_starts, np.array([0]))
+    model.add_initializer(slice_ends, np.array([197]))
+    model.add_initializer(slice_axes, np.array([2]))
+    model.add_initializer(slice_steps, np.array([1]))
 
-graph = OnnxGraph(onnx_name)
+    for node in model.get_nodes('Concat'):
+        next_node = model.get_next_nodes(node.outputs[0])[0]
+        if next_node.op_type in ['Add', 'ReduceMean']:
+            node.inputs.append(concat_pad)
 
-concat_list = ("Concat_36", "Concat_162", "Concat_342", "Concat_522", "Concat_703", "Concat_883", "Concat_1063",
-               "Concat_1243", "Concat_1424", "Concat_1604", "Concat_1784", "Concat_1964")
-slice_list = ("Slice_259", "Slice_439", "Slice_619", "Slice_800", "Slice_980", "Slice_1160", "Slice_1340",
-              "Slice_1521", "Slice_1701", "Slice_1881", "Slice_2061")
-gather_list = ('Gather_70', 'Gather_72', 'Gather_74', 'Gather_197', 'Gather_199', 'Gather_201', 'Gather_377',
-               'Gather_379', 'Gather_381', 'Gather_557', 'Gather_559', 'Gather_561', 'Gather_738', 'Gather_740',
-               'Gather_742', 'Gather_918', 'Gather_920', 'Gather_922', 'Gather_1098', 'Gather_1100', 'Gather_1102',
-               'Gather_1278', 'Gather_1280', 'Gather_1282', 'Gather_1459', 'Gather_1461', 'Gather_1463',
-               'Gather_1639', 'Gather_1641', 'Gather_1643', 'Gather_1819', 'Gather_1821', 'Gather_1823',
-               'Gather_1999', 'Gather_2001', 'Gather_2003')
+    for node in model.get_nodes('Slice'):
+        if model[node.inputs[2]].value > 197:
+            node.inputs[2] = 'end'
 
-pad_zero = np.zeros((1, 11, 384), dtype="float32")
-OnnxGraph.add_node(graph, 'expand_m', 'Expand')
-OnnxGraph.add_initializer(graph, name='pad_zero', value=pad_zero)
+    i = 0
+    inputs = [slice_starts, slice_ends, slice_axes, slice_steps]
+    for node in model.get_nodes('Transpose'):
+        next_nodes = model.get_next_nodes(node.outputs[0])
+        if len(next_nodes) == 3 and next_nodes[0].op_type == 'Gather':
+            i += 1
+            for j, next_node in enumerate(next_nodes):
+                slice_name = 'Slice_{}_{}'.format(i, j)
+                new_slice = model.add_node(slice_name, 'Slice')
+                model.insert_node(next_node.name, new_slice)
+                new_slice.inputs.extend(inputs)
+        
+    for node in model.get_nodes('Softmax'):
+        next_node = model.get_next_nodes(node.outputs[0])[0]
+        i += 1
+        concat_name = 'Concat_new_' + str(i)
+        new_concat = model.add_node(concat_name, 'Concat', attrs={'axis': 2})
+        model.insert_node(next_node.name, new_concat)
+        new_concat.inputs.append(gather_pad)
 
-graph['expand_m'].node.input[0] = 'pad_zero'
-graph['expand_m'].node.input.append('736')
-graph['expand_m'].node.output[0] = 'pad_out'
+    return model
 
-for name in concat_list:
-    graph[name].node.input.append('pad_out')
 
-stop=np.array([197])
-num_0 = np.array([0])
-num_1 = np.array([1])
-num_2 = np.array([2])
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_path', required=True,
+                        help='filename of original onnx model')
+    parser.add_argument('--save_path', required=True,
+                        help='filename of modified onnx model')
+    parser.add_argument('--batch_size', required=True, type=int,
+                        help='batch size of onnx model')
+    args = parser.parse_args()
 
-OnnxGraph.add_initializer(graph, name='stop', value=stop)
-OnnxGraph.add_initializer(graph, name='num0', value=num_0)
-OnnxGraph.add_initializer(graph, name='num1', value=num_1)
-OnnxGraph.add_initializer(graph, name='num2', value=num_2)
-pad_zero2 = np.zeros((4, 6, 11, 64), dtype="float32")
-OnnxGraph.add_initializer(graph, name='pad_zero2', value=pad_zero2)
-
-for name in gather_list:
-    new_name = 'Concat' + name
-    OnnxGraph.add_node(graph, new_name, 'Concat', attrs={"axis": 2})
-    graph.insert_node(name, graph[new_name], index=0, mode='after')
-    pad_zero2 = np.zeros((bs, 6, 11, 64), dtype="float32") #修改bs大小
-    OnnxGraph.add_initializer(graph, name=name+'pad_zero', value=pad_zero2)
-    graph[new_name].node.input.append(name+'pad_zero')
-    new_name = 'slice'+name
-    OnnxGraph.add_node(graph, new_name, 'Slice')
-    graph.insert_node(name, graph[new_name], index=0, mode='after')
-    graph[new_name].node.input.append('num0')
-    graph[new_name].node.input.append('stop')
-    graph[new_name].node.input.append('num2')
-    graph[new_name].node.input.append('num1')
-
-for name in slice_list:
-    graph[name].node.input[2]='stop'
-
-graph.save(onnx_name_bs)
+    model_1 = OnnxGraph.parse(args.model_path)
+    model_2 = add_pad(model_1, args.batch_size)
+    model_2.save(args.save_path)

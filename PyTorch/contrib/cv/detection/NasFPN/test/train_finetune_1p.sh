@@ -93,7 +93,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 tools/train.py configs/nas_fpn/retinanet_r50_nasfpn_crop640_50e_coco.py \
+python3 tools/train.py configs/nas_fpn/retinanet_r50_nasfpn_crop640_50e_coco.py \
     --seed 0 \
     --gpu-ids ${ASCEND_DEVICE_ID} \
     --resume-from ${pth_path} \

@@ -159,8 +159,15 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
 2023.03.20：首次发布
 
-## 已知问题
+## FAQ
 
-**_当前发行版本中存在的问题描述。_**
+1. 针对Pytorch 2.0及以后版本，由于torch._six接口已弃用，且npu目前只支持0.6.0版本的deepspeed，可对应修改该三方库的源码文件。
 
-无。
+   ```
+   # 请参考以下路径修改源码文件，将文件中的 “from torch._six import inf” 修改为 “from math import inf”
+   vim /usr/local/python3.8.10/lib/python3.8/site-packages/deepspeed/runtime/utils.py +18
+   vim /usr/local/python3.8.10/lib/python3.8/site-packages/deepspeed/runtime/zero/stage_1_and_2.py +8
+   vim /usr/local/python3.8.10/lib/python3.8/site-packages/deepspeed/runtime/zero/stage3.py +19
+   vim /home/xxx/GPT-2_for_PyTorch/Megatron-DeepSpeed/megatron/optimizer/clip_grads.py +19
+   ```
+

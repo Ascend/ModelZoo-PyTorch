@@ -94,7 +94,7 @@ do
         kernel_num=$(($(nproc) / $RANK_SIZE))
         pid_start=$((kernel_num * rank))
         pid_end=$((pid_start + kernel_num - 1))
-        setsid taskset -c $pid_start-$pid_end python3.7 -u main.py \
+        setsid taskset -c $pid_start-$pid_end python3 -u main.py \
         --datasets=${data_path} \
         --validation_dataset=${validation_data_path} \
         --num_workers=${workers} \
@@ -114,7 +114,7 @@ do
         --warm_up_epochs 5 \
         --batch_size=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     else
-        setsid python3.7 -u main.py \
+        setsid python3 -u main.py \
         --datasets=${data_path} \
         --validation_dataset=${validation_data_path} \
         --num_workers=${workers} \

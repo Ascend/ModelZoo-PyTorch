@@ -91,7 +91,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-python3.7 train_1p.py \
+python3 train_1p.py \
 	--npu ${ASCEND_DEVICE_ID} \
 	--amp \
     	--data ${data_path} \

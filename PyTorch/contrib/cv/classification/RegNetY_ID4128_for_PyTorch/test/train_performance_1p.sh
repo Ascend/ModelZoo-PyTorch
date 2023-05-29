@@ -83,7 +83,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 
 
-nohup taskset -c 0-32 python3.7 -u imagenet_fast.py \
+nohup taskset -c 0-32 python3 -u imagenet_fast.py \
   --data ${data_path} \
   --epochs ${train_epochs} \
   --cos \

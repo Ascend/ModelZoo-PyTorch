@@ -17,7 +17,7 @@ For details, see mmpose/models/backbones/resnet.py.
   ```
   unzip xtcocoapi.zip
   cd xtcocoapi
-  python3.7 setup.py build_ext install
+  python3 setup.py build_ext install
   ```
 
 - [HRNet-Human-Pose-Estimation](https://github.com/HRNet/HRNet-Human-Pose-Estimation) provides person detection result of COCO val2017 to reproduce our multi-person pose estimation results. Please download from [OneDrive](https://onedrive.live.com/?cid=56b9f9c97f261712&id=56B9F9C97F261712%2110160&ithint=folder,&authkey=!ANejPkF4WXyxYz4) or [GoogleDrive](https://drive.google.com/drive/folders/1fRUDNUDxe9fjqcRZ2bnF_TKMlO0nB_dk?usp=sharing). Download and extract them , and place **COCO_val2017_detections_AP_H_56_person.json** under **$DeepPose/person_detection_results**.
@@ -41,10 +41,10 @@ bash test/train_full_8p.sh --data_path=coco2017_data_path
 bash bash test/train_full_8p.sh --data_path=coco2017_data_path --checkpoint=ckpt_path
 
 # online inference demo
-python3.7 demo.py configs/top_down/deeppose/coco/npu_deeppose_res50_coco_256x192.py work_dirs/npu_deeppose_res50_coco_256x192/epoch_210.pth
+python3 demo.py configs/top_down/deeppose/coco/npu_deeppose_res50_coco_256x192.py work_dirs/npu_deeppose_res50_coco_256x192/epoch_210.pth
 
 # onnx
-python3.7 pthtar2onnx.py
+python3 pthtar2onnx.py
 ```
 
 ## DeepPose training result 

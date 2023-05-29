@@ -59,7 +59,7 @@ do
     echo ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
     #################启动训练脚本#################
     export RANK_ID=$RANK_ID
-    nohup python3.7 -u ./train.py \
+    nohup python3 -u ./train.py \
         --data=${data_path} \
         --seed=1234 \
         --max_iter=${max_iter} \
@@ -76,7 +76,7 @@ wait
 
 export RANK_SIZE=1
 export RANK_ID=0
-nohup python3.7 -u ./eval.py \
+nohup python3 -u ./eval.py \
 	--trained_model=weights/yolact_base_53_98000.pth \
 	--val_data=${data_path} >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log>&1 &
 

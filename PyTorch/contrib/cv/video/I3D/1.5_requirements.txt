@@ -1,0 +1,4 @@
+torchvision==0.6.0
+decord
+decorator
+sympy

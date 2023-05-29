@@ -43,7 +43,7 @@ fi
 export MSPN_HOME=${cur_path}
 export PYTHONPATH=$PYTHONPATH:$MSPN_HOME
 export PERF_MODE=1
-python3.7 $MSPN_HOME/exps/mspn.2xstg.coco/config.py -log
+python3 $MSPN_HOME/exps/mspn.2xstg.coco/config.py -log
 
 RANK_ID_START=0
 RANK_SIZE=1
@@ -58,7 +58,7 @@ PID_END=$((PID_START + KERNEL_NUM - 1))
 export WORLD_SIZE=$RANK_SIZE
 export RANK=$RANK_ID
 
-nohup taskset -c $PID_START-$PID_END python3.7 -u $MSPN_HOME/exps/mspn.2xstg.coco/train.py --local_rank $RANK_ID \
+nohup taskset -c $PID_START-$PID_END python3 -u $MSPN_HOME/exps/mspn.2xstg.coco/train.py --local_rank $RANK_ID \
 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 & 
 done
 wait

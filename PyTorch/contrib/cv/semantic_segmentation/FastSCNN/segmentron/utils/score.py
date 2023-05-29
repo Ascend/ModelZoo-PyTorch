@@ -13,6 +13,8 @@
 # limitations under the License.
 """Evaluation Metrics for Semantic Segmentation"""
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import numpy as np
 from torch import distributed as dist
 import copy
@@ -100,7 +102,7 @@ class SegmentationMetric(object):
 def batch_pix_accuracy(output, target):
     """PixAcc"""
     # inputs are numpy array, output 4D, target 3D
-    output.data = output.data.npu_format_cast(0)  # 3: 5HD; 0:NCHW;
+    output.data = torch_npu.npu_format_cast(output.data, 0)  # 3: 5HD; 0:NCHW;
     predict = torch.argmax(output, 1).to(torch.int32) + 1
     target = target + 1
     pixel_labeled = torch.sum(target > 0)
@@ -115,7 +117,7 @@ def batch_intersection_union(output, target, nclass):
     mini = 1
     maxi = nclass
     nbins = nclass
-    output.data = output.data.npu_format_cast(0)
+    output.data = torch_npu.npu_format_cast(output.data, 0)
     predict = torch.argmax(output, 1).to(torch.int32) + 1
     target = target.float() + 1
     predict = predict.float() * (target > 0).float()

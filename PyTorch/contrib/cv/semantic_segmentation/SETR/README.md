@@ -65,7 +65,7 @@ https://github.com/fudan-zvg/SETR
 新下载的数据集需要进行格式转换，产生_labelTrainIds.png后缀的输入文件
 
 ```
-python3.7 tools/convert_datasets/cityscapes.py ./data/cityscapes --nproc 8 
+python3 tools/convert_datasets/cityscapes.py ./data/cityscapes --nproc 8 
 ```
 
 

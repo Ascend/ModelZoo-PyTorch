@@ -67,8 +67,8 @@ SOLOv2建立了一个简单，直接，快速的实例分割框架，具有很�
 
    ```
    cd mmcv
-   python3.7 setup.py build_ext
-   python3.7 setup.py develop
+   python3 setup.py build_ext
+   python3 setup.py develop
    cd ..
    pip list | grep mmcv  # 查看版本和路径
    ```

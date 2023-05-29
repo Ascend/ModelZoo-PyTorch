@@ -11,10 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import shutil
-from my_utils import mkdir
 from argparse import ArgumentParser
+
+
+def mkdir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
 
 
 if __name__ == "__main__":
@@ -23,25 +27,20 @@ if __name__ == "__main__":
     parser.add_argument("--data_root", default="infer_out", help="data root dir")
     parser.add_argument("--driving_dir", default="kpd", help="kp driving save dir")
     parser.add_argument("--source_dir", default="kps", help="kp source save dir")
-    parser.set_defaults(verbose=False)
     opt = parser.parse_args()
 
     data_root = opt.data_root
     driving_dir = opt.driving_dir
     source_dir = opt.source_dir
-    if not data_root.__contains__('/'):
+    if not data_root[-1] == '/':
         data_root += "/"
-    if not driving_dir.__contains__('/'):
+    if not driving_dir[-1] == '/':
         driving_dir += "/"
-    if not source_dir.__contains__('/'):
+    if not source_dir[-1] == '/':
         source_dir += "/"
 
     kpd_dir = data_root + driving_dir
     kps_dir = data_root + source_dir
-    # if not kpd_dir.__contains__('/'):
-    #     kpd_dir += "/"
-    # if not kps_dir.__contains__('/'):
-    #     kps_dir += "/"
 
     kp_driving_value_dir = data_root + "kpdv/"
     kp_driving_jac_dir = data_root + "kpdj/"
@@ -73,7 +72,7 @@ if __name__ == "__main__":
             kp_source_value = kp_source_value_dir + str(i) + ".bin"
             kp_source_jac = kp_source_jac_dir + str(i) + ".bin"
 
-        shutil.copy(kpdv, kp_driving_value)
-        shutil.copy(kpdj, kp_driving_jac)
-        shutil.copy(kpsv, kp_source_value)
-        shutil.copy(kpsj, kp_source_jac)
+        shutil.move(kpdv, kp_driving_value)
+        shutil.move(kpdj, kp_driving_jac)
+        shutil.move(kpsv, kp_source_value)
+        shutil.move(kpsj, kp_source_jac)

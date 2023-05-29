@@ -67,7 +67,7 @@ do
     export RANK=$RANK_ID
     PID_START=$((KERNEL_NUM * RANK_ID))
     PID_END=$((PID_START + KERNEL_NUM - 1))
-    nohup taskset -c $PID_START-$PID_END python3.7 main_simmim.py  \
+    nohup taskset -c $PID_START-$PID_END python3 main_simmim.py  \
         --cfg configs/swin_base__100ep/simmim_pretrain__swin_base__img192_window6__100ep.yaml \
         --batch-size $batch_size \
         --amp-opt-level O1 \

@@ -70,7 +70,7 @@ PID_START=$((KERNEL_NUM * 0))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 
 nohup \
-taskset -c $PID_START-$PID_END python3.7 -u ./bin/my_train.py \
+taskset -c $PID_START-$PID_END python3 -u ./bin/my_train.py \
 	--data ${data_path} \
 	--workers $(nproc) \
 	--world_size 1 \

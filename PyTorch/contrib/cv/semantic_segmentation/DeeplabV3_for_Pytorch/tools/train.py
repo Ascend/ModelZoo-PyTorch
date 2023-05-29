@@ -70,7 +70,7 @@ def parse_args():
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--local_rank', '--local-rank', type=int, default=0)
     parser.add_argument('--device', type=str, default='cuda', help='model to device cuda or npu')
     parser.add_argument('--master-addr', type=str, default='127.0.0.1', help='master addr')
     parser.add_argument('--master-port', type=str, default='29500', help='master port')

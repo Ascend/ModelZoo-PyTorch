@@ -78,7 +78,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ../test/env_npu.sh
 fi
-python3.7 ./tools/train.py ./configs/fsaf/fsaf_r50_fpn_1x_coco.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+python3 ./tools/train.py ./configs/fsaf/fsaf_r50_fpn_1x_coco.py > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
@@ -92,7 +92,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 rm -rf ./work_dirs/fsaf_r50_fpn_1x_coco/
-fps_list=$(python3.7 ../calc_fps.py ./work_dirs/fsaf_r50_fpn_1x_coco/*.json ${RANK_SIZE} ${batch_size})
+fps_list=$(python3 ../calc_fps.py ./work_dirs/fsaf_r50_fpn_1x_coco/*.json ${RANK_SIZE} ${batch_size})
 FPS=`echo ${fps_list##* }`
 FPS=${FPS%\}*}
 # 打印，不需要修改

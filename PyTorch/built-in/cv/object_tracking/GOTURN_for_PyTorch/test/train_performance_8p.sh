@@ -69,7 +69,7 @@ else
   ALOV_PATH=${data_path}/ALOV/
 fi
 
-python3.7 -u ./src/scripts/train.py \
+python3 -u ./src/scripts/train.py \
   --imagenet_path $IMAGENET_PATH \
   --alov_path $ALOV_PATH \
   --save_path $SAVE_PATH \

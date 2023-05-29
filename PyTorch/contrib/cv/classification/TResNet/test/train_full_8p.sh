@@ -68,7 +68,7 @@ PID_START=$((KERNEL_NUM * RANK_ID))
 PID_END=$((PID_START + KERNEL_NUM - 1))
 # mixup:0.2->0.1 
 # remove model-ema, aa, remode, reprob
-nohup taskset -c $PID_START-$PID_END python3.7 train.py ${data_path} -b=190\
+nohup taskset -c $PID_START-$PID_END python3 train.py ${data_path} -b=190\
             --model=tresnet_m --sched cosine --epochs 100  --lr 0.6\
             --amp -j 16 --mixup=0.1 --world-size 8 --local_rank $RANK_ID \
             > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &

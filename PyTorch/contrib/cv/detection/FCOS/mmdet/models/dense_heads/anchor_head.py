@@ -1,4 +1,20 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 import torch.nn as nn
 from mmcv.cnn import normal_init
 from mmcv.runner import force_fp32
@@ -624,7 +640,7 @@ class AnchorHead(BaseDenseHead, BBoxTestMixin):
             if self.use_sigmoid_cls:
                 ########## myy add#########
                 print("cls_score npu_format:",cls_score.storage().npu_format())
-                cls_score = cls_score.npu_format_cast(0)
+                cls_score = torch_npu.npu_format_cast(cls_score, 0)
                 ########## myy add#########
                 scores = cls_score.sigmoid()
             else:

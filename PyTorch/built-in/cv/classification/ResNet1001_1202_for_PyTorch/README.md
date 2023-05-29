@@ -62,7 +62,7 @@ ResNet18的含义是指网络中有18-layer。
 - 源码安装DLLogger库。
   ```
   下载源码链接： git clone https://github.com/NVIDIA/dllogger.git
-  进入源码一级目录执行： python3.7 setup.py install
+  进入源码一级目录执行： python3 setup.py install
   ```
 
 

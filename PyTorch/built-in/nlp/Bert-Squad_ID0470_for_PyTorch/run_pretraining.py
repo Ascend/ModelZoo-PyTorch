@@ -29,6 +29,8 @@ from tqdm import tqdm
 import os
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch.utils.data import DataLoader, RandomSampler, Dataset
 from apex import amp
 
@@ -113,7 +115,7 @@ class BertPretrainingCriterion(torch.nn.Module):
         self.loss_fn = torch.nn.CrossEntropyLoss(ignore_index=-1)
         self.vocab_size = vocab_size
     def forward(self, prediction_scores, seq_relationship_score, masked_lm_labels, next_sentence_labels):
-        prediction_scores = prediction_scores.npu_format_cast(2)
+        prediction_scores = torch_npu.npu_format_cast(prediction_scores, 2)
         masked_lm_loss = self.loss_fn(prediction_scores.view(-1, self.vocab_size), masked_lm_labels.view(-1))
         next_sentence_loss = self.loss_fn(seq_relationship_score.view(-1, 2), next_sentence_labels.view(-1))
         total_loss = masked_lm_loss + next_sentence_loss

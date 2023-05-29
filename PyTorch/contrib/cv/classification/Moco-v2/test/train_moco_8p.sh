@@ -61,7 +61,7 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
-python3.7 main_moco.py \
+python3 main_moco.py \
   --mlp \
   --cos \
   --rank 0 \

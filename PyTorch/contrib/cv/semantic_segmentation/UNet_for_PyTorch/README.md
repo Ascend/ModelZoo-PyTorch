@@ -64,7 +64,7 @@ UNet在生物医学图像分割领域，得到了广泛的应用。
 2. 上传数据集在源码包根目录下新建的 `inputs` 文件夹下并解压。
 3. 数据集需要执行预处理，在源码包根目录下执行
     ```bash
-    python3.7 preprocess_dsb2018.py
+    python3 preprocess_dsb2018.py
     ```
    数据集目录结构参考如下所示。
     ```

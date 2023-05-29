@@ -37,6 +37,7 @@ import torch
 if torch.__version__ >= "1.8":
     import torch_npu
 import torch.nn as nn
+torch.npu.set_compile_mode(jit_compile=False)
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 from callback.optimizater.adamw import AdamW
@@ -64,6 +65,13 @@ MODEL_CLASSES = {
 }
 
 def train(args, train_dataset, model, tokenizer):
+    option = {}
+    if args.precision_mode == 'O0':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
+    torch.npu.set_option(option)
     """ Train the model """
     args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
     train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
@@ -116,6 +124,8 @@ def train(args, train_dataset, model, tokenizer):
     if args.fp16:
         optimizer = apex.optimizers.NpuFusedAdamW(
             optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
+    elif args.precision_mode == "O0":
+       	optimizer = torch.optim.SGD(optimizer_grouped_parameters,lr=args.learning_rate)  
     else:
         optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps,
@@ -130,6 +140,9 @@ def train(args, train_dataset, model, tokenizer):
         model, optimizer = apex.amp.initialize(model, optimizer, opt_level=args.fp16_opt_level,
                                             loss_scale=128,
                                             combine_grad=True)
+    if args.precision_mode == "O0":
+        model, optimizer = apex.amp.initialize(model, optimizer, opt_level='O0', loss_scale=128)
+	
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
         model = torch.nn.DataParallel(model)

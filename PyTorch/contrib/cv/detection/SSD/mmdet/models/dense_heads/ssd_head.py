@@ -168,8 +168,8 @@ class SSDHead(AnchorHead):
         if num_neg_samples > neg_inds.size(0):
             num_neg_samples = neg_inds.size(0)
         loss_cls_all_cpu = loss_cls_all.cpu()
-        topk_loss_cls_neg, _ = loss_cls_all_cpu[neg_inds].topk(num_neg_samples)
-        loss_cls_pos = loss_cls_all_cpu[pos_inds].sum().npu()
+        topk_loss_cls_neg, _ = loss_cls_all_cpu[neg_inds.cpu()].topk(num_neg_samples)
+        loss_cls_pos = loss_cls_all_cpu[pos_inds.cpu()].sum().npu()
         loss_cls_neg = topk_loss_cls_neg.sum().npu()
         loss_cls = (loss_cls_pos + loss_cls_neg) / num_total_samples
 

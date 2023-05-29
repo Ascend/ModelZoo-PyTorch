@@ -14,6 +14,8 @@
 
 import numpy as np
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 
 from ..builder import BBOX_CODERS
 from .base_bbox_coder import BaseBBoxCoder
@@ -61,7 +63,7 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         assert bboxes.size(0) == gt_bboxes.size(0)
         assert bboxes.size(-1) == gt_bboxes.size(-1) == 4
         # encoded_bboxes = bbox2delta(bboxes, gt_bboxes, self.means, self.stds)
-        encoded_bboxes = torch.npu_bounding_box_encode(bboxes, gt_bboxes, 
+        encoded_bboxes = torch_npu.npu_bounding_box_encode(bboxes, gt_bboxes, 
                                 self.means[0], self.means[1], self.means[2], self.means[3],
                                 self.stds[0], self.stds[1], self.stds[2], self.stds[3])
         return encoded_bboxes

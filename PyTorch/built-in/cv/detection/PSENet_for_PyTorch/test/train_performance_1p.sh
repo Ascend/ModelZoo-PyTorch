@@ -96,7 +96,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-nohup python3.7 ./NPU/src/train_ic15.py \
+nohup python3 ./NPU/src/train_ic15.py \
     --lr 0.001 \
     --dist-backend 'hccl' \
     --rank 0 \

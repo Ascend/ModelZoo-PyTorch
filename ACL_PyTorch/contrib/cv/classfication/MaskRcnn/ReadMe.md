@@ -162,13 +162,13 @@ Mask RCNN是一个实例分割（Instance segmentation）算法，它是一个�
     chip_name=310P3  # 根据 step1 的结果设值
     
     # 执行 ATC 进行模型转换
-    atc --model=model_py1.8.onnx --framework=5 --output=maskrcnn_detectron2_npu --input_format=NCHW --input_shape="0:4,3,1344,1344" --out_nodes="Cast_1673:0;Gather_1676:0;Reshape_1667:0;Slice_1706:0" --log=error --soc_version=Ascend${chip_name}
+    atc --model=model_py1.8.onnx --framework=5 --output=maskrcnn_detectron2_npu --input_format=NCHW --input_shape="0:1,3,1344,1344" --out_nodes="Cast_1673:0;Gather_1676:0;Reshape_1667:0;Slice_1706:0" --log=error --soc_version=Ascend${chip_name}
     ```
 
    参数说明：
     + --framework: 5代表ONNX模型
     + --model: ONNX模型路径
-    + --input_shape: 模型输入数据的shape
+    + --input_shape: 模型输入数据的shape，本模型只支持bs=1
     + --input_format: 输入数据的排布格式
     + --output: OM模型路径，无需加后缀
     + --log：日志级别
@@ -262,6 +262,6 @@ Mask RCNN是一个实例分割（Instance segmentation）算法，它是一个�
 
 在310P设备上，OM模型的精度为  **{AP@50:53.714}**，当batchsize设为1时模型性能最优，达 22.06 fps。
 
-| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
-| --------- | --------- | ----------- | --------------- | --------- |
-|Ascend310P3| 1         | COCO2017  | AP@50:53.714 | 22.06 fps |
+| 芯片型号   | BatchSize | 数据集      | 精度            | 性能       | coco2017验证集性能       |
+| --------- | --------- | ----------- | --------------- | --------- | --------- |
+|Ascend310P3| 1         | COCO2017  | AP@50:53.714 | 22.06 fps | 13.31 fps |

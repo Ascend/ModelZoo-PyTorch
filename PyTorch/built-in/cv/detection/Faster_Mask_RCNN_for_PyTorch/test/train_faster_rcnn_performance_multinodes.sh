@@ -122,7 +122,7 @@ start_time=$(date +%s)
 # 多机多卡
 export HCCL_IF_IP=$local_addr
 
-nohup python3.7 tools/train_net.py \
+nohup python3 tools/train_net.py \
         --config-file  configs/COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml \
         --master-addr $master_addr \
         --master-port $master_port \

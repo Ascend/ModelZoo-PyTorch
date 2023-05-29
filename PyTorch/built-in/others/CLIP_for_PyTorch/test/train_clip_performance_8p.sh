@@ -78,7 +78,7 @@ if [ $(uname -m) = "aarch64" ]; then
     let p_start=0+24*i
     let p_end=23+24*i
     taskset -c $p_start-$p_end $CMD \
-      python3.7 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
+      python3 ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
       --num_train_epochs ${train_epochs} \
       --model_name_or_path "$model_path" \
       --data_dir $data_path \
@@ -96,7 +96,7 @@ if [ $(uname -m) = "aarch64" ]; then
       --local_rank $i >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
   done
 else
-  python3.7 -m torch.distributed.launch --nproc_per_node 8 \
+  python3 -m torch.distributed.launch --nproc_per_node 8 \
     ./run_clip.py --output_dir ./clip-roberta-finetuned-npu-8p \
     --num_train_epochs ${train_epochs} \
     --model_name_or_path "$model_path" \
