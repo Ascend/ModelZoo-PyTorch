@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-from ais_bench.infer.interface import InferSession
+import math
 import argparse
 import numpy as np
 import onnxruntime
-import math
+from ais_bench.infer.interface import InferSession
 
 parser = argparse.ArgumentParser(description='CRAFT Text Detection')
 parser.add_argument('--model_path', default='output/craft_bs1.om', type=str, help='om model path')
