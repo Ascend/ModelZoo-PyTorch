@@ -23,8 +23,7 @@ from mmengine.runner import Runner
 
 from mmseg.registry import RUNNERS
 
-from npu_patch import (histc_patch, fps_patch, accuracy_patch,
-                       ohem_pixel_sampler_patch)
+from npu_patch import (accuracy_patch, fps_patch, ohem_pixel_sampler_patch)
 
 
 def parse_args():
