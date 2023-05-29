@@ -665,7 +665,7 @@ CV-tracking
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/T2vec_for_PyTorch">  T2vec_for_PyTorch </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/T2vec_for_Pytorch">  T2vec_for_PyTorch </a>
         </td>
         <td>Proto</td>
 	<td>/</td>
