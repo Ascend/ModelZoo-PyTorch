@@ -857,7 +857,6 @@ def main():
                             scaled_loss.backward()
                     else:
                         loss.backward()
-                    average_loss += loss.item()
 
                     # args.allreduce_post_accumulation needs to be set for correctness
                     if args.clip_and_accumulate:
@@ -919,7 +918,7 @@ def main():
                                         print("%f > %f, Target MLM Accuracy reached at %d"%(eval_avg_mlm_accuracy, args.target_mlm_accuracy, global_step))
 
                             eval_count += 1
-
+                    average_loss += loss.item()
                     if args.target_mlm_accuracy and args.train_mlm_accuracy_window_size > 0:
                         accuracy_scores.append(mlm_acc)
                         if update_step:

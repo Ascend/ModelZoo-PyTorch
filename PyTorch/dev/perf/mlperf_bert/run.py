@@ -61,6 +61,8 @@ def prepare_model_and_optimizer(args, device):
     config.fuse_dropout = args.enable_fuse_dropout
     config.apex_softmax = not args.disable_apex_softmax
     config.enable_stream = args.enable_stream
+    config.hidden_dropout_prob = 0 # TODO: 临时规避dropout导致精度异常，根因需要进一步定位
+    config.attention_probs_dropout_prob = 0
     if config.fuse_mask == True:
         config.apex_softmax = True
     if config.pad == False:
