@@ -131,11 +131,11 @@
 
          运行成功后获得retinanet.onnx文件。
 
-       2. 量化
+       2. 量化（可选）
 
          ```shell
          amct_onnx calibration --model retinanet.onnx --save_path ./amct --input_shape "input:1,3,1216,1216" --data_dir ./input_data/ --data_types "float32" --calibration_config amct.cfg
-         mv Retinanet_Resnet18_result_deploy_model.onnx retinanet_int8.onnx
+         mv Retinanet_Resnet18_result_deploy_model.onnx retinanet.onnx
          ```
          获得量化后的retinanet_int8.onnx
 
@@ -144,7 +144,7 @@
           请访问[auto-optimizer改图工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
 	 
           ```shell
-          python3 -m auto_optimizer optimize retinanet_int8.onnx retinanet_fix.onnx -k 4,8
+          python3 -m auto_optimizer optimize retinanet.onnx retinanet_fix.onnx -k 4,8
           ```
           获得retinanet_fix.onnx文件。
 
@@ -250,8 +250,8 @@
 调用ACL接口推理计算，性能参考下列数据。
 开源仓精度（mAP）：31.7
 
-| 芯片型号 | Batch Size   | 数据集 | 精度  | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-|  310P3    |         1        |   COCO2017 | mAP：31.6  |     16.78      |
+| 芯片型号 | Batch Size   | 数据集 | 精度  | 性能(FP16) | 性能(INT8) |
+| --------- | ---------------- | ---------- | ---------- | --------------- | --------------- |
+|  310P3    |         1        |   COCO2017 | mAP：31.6  |     16.78      |    18.32   |
 该模型仅支持batch size为1
 

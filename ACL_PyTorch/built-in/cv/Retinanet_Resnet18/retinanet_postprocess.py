@@ -15,11 +15,11 @@
 import os
 import sys
 import argparse
+from glob import glob
 import numpy as np
 import cv2
 from tqdm import tqdm
 import mmcv
-from glob import glob
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
@@ -60,7 +60,7 @@ def get_jpg_info(file_path):
                 shape = img_cv.shape
                 width, height = shape[1], shape[0]
                 content = [img, str(width), str(height)]
-		res.append(content)
+        res.append(content)
     return res
 
 def coco_postprocess(bbox: np.ndarray, image_size, 
