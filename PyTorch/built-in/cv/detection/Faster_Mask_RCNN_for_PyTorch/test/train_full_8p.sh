@@ -11,6 +11,9 @@ else
     test_path_dir=${cur_path}/test
 fi
 
+#网络名称，同目录名称
+Network="Faster_Mask_RCNN_ID0101_for_PyTorch"
+
 # 指定训练所使用的npu device卡id
 device_id=0
 batch_size=64
@@ -139,7 +142,7 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 
 ##获取性能数据
 #吞吐量，不需要修改
