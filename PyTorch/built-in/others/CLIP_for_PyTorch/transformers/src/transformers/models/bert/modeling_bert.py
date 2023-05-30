@@ -295,8 +295,8 @@ class BertSelfAttention(nn.Module):
                 drop_p = p
             else:
                 drop_p = 0
-            _, _, attn_probs = torch.npu_dropout_with_add_softmax(attn_scores, attn_mask,
-                                                                  1 / math.sqrt(attention_head_size), drop_p, -1)
+            _, _, attn_probs = torch_npu.npu_dropout_with_add_softmax(attn_scores, attn_mask,
+                                                                      1 / math.sqrt(attention_head_size), drop_p, -1)
         else:                  
             # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
             attn_scores = torch.add(attn_mask, attn_scores, alpha=(1 / math.sqrt(attention_head_size)))
