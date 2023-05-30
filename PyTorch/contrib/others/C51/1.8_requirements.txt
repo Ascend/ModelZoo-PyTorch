@@ -1,0 +1,11 @@
+gym==0.10.8
+tensorflow
+atari-py==0.1.7
+opencv-python
+scikit-image==0.14.2
+tqdm==4.31.1
+pandas==0.24.1
+pathlib==1.0.1
+seaborn==0.9.0
+roboschool
+torchvision==0.9.1

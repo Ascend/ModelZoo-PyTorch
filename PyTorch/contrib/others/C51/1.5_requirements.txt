@@ -8,3 +8,4 @@ pandas==0.24.1
 pathlib==1.0.1
 seaborn==0.9.0
 roboschool
+torchvision==0.2.2.post3
