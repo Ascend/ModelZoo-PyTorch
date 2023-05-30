@@ -60,6 +60,7 @@ CenterNet使用关键点检测的方法去预测目标边框的中心点，然�
   git clone https://github.com/cocodataset/cocoapi.git
   cd cocoapi/PythonAPI
   python setup.py install
+  cd -
   ```
 
 - 编译可变形卷积（来自DCNv2）
@@ -67,6 +68,7 @@ CenterNet使用关键点检测的方法去预测目标边框的中心点，然�
   ```
   cd ./src/lib/models/networks/DCNv2
   ./make.sh
+  cd -
   ```
 
 - 编译NMS
@@ -74,6 +76,7 @@ CenterNet使用关键点检测的方法去预测目标边框的中心点，然�
   ```
   cd ./src/lib/external
   make
+  cd -
   ```
 
 ## 准备数据集

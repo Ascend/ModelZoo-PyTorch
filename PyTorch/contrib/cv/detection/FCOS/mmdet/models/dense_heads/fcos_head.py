@@ -410,10 +410,10 @@ class FCOSHead(AnchorFreeHead):
             scores = cls_score.permute(1, 2, 0).reshape(
                 -1, self.cls_out_channels)#.sigmoid()
 
-            scores = scores.npu_format_cast(0).sigmoid()
+            scores = torch_npu.npu_format_cast(scores, 0).sigmoid()
             centerness = centerness.permute(1, 2, 0).reshape(-1)#.sigmoid()
 
-            centerness = centerness.npu_format_cast(0).sigmoid()
+            centerness = torch_npu.npu_format_cast(centerness, 0).sigmoid()
 
             bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, 4)
             nms_pre = cfg.get('nms_pre', -1)
