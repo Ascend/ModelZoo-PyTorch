@@ -38,6 +38,9 @@ sed -i "s|\"coco_2017_train\": (\"coco/train2017\", \"coco/annotations/instances
 sed -i "s|\"coco_2017_val\": (\"coco/val2017\", \"coco/annotations/instances_val2017.json\")|\"coco_2017_val\": (\"$data_path/coco/val2017\", \"$data_path/coco/annotations/instances_val2017.json\")|g" $cur_path/detectron2/data/datasets/builtin.py
 sed -i "s|WEIGHTS: \"detectron2://ImageNetPretrained/MSRA/R-101.pkl\"|WEIGHTS: \"$data_path/R-101.pkl\"|g" $cur_path/configs/COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml
 
+cd $cur_path/
+python3 -m pip install -e .
+
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ $ASCEND_DEVICE_ID ];then
     echo "device id is ${ASCEND_DEVICE_ID}"
