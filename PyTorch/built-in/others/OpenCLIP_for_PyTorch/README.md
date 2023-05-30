@@ -1,4 +1,4 @@
-# Resnet50-cifar for PyTorch
+# OpenCLIP for PyTorch
 
 -   [概述](概述.md)
 -   [准备训练环境](准备训练环境.md)
