@@ -91,7 +91,7 @@ CV-classfication
         <td></td>
         <td></td>
         <td>32.739%</td>
-        <td>11.4(bs8)</td>
+        <td>13(bs1)</td>
         <td>1 x 3 x 1344 x 1344</td>
     </tr>
     <tr>
@@ -397,13 +397,24 @@ CV-detection
     </tr>
     <tr>
         <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/build-in/cv/Retinanet_for_Pytorch"> Retinanet_r50_fpn_1x </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Retinanet_for_Pytorch"> Retinanet_r50_fpn_1x </a>
         </td>
         <td>coco</td>
 	<td></td>
         <td>36.3%</td>
         <td></td>
 	<td>15.48(bs1)</td>
+	<td>1 x 3 x 1216 x 1216</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Retinanet_Resnet18"> Retinanet_Resnet18 </a>
+        </td>
+        <td>coco</td>
+	<td></td>
+        <td>31.6%</td>
+        <td></td>
+	<td>16.78(bs1)</td>
 	<td>1 x 3 x 1216 x 1216</td>
     </tr>
     <tr>
@@ -1105,7 +1116,7 @@ CV-classfication
 	<td>79.47%</td>
 	<td>94.54%</td>
         <td></td>
-	<td>567(bs4)</td>
+	<td>550(bs4)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1177,7 +1188,7 @@ CV-classfication
 	<td>82.26%</td>
 	<td></td>
         <td></td>
-	<td>1859(bs64)</td>
+	<td>1670(bs64)</td>
         <td></td>
 	<td>bs x 3 x 288 x 288</td>
     </tr>
@@ -1501,7 +1512,7 @@ CV-classfication
 	<td>73.31%</td>
         <td>91.44%</td>
 	<td></td>
-	<td>5967(bs32)</td>
+	<td>5455(bs16)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1596,7 +1607,7 @@ CV-classfication
 	<td>77.64%</td>
         <td>93.74%</td>
 	<td></td>
-	<td>2333(bs4)</td>
+	<td>2479(bs32)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -1836,7 +1847,7 @@ CV-classfication
 	<td>71.76%</td>
         <td>90.80%</td>
 	<td></td>
-	<td>1316.24(bs16)</td>
+	<td>1153(bs64)</td>
         <td></td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
@@ -4011,7 +4022,7 @@ CV-tracking
         <td></td>
         <td>2.15</td>
         <td></td>
-	<td>15(bs1)</td>
+	<td>14(bs1)</td>
         <td></td>
 	<td nowrap="nowrap">bs x 3 x 448 x 1024</td>
     </tr>
@@ -4093,7 +4104,7 @@ CV-video_understanding
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/FOMM">  FOMM </a>
         </td>
         <td>taichi</td>
-        <td>6.8</td>
+        <td>6.7975</td>
         <td>0.036</td>
         <td></td>
         <td></td>
@@ -4200,7 +4211,7 @@ Audio
         <td></td>
         <td></td>
         <td></td>
-	<td>164(bs1)</td>
+	<td>168(bs64)</td>
         <td></td>
 	<td nowrap="nowrap">1 x 64600</td>
     </tr>
@@ -4367,7 +4378,7 @@ Knowledge
         </td>
         <td>FB15k-237</td>
         <td>0.3355</td>
-	<td>head:141.9(bs16) <br> tail:142(bs16)</td>
+	<td>head:222(bs64) <br> tail:222(bs64)</td>
 	<td nowrap="nowrap">bs x 3 <br> bs x 14541</td>
 </table>
 
