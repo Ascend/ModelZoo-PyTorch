@@ -34,13 +34,16 @@ def parse_args():
     parser.add_config_argument()
     parser.add_test_image_dir_argument()
     parser.add_test_label_argument()
+    parser.add_is_dym()
     return parser.parse_args()
 
 
 class ImagePreprocessor:
-    def __init__(self, config_, image_dir):
+    def __init__(self, config_, image_dir, is_dym):
         self.__config = config_
         self.__image_dir = image_dir.rstrip('/')
+        self.dym = is_dym
+        self.prefix = "preprocessed_dym_" if self.dym else "preprocessed_"
         self.__preprocessed_image_dir = self.__get_preprocessed_image_dir()
         if not os.path.exists(self.__preprocessed_image_dir):
             os.makedirs(self.__preprocessed_image_dir)
@@ -48,7 +51,7 @@ class ImagePreprocessor:
     def __get_preprocessed_image_dir(self):
         dir_name = os.path.dirname(self.__image_dir)
         base_name = os.path.basename(self.__image_dir)
-        return os.path.join(dir_name, f'preprocessed_{base_name}')
+        return os.path.join(dir_name, f'{self.prefix}{base_name}')
 
     def preprocess(self):
         image_files = os.listdir(self.__image_dir)
@@ -78,8 +81,15 @@ class ImagePreprocessor:
         return cv2.resize(image, (0, 0), fx=scale_factor, fy=1, interpolation=cv2.INTER_CUBIC)
 
     def __normalize(self, image):
+        h, w = image.shape
         image = image.astype(np.float32)
-        return (image / 255 - self.__config.DATASET.MEAN) / self.__config.DATASET.STD
+        image = (image / 255 - self.__config.DATASET.MEAN) / self.__config.DATASET.STD
+
+        if self.dym:
+            scale_factor =np.random.uniform(1, 5.5)
+            num_pix = (scale_factor - 1) * w
+            return cv2.copyMakeBorder(image, 0, 0, 0, int(num_pix), cv2.BORDER_CONSTANT, value=(0.0))
+        return image
 
     @staticmethod
     def __reshape(image):
@@ -88,14 +98,14 @@ class ImagePreprocessor:
 
     @staticmethod
     def __write_data_to_file(image, filepath):
-        image.tofile(filepath)
+        np.save(filepath, image)
 
     def __get_bin_filepath(self, image_filepath):
         parent_dirname = os.path.dirname(self.__image_dir)
         image_dir_basename = os.path.basename(self.__image_dir)
         image_filepath_basename = os.path.basename(image_filepath)
         filename, _ = os.path.splitext(image_filepath_basename)
-        return os.path.join(parent_dirname, 'preprocessed_' + image_dir_basename, filename + '.bin')
+        return os.path.join(parent_dirname, self.prefix + image_dir_basename, filename + '.npy')
 
 
 class LabelPreprocessor:
@@ -149,8 +159,12 @@ class LabelPreprocessor:
 
 
 if __name__ == '__main__':
+
     args = parse_args()
-    image_preprocessor = ImagePreprocessor(config.get_config(args.config), args.image_dir)
+    if args.is_dym:
+        np.random.seed(2023)
+
+    image_preprocessor = ImagePreprocessor(config.get_config(args.config), args.image_dir, args.is_dym)
     image_preprocessor.preprocess()
     label_preprocessor = LabelPreprocessor(config.get_config(args.config), args.label)
     label_preprocessor.preprocess()

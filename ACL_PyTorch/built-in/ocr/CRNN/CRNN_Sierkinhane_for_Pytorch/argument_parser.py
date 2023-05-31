@@ -75,6 +75,14 @@ class ArgumentParser:
             default='ais_bench_output/result',
             help='ais_bench 推理结果目录'
         )
+    
+    def add_is_dym(self):
+        self.__parser.add_argument(
+            '--is-dym',
+            type=bool,
+            default=False,
+            help='是否使用动态逻辑'
+        )
 
     def parse_args(self):
         return self.__parser.parse_args()

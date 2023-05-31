@@ -10,6 +10,7 @@
     - [精度验证](#精度验证)
     - [纯推理性能验证](#纯推理性能验证)
   - [精度和性能](#精度和性能)
+  - [动态推理的流程](#动态推理的流程)
 
 ## 概述
 
@@ -80,6 +81,7 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
 2. 新建 conda 环境，安装依赖。
 
    ```bash
+   # conda 环境可选
    conda create -n crnn python=3.7.5
    conda activate crnn
    pip3 install -r my/requirements.txt
@@ -151,6 +153,7 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
    ```bash
    python3 npu_infer/preprocess.py # 可以使用 -h 查看参数用法
    ```
+   运行完会在`images/preprocessed_test_images`生成处理好的数据
 
 2. 推理。运行后生成 ais_bench_output 文件夹。
 
@@ -166,12 +169,12 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
 
    参数说明：
 
-   - --model：需要进行推理的OM离线模型文件。
-   - --input：模型需要的输入。可指定输入文件所在目录或直接指定输入文件。支持输入文件格式为“NPY”、“BIN”。可输入多个文件或目录，文件或目录之间用“,”隔开。具体输入文件请根据模型要求准备。 若不配置该参数，会自动构造输入数据，输入数据类型由--pure_data_type参数决定。
-   - --output：推理结果保存目录。配置后会创建“日期+时间”的子目录，保存输出结果。如果指定output_dirname参数，输出结果将保存到子目录output_dirname下。不配置输出目录时，仅打印输出结果，不保存输出结果。
-   - --output_dirname：推理结果保存子目录。设置该值时输出结果将保存到*output/output_dirname*目录下。 配合output参数使用，单独使用无效。 例如：--output */output* --output_dirname *output_dirname*
-   - --output_batchsize_axis：输出tensor的batchsize轴。输出结果保存文件时，根据哪个轴进行切割推理结果，那输出结果的batch维度就在哪个轴。默认按照0轴进行切割，但是部分模型的输出batch为1轴，所以要设置该值为1。
-   - --outfmt：输出数据的格式。取值为：“NPY”、“BIN”、“TXT”，默认为”BIN“。 配合output参数使用，单独使用无效。 例如：--output */output* --outfmt NPY。
+   - --model：OM离线文件
+   - --input：模型需要的输入
+   - --output：推理结果保存目录
+   - --output_dirname：推理结果保存子目录
+   - --output_batchsize_axis：输出tensor的batchsize轴
+   - --outfmt：输出数据的格式
    - 更多参数请参考 [ ais_bench 推理工具使用指南](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)。
 
 3. 后处理。运行后在控制台输出精度。
@@ -185,14 +188,84 @@ commit_id=a565687c4076b729d4059593b7570dd388055af4
 ```bash
 python3 -m ais_bench --model=om/crnn_bs${batch_size}.om --loop=100
 ```
+## 动态推理的流程
+
+### 数据预处理
+1. 由于验证集数量很大，为了加快测试流程，可以用以下命令复制前N张图片（这步可选）
+```bash
+cd images/test_images
+mkdir ../tmp1000
+ls | head -n 1000 | xargs -i cp {} ../tmp1000
+cd -
+```
+
+2. 生成动态测试数据集
+```bash
+python3 npu_infer/preprocess.py --image-dir images/tmp1000 --is-dym True
+```
+运行完会在`images/preprocessed_tmp1000`生成处理好的数据
+
+### 生成om模型
+```bash
+atc \
+       --framework=5 \
+       --model=crnn.onnx \
+       --output=om/crnn_dym \
+       --input_format=ND \
+       --input_shape="input:1~64,1,32,32~2048" \
+       --soc_version=Ascend${chip_name}
+``` 
+模型生成在`om/crnn_dym_linux_${arch}.om`,`${arch}`是你架构
+
+### 推理验证
+```bash
+python3 -m ais_bench \
+   --model om/crnn_dym_linux_${arch}.om \
+   --device 0 \
+   --input images/preprocessed_tmp1000 \
+   --output ./ \
+   --output_dirname npu_result \
+   --auto_set_dymshape_mode 1 \
+   --output_batchsize_axis 1 \
+   --outfmt NPY
+```
+运行完结果会保存在当前目录`npu_result`
+
+### 后处理精度验证
+```bash
+python3 npu_infer/postprocess.py --predict-dir npu_result --is-dym True
+```
+运行完精度会打屏显示
+
+## GPU动态Shape测试流程
+1. 环境安装
+在`ocr/utils`下有GPU动态Shape的样例，按照[readme](../../utils/trtexec_dynamic/README.md)搭建好环境
+2. 运行脚本
+```bash
+python3 npu_infer/gpu_end2end.py --data_path images/tmp1000 --onnx_path crnn.onnx --output gpu_result
+```
+运行完结果会保存在当前目录`gpu_result`
+3. 后处理精度验证
+```bash
+python3 npu_infer/postprocess.py --predict-dir gpu_result --is-dym True
+```
+运行完精度会打屏显示
 
 ## 精度和性能
 
+1. 静态数据
+
 | 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
 | ---- | ---- | ---- | ---- | ----|
-| 310P3 | 1 | GitHub 仓库提供的 360 万数据集 | 78.37% | 688 |
-| 310P3 | 4 | GitHub 仓库提供的 360 万数据集 | 78.37% | 2531 |
-| 310P3 | 8 | GitHub 仓库提供的 360 万数据集 | 78.37% | 3961 |
-| 310P3 | 16 | GitHub 仓库提供的 360 万数据集 | 78.37% | 5745 |
-| 310P3 | 32 | GitHub 仓库提供的 360 万数据集 | 78.37% | 5881 |
-| 310P3 | 64 | GitHub 仓库提供的 360 万数据集 | 78.37% | 6011 |
+| 310P3 | 1 | GitHub 仓库提供的 360 万数据集 | 78.37% | 696 |
+| 310P3 | 4 | GitHub 仓库提供的 360 万数据集 | 78.37% | 2598 |
+| 310P3 | 8 | GitHub 仓库提供的 360 万数据集 | 78.37% | 3990 |
+| 310P3 | 16 | GitHub 仓库提供的 360 万数据集 | 78.37% | 5754 |
+| 310P3 | 32 | GitHub 仓库提供的 360 万数据集 | 78.37% | 7445 |
+| 310P3 | 64 | GitHub 仓库提供的 360 万数据集 | 78.37% | 8066 |
+
+2. 动态数据
+
+| 芯片型号 |  数据集 | 精度 | 性能 |
+| ---- | ---- | ---- | ----|
+| 310P3 | GitHub 仓库提供的 360 万数据集 | 78.5% | 229 |

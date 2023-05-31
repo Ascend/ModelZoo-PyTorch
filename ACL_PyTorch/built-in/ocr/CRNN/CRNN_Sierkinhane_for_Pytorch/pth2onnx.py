@@ -45,7 +45,7 @@ def convert(config_filepath, checkpoint_filepath):
         'crnn.onnx',
         input_names=['input'],
         output_names=['output'],
-        dynamic_axes={'input': {0: '-1'}, 'output': {1: '-1'}}
+        dynamic_axes={'input': {0: 'batch', 3:"width"}, 'output': {0: "-1", 1: '-1'}}
     )
 
 

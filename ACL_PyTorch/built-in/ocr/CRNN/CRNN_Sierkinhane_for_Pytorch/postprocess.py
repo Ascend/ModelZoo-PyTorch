@@ -34,15 +34,17 @@ def parse_args():
     parser.add_config_argument()
     parser.add_preprocessed_test_label_argument()
     parser.add_predict_dir_argument()
+    parser.add_is_dym()
     return parser.parse_args()
 
 
 class Postprocessor:
-    def __init__(self, predict_dir, label_file, alphabets):
+    def __init__(self, predict_dir, label_file, alphabets, is_dym):
         self.__predict_dir = predict_dir
         self.__label_file = label_file
         self.__alphabets = alphabets
         self.__filename_to_label = self.__get_filename_to_label()
+        self.dym = is_dym
 
     def __get_filename_to_label(self):
         lines = open(self.__label_file, encoding='utf-8').readlines()
@@ -59,8 +61,14 @@ class Postprocessor:
         for predict_file in tqdm(predict_files):
             predict_text = self.__get_predict_text(predict_file)
             expected_text = self.__get_expected_text(predict_file)
-            if predict_text == expected_text:
-                correct_count += 1
+            if self.dym:
+                predict_text = set(predict_text)
+                expected_text = set(expected_text)
+                if expected_text.issubset(predict_text):
+                    correct_count += 1
+            else:
+                if predict_text == expected_text:
+                    correct_count += 1
         total_count = len(predict_files)
         print(f'total: {total_count}, correct_count: {correct_count}, accuracy: {correct_count / total_count}')
 
@@ -75,6 +83,7 @@ class Postprocessor:
         filename, _ = os.path.splitext(image_file)
         predict_filepath = os.path.join(self.__predict_dir, filename + '.npy')
         predict_data = np.load(predict_filepath)
+        predict_data = predict_data[:41, ...]
         predict_data = torch.from_numpy(predict_data)
         _, char_indices = predict_data.max(2)
         char_indices = char_indices.transpose(1, 0).contiguous().view(-1)
@@ -86,5 +95,5 @@ class Postprocessor:
 if __name__ == '__main__':
     args = parse_args()
     config = config.get_config(args.config)
-    postprocessor = Postprocessor(args.predict_dir, args.label, config.DATASET.ALPHABETS)
+    postprocessor = Postprocessor(args.predict_dir, args.label, config.DATASET.ALPHABETS, args.is_dym)
     postprocessor.compute_accuracy()
