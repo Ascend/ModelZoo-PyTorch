@@ -13,10 +13,24 @@
 # limitations under the License.
 
 # -*- coding:utf-8 -*-
-
 import sys
-from graph_fusion import GraphFusion
+from auto_optimizer import OnnxGraph
 
-input_model = sys.argv[1]
-output_model = sys.argv[2]
-GraphFusion(input_model=input_model, output_model=output_model, opt_type=2)
+
+def keep_dymamic_batch(graph):
+    for input_node in graph.inputs:
+        input_node.shape[0] = 'batch'
+
+    for out_node in graph.outputs:
+        out_node.shape[0] = 'batch'
+
+    graph.infershape()
+    return graph
+
+
+if __name__ == '__main__':
+    input_model = sys.argv[1]
+    output_model = sys.argv[2]
+    onnx_graph = OnnxGraph.parse(input_model)
+    onnx_graph = keep_dymamic_batch(onnx_graph)
+    onnx_graph.save(output_model)

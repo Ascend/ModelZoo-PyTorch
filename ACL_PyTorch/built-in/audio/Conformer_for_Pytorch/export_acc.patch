@@ -1,16 +1,54 @@
 diff --git a/espnet_onnx/asr/abs_asr_model.py b/espnet_onnx/asr/abs_asr_model.py
-index d55e2c4..f31e869 100644
+index d55e2c4..399ed48 100644
 --- a/espnet_onnx/asr/abs_asr_model.py
 +++ b/espnet_onnx/asr/abs_asr_model.py
-@@ -49,13 +49,15 @@ class AbsASRModel(AbsModel):
+@@ -11,6 +11,7 @@ from espnet_onnx.asr.scorer.length_bonus import LengthBonus
+ from espnet_onnx.asr.scorer.interface import BatchScorerInterface
+ from espnet_onnx.asr.beam_search.beam_search import BeamSearch
+ from espnet_onnx.asr.beam_search.batch_beam_search import BatchBeamSearch
++from espnet_onnx.asr.beam_search.multi_batch_beam_search import MultiBatchBeamSearch
+ from espnet_onnx.asr.beam_search.beam_search_transducer import BeamSearchTransducer
+ 
+ 
+@@ -20,7 +21,7 @@ class AbsASRModel(AbsModel):
+             # check if quantized model config is defined.
+             raise RuntimeError(
+                 'Configuration for quantized model is not defined.')
+-        
++
+     def _build_beam_search(self, scorers, weights):
+         if self.config.transducer.use_transducer_decoder:
+             self.beam_search = BeamSearchTransducer(
+@@ -41,35 +42,53 @@ class AbsASRModel(AbsModel):
+                 if not isinstance(v, BatchScorerInterface)
+             ]
+             if len(non_batch) == 0:
+-                self.beam_search.__class__ = BatchBeamSearch
+-                logging.info("BatchBeamSearch implementation is selected.")
++                if not self.enable_multibatch:
++                    self.beam_search.__class__ = BatchBeamSearch
++                    logging.info("BatchBeamSearch implementation is selected.")
++                else:
++                    self.beam_search.__class__ = MultiBatchBeamSearch
++                    logging.info("MultiBatchBeamSearch implementation is selected.")
+             else:
+                 logging.warning(
+                     f"As non-batch scorers {non_batch} are found, "
                      f"fall back to non-batch implementation."
                  )
-     
+-    
 -    def _build_model(self, providers, use_quantized):
 -        self.encoder = get_encoder(self.config.encoder, providers, use_quantized)
 -        decoder = get_decoder(self.config.decoder, providers, use_quantized)
-+    def _build_model(self, providers, use_quantized, device_id):
-+        self.encoder = get_encoder(self.config.encoder, providers, use_quantized, device_id)
++
++    def _build_model(self, providers, use_quantized, device_id, only_use_encoder=False, only_use_decoder=False):
++        if only_use_encoder:
++            self.encoder = get_encoder(self.config.encoder, providers, use_quantized, device_id)
++            return self.encoder
++        if not only_use_decoder:
++            self.encoder = get_encoder(self.config.encoder, providers, use_quantized, device_id)
++        else:
++            self.encoder = None
 +        decoder = get_decoder(self.config.decoder, providers, use_quantized, device_id)
          scorers = {'decoder': decoder}
          weights = {}
@@ -18,71 +56,94 @@ index d55e2c4..f31e869 100644
 +        joint_network = None
          if not self.config.transducer.use_transducer_decoder:
 -            ctc = CTCPrefixScorer(self.config.ctc, self.config.token.eos, providers, use_quantized)
-+            ctc = CTCPrefixScorer(self.config.ctc, self.config.token.eos, providers, use_quantized, device_id)
-             scorers.update(
-                 ctc=ctc,
-                 length_bonus=LengthBonus(len(self.config.token.list))
-@@ -66,10 +68,10 @@ class AbsASRModel(AbsModel):
-                 length_bonus=self.config.weights.length_bonus,
-             )
+-            scorers.update(
+-                ctc=ctc,
+-                length_bonus=LengthBonus(len(self.config.token.list))
+-            )
+-            weights.update(
+-                decoder=self.config.weights.decoder,
+-                ctc=self.config.weights.ctc,
+-                length_bonus=self.config.weights.length_bonus,
+-            )
++            use_ctc = self.config.ctc.use_ctc if 'use_ctc' in self.config.ctc.keys() else True
++            if use_ctc:
++                ctc = CTCPrefixScorer(self.config.ctc, self.config.token.eos, providers, use_quantized, device_id)
++                scorers.update(
++                    ctc=ctc,
++                    length_bonus=LengthBonus(len(self.config.token.list))
++                )
++                weights.update(
++                    decoder=self.config.weights.decoder,
++                    ctc=self.config.weights.ctc,
++                    length_bonus=self.config.weights.length_bonus,
++                )
++            else:
++                weights.update(
++                    decoder=self.config.weights.decoder,
++                )
          else:
 -            joint_network = JointNetwork(self.config.joint_network, providers, use_quantized)
 +            joint_network = JointNetwork(self.config.joint_network, providers, use_quantized, device_id)
              scorers.update(joint_network=joint_network)
-             
+-            
 -        lm = get_lm(self.config, providers, use_quantized)
++
 +        lm = get_lm(self.config, providers, use_quantized, device_id)
          if lm is not None:
              scorers.update(lm=lm)
              weights.update(lm=self.config.weights.lm)
-@@ -79,3 +81,4 @@ class AbsASRModel(AbsModel):
+@@ -79,3 +98,6 @@ class AbsASRModel(AbsModel):
          self._build_token_converter()
          self.scorers = scorers
          self.weights = weights
++        if only_use_decoder:
++            return decoder, ctc, joint_network, lm
 +        return self.encoder, decoder, ctc, joint_network, lm
 diff --git a/espnet_onnx/asr/asr_model.py b/espnet_onnx/asr/asr_model.py
-index 93e7de3..1617a8d 100644
+index 93e7de3..040ab97 100644
 --- a/espnet_onnx/asr/asr_model.py
 +++ b/espnet_onnx/asr/asr_model.py
-@@ -10,7 +10,7 @@ import numpy as np
- 
- from espnet_onnx.asr.abs_asr_model import AbsASRModel
- from espnet_onnx.asr.beam_search.hyps import Hypothesis
--
-+from pyacl.acl_infer import init_acl
- 
- class Speech2Text(AbsASRModel):
-     """Wrapper class for espnet2.asr.bin.asr_infer.Speech2Text
-@@ -22,21 +22,25 @@ class Speech2Text(AbsASRModel):
+@@ -22,22 +22,34 @@ class Speech2Text(AbsASRModel):
                   model_dir: Union[Path, str] = None,
                   providers: List[str] = ['CPUExecutionProvider'],
                   use_quantized: bool = False,
 +                 device_id: int = 0,
++                 only_use_encoder: bool = False,
++                 only_use_decoder: bool = False,
++                 enable_multibatch: bool = False
                   ):
          assert check_argument_types()
          self._check_argument(tag_name, model_dir)
          self._load_config()
-         
+-        
++
          # check onnxruntime version and providers
 -        self._check_ort_version(providers)
 -        
 +        # add npu, we don,t check
 +        #self._check_ort_version(providers)
-+        # init_acl
-+        if providers[0] == 'NPUExecutionProvider':
-+            init_acl(device_id)
          # check if model is exported for streaming.
++        self.only_use_encoder = only_use_encoder
++        self.only_use_decoder = only_use_decoder
++        self.enable_multibatch = enable_multibatch
          if self.config.encoder.enc_type == 'ContextualXformerEncoder':
              raise RuntimeError('Onnx model is built for streaming. Use StreamingSpeech2Text instead.')
  
          # check quantize and optimize model
          self._check_flags(use_quantized)
 -        self._build_model(providers, use_quantized)
-+        self.encoder_m, self.decoder_m, self.ctc_m, self.joint_network_m, self.lm_m = self._build_model(providers, use_quantized, device_id)
-         
+-        
++        if not only_use_encoder and not only_use_decoder:
++            self.encoder_m, self.decoder_m, self.ctc_m, self.joint_network_m, self.lm_m = self._build_model(providers, use_quantized, device_id)
++        elif only_use_encoder:
++            self.encoder_m = self._build_model(providers, use_quantized, device_id, only_use_encoder=True)
++        elif only_use_decoder:
++            self.decoder_m, self.ctc_m, self.joint_network_m, self.lm_m = self._build_model(providers, use_quantized, device_id, only_use_decoder=True)
++
          if self.config.transducer.use_transducer_decoder:
              self.start_idx = 1
-@@ -45,7 +49,6 @@ class Speech2Text(AbsASRModel):
+             self.last_idx = None
+@@ -45,7 +57,6 @@ class Speech2Text(AbsASRModel):
              self.start_idx = 1
              self.last_idx = -1
  
@@ -90,6 +151,120 @@ index 93e7de3..1617a8d 100644
      def __call__(self, speech: np.ndarray) -> List[
          Tuple[
              Optional[str],
+@@ -66,18 +77,31 @@ class Speech2Text(AbsASRModel):
+         if speech.dtype != np.float32:
+             speech = speech.astype(np.float32)
+ 
+-        # data: (Nsamples,) -> (1, Nsamples)
+-        speech = speech[np.newaxis, :]
+-        # lengths: (1,)
+-        lengths = np.array([speech.shape[1]]).astype(np.int64)
++        if not self.only_use_decoder:
++            # data: (Nsamples,) -> (1, Nsamples)
++            speech = speech[np.newaxis, :]
++            # lengths: (1,)
++            lengths = np.array([speech.shape[1]]).astype(np.int64)
++
++            # b. Forward Encoder
++            enc, _ = self.encoder(speech=speech, speech_length=lengths)
+ 
+-        # b. Forward Encoder
+-        enc, _ = self.encoder(speech=speech, speech_length=lengths)
+-        if isinstance(enc, tuple):
+-            enc = enc[0]
+-        assert len(enc) == 1, len(enc)
++        if self.only_use_encoder:
++            return enc
+ 
+-        nbest_hyps = self.beam_search(enc[0])[:1]
++        if not self.only_use_decoder:
++            if isinstance(enc, tuple):
++                enc = enc[0]
++            assert len(enc) == 1, len(enc)
++
++            nbest_hyps = self.beam_search(enc[0])[:1]
++        else:
++            enc = speech
++            init_batch = enc.shape[0]
++            nbest_hyps_list = self.beam_search(enc)
++            nbest_hyps = []
++            for batch_idx in range(init_batch):
++                nbest_hyps.append(nbest_hyps_list[batch_idx][0])
+ 
+         results = []
+         for hyp in nbest_hyps:
+@@ -86,7 +110,7 @@ class Speech2Text(AbsASRModel):
+                 token_int = list(hyp.yseq[self.start_idx : self.last_idx])
+             else:
+                 token_int = list(hyp.yseq[self.start_idx:])
+-                
++
+             # remove blank symbol id, which is assumed to be 0
+             token_int = list([int(i) for i in filter(lambda x: x != 0, token_int)])
+ 
+diff --git a/espnet_onnx/asr/beam_search/batch_beam_search.py b/espnet_onnx/asr/beam_search/batch_beam_search.py
+index 87ee562..4a6716b 100644
+--- a/espnet_onnx/asr/beam_search/batch_beam_search.py
++++ b/espnet_onnx/asr/beam_search/batch_beam_search.py
+@@ -76,7 +76,7 @@ class BatchBeamSearch(BeamSearch):
+         ]
+ 
+     def batch_beam(
+-        self, weighted_scores: np.ndarray, ids: np.ndarray
++            self, weighted_scores: np.ndarray, ids: np.ndarray,
+     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+         """Batch-compute topk full token ids and partial token ids.
+         Args:
+@@ -102,6 +102,7 @@ class BatchBeamSearch(BeamSearch):
+         Returns:
+             Hypothesis: The initial hypothesis.
+         """
++        batch_num = x.shape[0]
+         init_states = dict()
+         init_scores = dict()
+         for k, d in self.scorers.items():
+@@ -115,7 +116,7 @@ class BatchBeamSearch(BeamSearch):
+                     states=init_states,
+                     yseq=np.array([self.sos], dtype=np.int64),
+                 )
+-            ]
++            ] * batch_num
+         )
+ 
+     def score_full(
+@@ -252,11 +253,12 @@ class BatchBeamSearch(BeamSearch):
+         return self.batchfy(best_hyps)
+ 
+     def post_process(
+-        self,
+-        i: int,
+-        maxlen: int,
+-        running_hyps: BatchHypothesis,
+-        ended_hyps: List[Hypothesis],
++            self,
++            i: int,
++            maxlen: int,
++            running_hyps: BatchHypothesis,
++            ended_hyps: List[Hypothesis],
++            keep_ori_hyps: bool = False
+     ) -> BatchHypothesis:
+         """Perform post-processing of beam search iterations.
+         Args:
+@@ -264,6 +266,7 @@ class BatchBeamSearch(BeamSearch):
+             maxlen (int): The maximum length of tokens in beam search.
+             running_hyps (BatchHypothesis): The running hypotheses in beam search.
+             ended_hyps (List[Hypothesis]): The ended hypotheses in beam search.
++            keep_ori_hyps (Bool): whether to keep ori hyps
+         Returns:
+             BatchHypothesis: The new running hypotheses.
+         """
+@@ -308,4 +311,6 @@ class BatchBeamSearch(BeamSearch):
+             hyp = self._select(running_hyps, b)
+             ended_hyps.append(hyp)
+         remained_ids = np.transpose(np.nonzero(is_eos == 0)).reshape(-1)
++        if keep_ori_hyps:
++            return self._batch_select(running_hyps, remained_ids), running_hyps
+         return self._batch_select(running_hyps, remained_ids)
 diff --git a/espnet_onnx/asr/model/decoder.py b/espnet_onnx/asr/model/decoder.py
 index 9090203..e1c5966 100644
 --- a/espnet_onnx/asr/model/decoder.py
@@ -187,7 +362,7 @@ index ca8240a..8af8702 100644
              cache[str_labels] = (dec_out, dec_state)
  
 diff --git a/espnet_onnx/asr/model/decoders/xformer.py b/espnet_onnx/asr/model/decoders/xformer.py
-index b8ccd20..4d233c6 100644
+index b8ccd20..274d484 100644
 --- a/espnet_onnx/asr/model/decoders/xformer.py
 +++ b/espnet_onnx/asr/model/decoders/xformer.py
 @@ -11,7 +11,7 @@ import onnxruntime
@@ -195,7 +370,7 @@ index b8ccd20..4d233c6 100644
  from espnet_onnx.asr.scorer.interface import BatchScorerInterface
  from espnet_onnx.utils.config import Config
 -
-+from pyacl.acl_infer import AclNet
++from ais_bench.infer.interface import InferSession
  
  class XformerDecoder(BatchScorerInterface):
      def __init__(
@@ -207,7 +382,7 @@ index b8ccd20..4d233c6 100644
      ):
          """Onnx support for espnet2.asr.decoder.transformer_decoder
  
-@@ -26,23 +27,37 @@ class XformerDecoder(BatchScorerInterface):
+@@ -26,23 +27,28 @@ class XformerDecoder(BatchScorerInterface):
              config (Config):
              use_quantized (bool): Flag to use quantized model
          """
@@ -217,16 +392,7 @@ index b8ccd20..4d233c6 100644
 -                providers=providers,
 -            )
 +        if providers[0] == "NPUExecutionProvider":
-+            input_size = config.input_size
-+            if not isinstance(input_size, int):
-+                input_size = input_size.split(',')
-+                input_size = list(map(int, input_size))
-+            output_size = config.output_size
-+            if not isinstance(output_size, int):
-+                output_size = output_size.split(',')
-+                output_size = list(map(int, output_size))
-+            self.decoder = AclNet(model_path=config.model_path, output_data_shape=output_size, \
-+                input_data_shape=input_size, device_id=device_id)
++            self.decoder = InferSession(device_id, config.model_path)
 +            self.providers = 'NPU'
          else:
 -            self.decoder = onnxruntime.InferenceSession(
@@ -257,7 +423,16 @@ index b8ccd20..4d233c6 100644
  
      def batch_score(
          self, ys: np.ndarray, states: List[Any], xs: np.ndarray
-@@ -77,11 +92,14 @@ class XformerDecoder(BatchScorerInterface):
+@@ -65,7 +71,7 @@ class XformerDecoder(BatchScorerInterface):
+         n_batch = len(ys)
+         if states[0] is None:
+             batch_state = [
+-                np.zeros((1, 1, self.odim), dtype=np.float32)
++                np.zeros((n_batch, 1, self.odim), dtype=np.float32)
+                 for _ in range(self.n_layers)
+             ]
+         else:
+@@ -77,11 +83,16 @@ class XformerDecoder(BatchScorerInterface):
  
          # batch decoding
          input_dict = self.get_input_dict(ys, xs, batch_state)
@@ -267,7 +442,9 @@ index b8ccd20..4d233c6 100644
 -            input_dict
 -        )
 +        if self.providers == "NPU":
-+            outputs, exe_t = self.decoder(list(input_dict.values()))
++            outputs = self.decoder.infer(list(input_dict.values()),
++                                         mode="dymshape",
++                                         custom_sizes=self.config.output_size)
 +            logp, *states = outputs
 +        else:
 +            logp, *states = self.decoder.run(
@@ -277,7 +454,7 @@ index b8ccd20..4d233c6 100644
  
          if type(self.n_layers) == 1:
              states = [states]
-@@ -93,7 +111,10 @@ class XformerDecoder(BatchScorerInterface):
+@@ -93,7 +104,10 @@ class XformerDecoder(BatchScorerInterface):
          return logp, state_list
  
      def get_input_dict(self, ys, xs, state):
@@ -305,18 +482,18 @@ index 3a2cb40..0854ad8 100644
 -        return Encoder(config, providers, use_quantized)
 +        return Encoder(config, providers, use_quantized, device_id)
 diff --git a/espnet_onnx/asr/model/encoders/encoder.py b/espnet_onnx/asr/model/encoders/encoder.py
-index bb52644..ade88e9 100644
+index bb52644..24dc8d5 100644
 --- a/espnet_onnx/asr/model/encoders/encoder.py
 +++ b/espnet_onnx/asr/model/encoders/encoder.py
 @@ -13,6 +13,7 @@ from espnet_onnx.utils.function import (
      mask_fill
  )
  from espnet_onnx.utils.config import Config
-+from pyacl.acl_infer import AclNet
++from ais_bench.infer.interface import InferSession
  
  
  class Encoder:
-@@ -21,20 +22,35 @@ class Encoder:
+@@ -21,20 +22,26 @@ class Encoder:
          encoder_config: Config,
          providers: List[str],
          use_quantized: bool = False,
@@ -331,16 +508,7 @@ index bb52644..ade88e9 100644
 -                providers=providers
 -            )
 +        if providers[0] == 'NPUExecutionProvider':
-+            input_size = self.config.input_size     
-+            if not isinstance(input_size, int):     
-+                input_size = input_size.split(',')
-+                input_size = list(map(int, input_size))
-+            output_size = self.config.output_size
-+            if not isinstance(output_size, int):
-+                output_size = output_size.split(',')
-+                output_size = list(map(int, output_size))
-+            self.encoder = AclNet(model_path=self.config.model_path, output_data_shape=output_size, \
-+                input_data_shape=input_size, device_id=device_id)
++            self.encoder = InferSession(device_id, self.config.model_path)
 +            self.providers = 'NPU'
          else:
 -            self.encoder = onnxruntime.InferenceSession(
@@ -361,7 +529,7 @@ index bb52644..ade88e9 100644
  
          self.frontend = Frontend(self.config.frontend, providers, use_quantized)
          if self.config.do_normalize:
-@@ -49,6 +65,7 @@ class Encoder:
+@@ -49,6 +56,7 @@ class Encoder:
          # if self.config.do_postencoder:
          #     self.postencoder = Postencoder(self.config.postencoder)
  
@@ -369,7 +537,7 @@ index bb52644..ade88e9 100644
      def __call__(
          self, speech: np.ndarray, speech_length: np.ndarray
      ) -> Tuple[np.ndarray, np.ndarray]:
-@@ -82,10 +99,14 @@ class Encoder:
+@@ -82,10 +90,16 @@ class Encoder:
          return feats, feat_length
  
      def forward_encoder(self, feats, feat_length):
@@ -378,7 +546,9 @@ index bb52644..ade88e9 100644
 -                "feats": feats
 -            })
 +        if self.providers == "NPU":  
-+            outputs, exe_t = self.encoder([feats])
++            outputs = self.encoder.infer([feats],
++                                         mode="dymshape",
++                                         custom_sizes=self.config.output_size)
 +            encoder_out, encoder_out_lens = outputs
 +        else:
 +            encoder_out, encoder_out_lens = \
@@ -579,16 +749,16 @@ index aea2583..a39271d 100644
          logp = log_softmax(decoded, axis=-1)
          # state: Change to batch first
 diff --git a/espnet_onnx/asr/model/lms/transformer_lm.py b/espnet_onnx/asr/model/lms/transformer_lm.py
-index a5bc200..d02fbf9 100644
+index a5bc200..6e41f81 100644
 --- a/espnet_onnx/asr/model/lms/transformer_lm.py
 +++ b/espnet_onnx/asr/model/lms/transformer_lm.py
-@@ -8,25 +8,39 @@ import onnxruntime
+@@ -8,25 +8,32 @@ import onnxruntime
  from scipy.special import log_softmax
  
  from espnet_onnx.asr.scorer.interface import BatchScorerInterface
 -
--
-+from pyacl.acl_infer import AclNet
++from ais_bench.infer.interface import InferSession
+ 
  class TransformerLM(BatchScorerInterface):
      def __init__(
          self,
@@ -603,17 +773,9 @@ index a5bc200..d02fbf9 100644
 -                config.quantized_model_path,
 -                providers=providers
 -            )
++        self.config = config
 +        if providers[0] == 'NPUExecutionProvider':
-+            input_size = config.input_size
-+            if not isinstance(input_size, int):
-+                input_size = input_size.split(',')
-+                input_size = list(map(int, input_size))
-+            output_size = config.output_size
-+            if not isinstance(output_size, int):
-+                output_size = output_size.split(',')
-+                output_size = list(map(int, output_size))
-+            self.lm_session = AclNet(model_path=config.model_path, output_data_shape=output_size, \
-+                input_data_shape=input_size, device_id=device_id)
++            self.lm_session = InferSession(device_id, config.model_path)
 +            self.providers = 'NPU'
          else:
 -            self.lm_session = onnxruntime.InferenceSession(
@@ -634,7 +796,7 @@ index a5bc200..d02fbf9 100644
              
          self.enc_output_names = ['y'] \
              + [d.name for d in self.lm_session.get_outputs() if 'cache' in d.name]
-@@ -35,7 +49,6 @@ class TransformerLM(BatchScorerInterface):
+@@ -35,7 +42,6 @@ class TransformerLM(BatchScorerInterface):
  
          self.nlayers = config.nlayers
          self.odim = config.odim
@@ -642,7 +804,15 @@ index a5bc200..d02fbf9 100644
      def score(
          self, y: np.ndarray, state: Any, x: np.ndarray
      ) -> Tuple[np.ndarray, Any]:
-@@ -64,10 +77,14 @@ class TransformerLM(BatchScorerInterface):
+@@ -57,17 +63,23 @@ class TransformerLM(BatchScorerInterface):
+ 
+         if state is None:
+             state = [
+-                np.zeros((1, 1, self.odim), dtype=np.float32)
++                np.zeros((y.shape[0], 1, self.odim), dtype=np.float32)
+                 for _ in range(self.nlayers)
+             ]
+ 
          input_dic.update({
              k: v for k, v in zip(self.enc_in_cache_names, state)
          })
@@ -651,7 +821,9 @@ index a5bc200..d02fbf9 100644
 -            input_dic
 -        )
 +        if self.providers == "NPU":
-+            outputs, exe_t = self.lm_session(list(input_dic.values()))
++            outputs = self.lm_session.infer(list(input_dic.values()),
++                                            mode="dymshape",
++                                            custom_sizes=self.config.output_size)
 +            decoded, *new_state = outputs
 +        else:
 +            decoded, *new_state = self.lm_session.run(
@@ -661,7 +833,7 @@ index a5bc200..d02fbf9 100644
  
          if self.nlayers == 1:
              new_state = [new_state]
-@@ -75,6 +92,7 @@ class TransformerLM(BatchScorerInterface):
+@@ -75,6 +87,7 @@ class TransformerLM(BatchScorerInterface):
          logp = log_softmax(decoded, axis=-1).squeeze(0)
          return logp, new_state
  
@@ -669,7 +841,16 @@ index a5bc200..d02fbf9 100644
      def batch_score(
          self, ys: np.ndarray, states: List[Any], xs: np.ndarray
      ) -> Tuple[np.ndarray, List[Any]]:
-@@ -113,10 +131,14 @@ class TransformerLM(BatchScorerInterface):
+@@ -98,7 +111,7 @@ class TransformerLM(BatchScorerInterface):
+         is_first_iteration = False
+         if states[0] is None:
+             batch_state = [
+-                np.zeros((1, 1, self.odim), dtype=np.float32)
++                np.zeros((ys.shape[0], 1, self.odim), dtype=np.float32)
+                 for _ in range(self.nlayers)
+             ]
+             is_first_iteration = True
+@@ -113,10 +126,16 @@ class TransformerLM(BatchScorerInterface):
          input_dic.update({
              k: v for k, v in zip(self.enc_in_cache_names, batch_state)
          })
@@ -678,7 +859,9 @@ index a5bc200..d02fbf9 100644
 -            input_dic
 -        )
 +        if self.providers == "NPU":
-+            outputs, exe_t = self.lm_session(list(input_dic.values()))
++            outputs = self.lm_session.infer(list(input_dic.values()),
++                                            mode="dymshape",
++                                            custom_sizes=self.config.output_size)
 +            decoded, *new_state = outputs
 +        else:
 +            decoded, *new_state = self.lm_session.run(
@@ -689,18 +872,18 @@ index a5bc200..d02fbf9 100644
  
          # if first iteration, remove the first row
 diff --git a/espnet_onnx/asr/scorer/ctc_prefix_scorer.py b/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
-index c6d094e..44c37f3 100644
+index c6d094e..b375c3c 100644
 --- a/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
 +++ b/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
 @@ -10,6 +10,7 @@ from scipy.special import (
  
  from espnet_onnx.utils.config import Config
  from .interface import BatchPartialScorerInterface
-+from pyacl.acl_infer import AclNet
++from ais_bench.infer.interface import InferSession
  
  
  class CTCPrefixScore:
-@@ -105,7 +106,7 @@ class CTCPrefixScore:
+@@ -105,24 +106,30 @@ class CTCPrefixScore:
  class CTCPrefixScorer(BatchPartialScorerInterface):
      """Decoder interface wrapper for CTCPrefixScore."""
  
@@ -709,9 +892,10 @@ index c6d094e..44c37f3 100644
          """Initialize class.
          Args:
              ctc (np.ndarray): The CTC implementation.
-@@ -113,16 +114,30 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+                 For example, :class:`espnet.nets.pytorch_backend.ctc.CTC`
              eos (int): The end-of-sequence id.
          """
++        self.config = ctc
          assert check_argument_types()
 -        if use_quantized:
 -            self.ctc = onnxruntime.InferenceSession(
@@ -719,16 +903,7 @@ index c6d094e..44c37f3 100644
 -                providers=providers
 -            )
 +        if providers[0] == 'NPUExecutionProvider':
-+            input_size = ctc.input_size
-+            if not isinstance(input_size, int):
-+                input_size = input_size.split(',')
-+                input_size = list(map(int, input_size))
-+            output_size = ctc.output_size
-+            if not isinstance(output_size, int):
-+                output_size = output_size.split(',')
-+                output_size = list(map(int, output_size))
-+            self.ctc = AclNet(model_path=ctc.model_path, output_data_shape=output_size, \
-+                input_data_shape=input_size, device_id=device_id)
++            self.ctc = InferSession(device_id, ctc.model_path)
 +            self.providers = 'NPU'
          else:
 -            self.ctc = onnxruntime.InferenceSession(
@@ -749,45 +924,135 @@ index c6d094e..44c37f3 100644
          self.eos = eos
          self.impl = None
  
-@@ -132,7 +147,11 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+@@ -132,7 +139,13 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
              x (np.ndarray): The encoded feature tensor
          Returns: initial state
          """
 -        x = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
 +        if self.providers == "NPU":
-+            x, exe_t = self.ctc([x[None, :]])
++            x = self.ctc.infer([x[None, :]],
++                               mode="dymshape",
++                               custom_sizes=self.config.output_size)
 +            x = x[0]
 +        else:
 +            x = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
          logp = np.squeeze(x, axis=0)
          # TODO(karita): use CTCPrefixScoreTH
          self.impl = CTCPrefixScore(logp, 0, self.eos, np)
-@@ -185,7 +204,11 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+@@ -185,11 +198,38 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
              x (np.ndarray): The encoded feature tensor
          Returns: initial state
          """
 -        logp = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
 +        if self.providers == "NPU":
-+            logp, exe_t = self.ctc([x[None, :]])
++            logp = self.ctc.infer([x[None, :]],
++                               mode="dymshape",
++                               custom_sizes=self.config.output_size)
 +            logp = logp[0]
 +        else:
 +            logp = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
          xlen = np.array([logp.shape[1]])
          self.impl = CTCPrefixScoreTH(logp, xlen, 0, self.eos)
          return None
-@@ -223,7 +246,11 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+ 
++    def multi_batch_init_state(self, x: np.ndarray):
++        """Get an initial state for decoding, supported for multi batch.
++        Args:
++            x (np.ndarray): The encoded feature tensor
++        Returns: initial state
++        """
++        if self.providers == "NPU":
++            logp = self.ctc.infer([x],
++                                  mode="dymshape",
++                                  custom_sizes=self.config.output_size)
++            logp = logp[0]
++        else:
++            logp = self.ctc.run(["ctc_out"], {"x": x})[0]
++        xlen = np.sum((x[:, :, 0] != 0), axis=-1)
++        xlen = np.expand_dims(xlen, axis=-1)
++        self.impl_list = [
++            CTCPrefixScoreTH(
++                logp[idx: idx+1, :xlen[idx][0], :], xlen[idx: idx+1], 0, self.eos) for idx in range(x.shape[0])
++        ]
++        return None
++
+     def batch_score_partial(self, y, ids, state, x):
+         """Score new token.
+         Args:
+@@ -212,7 +252,33 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+         else:
+             batch_state = None
+         return self.impl(y, batch_state, ids)
+-    
++
++    def multi_batch_score_partial(self, y, ids, state, x, batch_idx):
++        """Score new token.
++        Args:
++            y (np.ndarray): 1D prefix token
++            ids (np.ndarray): torch.int64 next token to score
++            state: decoder state for prefix tokens
++            x (np.ndarray): 2D encoder feature that generates ys
++            batch_idx (int): batch idx for input tensor
++        Returns:
++            tuple[np.ndarray, Any]:
++                Tuple of a score tensor for y that has a shape `(len(next_tokens),)`
++                and next state for ys
++        """
++        end_frame = self.impl_list[batch_idx].end_frames[0][0] + 1
++        if state[0] is not None:
++            batch_state = (
++                np.concatenate([s[0][..., None] for s in state], axis=2)[:end_frame],
++                np.concatenate([s[1][None, :] for s in state]),
++                state[0][2],
++                state[0][3],
++            )
++        else:
++            batch_state = None
++
++        return self.impl_list[batch_idx](y, batch_state, ids)
++
+     def extend_prob(self, x: np.ndarray):
+         """Extend probs for decoding.
+ 
+@@ -223,7 +289,13 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
              x (np.ndarray): The encoded feature tensor
  
          """
 -        x = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
 +        if self.providers == "NPU":
-+            x, exe_t = self.ctc([x[None, :]])
++            x = self.ctc.infer([x[None, :]],
++                               mode="dymshape",
++                               custom_sizes=self.config.output_size)
 +            x = x[0]
 +        else:
 +            x = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
          logp = log_softmax(x, axis=-1)
          self.impl.extend_prob(logp)
  
+@@ -299,7 +371,7 @@ class CTCPrefixScoreTH:
+         self.idx_b = np.arange(self.batch)
+         self.idx_bo = (self.idx_b * self.odim)[:, None]
+ 
+-    def __call__(self, y, state, scoring_ids=None, att_w=None):
++    def __call__(self, y, state, scoring_ids=None, att_w=None, batch_idx=None):
+         """Compute CTC prefix scores for next labels
+         :param list y: prefix label sequences
+         :param tuple state: previous CTC state
+@@ -412,8 +484,12 @@ class CTCPrefixScoreTH:
+                 axis=0,
+             )
+ 
+-        for si in range(n_bh):
+-            log_psi[si, self.eos] = r_sum[self.end_frames[si // n_hyps], si]
++        if batch_idx is None:
++            for si in range(n_bh):
++                log_psi[si, self.eos] = r_sum[self.end_frames[si // n_hyps], si]
++        else:
++            for si in range(n_bh):
++                log_psi[si, self.eos] = r_sum[self.end_frames[batch_idx][si // n_hyps], si]
+ 
+         # exclude blank probs
+         log_psi[:, self.blank] = self.logzero
 diff --git a/espnet_onnx/export/asr/export_asr.py b/espnet_onnx/export/asr/export_asr.py
 index 187d687..ca537a8 100644
 --- a/espnet_onnx/export/asr/export_asr.py

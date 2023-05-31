@@ -10,7 +10,6 @@
 
 ******
 
-
 # 概述
 Conformer是将CNN用于增强Transformer来做ASR的结构
 
@@ -25,13 +24,13 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 - 该模型需要以下插件与驱动  
   **表 1**  版本配套表
 
-| 配套                                                         | 版本   | 环境准备指导                                                 |
-| ------------------------------------------------------------ | ------ | ------------------------------------------------------------ |
-| 固件与驱动                                                   | 22.0.3 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 6.0.0  | -                                                            |
-| Python                                                       | 3.7.5  | -                                                            |
-| PyTorch                                                      | 1.13.0 | -                                                            |
-| 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \      | \                                                            |
+  | 配套                                                            |   版本 | 环境准备指导                                                                                          |
+  | ------------------------------------------------------------    | ------ | ------------------------------------------------------------                                          |
+  | 固件与驱动                                                      | 22.0.3 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                            |  6.0.0 | -                                                                                                     |
+  | Python                                                          |  3.7.5 | -                                                                                                     |
+  | PyTorch                                                         | 1.13.0 | -                                                                                                     |
+  | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |      \ | \                                                                                                     |
 
 
 # 快速上手
@@ -50,13 +49,10 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    pip3 install -r requirements.txt
    ```
    
-3. 安装pyacl
+3. 安装ais-bench/auto-optimizer
 
-   ```
-   git clone https://gitee.com/peng-ao/pyacl.git
-   cd pyacl
-   pip3 install .
-   ```
+   参考[ais-bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)/[auto-optimizer](https://gitee.com/ascend/auto-optimizer/tree/master)安装。
+   
 
 4. 获取`OM`推理代码  
    将推理部署代码放在espnet_onnx源码仓目录下。
@@ -78,7 +74,9 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 
 
 ## 模型推理
-### 1 模型转换  
+
+### 1 模型转换
+
 将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
 
 1. 获取权重文件  
@@ -92,8 +90,11 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 2. 导出`ONNX`模型    
    
    ```
-   patch -p1 < export_acc.patch
+   cd espnet_onnx
+   patch -p1 < ../export_acc.patch
+   cp ../multi_batch_beam_search.py espnet_onnx/asr/beam_search
    pip3 install .  #安装espnet_onnx
+   cd ..
    ```
    配置环境变量  
    
@@ -114,8 +115,12 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    修改导出的`onnx`模型，修改xformer_decoder.onnx文件以及transformer_lm.onnx文件，原因是两模型中存在Gather算子indices为-1的场景，当前CANN还不支持该场景，有精度问题，并且可以优化部分性能。
    
    ```
-   python3 modify_onnx_decoder.py
-   python3 modify_onnx_lm.py
+   python3 modify_onnx_decoder.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder.onnx \
+   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder_revise.onnx
+   python3 modify_onnx_lm.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm.onnx \
+   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_revise.onnx
+   python3 modify_onnx_ctc.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc.onnx \
+   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_dynamic.onnx
    ```
    
 3. 使用`ATC`工具将`ONNX`模型转为`OM`模型  
@@ -125,8 +130,8 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    ```
    npu-smi info
    #该设备芯片名为Ascend310P3 （自行替换）
-回显如下：
-   +-------------------+-----------------+------------------------------------------------------+
+   回显如下：
+   +-------------------|-----------------|------------------------------------------------------+
    | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
    | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
    +===================+=================+======================================================+
@@ -152,52 +157,49 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 ### 2 开始推理验证
 
 1. 修改配置参数
-   
 
-修改/root/.cache/espnet_onnx/asr_train_asr_qkv/目录下config配置文件参数，给每个模型增加input_size,output_size参数以及修改对应的weight参数中的ctc, decoder, lm，给出样例如下
+   修改/root/.cache/espnet_onnx/asr_train_asr_qkv/目录下config配置文件参数，给每个模型增加input_size,output_size参数以及修改对应的weight参数中的ctc, decoder, lm，给出样例如下
 
-| 项      | 子项        | 路径或值                                                     |
-| :------ | ----------- | ------------------------------------------------------------ |
-| encoder | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/xformer_encoder.om |
-|         | input_size  | 1000000                                                      |
-|         | output_size | 10000000                                                     |
-| decoder | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/xformer_decoder.om |
-|         | input_size  | 10000000                                                     |
-|         | output_size | 10000000                                                     |
-| ctc     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/ctc.om            |
-|         | input_size  | 10000000                                                     |
-|         | output_size | 100000000                                                    |
-| lm      | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/transformer_lm.om |
-|         | input_size  | 10000000                                                     |
-|         | output_size | 10000000                                                     |
-| weights | ctc         | 0.3                                                          |
-|         | decoder     | 0.7                                                          |
-|         | lm          | 0.3                                                          |
+   | 项          | 子项        |                                                                         路径或值 |
+   | :------     | ----------- |                     ------------------------------------------------------------ |
+   | encoder     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_${os}_${arch}.om |
+   |             | output_size |                                                                         10000000 |
+   | decoder     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder_${os}_${arch}.om |
+   |             | output_size |                                                                         10000000 |
+   | ctc         | model_path  |             /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_${os}_${arch}.om |
+   |             | output_size |                                                                        100000000 |
+   | lm          | model_path  |  /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_${os}_${arch}.om |
+   |             | output_size |                                                                         10000000 |
+   | beam_search | beam_size   |                                                                                2 |
+   | weights     | ctc         |                                                                              0.3 |
+   |             | decoder     |                                                                              0.7 |
+   |             | lm          |                                                                              0.3 |
 
-   
 
-2. 执行推理 & 精度验证  
+2. 执行推理 & 精度验证
    运行`om_val.py`推理OM模型，生成的结果txt文件在当前文件夹下。
 
    ```
-   python3 om_val.py --dataset_path /test/S0768 --model_path /root/.cache/espnet_onnx/asr_train_asr_qkv
-   
-   python3 compute-wer.py --char=1 --v=1 text om.txt > offline_wer
-   #text是标杆文件
+   # 生成的om.txt可以跟标杆对比即可:
+   python3 om_val.py --dataset_path ${dataset_path}/wav/test --model_path /root/.cache/espnet_onnx/asr_train_asr_qkv
+
+   # text是标杆文件
+   python3 compute-wer.py --char=1 --v=1 text om.txt
    ```
-```
-   
-生成的om.txt可以跟标杆对比即可
-   
-3. 性能验证  
+
+3. 性能验证
+
    打印终端的时间即为数据集上的端到端推理耗时
 
-# 模型推理性能&精度
+   模型推理性能&精度:
 
-调用ACL接口推理计算，性能&精度参考下列数据。
+   调用ACL接口推理计算，性能&精度参考下列数据:
+   备注说明：NPU推理采用多进程推理方案，依赖CPU性能，参考机器：96核CPU(aarch64)/CPU max MHZ: 2600/251G内存/NPU310P3
 
-|   芯片型号   | Batch Size |   数据集    | 精度WER |     性能     |
-|:-----------:|:----------:|:--------:|:------:|:----------:|
-| Ascend310P3 |     --     |  aishell  | 4.9% | -- |
-
-```
+   | 芯片型号    | 配置                                 | 数据集  | 精度(overall) | 性能(fps)                                |
+   |:-----------:|:------------------------------------:|:-------:|:-------------:|:----------------------------------------:|
+   | GPU         | encoder/decoder/ctc/lm(beam_size=20) | aishell | 95.27%        | ---                                      |
+   | GPU         | encoder/decoder/ctc/lm(beam_size=2)  | aishell | 95.08%        | ---                                      |
+   | Ascend310P3 | encoder/decoder/ctc/lm(default)      | aishell | 95.09%        | encode:34fps, decode:47fps, total:18fps  |
+   | Ascend310P3 | encoder/decoder/ctc                  | aishell | 95.07%        | encode:34fps, decode:115fps, total:26fps |
+   | Ascend310P3 | encoder/decoder                      | aishell | 94.81%        | encode:34fps, decode:120fps, total:27fps |

@@ -3,4 +3,5 @@ librosa==0.8.2
 espnet==202211
 espnet-model-zoo==0.1.7
 espnet-tts-frontend==0.0.3
+typeguard==2.13.0
 onnx==1.8.0

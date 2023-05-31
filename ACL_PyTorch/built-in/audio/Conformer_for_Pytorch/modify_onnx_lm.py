@@ -13,7 +13,22 @@
 # limitations under the License.
 
 # -*- coding:utf-8 -*-
+import sys
 from graph_fusion import GraphFusion
-input_model = "transformer_lm.onnx"
-output_model = "transformer_lm_revise.onnx"
-GraphFusion(input_model=input_model, output_model=output_model, opt_type=1)
+from auto_optimizer import OnnxGraph
+
+
+def fix_cast(graph):
+    for cast_node in graph.get_nodes(op_type="Cast"):
+        if cast_node['to'] == 7:
+            cast_node['to'] = 6
+
+
+if __name__ == '__main__':
+    input_model = sys.argv[1]
+    output_model = sys.argv[2]
+    GraphFusion(input_model=input_model, output_model=output_model, opt_type=1)
+
+    onnx_graph = OnnxGraph.parse(output_model)
+    fix_cast(onnx_graph)
+    onnx_graph.save(output_model)
