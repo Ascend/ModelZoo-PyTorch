@@ -1,0 +1,5 @@
+Numpy
+Pillow==9.5.0
+Requests
+Decorator
+sympy
