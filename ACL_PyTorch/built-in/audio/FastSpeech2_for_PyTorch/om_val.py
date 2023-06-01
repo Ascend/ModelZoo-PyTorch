@@ -15,7 +15,9 @@
 
 import re
 import os
+import stat
 import argparse
+import time
 from tqdm import tqdm
 
 import torch
@@ -152,8 +154,19 @@ if __name__ == "__main__":
 
     control_values = args.pitch_control, args.energy_control, args.duration_control
 
+    start_time = time.time()
+    cnt = 0
     for batch in tqdm(batchs):
+        cnt += 1
         batch = to_device(batch, 'cpu')
         src_masks = get_mask_from_lengths(batch[4], batch[5])
         mel_output, mel_lens = fastspeech2_infer(batch[3], src_masks, fastspeech2_om, control_values)
         hifigan_infer(batch[0], mel_output, mel_lens, preprocess_config, train_config, hifigan_om)
+    end_time = time.time()
+    fps = (cnt * args.batch_size) / (end_time - start_time)
+    res = 'fps: {}'.format(fps)
+    print(res)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL 
+    modes = stat.S_IWUSR | stat.S_IRUSR
+    with os.fdopen(os.open('result.txt', flags, modes), 'w') as f:
+        f.write(res)

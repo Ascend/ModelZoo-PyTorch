@@ -778,7 +778,7 @@ Audio
 	<td></td>
         <td></td>
         <td></td>
-	<td>11.9(bs1)</td>
+	<td>13.66(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
     <tr>

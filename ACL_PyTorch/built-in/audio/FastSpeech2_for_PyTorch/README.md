@@ -160,25 +160,15 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
 2. 执行推理  
-   运行`om_val.py`推理OM模型，合成语音默认保存在`output/result/LJSpeech`文件夹下。可设置参数`-vp/-ve/-vd`分别调整合成语音的`pitch`（音调）/`energy`（响度）/`duration`（语速）。
+   运行`om_val.py`推理OM模型，性能结果文件保存在`result.txt`中，合成语音默认保存在`output/result/LJSpeech`文件夹下。可设置参数`-vp/-ve/-vd`分别调整合成语音的`pitch`（音调）/`energy`（响度）/`duration`（语速）/`om_path` （om保存路径）。
    ```
    python3 om_val.py --source preprocessed_data/LJSpeech/val.txt \
                -p config/LJSpeech/preprocess.yaml \
                -t config/LJSpeech/train.yaml \
                -vp 1.0 -ve 1.0 -vd 1.0 \
+               --om_path output/om/ \
                --batch 1 --device_id 0
    ```
-
-3. 性能验证  
-   可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，FastSpeech2包括多个子模型，各子模型测试性能的参考命令如下：
-   ```
-   python3 -m ais_bench --model output/om/encoder_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "texts:${bs},${seq_len};src_masks:${bs},${seq_len}" --outputSize "1000000"
-   python3 -m ais_bench --model output/om/variance_adaptor_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "enc_output:${bs},${seq_len},256;src_masks:${bs},${seq_len};p_control:1;e_control:1;d_control:1" --outputSize "1000000,1000000"
-   python3 -m ais_bench --model output/om/decoder_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "output:${bs},250,256;mel_masks:${bs},250" --outputSize "1000000"
-   python3 -m ais_bench --model output/om/postnet_bs${bs}.om --loop 20 --batchsize ${bs} --dymShape "dec_output:${bs},250,256" --outputSize "1000000"
-   python3 -m ais_bench --model output/om/hifigan_bs${bs}.om --loop 20 --batchsize ${bs} --dymDims "mel_output:${bs},250,80" --outputSize "1000000"
-   ```
-   其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度。
 
 # 模型推理性能&精度
 
@@ -186,5 +176,5 @@ FastSpeech2是一种非自回归的语音合成网络。所谓自回归是指模
 
 |   芯片型号   | Batch Size |    数据集     |     精度      |     性能      |
 |:-----------:|:-------------:|:-----------:|:--------:|:-----------:|
-| Ascend310P3 |     1      |  LJSpeech   | 人工判断语音质量 | 11.9 wavs/s |
-- 说明：由于模型推理为多个子模型串联，仅测量单个子模型性能没有意义，故性能采用端到端推理LJSpeech验证集中512条文本数据测得。
+| Ascend310P3 |     1      |  LJSpeech   | 人工判断语音质量 | 13.66 wavs/s |
+- 说明：由于模型推理为多个子模型串联，故性能采用端到端推理LJSpeech验证集中512条文本数据测得。
