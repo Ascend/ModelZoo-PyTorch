@@ -35,7 +35,6 @@ device_id=0
 train_steps=
 #学习率
 learning_rate=6e-5
-prof_type=None
 
 #维测参数，precision_mode需要模型审视修改
 precision_mode="allow_fp32_to_fp16"
@@ -86,8 +85,6 @@ do
         batch_size=`echo ${para#*=}`
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
-    elif [[ $para == --prof_type* ]];then
-        prof_type=`echo ${para#*=}`
     fi
 done
 
@@ -153,7 +150,6 @@ do
 		  --do_lower_case \
 		  --output_dir ${cur_path}/results \
 		  --config_file bert_config.json \
-          --prof_type ${prof_type} \
 		  --json-summary ${test_path_dir}/output/${ASCEND_DEVICE_ID}/dllogger.json> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done
 wait

@@ -31,7 +31,7 @@ from mmdet.utils import get_root_logger
 from apex import amp
 
 try:
-    from torch_npu.utils.porfiler import Profile
+    from torch_npu.utils.profiler import Profile
 except ImportError:
     print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
     class Profile:

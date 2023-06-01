@@ -46,7 +46,7 @@ from .builder import RUNNERS
 from .checkpoint import save_checkpoint
 from .utils import get_host_info
 try:
-    from torch_npu.utils.porfiler import Profile
+    from torch_npu.utils.profiler import Profile
 except ImportError:
     print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
     class Profile:
