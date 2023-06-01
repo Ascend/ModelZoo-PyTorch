@@ -789,7 +789,7 @@ Audio
 	<td></td>
         <td></td>
         <td></td>
-	<td>682(bs8 mel_len:250)</td>
+	<td>637(bs8 mel_len:250)</td>
 	<td nowrap="nowrap">多尺度</td>
     </tr>
     <tr>

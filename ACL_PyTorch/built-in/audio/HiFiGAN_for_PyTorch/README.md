@@ -134,15 +134,18 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
    ```
 
    3.3 执行ATC命令  
-   运行`atc.sh`导出`OM`模型，默认保存在`output`文件夹下。
+   运行`atc.sh`导出`OM`模型。
    ```
-   bash atc.sh  --model generator_v1 --bs 1 --soc Ascend310P3
+   atc --framework=5 --input_format=ND --log=error --soc_version=Ascend${chip_name} \
+    --model=${output_dir}/${model}.onnx --output=${output_dir}/${model}_bs${bs} \
+    --input_shape="mel_spec:${bs},80,1,-1" \
+    --dynamic_dims="250;500;750;1000;1250;1500;1750;2000"
    ```
-      - `atc`命令参数说明（参数见`atc.sh`）：
+      - 参数说明
+      ：
         -   `--model`：ONNX模型文件
         -   `--framework`：5代表ONNX模型
         -   `--output`：输出的OM模型
-        -   `--input_format`：输入数据的格式
         -   `--input_shape`：输入数据的shape
         -   `--log`：日志级别
         -   `--soc_version`：处理器型号
@@ -166,7 +169,7 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
 3. 性能验证  
    可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
    ```
-   python3 -m ais_bench --model output/generator_v1_bs${bs}.om --loop 1000 --batchsize ${bs} --dymDims "mel_spec:${bs},80,1,${mel_len}" --outputSize "1000000"
+   python3 -m ais_bench --model output/generator_v1_bs${bs}.om --loop 1000 --batchsize ${bs} --dymDims "mel_spec:${bs},80,1,${mel_len}" --outputSize "10000000"
    ```
    其中，`bs`为模型`batch_size`，`mel_len`为输入数据的长度。
 
@@ -176,12 +179,12 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
 
 |   芯片型号   | Batch Size | mel_len |   数据集     |     精度      |     性能     |
 |:-----------:|:----------:|:-------:|:--------:|:------:|:----------:|
-| Ascend310P3 |     1      |   250   |  LJSpeech   | 人工判断语音质量 | 378.34 fps |
-| Ascend310P3 |     1      |   500   |  LJSpeech   | 人工判断语音质量 | 258.93 fps |
-| Ascend310P3 |     1      |   750   |  LJSpeech   | 人工判断语音质量 | 169.48 fps |
-| Ascend310P3 |     1      |  1000   |  LJSpeech   | 人工判断语音质量 | 128.59 fps |
-| Ascend310P3 |     8      |   250   |  LJSpeech   | 人工判断语音质量 | 682.95 fps |
-| Ascend310P3 |     8      |   500   |  LJSpeech   | 人工判断语音质量 | 327.07 fps |
-| Ascend310P3 |     8      |   750   |  LJSpeech   | 人工判断语音质量 | 208.93 fps |
-| Ascend310P3 |     8      |  1000   |  LJSpeech   | 人工判断语音质量 | 151.88 fps |
+| Ascend310P3 |     1      |   250   |  LJSpeech   | 人工判断语音质量 | 339.62 fps |
+| Ascend310P3 |     1      |   500   |  LJSpeech   | 人工判断语音质量 | 248.54 fps |
+| Ascend310P3 |     1      |   750   |  LJSpeech   | 人工判断语音质量 | 159.83 fps |
+| Ascend310P3 |     1      |  1000   |  LJSpeech   | 人工判断语音质量 | 121.50 fps |
+| Ascend310P3 |     8      |   250   |  LJSpeech   | 人工判断语音质量 | 637.95 fps |
+| Ascend310P3 |     8      |   500   |  LJSpeech   | 人工判断语音质量 | 300.21 fps |
+| Ascend310P3 |     8      |   750   |  LJSpeech   | 人工判断语音质量 | 191.81 fps |
+| Ascend310P3 |     8      |  1000   |  LJSpeech   | 人工判断语音质量 | 139.74 fps |
 - 说明：由于音频数据输入长度不同，故给出不同mel_len的性能数据作为参考。
