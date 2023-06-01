@@ -343,30 +343,15 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
         targets = [anno.to(loc) for anno in target]
         optimizer.zero_grad()
         # compute output
-        if i == 11 and not args.distributed:
-            print("prof out file")
-            with torch.autograd.profiler.profile(use_npu=True) as prof:
-                out = model(images)
-                # backprop
-                loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
-                loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
-                if args.amp:
-                    with amp.scale_loss(loss, optimizer) as scaled_loss:
-                        scaled_loss.backward()
-                else:
-                    loss.backward()
-                optimizer.step()
-            prof.export_chrome_trace("output.prof")
+        out = model(images)
+        loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
+        loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
+        if args.amp:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
         else:
-            out = model(images)
-            loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
-            loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
-            if args.amp:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
-            optimizer.step()
+            loss.backward()
+        optimizer.step()
 
         losses.update(loss.item(), images.size(0))
 
