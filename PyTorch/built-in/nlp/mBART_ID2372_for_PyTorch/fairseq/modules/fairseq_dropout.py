@@ -7,6 +7,8 @@ import logging
 from typing import List, Optional
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -102,7 +104,7 @@ class NpuFairseqDropout(torch.nn.Dropout):
         else:
             mask, event = NpuFairseqDropout.task_dict[key].mask_queue.pop(0)
             if do_mask_flag:
-                return torch.npu_dropout_do_mask(x, mask, self.p)[0]
+                return torch_npu.npu_dropout_do_mask(x, mask, self.p)[0]
             else:
                 return mask
 

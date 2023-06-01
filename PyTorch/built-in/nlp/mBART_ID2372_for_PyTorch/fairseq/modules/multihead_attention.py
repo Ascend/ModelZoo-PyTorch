@@ -392,12 +392,12 @@ class MultiheadAttention(nn.Module):
             dropout_mask = self.dropout_module([(bsz, self.num_heads, tgt_len, src_len), query.dtype, query.device])
         else:
             dropout_mask = None
-        attn = torch.npu_multi_head_attention(query, key, value, self.q_proj.weight,
-                                                 self.k_proj.weight, self.v_proj.weight,
-                                                 key_padding_mask, self.out_proj.weight,
-                                                 self.q_proj.bias, self.k_proj.bias, self.v_proj.bias,
-                                                 self.out_proj.bias, dropout_mask, self.num_heads,
-                                                 self.head_dim, src_len, tgt_len, self.dropout_prob, True)
+        attn = torch_npu.npu_multi_head_attention(query, key, value, self.q_proj.weight,
+                                                  self.k_proj.weight, self.v_proj.weight,
+                                                  key_padding_mask, self.out_proj.weight,
+                                                  self.q_proj.bias, self.k_proj.bias, self.v_proj.bias,
+                                                  self.out_proj.bias, dropout_mask, self.num_heads,
+                                                  self.head_dim, src_len, tgt_len, self.dropout_prob, True)
         return attn[0]
 
     @staticmethod
