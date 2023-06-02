@@ -215,19 +215,11 @@ atc \
        --input_shape="input:1~64,1,32,32~2048" \
        --soc_version=Ascend${chip_name}
 ``` 
-模型生成在`om/crnn_dym_linux_${arch}.om`,`${arch}`是你架构
+模型生成在`om/crnn_dym_linux_${arch}.om`，`${arch}`是服务器的对应架构
 
 ### 推理验证
 ```bash
-python3 -m ais_bench \
-   --model om/crnn_dym_linux_${arch}.om \
-   --device 0 \
-   --input images/preprocessed_tmp1000 \
-   --output ./ \
-   --output_dirname npu_result \
-   --auto_set_dymshape_mode 1 \
-   --output_batchsize_axis 1 \
-   --outfmt NPY
+python3 npu_infer/npu_end2end.py --data_path images/tmp1000 --om_path om/crnn_dym_linux_${arch}.om --output npu_result
 ```
 运行完结果会保存在当前目录`npu_result`
 
@@ -268,4 +260,4 @@ python3 npu_infer/postprocess.py --predict-dir gpu_result --is-dym True
 
 | 芯片型号 |  数据集 | 精度 | 性能 |
 | ---- | ---- | ---- | ----|
-| 310P3 | GitHub 仓库提供的 360 万数据集 | 78.5% | 229 |
+| 310P3 | GitHub 仓库提供的 360 万数据集 | 75.5% | 163 |

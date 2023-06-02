@@ -22,57 +22,36 @@ from tqdm import tqdm
 
 import numpy as np
 
-from tensorrt_dynamic.infer import Infer
-
+from ais_bench.infer.interface import InferSession
 
 def gen_data(data_path):
-    
     imgs = os.listdir(data_path)
-
     for img in imgs:
-        
         yield np.load(os.path.join(data_path,img)), img
 
-def build_session(onnx_path, engine_path):
-    precision = "fp16"  # fp16 or int8
+def build_session(device_id, om_path):
+    session_npu = InferSession(device_id, om_path)
+    return session_npu
 
-    input_shapes = [
-        {
-            "min_shapes": [1, 1, 32, 32],
-            "opt_shapes": [8, 1, 32, 576],
-            "max_shapes": [64, 1, 32, 2048]
-        },
-    ]
+def main(data_path, session, output):
 
-    builder = Builder(onnx_path, engine_path, input_shapes, precision)
-    builder.set_calibration_dataset(None)
-    status = builder.build()
-    if status:
-        print("model build success .")
-    else:
-        print("model build failed .")
-    
-
-    session = Infer(engine_path)
-    return session
-
-def get_gpu_time(data_path, session, output):
+    datas = gen_data(data_path)
    
     tt = 0
     num_data = 0
     for data, name in tqdm(gen_data(data_path)):
     
         t0 = time.time()
-        result = session.infer([data])
+        result = session.infer([data], "dymshape", custom_sizes=11655609)
         tt += (time.time() - t0)
         save_path = os.path.join(output,f'{name[:-4]}_0.npy')
-        np.save(save_path, result['output'])
+        np.save(save_path, result[0])
         num_data += 1
 
         
     print('*'*50)
-    print(f"GPU E2E time(s): {tt} s")
-    print(f"GPU fps: {1000 / tt} fps")
+    print(f"NPU E2E time(s): {tt} s")
+    print(f"NPU fps: {num_data / tt} fps")
     print('*'*50)
 
 
@@ -80,13 +59,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='infer E2E')
     parser.add_argument("--data_path", default="./images/preprocessed_dym_test_cj", help='data path')
-    parser.add_argument("--trt_engine", default="./crnn.trt", help='trt path')
-    parser.add_argument("--onnx_path", default="./crnn.onnx", help='onnx path')
-    parser.add_argument("--output", default="./gpu_result", help='result save path')
+    parser.add_argument("--device_id", type=int, default=0, help='device id')
+    parser.add_argument("--om_path", default="./om/crnn_dym_linux_x86_64.om", help='om path')
+    parser.add_argument("--output", default="./npu_result", help='result save path')
     
     flags = parser.parse_args()
     if not os.path.exists(flags.output):
         os.mkdir(flags.output)
 
-    trt_session = build_session(flags.onnx_path, flags.trt_engine)
-    get_gpu_time(flags.data_path, trt_session, flags.output)
+    npu_sess = build_session(flags.device_id, flags.om_path)
+    main(flags.data_path, npu_sess, flags.output)
