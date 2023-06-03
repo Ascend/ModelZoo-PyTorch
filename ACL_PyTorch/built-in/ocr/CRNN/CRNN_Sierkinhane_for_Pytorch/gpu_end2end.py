@@ -23,6 +23,7 @@ from tqdm import tqdm
 import numpy as np
 
 from tensorrt_dynamic.infer import Infer
+from tensorrt_dynamic.builder import Builder
 
 
 def gen_data(data_path):

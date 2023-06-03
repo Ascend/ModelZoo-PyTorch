@@ -39,7 +39,7 @@ def main(data_path, session, output):
    
     tt = 0
     num_data = 0
-    for data, name in tqdm(gen_data(data_path)):
+    for data, name in tqdm(datas):
     
         t0 = time.time()
         result = session.infer([data], "dymshape", custom_sizes=11655609)
