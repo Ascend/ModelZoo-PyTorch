@@ -23,7 +23,7 @@ from experiment import Experiment
 from concern.config import Configurable, Config
 
 class Eval:
-    def __init__(self, experiment, args, cmd=dict(), verbose=False):
+    def __init__(self, experiment, args, cmd, verbose=False):
         self.experiment = experiment
         experiment.load('evaluation', **args)
         self.data_loaders = experiment.evaluation.data_loaders
@@ -31,7 +31,8 @@ class Eval:
         self.logger = experiment.logger
         self.structure = experiment.structure
 
-    def get_pred(self, filename):
+    @staticmethod
+    def get_pred(filename):
         path_base = os.path.join(flags.bin_data_path, filename.split(".")[0])
         mask_pred = np.fromfile(path_base + "_" + '0' + ".bin", dtype="float32")
         mask_pred = np.reshape(mask_pred, [1, 1, 736, 1280])
@@ -60,13 +61,13 @@ if __name__ == '__main__':
                         help='visualize maps in tensorboard')
     flags = parser.parse_args()
 
-    args = parser.parse_args()
-    args = vars(args)
-    args = {k: v for k, v in args.items() if v is not None}
+    global_args = parser.parse_args()
+    global_args = vars(global_args)
+    global_args = {k: v for k, v in global_args.items() if v is not None}
 
     conf = Config()
-    experiment_args = conf.compile(conf.load(args['exp']))['Experiment']
-    experiment_args.update(cmd=args)
-    experiment = Configurable.construct_class_from_config(experiment_args)
+    experiment_args = conf.compile(conf.load(global_args['exp']))['Experiment']
+    experiment_args.update(cmd=global_args)
+    global_experiment = Configurable.construct_class_from_config(experiment_args)
 
-    Eval(experiment, experiment_args, cmd=args).eval()
+    Eval(global_experiment, experiment_args, cmd=global_args).eval()

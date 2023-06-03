@@ -78,6 +78,7 @@
    patch -p1 < ../db.diff
    cd ..
    ```
+   并把gitee所有的py文件全部移到`DB`中
 
 2. 安装依赖
 
@@ -105,7 +106,7 @@
    执行db_preprocess.py脚本，完成预处理
 
    ```shell
-   python3 ../db_preprocess.py --image_src_path=./datasets/icdar2015/test_images --bin_file_path=./prep_dataset
+   python3 ./db_preprocess.py --image_src_path=./datasets/icdar2015/test_images --npu_file_path=./prep_dataset
    ```
    
    结果存在 ./prep_dataset 中
@@ -128,7 +129,7 @@
       1. 使用db_pth2onnx.py导出onnx文件
 
          ```shell
-         python3 ../db_pth2onnx.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume ./ic15_resnet50
+         python3 ./db_pth2onnx.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume ./ic15_resnet50
          ```
          
          获得dbnet.onnx文件 
@@ -210,7 +211,7 @@
       结果保存在result_bs1.json
 
       ```shell
-      python3 ../db_postprocess.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --bin_data_path ./result --box_thresh 0.6 > result_bs1.json
+      python3 ./db_postprocess.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --bin_data_path ./result --box_thresh 0.6 > result_bs1.json
       ```
 
       - 参数说明：
@@ -228,10 +229,27 @@
 
       - 参数说明：
         - --model：om模型
+## 动态shaep流程
+1. 转om模型
+   ```bash
+   atc --framework=5 --model=./dbnet.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,128~2048,128~2048" --output=db_dym${bs} --log=error --soc_version=Ascend${chip_name}
+   ```
+   生成模型`db_dym_linux_${arch}.om`，${arch}是服务器对应的架构
+
+2. 推理验证
+   ```bash
+   python3 npu_end2end.py --data_path ./prep_dataset --om_path db_dym_linux_${arch}.om --output npu_result
+   ```
+   结果存在npu_result
+3. 精度验证
+   ```bash
+   python3 ./db_postprocess.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --bin_data_path ./npu_result --box_thresh 0.6
+   ```
+   精度会打屏显示
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+1. 静态数据
 
 | 芯片型号 | Batch Size |  数据集   | 精度 | 性能  |
 | :------: | :--------: | :-------: | :--: | :---: |
@@ -240,3 +258,9 @@
 |  310P3   |     8      | icdar2015 | 0.88 | 18.85 |
 |  310P3   |     16     | icdar2015 | 0.88 | 19.20 |
 |  310P3   |     32     | icdar2015 | 0.88 | 18.71 |
+
+2. 动态数据
+
+| 芯片型号 |   数据集   | 精度 | 性能  |
+| :------: |  :-------: | :--: | :---: |
+|  310P3   |     icdar2015 | 0.88 | 17.24 |

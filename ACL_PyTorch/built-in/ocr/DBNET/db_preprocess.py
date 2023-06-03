@@ -14,38 +14,40 @@
 
 import os
 import argparse
-import numpy as np
-import cv2
 import multiprocessing
 
-def gen_input_bin(file_batches, batch):
+import numpy as np
+import cv2
+
+def gen_input_npy(file_batches, batch, save_path):
     i = 0
     for file in file_batches[batch]:
         i = i + 1
         print("batch", batch, file, "===", i)
 
         image = cv2.imread(os.path.join(flags.image_src_path, file), cv2.IMREAD_COLOR).astype('float32')
-        image = cv2.resize(image, (1280, 736))
-        image -= np.array([122.67891434, 116.66876762, 104.00698793])
+        image = cv2.resize(image, (1280, 736)) 
+        image -= np.array([122.67891434, 116.66876762, 104.00698793]) # mean values
         image = image / 255.
         image = image.transpose(2, 0, 1)
-        image.tofile(os.path.join(flags.bin_file_path, file.split('.')[0] + ".bin"))
+        image = image[np.newaxis,:] # CHW ---> NCHW
+        np.save(os.path.join(save_path, file.split('.')[0] + ".npy"), image)
 
 def preprocess(src_path, save_path):
     files = os.listdir(src_path)
     file_batches = [files[i:i + 100] for i in range(0, 5000, 100) if files[i:i + 100] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch))
+        thread_pool.apply_async(gen_input_npy, args=(file_batches, batch, save_path))
     thread_pool.close()
     thread_pool.join()
-    print("in thread, except will not report! please ensure bin files generated.")
+    print("in thread, except will not report! please ensure npy files generated.")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='preprocess of db pytorch')
     parser.add_argument('--image_src_path', default="./datasets/icdar2015/test_images", help='images of dataset')
-    parser.add_argument('--bin_file_path', default="./icdar2015_bin/", help='bin data')
+    parser.add_argument('--npu_file_path', default="./icdar2015_npy/", help='npy data')
     flags = parser.parse_args()
-    if not os.path.isdir(flags.bin_file_path):
-        os.makedirs(os.path.realpath(flags.bin_file_path))
-    preprocess(flags.image_src_path, flags.bin_file_path)
+    if not os.path.isdir(flags.npu_file_path):
+        os.makedirs(os.path.realpath(flags.npu_file_path))
+    preprocess(flags.image_src_path, flags.npu_file_path)
