@@ -31,15 +31,6 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
     code_path=PyTorch/Translation/GNMT
     ```
 
-    通过Git获取对应commit_id的代码方法如下：
-    ```
-    git clone {repository_url}        # 克隆仓库的代码
-    cd {repository_name}              # 切换到模型的代码仓目录
-    git checkout {branch/tag}         # 切换到对应分支
-    cd reset --hard {commit_id}      # 代码设置到对应的commit_id（可选）
-    cd {code_path}                    # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-    ```
-
 
 ## 输入输出数据<a name="section540883920406"></a>
 
@@ -78,7 +69,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
 1. 获取开源代码。
-   ```
+   ```bash
    git clone https://github.com/NVIDIA/DeepLearningExamples.git -b master
    cd DeepLearningExamples
    git reset --hard 90f94bd77e8d4c75ad9cc25f03fcf9f09af28a63
@@ -86,7 +77,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
    ```
 
 2. 安装依赖。
-   ```
+   ```bash
    pip3 install -r requirements.txt
    ```
 
@@ -96,7 +87,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 1. 获取原始数据集。
 
     运行gnmt_data.sh脚本下载newstest2014数据集。
-    ```
+    ```bash
     bash gnmt_data.sh
     ```
 
@@ -108,8 +99,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
     数据预处理将原始数据集转换为模型输入的数据。
 
     执行gnmt_preprocess.py脚本，完成预处理。
-    ```
-    python3.7 gnmt_preprocess.py \
+    ```bash
+    python3 gnmt_preprocess.py \
         --model_path ./gnmt.pth \
         --data_path ./data \
         --pre_data_save_path ./pre_data \
@@ -128,7 +119,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 1. 模型修改。
 
     应用补丁，修改模型代码。
-    ```
+    ```bash
     cd DeepLearningExamples
     patch -p1 < ../gnmt.patch
     cd ..
@@ -143,8 +134,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         1. 使用pth2onnx.py导出onnx文件。
 
             运行pth2onnx.py脚本。
-            ```
-            python3.7 pth2onnx.py \
+            ```bash
+            python3 pth2onnx.py \
                 --model ./gnmt.pth \
                 --onnx_dir ./ \
                 --max_seq_len 30
@@ -155,19 +146,19 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
                 -  --onnx_dir：onnx文件的保存路径。
                 -  --max_seq_len：最大文本长度，默认30。
    
-            获得gnmt_msl30.onnx文件。
+            获得`gnmt_msl30.onnx`文件。
    
         2. 优化ONNX文件。
-            ```
+            ```bash
             python3 -m onnxsim gnmt_msl30.onnx gnmt_msl30_sim.onnx
             ```
 
-            获得gnmt_msl30_sim.onnx文件。
+            获得`gnmt_msl30_sim.onnx`文件。
 
     2. 使用ATC工具将ONNX模型转OM模型。
    
         1. 配置环境变量。
-            ```
+            ```bash
             source /usr/local/Ascend/ascend-toolkit/set_env.sh
             ```
    
@@ -192,7 +183,7 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
             ```
    
         3. 执行ATC命令。
-            ```
+            ```bash
             atc --framework=5 \
                 --model=gnmt_msl30_sim.onnx \
                 --output=gnmt_msl30_sim \
@@ -221,14 +212,12 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
         请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
     2. 执行推理。
-        ```
-        mkdir out_data
-		source /usr/local/Ascend/ascend-toolkit/set_env.sh
-        python3.7 -m ais_bench \
+        ```bash
+        python3 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --input=./pre_data/input_encoder/,./pre_data/input_enc_len,./pre_data/input_decoder \
-            --output=./ \
-            --output_dirname=result
+            --output=. \
+            --output_dirname=result \
             --outfmt=BIN
         ```
 
@@ -245,8 +234,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
     3. 精度验证。
 
         调用脚本进行后处理，可以获得翻译结果，并得到BLEU分数，译文保存在res_data/pred_sentences.txt中。
-        ```
-        python3.7 gnmt_postprocess.py \
+        ```bash
+        python3 gnmt_postprocess.py \
             --model_path ./gnmt.pth \
             --bin_file_path ./result \
             --res_file_path ./res_data \
@@ -261,8 +250,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
     4. 性能验证。
 
         使用ais_bench推理工具进行纯推理，获得性能数据。
-        ```
-        python3.7 -m ais_bench \
+        ```bash
+        python3 -m ais_bench \
             --model=./gnmt_msl30_sim.om \
             --loop 20 \
             --batchsize 1
@@ -274,4 +263,4 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| Ascend 310P3 | 1 | newstest2014 | BLEU：22.69 | 24.55 fps |
+| Ascend 310P3 | 1 | newstest2014 | BLEU：22.67 | 24.55 fps |

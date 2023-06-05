@@ -14,43 +14,36 @@
 
 import os
 import sys
-import glob
 import argparse
-import json
 import numpy as np
-import re
 import torch
 import subprocess
 from tqdm import tqdm
 sys.path.append('./DeepLearningExamples/PyTorch/Translation/GNMT/')
-from seq2seq.data.dataset import RawTextDataset
-from seq2seq.inference.translator import gather_predictions
 from seq2seq.data.tokenizer import Tokenizer
+
 
 def run_postprocess(args):
     checkpoint = torch.load(args.model_path, map_location=torch.device('cpu'))
     tokenizer = Tokenizer()
     tokenizer.set_state(checkpoint['tokenizer'])
 
-
-    if os.path.exists(args.res_file_path) == False:
+    if not os.path.exists(args.res_file_path):
         os.mkdir(args.res_file_path)
-    f_pred = open(os.path.join(args.res_file_path, "pred_sentences.txt"), "wt")
-    
-    bin_file_num = len(glob.glob(os.path.join(args.bin_file_path, "*.bin")))
 
-    with open(os.path.join(args.bin_file_path, "sumary.json"), "r") as f:
-        sumary = json.load(f)
+    with os.fdopen(
+        os.open(
+            os.path.join(args.res_file_path, "pred_sentences.txt"), 
+            os.O_RDWR|os.O_CREAT, 
+            0o644
+        ), 
+    "wt") as f_pred:
+        output_files = os.listdir(args.bin_file_path)
+        prefix, _, suffix = output_files[0].split('_')
 
-    out_data = dict()
-    for item in sumary["filesinfo"].values():
-        input_no = re.search(r"in_(\d+)\.bin", item["infiles"][0]).groups()[-1]
-        out_data[input_no] = item["outfiles"][0]
-    
-    with tqdm(total=len(out_data)) as pbar:
-        for i in range(len(out_data)):
-            pbar.update(1)
-            preds = np.fromfile(out_data[str(i)], dtype=np.int32).reshape([1, -1])
+        for idx in tqdm(range(len(output_files))):
+            output_bin_file = os.path.join(args.bin_file_path, f"{prefix}_{str(idx)}_{suffix}")
+            preds = np.fromfile(output_bin_file, dtype=np.int32).reshape([1, -1])
 
             is_end = np.where(preds == 3)
             if is_end[0].size:
@@ -64,7 +57,7 @@ def run_postprocess(args):
                 output.append(detok)
             lines = [line + '\n' for line in output]
             f_pred.writelines(lines)
-    f_pred.close()
+        
     print("finished!")
     print("The translation is stored in: " + os.path.join(args.res_file_path, "pred_sentences.txt"))
 
@@ -80,14 +73,17 @@ def run_score(args):
     print("BLEU score:", test_bleu)
 
 
-def main():
+def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', default='./gnmt.pth')
     parser.add_argument('--bin_file_path', default='./out_data/')
     parser.add_argument('--res_file_path', default='./res_data/')
     parser.add_argument('--pre_file_path', default='./pre_data/')
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def main():
+    args = parse_arguments()
     run_postprocess(args)
     run_score(args)
 

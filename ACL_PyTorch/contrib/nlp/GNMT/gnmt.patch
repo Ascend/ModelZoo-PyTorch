@@ -12,7 +12,7 @@ index e9a234e7..c4f7037f 100644
          x, _ = self.rnn_layers[0](x)
          x, _ = pad_packed_sequence(x, batch_first=self.batch_first)
 diff --git a/PyTorch/Translation/GNMT/seq2seq/models/gnmt.py b/PyTorch/Translation/GNMT/seq2seq/models/gnmt.py
-index 5643852c..77c0fec6 100644
+index 5643852c..bc251e96 100644
 --- a/PyTorch/Translation/GNMT/seq2seq/models/gnmt.py
 +++ b/PyTorch/Translation/GNMT/seq2seq/models/gnmt.py
 @@ -19,7 +19,9 @@
@@ -43,7 +43,7 @@ index 5643852c..77c0fec6 100644
          if share_embedding:
              embedder = nn.Embedding(vocab_size, hidden_size,
                                      padding_idx=config.PAD)
-@@ -66,7 +70,23 @@ class GNMT(Seq2Seq):
+@@ -66,7 +70,22 @@ class GNMT(Seq2Seq):
  
      def forward(self, input_encoder, input_enc_len, input_decoder):
          context = self.encode(input_encoder, input_enc_len)
@@ -63,9 +63,8 @@ index 5643852c..77c0fec6 100644
 +
 +            logits, _, context = self.decode(words, context, True)
 +            logprobs = log_softmax(logits, dim=-1)
-+            _, words = logprobs.topk(1, dim=-1)
++            words = torch.argmax(logprobs, dim=-1, keepdim=False).int()
 +
-+            words = words.view([-1, 1]).int()
 +            translation = torch.cat((translation, words), dim=1)
  
 -        return output
