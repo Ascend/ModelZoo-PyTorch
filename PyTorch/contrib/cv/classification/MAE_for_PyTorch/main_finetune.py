@@ -166,6 +166,8 @@ def get_args_parser():
     # True: Apex AMP or False: Native AMP
     parser.add_argument('--amp', action='store_true', default=False,
                         help='use NVIDIA Apex AMP or Native AMP for mixed precision training')
+    parser.add_argument('--loss_scale', default='dynamic',
+                        help='NVIDIA Apex AMP loss_scale')
     # prof
     parser.add_argument('--prof', default=False, action='store_true',
                         help='use profiling to evaluate the performance of model')
@@ -311,7 +313,9 @@ def main(args):
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if args.amp and has_apex:
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O2', combine_grad=True)
+        model, optimizer = amp.initialize(model, optimizer, opt_level='O2', 
+                                                            loss_scale=args.loss_scale, 
+                                                            combine_grad=True)
         loss_scaler = ApexScaler()
         print('Using NVIDIA APEX AMP. Training in mixed precision.')
     else:

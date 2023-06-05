@@ -249,7 +249,7 @@ def init_distributed_mode(args):
     print('| distributed init (rank {}): {}, npu {}'.format(
         args.rank, args.dist_url, args.npu), flush=True)
     if int(os.getenv("RANK_SIZE", 0)) > 8:
-        args.rank = int(os.getenv("NODE_RANK", 0)) * 8 + args.rank
+        # fix multinodes bug 
         print("the global_rank is :", args.rank)
         dist.init_process_group(backend=args.dist_backend,
                                 world_size=args.world_size, rank=args.rank)

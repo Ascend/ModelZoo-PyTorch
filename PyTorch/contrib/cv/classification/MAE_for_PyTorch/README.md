@@ -136,11 +136,22 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
     # fine-tuning 8p full，8p上运行100个epoch，运行时间约为18h
     # 输出完整微调日志./output_finetune_full_8p/910A_8p_finetune_full.log、总结性日志./output_finetune_full_8p/log.txt
     bash ./test/finetune_full_8p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
+
+    # fine-tuning_large 8p performance，8p上运行1个epoch，910B运行时间约为14min
+    bash ./test/finetune_performance_large_8p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
+
+    # fine-tuning_large 8p full，8p上运行50个epoch，910B运行时间约为12h
+    bash ./test/finetune_full_large_8p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
+
+    # fine-tuning_large 16p full，16p上运行50个epoch，910B运行时间约为6h
+    bash ./test/finetune_full_large_16p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
     
-    # 8p eval，运行时间约为3min
+    # 8p Base_eval，运行时间约为3min
     # 输出eval日志./output_finetune_eval_8p/910A_8p_finetune_eval.log
     bash ./test/finetune_eval_8p.sh --data_path=real_data_path --resume_pth=finetuned_model_path
     ```
+
+    说明：MAE-Large配置在910B上进行训练，16p脚本需要在启动脚本修改节点IP
 
    模型训练脚本参数说明如下。
 
@@ -154,27 +165,38 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
 
 # 训练结果展示
 
-**表 2**   MAE Pre-Training Result
+**表 2**   MAE-Base Pre-Training Result
 
 | NAME | LOSS | FPS | Epochs   | AMP_Type | Torch_Version |
 | :------: | :------:  | :------: | :------: | :------: | :------: |
-| 1p-GPU  | -      | 320   | 1        | -       | 1.5    |
+| 1p-竞品V  | -      | 320   | 1        | -       | 1.5    |
 | 1p-NPU | -     | 328  | 1      | O2      | 1.8  |
-| 8p-GPU | 0.4107 | 2399 | 400 | - | 1.5 |
+| 8p-竞品V | 0.4107 | 2399 | 400 | - | 1.5 |
 | 8p-NPU | 0.4107 | 2515 | 400 | O2 | 1.8 |
 
-**表 3**   MAE Fine-Tuning Result
+**表 3**   MAE-Base Fine-Tuning Result
 
 | NAME | Acc@1 | FPS | Epochs   | AMP_Type | Torch_Version |
 | :------: | :------:  | :------: | :------: | :------: | :------: |
-| 1p-GPU  | -      | 218   | 1        | -       | 1.5    |
+| 1p-竞品V  | -      | 218   | 1        | -       | 1.5    |
 | 1p-NPU | -     | 306   | 1      | O2      | 1.8   |
-| 8p-GPU | 83.07 | 1538 | 100 | - | 1.5 |
+| 8p-竞品V | 83.07 | 1538 | 100 | - | 1.5 |
 | 8p-NPU | 83.34 | 2263 | 100 | O2 | 1.8 |
+
+**表 4**   MAE-Large Fine-Tuning Result
+
+| NAME | Acc@1 | FPS | Epochs   | AMP_Type | Torch_Version |
+| :------: | :------:  | :------: | :------: | :------: | :------: |
+| 8p-竞品A | 85.85 | 1190 | 50 | - | 1.8 |
+| 8p-NPU | 83.86 | 1603 | 50 | O2 | 1.8 |
+| 16p-NPU | 85.97 | 3145 | 50 | O2 | 1.8 |
+
+说明：MAE-Large配置在910B上进行训练
 
 # 版本说明
 
 ## 变更
+2023.06.05：添加MAE-Large Fine-Tuning配置
 
 2022.12.22：更新readme，重新发布。
 

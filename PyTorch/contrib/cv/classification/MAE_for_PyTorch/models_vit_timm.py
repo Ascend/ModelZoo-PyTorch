@@ -13,12 +13,26 @@ import torch.nn as nn
 from functools import partial
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
+# Using affinity npu operators to improve model performance
+class NpuLinear(nn.Linear):
+    def forward(self, x):
+        x_shape = x.size()
+        if x.dim() == 3:
+            x = x.view(-1, self.in_features)
+            return torch_npu.npu_linear(x,self.weight, self.bias).view(x_shape[0],
+                                                                           x_shape[1],
+                                                                           self.out_features)
+        elif x.dim() == 2:
+            return torch_npu.npu_linear(x, self.weight,self.bias)
+        else:
+            raise RuntimeError('not support this dim')
 
-class FAST_GELU(nn.Module):
-    def forward(self, input):
-        return torch_npu.fast_gelu(input)
+## Using affinity npu operators to improve model performance
+class FastGelu(nn.Module):
+    def forward(self, x):
+        return torch_npu.fast_gelu(x)
 
-
+# Using affinity npu operators to improve model performance
 class MatmulApply(torch.autograd.Function):
     @staticmethod
     def forward(ctx, self, mat2):
@@ -38,13 +52,13 @@ class MatmulApply(torch.autograd.Function):
 matmul_transpose = MatmulApply.apply
 
 class Mlp(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FAST_GELU, drop=0.):
+    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=FastGelu, drop=0.):
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features)
+        self.fc1 = NpuLinear(in_features, hidden_features)
         self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features)
+        self.fc2 = NpuLinear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
@@ -65,9 +79,9 @@ class Attention(nn.Module):
         # self.scale = qk_scale or head_dim ** -0.5
         self.scale = torch.tensor(qk_scale) if qk_scale else torch.tensor(head_dim ** -0.5)
 
-        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
+        self.qkv = NpuLinear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim)
+        self.proj = NpuLinear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x):
@@ -98,7 +112,7 @@ class Attention(nn.Module):
 class Block(nn.Module):
 
     def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
-                 drop_path=0., act_layer=FAST_GELU, norm_layer=nn.LayerNorm):
+                 drop_path=0., act_layer=FastGelu, norm_layer=nn.LayerNorm):
         super().__init__()
         self.norm1 = norm_layer(dim)
         self.attn = Attention(
@@ -164,7 +178,7 @@ class HybridEmbed(nn.Module):
             feature_size = to_2tuple(feature_size)
             feature_dim = self.backbone.feature_info.channels()[-1]
         self.num_patches = feature_size[0] * feature_size[1]
-        self.proj = nn.Linear(feature_dim, embed_dim)
+        self.proj = NpuLinear(feature_dim, embed_dim)
 
     def forward(self, x):
         x = self.backbone(x)[-1]
@@ -208,16 +222,16 @@ class VisionTransformer(nn.Module):
         #self.repr_act = nn.Tanh()
 
         # Classifier head
-        self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = NpuLinear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
         trunc_normal_(self.pos_embed, std=.02)
         trunc_normal_(self.cls_token, std=.02)
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
-        if isinstance(m, nn.Linear):
+        if isinstance(m, NpuLinear):
             trunc_normal_(m.weight, std=.02)
-            if isinstance(m, nn.Linear) and m.bias is not None:
+            if isinstance(m, NpuLinear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
             nn.init.constant_(m.bias, 0)
@@ -232,7 +246,7 @@ class VisionTransformer(nn.Module):
 
     def reset_classifier(self, num_classes, global_pool=''):
         self.num_classes = num_classes
-        self.head = nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        self.head = NpuLinear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
     def forward_features(self, x):
         B = x.shape[0]
