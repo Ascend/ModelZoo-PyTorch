@@ -105,7 +105,7 @@ class Solver(object):
         return out
 
     def create_labels(self, c_org, c_dim=5, dataset='CelebA', selected_attrs=None):
-        """Generate target domain labels for debugging and testing."""
+        """Generate target domain labels for testing."""
         # Get hair color indices.
         if dataset == 'CelebA':
             hair_color_indices = []

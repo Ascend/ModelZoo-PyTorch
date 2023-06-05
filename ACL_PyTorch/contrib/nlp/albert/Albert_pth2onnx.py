@@ -25,7 +25,6 @@ def pt2onnx(ar):
     input = tuple(data[0].values())
     if ar.max_seq_length <= input[0].shape[-1]:
         input = tuple([i[:, :ar.max_seq_length] for i in input])
-    # 跟踪一个批次的运算
     model.eval()
     torch.onnx.export(model, input, ar.onnx_path,
                       input_names=['input_ids', 'attention_mask',
