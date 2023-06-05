@@ -14,8 +14,8 @@ ABINet的特点即是autonomous（自治的）、bidirectional（双向的）、
 - 参考实现：
   
   ```bash
-    url=https://github.com/open-mmlab/mmocr/tree/1.x/configs/textrecog/abinet
-    commit_id=53e72e4440677cb6397a7c32b56608e36f46e1d4
+    url=https://github.com/open-mmlab/mmocr/tree/0.x/configs/textrecog/abinet
+    commit_id=a4fe6bb67f066bbb5023e38d404c1210b1b3bab2
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -35,7 +35,7 @@ ABINet的特点即是autonomous（自治的）、bidirectional（双向的）、
 
   | Torch_Version     | 三方库依赖版本 
   | --------          |:---------:
-  | PyTorch 1.8       |  mmcv==1.7.1
+  | PyTorch 1.8       |  mmcv==1.7.1; albumentations==1.2.1
 
 - 环境准备指导。
 
@@ -171,12 +171,14 @@ python tools/data/utils/lmdb_converter.py data/mixture/Syn90k/label.txt data/mix
 
 **表 2**  训练结果展示表
 
-| NAME     | 0_word_acc_ignore_case |   FPS    | AMP_Type | Epochs | Batch Size |
-| -------- |:---------:|:--------:| :------: | ------ | ---------- | 
-| 1p-NPU   |  -   | 224.56  |    O1    | -      | 192         |
-| 1p-竞品V |  -   |  248.614 |    O1    | -      | 192         |
-| 8p-NPU   |  0.7603   | 1525.929 |    O1    | 6     | 1536         |
-| 8p-竞品V |  0.7667  | 1,712.37  |    O1    | 6      | 1536         |
+| NAME   | 0_word_acc_ignore_case |   FPS   | AMP_Type | Epochs | Batch Size |
+|--------|:----------------------:|:-------:| :------: | ------ | ---------- | 
+| 1p-NPU |           -            | 391.83  |    O1    | -      | 192         |
+| 1p-竞品V |           -            | 248.614 |    O1    | -      | 192         |
+| 1p-竞品A |           -            |   320   |    O1    | -      | 192         |
+| 8p-NPU |         0.7740         | 3037.76 |    O1    | 6     | 1536         |
+| 8p-竞品V |         0.7667         | 1712.37 |    O1    | 6      | 1536         |
+| 8p-竞品A |         0.7567         | 2489.46 |    O1    | 6      | 1536         |
 
 
 
