@@ -18,13 +18,14 @@ from __future__ import print_function
 
 import os
 from tqdm import tqdm
-from ppocr.data import build_dataloader
-from ppocr.postprocess import build_post_process
-from ppocr.metrics import build_metric
-import tools.program as program
 import paddle
 import numpy as np
 from ais_bench.infer.interface import InferSession, MemorySummary
+
+from PaddleOCR.tools import program
+from PaddleOCR.ppocr.data import build_dataloader
+from PaddleOCR.ppocr.postprocess import build_post_process
+from PaddleOCR.ppocr.metrics import build_metric
 
 
 def eval(session_dbnet,

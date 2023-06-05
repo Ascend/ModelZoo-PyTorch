@@ -49,12 +49,11 @@
 
 - 该模型需要以下插件与驱动
 
-  **表 1**  版本配套表
 
 | 配套                                                         | 版本    | 环境准备指导                                                 |
 | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
 | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                         | 6.0.RC1.2 | -                                                            |
+| CANN                                                         | 6.3.RC1 | -                                                            |
 | Python                                                       | 3.7.5   | -                                                            |
 | paddlepaddle                                                 | 2.3.1   | -                                                            |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -65,7 +64,7 @@
 
 1. 获取源码。
 
-   ```
+   ```bash
    git clone -b release/2.5 https://github.com/PaddlePaddle/PaddleOCR.git
    cd PaddleOCR 
    git reset --hard 7f2d05cfe4e
@@ -73,11 +72,16 @@
    cd ..
    ```
 
+
 2. 安装依赖。
 
-   ```
+   ```bash
    pip3 install -r requirements.txt
+
    cd PaddleOCR
+   # 安装PaddleOCR依赖
+   pip3 install -r requirements.txt
+   # 安装PaddleOCR
    python3 setup.py install
    ```
 
@@ -85,13 +89,13 @@
 
 1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
-   该模型使用ICDAR2015数据集，其处理方式[参考](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/dataset/ocr_datasets.md),处理完后的目录结构如下:
+   该模型使用ICDAR2015数据集。请参考[该链接](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/dataset/ocr_datasets.md)下载对应数据集文件，解压、移动至目录`PaddleOCR/train_data/icdar2015/text_localization/`下，结构如下所示:
 
    ```
-   /PaddleOCR/train_data/icdar2015/text_localization/
-      └─ icdar_c4_train_imgs/         icdar 2015 数据集的训练数据
+   PaddleOCR/train_data/icdar2015/text_localization/
+      └─ icdar_c4_train_imgs/         icdar 2015 数据集的训练数据 *可选
       └─ ch4_test_images/             icdar 2015 数据集的测试数据
-      └─ train_icdar2015_label.txt    icdar 2015 数据集的训练标注
+      └─ train_icdar2015_label.txt    icdar 2015 数据集的训练标注 *可选
       └─ test_icdar2015_label.txt     icdar 2015 数据集的测试标注
    ```
 
@@ -110,14 +114,14 @@
        
        在`PaddleOCR`工作目录下可通过以下命令获取Paddle训练模型和推理模型。
 
-       ```
-       wget -nc -P ./checkpoint https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/det_mv3_db_v2.0_train.tar
+       ```bash
+       wget -P ./checkpoint https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/det_mv3_db_v2.0_train.tar
        cd ./checkpoint && tar xf det_mv3_db_v2.0_train.tar && cd ..
 
        ```
    2. 转换成推理权重
 
-      ```
+      ```bash
       python3 tools/export_model.py -c configs/det/det_mv3_db.yml -o Global.pretrained_model=./checkpoint/det_mv3_db_v2.0_train/best_accuracy  Global.save_inference_dir=./inference/db_mv3 Global.use_gpu=False
       ```
 
@@ -127,7 +131,7 @@
 
          在`PaddleOCR`工作目录下通过运行以下命令获取onnx模型。
 
-         ```
+         ```bash
          paddle2onnx \
          --model_dir ./inference/db_mv3 \
          --model_filename inference.pdmodel \
@@ -146,7 +150,7 @@
 
       1. 配置环境变量。
 
-         ```
+         ```bash
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
@@ -174,11 +178,11 @@
       3. 执行ATC命令。
       
          在`PaddleOCR`目录执行
-         ```
-         atc --framework=5 --model=db_mv3.onnx --output=om/db_mv3_24bs \
+         ```bash
+         atc --framework=5 --model=db_mv3.onnx --output=db_mv3_24bs \
          --input_format=NCHW --input_shape="x:24,3,736,1280" \
          --log=error --op_select_implmode=high_performance --optypelist_for_implmode=Sigmoid \
-         --soc_version=Ascend${chip_name} --enable_small_channel=1 --insert_op_conf=aipp_dbnet.cfg
+         --soc_version=Ascend${chip_name} --enable_small_channel=1 --insert_op_conf=../aipp_dbnet.cfg
          ```
 
          - 参数说明：
@@ -209,8 +213,8 @@
 
       在`PaddleOCR`目录执行
 
-      ```
-      python3 eval_npu.py -c ./configs/det/det_mv3_db.yml -o Global.use_gpu=False Global.device_id=0 Global.om_path=om/db_mv3_24bs.om Global.save_npu_path=npu_result Global.batch_size=24
+      ```bash
+      python3 ../eval_npu.py -c ./configs/det/det_mv3_db.yml -o Global.use_gpu=False Global.device_id=0 Global.om_path=db_mv3_24bs.om Global.save_npu_path=npu_result Global.batch_size=24
       ```
 
       -   参数说明：
@@ -219,7 +223,7 @@
            -   Global.device_id：选择npu的device_id
            -   Global.om_path：om文件路径
            -   Global.save_npu_path: 推理结果保存路径
-           -   Global.batch_size: 模型推理bs
+           -   Global.batch_size: 模型推理batchsize
 
       推理完成后结果打屏显示
 
@@ -230,13 +234,13 @@
    c. 纯推理验证性能方式如下
 
       ```
-      python3 -m ais_bench --model {om_path} --loop {loop} --batchsize {batchsize}
+      python3 -m ais_bench --model db_mv3_24bs.om --loop 100
       ```
       + 参数说明
 
          - --model: om模型路径
          - --loop: 循环次数
-         - --batchsize: 模型batchsiz
+         - --batchsize: 模型batchsize
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
