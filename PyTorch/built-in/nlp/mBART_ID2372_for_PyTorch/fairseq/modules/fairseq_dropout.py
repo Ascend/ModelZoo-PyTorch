@@ -126,8 +126,8 @@ class NpuFairseqDropout(torch.nn.Dropout):
                         for _, task in cls.task_dict.items():
                             if len(task.mask_queue) < task.request_count:
                                 for j in range(task.request_count - len(task.mask_queue)):
-                                    mask = torch.npu_dropout_gen_mask(task.shape, p=task.p, dtype=task.dtype,
-                                                                      device=task.device)
+                                    mask = torch_npu.npu_dropout_gen_mask(task.shape, p=task.p, dtype=task.dtype,
+                                                                          device=task.device)
                                     event = None
                                     task.mask_queue.append((mask, event))
             return hook_function
