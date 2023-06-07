@@ -4663,7 +4663,7 @@ Nlp
         <td></td>
         <td></td>
         <td></td>
-	<td>27242(bs64)</td>
+	<td>29237(bs64)</td>
 	<td nowrap="nowrap">bs x 32</td>
     </tr>
     <tr>
