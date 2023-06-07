@@ -606,11 +606,13 @@ class Trainer:
                             norm_type=grad_clip_type
                         )
                 else:
-                    grad_norm = torch.nn.utils.clip_grad_norm_(
-                        model.parameters(),
-                        max_norm=grad_clip,
-                        norm_type=grad_clip_type,
-                    )
+                    for iopt, optimizer in enumerate(optimizers):
+                        if optim_idx is not None and iopt != optim_idx:
+                            continue
+                        grad_norm = optimizer.clip_grad_norm_fused_(
+                            max_norm=grad_clip,
+                            norm_type=grad_clip_type
+                        )                    
                 # PyTorch<=1.4, clip_grad_norm_ returns float value
                 if not isinstance(grad_norm, torch.Tensor):
                     grad_norm = torch.tensor(grad_norm)

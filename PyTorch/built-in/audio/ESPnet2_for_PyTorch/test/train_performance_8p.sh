@@ -25,6 +25,8 @@ batch_size=256
 #训练起始stage
 stage=1
 
+#混合精度
+use_amp=true
 
 # 指定训练所使用的npu device卡id, 暂不支持修改
 device_id=0
@@ -34,7 +36,12 @@ do
     if [[ $para == --stage* ]];then
         stage=`echo ${para#*=}`
     fi
+    if [[ $para == --use_amp* ]];then
+        use_amp=`echo ${para#*=}`
+    fi
 done
+
+export USE_AMP=${use_amp}
 
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ ${device_id} ];then
@@ -64,16 +71,21 @@ cd $cur_path/egs2/aishell/asr1
 
 # 修改配置文件超参
 conf_file=$cur_path/egs2/aishell/asr1/conf/tuning/train_asr_conformer.yaml
+lm_conf_file=$cur_path/egs2/aishell/asr1/conf/tuning/train_lm_transformer.yaml
 ori_epoch=`cat $conf_file | grep max_epoch:`
 ori_batch_bins=`cat $conf_file | grep batch_bins:`
 ori_lr=`cat $conf_file | grep lr:`
 ori_warmup_steps=`cat $conf_file | grep warmup_steps:`
 ori_accum_grad=`cat $conf_file | grep accum_grad:`
+ori_use_amp=`cat $conf_file | grep use_amp:`
+lm_ori_use_amp=`cat $lm_conf_file | grep use_amp:`
 sed -i "s|$ori_epoch|max_epoch: 5|g" $conf_file
 sed -i "s|$ori_batch_bins|batch_bins: 40000000|g" $conf_file
 sed -i "s|$ori_lr|   lr: 0.0008|g" $conf_file
 sed -i "s|$ori_warmup_steps|   warmup_steps: 30000|g" $conf_file
 sed -i "s|$ori_accum_grad|accum_grad: 1|g" $conf_file
+sed -i "s|$ori_use_amp|use_amp: $use_amp|g" $conf_file
+sed -i "s|$lm_ori_use_amp|use_amp: $use_amp|g" $lm_conf_file
 start_time=$(date +%s)
 
 nohup bash run.sh \

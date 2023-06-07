@@ -1,3 +1,17 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Abstract task module."""
 from abc import ABC
 from abc import abstractmethod
@@ -21,6 +35,7 @@ from typing import Union
 import humanfriendly
 import numpy as np
 import torch
+import torch_npu
 from torch_npu.contrib import transfer_to_npu
 from torch_npu.contrib.module import NpuPreGenDropout
 import torch.multiprocessing
@@ -74,6 +89,7 @@ from espnet2.utils.types import str_or_int
 from espnet2.utils.types import str_or_none
 from espnet2.utils.yaml_no_alias_safe_dump import yaml_no_alias_safe_dump
 
+
 try:
     import wandb
 except Exception:
@@ -90,6 +106,23 @@ def cpu_affinity(rank_id, rank_size):
     used_cpus_num = count // rank_size
     used_cpus = [i for i in range(rank_id * used_cpus_num, (rank_id + 1) * used_cpus_num)]
     p.cpu_affinity(used_cpus)
+
+
+def get_npu_fused_adam():
+    if os.getenv('USE_AMP') == 'true':
+        return apex.optimizers.NpuFusedAdam
+    else:
+        from torch_npu import optim
+        return optim.NpuFusedAdam
+
+
+def get_npu_fused_sgd():
+    if os.getenv('USE_AMP') == 'true':
+        return apex.optimizers.NpuFusedSGD
+    else:
+        from torch_npu import optim
+        return optim.NpuFusedSGD
+
 
 optim_classes = dict(
     adam=torch.optim.Adam,
@@ -135,14 +168,13 @@ except ImportError:
     pass
 try:
     import apex
-
     optim_classes.update(
         fusedadam=apex.optimizers.FusedAdam,
         fusedlamb=apex.optimizers.FusedLAMB,
         fusednovograd=apex.optimizers.FusedNovoGrad,
         fusedsgd=apex.optimizers.FusedSGD,
-        npufusedadam=apex.optimizers.NpuFusedAdam,
-        npufusedsgd=apex.optimizers.NpuFusedSGD
+        npufusedadam=get_npu_fused_adam(),
+        npufusedsgd=get_npu_fused_sgd()
     )
     del apex
 except ImportError:
@@ -1092,6 +1124,8 @@ class AbsTask(ABC):
         assert check_argument_types()
         if args.distributed and args.multiprocessing_distributed:
             cpu_affinity(args.local_rank, args.rank_size)
+        
+        torch.npu.set_compile_mode(jit_compile=False)
 
         # 0. Init distributed process
         distributed_option = build_dataclass(DistributedOption, args)

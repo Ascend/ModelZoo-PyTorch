@@ -1,6 +1,21 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from contextlib import contextmanager
 from distutils.version import LooseVersion
 import logging
+import os
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -265,7 +280,19 @@ class ESPnetASRModelNpu(AbsESPnetModel):
             speech: (Batch, Length, ...)
             speech_lengths: (Batch, )
         """
-        with amp.disable_casts():
+        if os.getenv('USE_AMP') == 'true':
+            with amp.disable_casts():
+                # 1. Extract feats
+                feats, feats_lengths = speech, speech_lengths
+
+                # 2. Data augmentation
+                if self.specaug is not None and self.training:
+                    feats, feats_lengths = self.specaug(feats, feats_lengths)
+
+                # 3. Normalization for feature: e.g. Global-CMVN, Utterance-CMVN
+                if self.normalize is not None:
+                    feats, feats_lengths = self.normalize(feats, feats_lengths)
+        else:
             # 1. Extract feats
             feats, feats_lengths = speech, speech_lengths
 
@@ -275,7 +302,7 @@ class ESPnetASRModelNpu(AbsESPnetModel):
 
             # 3. Normalization for feature: e.g. Global-CMVN, Utterance-CMVN
             if self.normalize is not None:
-                feats, feats_lengths = self.normalize(feats, feats_lengths)
+                feats, feats_lengths = self.normalize(feats, feats_lengths)            
 
         # Pre-encoder, e.g. used for raw input data
         if self.preencoder is not None:

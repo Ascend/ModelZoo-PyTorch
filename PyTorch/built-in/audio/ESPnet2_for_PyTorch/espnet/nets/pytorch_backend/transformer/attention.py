@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright 2019 Shigeki Karita
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -57,9 +70,9 @@ class MultiHeadedAttention(nn.Module):
         q = self.linear_q(query).view(n_batch, -1, self.h, self.d_k)
         k = self.linear_k(key).view(n_batch, -1, self.h, self.d_k)
         v = self.linear_v(value).view(n_batch, -1, self.h, self.d_k)
-        q = q.transpose(1, 2)  # (batch, head, time1, d_k)
-        k = k.transpose(1, 2)  # (batch, head, time2, d_k)
-        v = v.transpose(1, 2)  # (batch, head, time2, d_k)
+        q = q.transpose(1, 2).contiguous()  # (batch, head, time1, d_k)
+        k = k.transpose(1, 2).contiguous()  # (batch, head, time2, d_k) 
+        v = v.transpose(1, 2).contiguous()  # (batch, head, time2, d_k)
 
         return q, k, v
 
@@ -115,7 +128,10 @@ class MultiHeadedAttention(nn.Module):
 
         """
         q, k, v = self.forward_qkv(query, key, value)
-        scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
+        if q.is_npu:
+            scores = torch.npu_bmmV2(q, k.transpose(-2, -1), []) / math.sqrt(self.d_k)
+        else:
+            scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
         return self.forward_attention(v, scores, mask)
 
 
@@ -185,26 +201,31 @@ class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
 
         """
         q, k, v = self.forward_qkv(query, key, value)
-        q = q.transpose(1, 2)  # (batch, time1, head, d_k)
 
         n_batch_pos = pos_emb.size(0)
         p = self.linear_pos(pos_emb).view(n_batch_pos, -1, self.h, self.d_k)
-        p = p.transpose(1, 2)  # (batch, head, time1, d_k)
+        p = p.transpose(1, 2).contiguous()  # (batch, head, time1, d_k)
 
         # (batch, head, time1, d_k)
-        q_with_bias_u = (q + self.pos_bias_u).transpose(1, 2)
+        q_with_bias_u = q + self.pos_bias_u[:, None, :]
         # (batch, head, time1, d_k)
-        q_with_bias_v = (q + self.pos_bias_v).transpose(1, 2)
+        q_with_bias_v = q + self.pos_bias_v[:, None, :]
 
         # compute attention score
         # first compute matrix a and matrix c
         # as described in https://arxiv.org/abs/1901.02860 Section 3.3
         # (batch, head, time1, time2)
-        matrix_ac = torch.matmul(q_with_bias_u, k.transpose(-2, -1))
+        if q_with_bias_u.is_npu:
+            matrix_ac = torch.npu_bmmV2(q_with_bias_u, k.transpose(-2, -1), [])
+        else:
+            matrix_ac = torch.matmul(q_with_bias_u, k.transpose(-2, -1))
 
         # compute matrix b and matrix d
         # (batch, head, time1, time1)
-        matrix_bd = torch.matmul(q_with_bias_v, p.transpose(-2, -1))
+        if q_with_bias_v.is_npu:
+            matrix_bd = torch.npu_bmmV2(q_with_bias_v, p.transpose(-2, -1), [])
+        else:
+            matrix_bd = torch.matmul(q_with_bias_v, p.transpose(-2, -1))
         matrix_bd = self.rel_shift(matrix_bd)
 
         scores = (matrix_ac + matrix_bd) / math.sqrt(
