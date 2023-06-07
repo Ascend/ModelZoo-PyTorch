@@ -255,7 +255,8 @@ class Model:
         return batch
 
     def fit(self):
-        batch_time = AverageMeter('Time （FPS）', ':6.3f')
+        batch_time = AverageMeter('Time', ':6.3f')
+        fps = AverageMeter('FPS', ':6.3f')
         data_time = AverageMeter('Data', ':6.3f')
         hard_loss_mean = AverageMeter('Hard_Loss', ':.6e', start_count_index=0)
         full_loss_mean = AverageMeter('Full_Loss', ':.6e', start_count_index=0)
@@ -277,9 +278,6 @@ class Model:
 
         train_loader = tordata.DataLoader(
             dataset=self.train_source,
-            # shuffle=False,
-            # batch_size=self.batch_size,
-            # pin_memory=False,
             batch_sampler=triplet_sampler,
             collate_fn=self.collate_fn,
             num_workers=self.num_workers)
@@ -289,7 +287,7 @@ class Model:
 
         progress = ProgressMeter(
             len(train_loader),
-            [batch_time, data_time, hard_loss_mean, full_loss_mean, p_full_loss_num],
+            [batch_time, fps, data_time, hard_loss_mean, full_loss_mean, p_full_loss_num],
             prefix="Iter[{}]".format(self.restore_iter))
         start_time = time.time()
 
@@ -366,7 +364,9 @@ class Model:
             org_frame_num = 30
             from config import conf_8p as conf
             frame_aug_rate = conf['model']['frame_num'] / org_frame_num
-            batch_time.update(self.device_count * self.P * self.M * frame_aug_rate / (time.time() - start_time))
+            time_spend = time.time() - start_time
+            batch_time.update(time_spend)
+            fps.update(self.device_count * self.P * self.M * frame_aug_rate / time_spend)
             if self.restore_iter < 5:
                 print('Iter_time: {}'.format((time.time() - start_time)))
             start_time = time.time()
