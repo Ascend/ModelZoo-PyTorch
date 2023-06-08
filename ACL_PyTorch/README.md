@@ -4144,7 +4144,7 @@ CV-video_understanding
         <td></td>
         <td>70.07%</td>
         <td>88.55%</td>
-	<td>146(bs1)</td>
+	<td>138(bs1)</td>
 	<td nowrap="nowrap">bs x 3 x 32 x 224 x 224</td>
     </tr>
     <tr>
