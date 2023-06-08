@@ -79,3 +79,8 @@ RefineNet: Multi-Path Refinement Networks for High-Resolution Semantic Segmentat
 Guosheng Lin, Anton Milan, Chunhua Shen, Ian Reid
 In CVPR 2017
 ```
+
+## Statement
+```
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
+```
