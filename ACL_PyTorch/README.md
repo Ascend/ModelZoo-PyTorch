@@ -223,7 +223,7 @@ CV-classfication
 	<td>71.28%</td>
         <td>90.38%</td>
 	<td></td>
-	<td>1567(bs16)</td>
+	<td>1508(bs16)</td>
 	<td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
