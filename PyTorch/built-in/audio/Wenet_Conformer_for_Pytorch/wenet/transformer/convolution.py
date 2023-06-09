@@ -1,28 +1,31 @@
-# Copyright (c) 2020 Mobvoi Inc. (authors: Binbin Zhang, Di Wu)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# Modified from ESPnet(https://github.com/espnet/espnet)
+# -*- coding: utf-8 -*-
+"""
+Copyright 2021 Huawei Technologies Co., Ltd
 
-"""ConvolutionModule definition."""
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 from typing import Tuple
 
 import torch
 from torch import nn
 
+"""ConvolutionModule definition."""
+
 
 class ConvolutionModule(nn.Module):
     """ConvolutionModule in Conformer model."""
+
     def __init__(self,
                  channels: int,
                  kernel_size: int = 15,
@@ -87,10 +90,10 @@ class ConvolutionModule(nn.Module):
         self.activation = activation
 
     def forward(
-        self,
-        x: torch.Tensor,
-        mask_pad: torch.Tensor = torch.ones((0, 0, 0), dtype=torch.bool),
-        cache: torch.Tensor = torch.zeros((0, 0, 0)),
+            self,
+            x: torch.Tensor,
+            mask_pad: torch.Tensor = torch.ones((0, 0, 0), dtype=torch.bool),
+            cache: torch.Tensor = torch.zeros((0, 0, 0)),
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Compute convolution module.
         Args:
@@ -108,7 +111,7 @@ class ConvolutionModule(nn.Module):
 
         # mask batch padding
         if mask_pad.size(2) > 0:  # time > 0
-            x.masked_fill_(~mask_pad, 0.0)
+            x.masked_fill(~mask_pad, 0.0)
 
         if self.lorder > 0:
             if cache.size(2) == 0:  # cache_t == 0
@@ -139,6 +142,6 @@ class ConvolutionModule(nn.Module):
         x = self.pointwise_conv2(x)
         # mask batch padding
         if mask_pad.size(2) > 0:  # time > 0
-            x.masked_fill_(~mask_pad, 0.0)
+            x.masked_fill(~mask_pad, 0.0)
 
         return x.transpose(1, 2), new_cache

@@ -87,6 +87,7 @@ def main():
             avg = states
         else:
             for k in avg.keys():
+                avg[k] = avg[k].to('cpu')
                 avg[k] += states[k]
     # average
     for k in avg.keys():
