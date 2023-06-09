@@ -77,7 +77,7 @@ fi
 python3 train.py \
     --data=${data_path}/train/label.txt \
     --addr=$(hostname -I |awk '{print $1}') \
-    --workers=8 \
+    --workers=64 \
     --dist-url='tcp://127.0.0.1:50003' \
     --dist-backend='hccl' \
     --world-size=1 \

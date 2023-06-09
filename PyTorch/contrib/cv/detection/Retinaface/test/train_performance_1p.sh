@@ -97,7 +97,7 @@ start_time=$(date +%s)
 python3 train.py \
     --data=${data_path}/train/label.txt \
     --addr=$(hostname -I |awk '{print $1}') \
-    --workers=16 \
+    --workers=64 \
     --dist-url='tcp://127.0.0.1:50000' \
     --dist-backend='hccl' \
     --world-size=1 \
