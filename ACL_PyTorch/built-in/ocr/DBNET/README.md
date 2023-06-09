@@ -79,6 +79,12 @@
    cd ..
    ```
    并把gitee所有的py文件全部移到`DB`中
+   
+   备注说明,如果出现`Hunk FAILED`，可以使用以下方法
+   ```bash
+   unix2dos ../db.diff
+   unix2dos backbones/resnet.py
+   ```
 
 2. 安装依赖
 
@@ -216,7 +222,7 @@
 
       - 参数说明：
 
-        - ./result：为生成推理结果所在路
+        - ./result：om推理结果保存的文件夹
         - result_bs1.json：为精度生成结果文件
 
    4. 性能验证
@@ -229,10 +235,10 @@
 
       - 参数说明：
         - --model：om模型
-## 动态shaep流程
+## 动态shape流程
 1. 转om模型
    ```bash
-   atc --framework=5 --model=./dbnet.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,128~2048,128~2048" --output=db_dym${bs} --log=error --soc_version=Ascend${chip_name}
+   atc --framework=5 --model=./dbnet.onnx --input_format=NCHW --input_shape="actual_input_1:1,3,128~2048,128~2048" --output=db_dym --log=error --soc_version=Ascend${chip_name}
    ```
    生成模型`db_dym_linux_${arch}.om`，${arch}是服务器对应的架构
 
@@ -251,7 +257,7 @@
 
 1. 静态数据
 
-| 芯片型号 | Batch Size |  数据集   | 精度 | 性能  |
+| 芯片型号 | Batch Size |  数据集   | precision:精度 | 性能  |
 | :------: | :--------: | :-------: | :--: | :---: |
 |  310P3   |     1      | icdar2015 | 0.88 | 17.83 |
 |  310P3   |     4      | icdar2015 | 0.88 | 18.70 |
@@ -261,6 +267,6 @@
 
 2. 动态数据
 
-| 芯片型号 |   数据集   | 精度 | 性能  |
+| 芯片型号 |   数据集   | precision:精度 | 性能  |
 | :------: |  :-------: | :--: | :---: |
-|  310P3   |     icdar2015 | 0.88 | 17.24 |
+|  310P3   |     icdar2015 | 0.88 | 16.57 |
