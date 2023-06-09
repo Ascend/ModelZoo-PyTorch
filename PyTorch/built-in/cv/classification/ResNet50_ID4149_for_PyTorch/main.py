@@ -181,6 +181,11 @@ def main():
     args = parser.parse_args()
     os.environ['MASTER_ADDR'] = args.addr
     os.environ['MASTER_PORT'] = '29501'
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        torch.npu.config.allow_internal_format = False
+        if os.getenv('ALLOW_FP32'):
+            torch.npu.conv.allow_hf32 = False
+            torch.npu.matmul.allow_hf32 = False
 
     if args.seed is not None:
         os.environ['PYTHONHASHSEED'] = str(args.seed)
@@ -295,11 +300,16 @@ def main_worker(gpu, ngpus_per_node, args):
     lr_scheduler = lr_cosine_policy(args.lr, args.warmup, args.epochs)
     criterion = CrossEntropy(args.label_smoothing).to(device)
 
-    optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        optimizer = torch_npu.optim.NpuFusedSGD(model.parameters(), args.lr,
+                                    momentum=args.momentum,
+                                    weight_decay=args.weight_decay)
+    else:
+        optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), args.lr,
+                                    momentum=args.momentum,
+                                    weight_decay=args.weight_decay)
 
-    if args.amp:
+    if args.amp and not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
         model, optimizer = amp.initialize(
             model, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale, verbosity=1, combine_grad=True)
     if args.distributed and args.gpu is not None:
@@ -448,7 +458,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        if args.amp:
+        if args.amp and not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:

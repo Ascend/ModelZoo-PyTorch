@@ -71,8 +71,11 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
 
         # compute gradient and do update step
         optimizer.zero_grad()
-        with amp.scale_loss(loss, optimizer) as scaled_loss:
-            scaled_loss.backward()
+        if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+            loss.backward()
+        else:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
         optimizer.step()
         profile.end()
 

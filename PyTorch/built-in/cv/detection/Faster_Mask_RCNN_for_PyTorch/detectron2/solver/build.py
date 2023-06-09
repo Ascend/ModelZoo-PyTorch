@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Set, Type, Union
 import torch
@@ -153,9 +154,15 @@ def build_optimizer(cfg: CfgNode, model: torch.nn.Module) -> torch.optim.Optimiz
     params = [{"params": params_1, "lr": lr, "weight_decay": weight_decay_1}, 
             {"params": params_2, "lr": lr, "weight_decay": weight_decay}]
 
-    optimizer = apex.optimizers.NpuFusedSGD(
-        params, cfg.SOLVER.BASE_LR, momentum=cfg.SOLVER.MOMENTUM, nesterov=cfg.SOLVER.NESTEROV
-    )
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        import torch_npu
+        optimizer = torch_npu.optim.NpuFusedSGD(
+            params, cfg.SOLVER.BASE_LR, momentum=cfg.SOLVER.MOMENTUM, nesterov=cfg.SOLVER.NESTEROV
+        )
+    else:
+        optimizer = apex.optimizers.NpuFusedSGD(
+            params, cfg.SOLVER.BASE_LR, momentum=cfg.SOLVER.MOMENTUM, nesterov=cfg.SOLVER.NESTEROV
+        )
     optimizer = maybe_add_gradient_clipping(cfg, optimizer)
     return optimizer
 

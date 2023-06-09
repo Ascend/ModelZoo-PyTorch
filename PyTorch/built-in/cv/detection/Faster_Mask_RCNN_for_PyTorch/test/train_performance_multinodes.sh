@@ -104,6 +104,12 @@ do
 		master_addr=$(echo ${para#*=})
 	elif [[ $para == --master_port* ]]; then
 		master_port=$(echo ${para#*=})
+    elif [[ $para == --hf32 ]];then
+      	hf32=`echo ${para#*=}`
+      	export ALLOW_HF32=True
+    elif [[ $para == --fp32 ]];then
+      	fp32=`echo ${para#*=}`
+      	export ALLOW_FP32=True
     fi
 done
 

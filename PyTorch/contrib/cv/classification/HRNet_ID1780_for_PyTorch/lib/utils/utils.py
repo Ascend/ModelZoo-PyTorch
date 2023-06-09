@@ -55,14 +55,24 @@ def create_logger(cfg, cfg_name, phase='train'):
 def get_optimizer(cfg, model, lr):
     optimizer = None
     if cfg.TRAIN.OPTIMIZER == 'sgd':
-        optimizer = apex.optimizers.NpuFusedSGD(
-            #model.parameters(),
-            filter(lambda p: p.requires_grad, model.parameters()),
-            lr=lr,
-            momentum=cfg.TRAIN.MOMENTUM,
-            weight_decay=cfg.TRAIN.WD,
-            nesterov=cfg.TRAIN.NESTEROV
-        )
+        if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+            import torch_npu
+            optimizer = torch_npu.optim.NpuFusedSGD(
+                filter(lambda p: p.requires_grad, model.parameters()),
+                lr=lr,
+                momentum=cfg.TRAIN.MOMENTUM,
+                weight_decay=cfg.TRAIN.WD,
+                nesterov=cfg.TRAIN.NESTEROV
+            )
+        else:
+            optimizer = apex.optimizers.NpuFusedSGD(
+                #model.parameters(),
+                filter(lambda p: p.requires_grad, model.parameters()),
+                lr=lr,
+                momentum=cfg.TRAIN.MOMENTUM,
+                weight_decay=cfg.TRAIN.WD,
+                nesterov=cfg.TRAIN.NESTEROV
+            )
     elif cfg.TRAIN.OPTIMIZER == 'adam':
         optimizer = optim.Adam(
             #model.parameters(),

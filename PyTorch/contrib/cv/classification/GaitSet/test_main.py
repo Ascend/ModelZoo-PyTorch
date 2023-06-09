@@ -16,6 +16,9 @@ from datetime import datetime
 import numpy as np
 import os
 import argparse
+import torch
+if torch.__version__>="1.8":
+    import torch_npu
 
 from model.initialization import initialization
 from model.utils import evaluation
@@ -48,6 +51,11 @@ def de_diag(acc, each_angle=False):
     return result
 
 
+if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+    torch.npu.config.allow_internal_format = False
+    if os.getenv('ALLOW_FP32'):
+        torch.npu.conv.allow_hf32 = False
+        torch.npu.matmul.allow_hf32 = False
 conf['data']['dataset_path'] = args.data_path
 conf['WORK_PATH'] = os.path.abspath(conf['WORK_PATH'])
 

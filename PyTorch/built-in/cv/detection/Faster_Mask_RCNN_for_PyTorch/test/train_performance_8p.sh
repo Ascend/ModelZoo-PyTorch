@@ -91,6 +91,12 @@ do
         conda_name=`echo ${para#*=}`
         source set_conda.sh --conda_name=$conda_name
         source activate $conda_name
+    elif [[ $para == --hf32 ]];then
+      	hf32=`echo ${para#*=}`
+      	export ALLOW_HF32=True
+    elif [[ $para == --fp32 ]];then
+      	fp32=`echo ${para#*=}`
+      	export ALLOW_FP32=True
     fi
 done
 

@@ -26,6 +26,8 @@ import shutil
 import pprint
 
 import torch
+if torch.__version__ >= "1.8":
+    import torch_npu
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
@@ -88,6 +90,11 @@ def parse_args():
     return args
 
 def main():
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        torch.npu.config.allow_internal_format = False
+        if os.getenv('ALLOW_FP32'):
+            torch.npu.conv.allow_hf32 = False
+            torch.npu.matmul.allow_hf32 = False
     args = parse_args()
 
     logger, final_output_dir, tb_log_dir = create_logger(

@@ -171,11 +171,18 @@ class Model:
         self.triplet_loss = TripletLoss(self.P * self.M, self.hard_or_full_trip, self.margin).float()
         self.triplet_loss.to(self.local_device)
 
-        self.optimizer = optim.Adam([
-            {'params': self.encoder.parameters()},
-        ], lr=self.lr)
+        if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+            import torch_npu
+            self.optimizer = torch_npu.optim.NpuFusedAdam([
+                {'params': self.encoder.parameters()},
+            ], lr=self.lr)
+        else:
+            self.optimizer = optim.Adam([
+                {'params': self.encoder.parameters()},
+            ], lr=self.lr)
 
-        self.encoder,self.optimizer = amp.initialize(self.encoder,self.optimizer,opt_level="O2", loss_scale=32.0)
+        if not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
+            self.encoder,self.optimizer = amp.initialize(self.encoder,self.optimizer,opt_level="O2", loss_scale=32.0)
 
         if self.device_count > 1:
             print("Let's use", self.device_count, "NPUs!")
@@ -332,8 +339,11 @@ class Model:
             self.dist_list.append(mean_dist.mean().data.cpu().numpy())
 
             if loss > 1e-10:
-                with amp.scale_loss(loss,self.optimizer) as scaled_loss:
-                    scaled_loss.backward()
+                if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+                    loss.backward()
+                else:
+                    with amp.scale_loss(loss,self.optimizer) as scaled_loss:
+                        scaled_loss.backward()
                 self.optimizer.step()
             else:
                 print('loss very small at: ', iter_i)

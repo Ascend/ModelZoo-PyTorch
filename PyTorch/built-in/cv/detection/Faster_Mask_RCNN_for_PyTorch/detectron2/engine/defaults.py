@@ -289,7 +289,7 @@ class DefaultTrainer(SimpleTrainer):
         # Assume these objects must be constructed in this order.
         model = self.build_model(cfg)
         optimizer = self.build_optimizer(cfg, model)
-        if cfg.AMP:
+        if cfg.AMP and not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
             model, optimizer = amp.initialize(
                 model,
                 optimizer,

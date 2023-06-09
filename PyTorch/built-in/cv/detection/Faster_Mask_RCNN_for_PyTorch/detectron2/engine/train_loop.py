@@ -277,7 +277,7 @@ class SimpleTrainer(TrainerBase):
         wrap the optimizer with your custom `zero_grad()` method.
         """
         self.optimizer.zero_grad()
-        if self.cfg.AMP:
+        if self.cfg.AMP and not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
             with amp.scale_loss(losses, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:

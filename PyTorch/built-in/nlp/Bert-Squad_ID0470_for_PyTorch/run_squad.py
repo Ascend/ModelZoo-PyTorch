@@ -1001,7 +1001,13 @@ def main():
         {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
     ]
     if args.do_train:
-        if args.fp16:
+        if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+            optimizer = torch_npu.optim.NpuFusedBertAdam(optimizer_grouped_parameters,
+                                                     lr=args.learning_rate)
+            if args.do_train:
+                scheduler = LinearWarmUpScheduler(optimizer, warmup=args.warmup_proportion,
+                                                  total_steps=num_train_optimization_steps)
+        elif args.fp16:
             try:
                 from apex.optimizers import NpuFusedAdam
             except ImportError:
@@ -1131,7 +1137,7 @@ def main():
                     loss = loss.mean()  # mean() to average on multi-gpu.
                 if args.gradient_accumulation_steps > 1:
                     loss = loss / args.gradient_accumulation_steps
-                if args.fp16:
+                if args.fp16 and not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
                     with amp.scale_loss(loss, optimizer) as scaled_loss:
                         scaled_loss.backward()
                 else:
@@ -1139,7 +1145,7 @@ def main():
 
 
                 if (step + 1) % args.gradient_accumulation_steps == 0:
-                    if args.fp16 :
+                    if args.fp16 or os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
                         # modify learning rate with special warm up for BERT which FusedAdam doesn't do
                         scheduler.step()
                     optimizer.step()
@@ -1187,7 +1193,7 @@ def main():
 
     if args.do_predict and (args.local_rank == -1 or is_main_process()):
         print("Doing predict...")
-        if not args.do_train and args.fp16:
+        if not args.do_train and args.fp16 and not os.getenv('ALLOW_FP32') and not os.getenv('ALLOW_HF32'):
             model.half()
 
         eval_examples = read_squad_examples(
@@ -1284,6 +1290,11 @@ def main():
         dllogger.log(step=tuple(), data={"exact_match": exact_match, "F1": f1})
 
 if __name__ == "__main__":
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        torch.npu.config.allow_internal_format = False
+        if os.getenv('ALLOW_FP32'):
+            torch.npu.conv.allow_hf32 = False
+            torch.npu.matmul.allow_hf32 = False
     option = {}
     option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
     option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
