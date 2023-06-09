@@ -164,7 +164,7 @@ if __name__ == '__main__':
     if args.is_dym:
         np.random.seed(2023)
 
-    image_preprocessor = ImagePreprocessor(config.get_config(args.config), args.image_dir, args.is_dym)
+    image_preprocessor = ImagePreprocessor(config.get_config(args.config), args.test_image_dir, args.is_dym)
     image_preprocessor.preprocess()
-    label_preprocessor = LabelPreprocessor(config.get_config(args.config), args.label)
+    label_preprocessor = LabelPreprocessor(config.get_config(args.config), args.test_label)
     label_preprocessor.preprocess()

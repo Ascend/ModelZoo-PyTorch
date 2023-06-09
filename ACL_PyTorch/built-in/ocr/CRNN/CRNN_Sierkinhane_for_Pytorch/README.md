@@ -201,9 +201,9 @@ cd -
 
 2. 生成动态测试数据集
 ```bash
-python3 npu_infer/preprocess.py --image-dir images/tmp1000 --is-dym True
+python3 npu_infer/preprocess.py --test-image-dir images/tmp1000 --is-dym True
 ```
-运行完会在`images/preprocessed_tmp1000`生成处理好的数据
+运行完会在`images/preprocessed_dym_tmp1000`生成处理好的数据
 
 ### 生成om模型
 ```bash
@@ -219,7 +219,7 @@ atc \
 
 ### 推理验证
 ```bash
-python3 npu_infer/npu_end2end.py --data_path images/tmp1000 --om_path om/crnn_dym_linux_${arch}.om --output npu_result
+python3 npu_infer/npu_end2end.py --data_path images/preprocessed_dym_tmp1000 --om_path om/crnn_dym_linux_${arch}.om --output npu_result
 ```
 运行完结果会保存在当前目录`npu_result`
 
@@ -247,7 +247,7 @@ python3 npu_infer/postprocess.py --predict-dir gpu_result --is-dym True
 
 1. 静态数据
 
-| 芯片型号 | Batch Size | 数据集 | 精度 | 性能 |
+| 芯片型号 | Batch Size | 数据集 | ACC-精度 | 性能 |
 | ---- | ---- | ---- | ---- | ----|
 | 310P3 | 1 | GitHub 仓库提供的 360 万数据集 | 78.37% | 696 |
 | 310P3 | 4 | GitHub 仓库提供的 360 万数据集 | 78.37% | 2598 |
@@ -258,6 +258,6 @@ python3 npu_infer/postprocess.py --predict-dir gpu_result --is-dym True
 
 2. 动态数据
 
-| 芯片型号 |  数据集 | 精度 | 性能 |
+| 芯片型号 |  数据集 | ACC-精度 | 性能 |
 | ---- | ---- | ---- | ----|
 | 310P3 | GitHub 仓库提供的 360 万数据集 | 75.5% | 163 |

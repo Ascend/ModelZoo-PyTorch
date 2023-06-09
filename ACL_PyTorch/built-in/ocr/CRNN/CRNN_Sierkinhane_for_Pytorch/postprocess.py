@@ -95,5 +95,5 @@ class Postprocessor:
 if __name__ == '__main__':
     args = parse_args()
     config = config.get_config(args.config)
-    postprocessor = Postprocessor(args.predict_dir, args.label, config.DATASET.ALPHABETS, args.is_dym)
+    postprocessor = Postprocessor(args.predict_dir, args.preprocessed_test_label, config.DATASET.ALPHABETS, args.is_dym)
     postprocessor.compute_accuracy()
