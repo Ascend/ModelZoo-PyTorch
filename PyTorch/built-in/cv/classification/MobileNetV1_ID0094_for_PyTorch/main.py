@@ -43,12 +43,18 @@ import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
 import numpy as np
+import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torch.distributed as dist
 import apex
 from apex import amp
+if torchvision.__version__ > "0.9.1":
+    RandomSizedCrop = transforms.RandomSizedCrop
+else:
+    RandomSizedCrop = transforms.RandomResizedCrop
+
 try:
     from torch_npu.utils.profiler import Profile
 except Exception:
@@ -286,7 +292,7 @@ def main():
                                      std=[0.229, 0.224, 0.225])
 
     train_dataset = datasets.ImageFolder(traindir, transforms.Compose([
-        transforms.RandomSizedCrop(224),
+        RandomSizedCrop(224),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize,
