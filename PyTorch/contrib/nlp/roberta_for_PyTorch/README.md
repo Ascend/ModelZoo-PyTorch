@@ -51,9 +51,12 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 - 安装依赖：
 
   ```
-  pip install -r requirements.txt
+  pip install -r requirements.txt # 小于PyTorch2.0版本
+  pip install -r 2.0_requirements.txt # PyTorch2.0版本
   python3 setup.py build_ext --inplace
   ```
+  > **说明：** 
+  >安装requirements.txt中的依赖只需执行一条对应的PyTorch版本依赖安装命令。
 
 
 ## 训练准备
