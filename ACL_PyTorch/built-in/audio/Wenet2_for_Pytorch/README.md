@@ -283,42 +283,12 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
-   2. 非流式动态shape场景性能和精度验证。
+   2. 非流式分档场景精度和性能验证。
+
+      端到端encoder + decoder
 
       ```
-      # 性能验证
-      python3 wenet/bin/recognize_om.py --config=20210601_u2++_conformer_exp/train.yaml --test_data=20210601_u2++_conformer_exp/data.list --dict=20210601_u2++_conformer_exp/units.txt --mode=ctc_greedy_search --result_file=offline_dynamic_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_dynamic.om --decoder_om=xx.om --batch_size=${batch_size} --device_id=0 --test_file=offline_dynamic_test_result_bs${batch_size}.txt
-      ```
-
-      - 参数说明：
-        - --config：aishell预训练模型配置文件路径。
-        - --test_data：测试数据路径。
-        - --dict：aishell预训练模型词典路径。
-        - --mode：解码模式，可选ctc_greedy_search、ctc_prefix_beam_search和attention_rescoring。
-        - --result_file：解码结果文件。
-        - --encoder_om：非流式动态shape场景encoder的om路径。
-        - --decoder_om：无需decoder的om，但需要填写该字段。
-        - --batch_size：batch大小。
-        - --device_id：卡序号。
-        - --test_file：性能结果文件。
-
-      ```
-      # 精度验证
-      python3 tools/compute-wer.py --char=1 --v=1 20210601_u2++_conformer_exp/text offline_dynamic_result_bs${batch_size}.txt
-      ```
-
-      - 参数说明：
-        - --char：是否逐词比对，0为整句比对，1为逐词比对。
-        - --v：是否打印对比结果，0为不打印，1为打印。
-        - 20210601_u2++_conformer_exp/text：标签文件路径。
-        - static_result.txt：比对结果输出文件路径。
-
-   3. 非流式分档场景精度和性能验证。
-
-      移动LSTM_postprocess_data.py脚本至steps目录下，执行LSTM_postprocess_data.py脚本进行数据后处理。
-
-      ```
-      python3 wenet/bin/recognize_om.py --config=20210601_u2++_conformer_exp/train.yaml --test_data=20210601_u2++_conformer_exp/data.list --dict=20210601_u2++_conformer_exp/units.txt --mode=ctc_greedy_search --result_file=static_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt
+      python3 wenet/bin/recognize_om.py --config=20210601_u2++_conformer_exp/train.yaml --test_data=20210601_u2++_conformer_exp/data.list --dict=20210601_u2++_conformer_exp/units.txt --mode=attention_rescoring --result_file=static_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt
       ```
 
       - 参数说明：
@@ -345,7 +315,7 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
         - 20210601_u2++_conformer_exp/text：标签文件路径。
         - static_result.txt：比对结果输出文件路径。
 
-   4. 流式纯推理场景精度和性能验证。
+   3. 流式纯推理场景精度和性能验证。
 
       可使用ais_infer推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
@@ -373,29 +343,18 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-因为decoder部分存在性能bug(比onnxruntime还慢)，仅提供encoder部分，性能参考下列数据。 
+性能参考下列数据。 
 
-非流式动态shape场景
+非流式分档（encoder + decoder）场景
 
-| 芯片型号        | Batch Size | 数据集       | 精度(WER) | 性能(测试数据集执行总时间) |
+| 芯片型号        | Batch Size | 数据集       | 精度(WER) | 端到端性能（fps） |
 |-------------|------------|-----------|---------|----------------|
-| Ascend310P3 | 1          | aishell   | 5.18%   | 118.9s         |
-| Ascend310P3 | 4          | aishell   | 5.18%   | 44.9s          |
-| Ascend310P3 | 8          | aishell   | 5.18%   | 37.9s          |
-| Ascend310P3 | 16         | aishell   | 5.18%   | 40.5s          |
-| Ascend310P3 | 32         | aishell   | 5.18%   | 44.9s          |
-| Ascend310P3 | 64         | aishell   | 5.18%   | 48.6s          |
-
-非流式分档场景
-
-| 芯片型号        | Batch Size | 数据集       | 精度(WER) | 性能(测试数据集执行总时间) |
-|-------------|------------|-----------|---------|----------------|
-| Ascend310P3 | 1          | aishell   | 5.18%   | 39.1s          |
-| Ascend310P3 | 4          | aishell   | 5.18%   | 29.6s          |
-| Ascend310P3 | 8          | aishell   | 5.18%   | 28.6s          |
-| Ascend310P3 | 16         | aishell   | 5.18%   | 31.8s          |
-| Ascend310P3 | 32         | aishell   | 5.18%   | 35.1s          |
-| Ascend310P3 | 64         | aishell   | 5.18%   | 51.9s          |
+| Ascend310P3 | 1          | aishell   | 4.67%   | 36.72          |
+| Ascend310P3 | 4          | aishell   | 4.67%   | 42.57          |
+| Ascend310P3 | 8          | aishell   | 4.67%   | 51.36          |
+| Ascend310P3 | 16         | aishell   | 4.67%   | 52.93          |
+| Ascend310P3 | 32         | aishell   | 4.67%   | 58.39          |
+| Ascend310P3 | 64         | aishell   | 4.67%   | 51.89          |
 
 流式纯推理场景
 

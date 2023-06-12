@@ -44,7 +44,10 @@ import logging
 import os
 import sys
 import time
+import stat
 
+import multiprocessing
+import numpy as np
 import torch
 import yaml
 from torch.utils.data import DataLoader
@@ -54,9 +57,6 @@ from wenet.utils.common import IGNORE_ID
 from wenet.utils.file_utils import read_symbol_table
 from wenet.utils.config import override_config
 
-import onnxruntime as rt
-import multiprocessing
-import numpy as np
 from pyacl.acl_infer import AclNet, init_acl, release_acl
 
 try:
@@ -64,8 +64,7 @@ try:
         ctc_beam_search_decoder_batch, \
         TrieVector, PathTrie
 except ImportError:
-    print('Please install ctc decoders first by refering to\n' +
-          'https://github.com/Slyne/ctc_decoder.git')
+    print('Please install ctc decoders first')
     sys.exit(1)
 
 
@@ -186,20 +185,41 @@ def get_args():
     print(args)
     return args
 
+def get_dict(args):
+    vocabulary = []
+    char_dict = {}
+    with open(args.dict, 'r') as fin:
+        for line in fin:
+            arr = line.strip().split()
+            if len(arr) == 2:
+                pass
+            else:
+                print('dict format is incorrect')
+                sys.exit(1)
+            char_dict[int(arr[1])] = arr[0]
+            vocabulary.append(arr[0])
+    return vocabulary, char_dict
 
-def main():
-    args = get_args()
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(levelname)s %(message)s')
+def init_om_session(args):
+    encoder_ort_session = AclNet(
+        model_path=args.encoder_om, device_id=args.device_id, input_data_shape=[
+            120000*args.batch_size, 1*args.batch_size], \
+                output_data_shape=[95744*args.batch_size, 
+            1*args.batch_size, 1583142*args.batch_size, 
+                3704*args.batch_size, 3680*args.batch_size]) # reserved suitable input & output shape
+    decoder_ort_session = None
+    if args.mode == "attention_rescoring":
+        decoder_ort_session = AclNet(model_path=args.decoder_om, \
+                                     device_id=args.device_id, \
+                                        input_data_shape=[
+            args.batch_size*384*256, args.batch_size, args.batch_size*50*10,
+                  args.batch_size*10, args.batch_size*50*10,  
+            args.batch_size*10], output_data_shape=[1*args.batch_size])# reserved suitable input & output shape
+    return encoder_ort_session, decoder_ort_session
 
-    with open(args.config, 'r') as fin:
-        configs = yaml.load(fin, Loader=yaml.FullLoader)
-    if len(args.override_config) > 0:
-        configs = override_config(configs, args.override_config)
-
-    reverse_weight = configs["model_conf"].get("reverse_weight", 0.0)
-    symbol_table = read_symbol_table(args.dict)
-    test_conf = copy.deepcopy(configs['dataset_conf'])
+def adjust_test_conf(test_conf, batch_size):
+    # adjust dataset parameters for om
+    # reserved suitable memory
     test_conf['filter_conf']['max_length'] = 102400
     test_conf['filter_conf']['min_length'] = 0
     test_conf['filter_conf']['token_max_length'] = 102400
@@ -212,7 +232,23 @@ def main():
     test_conf['sort'] = False
     test_conf['fbank_conf']['dither'] = 0.0
     test_conf['batch_conf']['batch_type'] = "static"
-    test_conf['batch_conf']['batch_size'] = args.batch_size
+    test_conf['batch_conf']['batch_size'] = batch_size
+    return test_conf    
+
+def main():
+    args = get_args()
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(levelname)s %(message)s')
+
+    with open(args.config, 'r') as fin:
+        configs = yaml.safe_load(fin, Loader=yaml.FullLoader)
+    if len(args.override_config) > 0:
+        configs = override_config(configs, args.override_config)
+
+    reverse_weight = configs["model_conf"].get("reverse_weight", 0.0)
+    symbol_table = read_symbol_table(args.dict)
+    test_conf = copy.deepcopy(configs['dataset_conf'])
+    test_conf = adjust_test_conf(test_conf, args.batch_size)
 
     test_dataset = Dataset(args.data_type,
                            args.test_data,
@@ -222,36 +258,22 @@ def main():
                            partition=False)
 
     test_data_loader = DataLoader(test_dataset, batch_size=None, num_workers=0)
-
-    # Init asr model from configs
+    # Init device and om model
     init_acl(args.device_id)
-    encoder_ort_session = AclNet(
-        model_path=args.encoder_om, device_id=args.device_id, input_data_shape=[
-            120000*args.batch_size, 1*args.batch_size], output_data_shape=[95744*args.batch_size, 
-            1*args.batch_size, 1583142*args.batch_size, 3704*args.batch_size, 3680*args.batch_size])
-    decoder_ort_session = None
-    if args.mode == "attention_rescoring":
-        decoder_ort_session = AclNet(model_path=args.decoder_om, device_id=args.device_id, input_data_shape=[
-            args.batch_size*384*256, args.batch_size, args.batch_size*50*10, args.batch_size*10, args.batch_size*50*10,
-            args.batch_size*10], output_data_shape=[1*args.batch_size])
-
+    encoder_ort_session, decoder_ort_session = init_om_session(args)
     # Load dict
-    vocabulary = []
-    char_dict = {}
-    with open(args.dict, 'r') as fin:
-        for line in fin:
-            arr = line.strip().split()
-            assert len(arr) == 2
-            char_dict[int(arr[1])] = arr[0]
-            vocabulary.append(arr[0])
+    vocabulary, char_dict = get_dict(args)
     eos = sos = len(char_dict) - 1
+    # In static mode, need padding for different ranks
+    # mul_shape: padding shape for encoder
+    # mul_shape_decoder: padding shape for decoder
     mul_shape = [262, 326, 390, 454, 518, 582, 646,
                  710, 774, 838, 902, 966, 1028, 1284, 1478]
     mul_shape_decoder = [96, 144, 384]
     sumt1 = 0
-    sumt2 = 0
     data_cnt = 0
     total_time = 0
+    start = time.time()
     with torch.no_grad(), open(args.result_file, 'w') as fout:
         for _, batch in enumerate(test_data_loader):
             data_cnt = data_cnt + 1
@@ -399,10 +421,15 @@ def main():
                 content = hyps[i]
                 logging.info('{} {}'.format(key, content))
                 fout.write('{} {}\n'.format(key, content))
-        fps = float(1000/((sumt1+sumt2)/(data_cnt*args.batch_size)))
-        resstr = "total time: {}\n".format(total_time)
-        with open(args.test_file, "a") as resfile:
-            resfile.write(resstr)
+        end = time.time()
+        fps = float((data_cnt * args.batch_size) / (end - start))
+        fps_str = "fps: {}\n".format(fps)
+        resstr = "total time: {}\n".format(end - start)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL 
+        modes = stat.S_IWUSR | stat.S_IRUSR
+        with os.fdopen(os.open(args.test_file, flags, modes), 'w') as f:
+            f.write(fps_str)
+            f.write(resstr)
     encoder_ort_session.release_model()
     if args.mode == "attention_rescoring":
         decoder_ort_session.release_model()

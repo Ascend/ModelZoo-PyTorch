@@ -15,7 +15,6 @@
 import argparse
 
 from pyacl.acl_infer import AclNet, init_acl, release_acl
-import acl
 import numpy as np
 import onnxruntime
 
@@ -31,16 +30,24 @@ if __name__ == '__main__':
     parser.add_argument('--encoder_om', required=True, help='encoder om file')
     parser.add_argument('--batch_size', required=True, type=int, help='batch size')
     parser.add_argument('--device_id', default=0, type=int, help='device id')
+    parser.add_argument('--decoding_chunk_size', default=16, type=int, 
+                        help='decoding chunk size, <=0 is not supported')
+    parser.add_argument('--num_decoding_left_chunks',
+                        default=5,
+                        type=int,
+                        required=False,
+                        help="number of left chunks, <= 0 is not supported")
     args = parser.parse_args()
     print(args)
 
     init_acl(args.device_id)
+    required_cache_size = args.decoding_chunk_size * args.num_decoding_left_chunks
     chunk_xs = np.random.random((args.batch_size, 67, 80)).astype("float32")
     chunk_lens = np.array([600]*args.batch_size).astype("int32")
     offset = np.array([0]*args.batch_size).reshape((args.batch_size, 1))
-    att_cache = np.random.random((args.batch_size, 12, 4, args.batch_size, 128)).astype("float32")
+    att_cache = np.random.random((args.batch_size, 12, 4, required_cache_size, 128)).astype("float32")
     cnn_cache = np.random.random((args.batch_size, 12, 256, 7)).astype("float32")
-    cache_mask = np.random.random((args.batch_size, 1, args.batch_size)).astype("float32")
+    cache_mask = np.random.random((args.batch_size, 1, required_cache_size)).astype("float32")
     net = AclNet(model_path=args.encoder_om, device_id=args.device_id)
     output_data, exe_time = net([chunk_xs, chunk_lens, offset, att_cache, cnn_cache, cache_mask])
     y = output_data[0].flatten()
