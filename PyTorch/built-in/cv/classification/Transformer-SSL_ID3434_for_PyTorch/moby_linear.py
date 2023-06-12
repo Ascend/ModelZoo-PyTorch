@@ -67,7 +67,8 @@ def parse_option():
     parser.add_argument('--throughput', action='store_true', help='Test throughput only')
 
     # distributed training
-    parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    parser.add_argument("--local_rank", "--local-rank", type=int, required=True,
+                        help='local rank for DistributedDataParallel')
     
     # dev: linear eval settings
     parser.add_argument('--lr', type=float, default=1.0, help='the base lr for linear evaluation')
