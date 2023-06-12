@@ -143,7 +143,13 @@ BLIP模型为一种新的Vision-Language Pre-training框架，它可以灵活地
    unzip -d ./coco2014 val2014.zip
    ```
 
-2. 数据预处理，将原始数据集转换为模型输入的数据。。
+2. 数据预处理，将原始数据集转换为模型输入的数据。
+
+   下载测试集到`annotation`目录下。
+
+   ```
+   wget -P ./annotation https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test.json
+   ```
 
    执行BLIP_preprocess.py脚本，完成预处理。
 

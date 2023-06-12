@@ -56,7 +56,10 @@ TinyBERT是一种新型的Transformer蒸馏方法，该方法能将大型教师B
 
 1. 获取源码。
 
-   源码已在仓中。
+   ```
+   git clone https://github.com/huawei-noah/Pretrained-Language-Model
+   ln -s Pretrained-Language-Model/TinyBERT/transformer/ .
+   ```
 
 2. 安装依赖。
 

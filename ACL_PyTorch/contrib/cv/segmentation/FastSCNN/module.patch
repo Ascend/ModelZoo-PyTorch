@@ -1,13 +1,3 @@
-From 67f87627a8d4b23b1d2dbb156ecbf04babbe6fb6 Mon Sep 17 00:00:00 2001
-From: Qw1kowa <1741235576@qq.com>
-Date: Fri, 2 Dec 2022 07:05:02 +0000
-Subject: [PATCH] module.patch
-
----
- segmentron/modules/module.py | 23 +++++++++++++++++++++--
- segmentron/utils/options.py  | 17 +++++++++++++++++
- 2 files changed, 38 insertions(+), 2 deletions(-)
-
 diff --git a/segmentron/modules/module.py b/segmentron/modules/module.py
 index 942ea13..51e324d 100644
 --- a/segmentron/modules/module.py

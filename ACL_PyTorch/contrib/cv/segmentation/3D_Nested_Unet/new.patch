@@ -4228,8 +4228,7 @@ diff --git a/pytorch/setup.py b/pytorch/setup.py
 index 590a453..554f4e2 100644
 --- a/pytorch/setup.py
 +++ b/pytorch/setup.py
-@@ -9,13 +9,13 @@ setup(name='nnunet',
-       author_email='f.isensee@dkfz-heidelberg.de',
+@@ -11,11 +11,11 @@ 
        license='Apache License Version 2.0, January 2004',
        install_requires=[
 -            "torch>=1.6.0a",

@@ -1,12 +1,3 @@
-From d34e2516c575eee7aeef2805acee3b9ac661549a Mon Sep 17 00:00:00 2001
-From: sunyuqi3 <sunyuqi3@huawei.com>
-Date: Tue, 21 Feb 2023 11:39:19 +0800
-Subject: [PATCH] fomm
-
----
- extract.py | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
 diff --git a/extract.py b/extract.py
 index b8dea18..c4ff33e 100644
 --- a/extract.py

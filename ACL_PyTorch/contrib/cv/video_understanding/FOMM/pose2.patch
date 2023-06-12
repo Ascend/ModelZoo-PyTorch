@@ -1,12 +1,3 @@
-From 57b248df4404b4c9c621230d75f23dbe6c6326e8 Mon Sep 17 00:00:00 2001
-From: sunyuqi3 <sunyuqi3@huawei.com>
-Date: Tue, 21 Feb 2023 11:41:26 +0800
-Subject: [PATCH] coco
-
----
- evaluate/coco_eval.py | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
 diff --git a/evaluate/coco_eval.py b/evaluate/coco_eval.py
 index 1e6be74..31bd4dc 100644
 --- a/evaluate/coco_eval.py

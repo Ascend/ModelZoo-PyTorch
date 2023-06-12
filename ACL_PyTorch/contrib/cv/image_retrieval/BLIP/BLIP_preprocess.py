@@ -68,14 +68,12 @@ def pre_caption(caption, max_words=50):
     return caption
 
 
-def preprocess(src_path, save_img_path, save_ids_path, save_mask_path):
+def preprocess(src_path, img_path, ids_path, mask_path):
 
     ann_root = 'annotation'
     if not os.path.exists(ann_root):
         os.mkdir(ann_root)
-    # 获取测试集
-    download_url(
-        'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test.json', ann_root)
+    
     filenames = {'val': 'coco_karpathy_val.json',
                  'test': 'coco_karpathy_test.json'}
     annotation = json.load(
@@ -96,7 +94,7 @@ def preprocess(src_path, save_img_path, save_ids_path, save_mask_path):
         input_image = Image.open(os.path.join(src_path, image)).convert('RGB')
         input_tensor = transform_test(input_image)
         img_np = np.array(input_tensor).astype(np.float32)
-        img_np.tofile(os.path.join(save_img_path, str(img_id) + ".bin"))
+        img_np.tofile(os.path.join(img_path, str(img_id) + ".bin"))
 
         for i, caption in enumerate(ann['caption']):
             txt = pre_caption(caption, 30)
@@ -107,9 +105,9 @@ def preprocess(src_path, save_img_path, save_ids_path, save_mask_path):
             input_ids_np = input_ids.numpy()
             input_mask_np = input_mask.numpy()
             input_ids_np.tofile(os.path.join(
-                save_ids_path, str(txt_id) + '.bin'))
+                ids_path, str(txt_id) + '.bin'))
             input_mask_np.tofile(os.path.join(
-                save_mask_path, str(txt_id) + '.bin'))
+                mask_path, str(txt_id) + '.bin'))
             txt_id += 1
 
     print("generate bin runs successfuly!")

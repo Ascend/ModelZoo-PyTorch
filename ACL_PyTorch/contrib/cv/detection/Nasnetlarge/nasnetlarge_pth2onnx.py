@@ -14,18 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from __future__ import print_function, division, absolute_import
-import  sys
+import sys
 import torch
 import torch.onnx
 from torch import nn
-from torch.utils import model_zoo
 sys.path.append(r"./pretrained-models.pytorch")
 from pretrainedmodels.models.nasnet import NASNetALarge
 
 pretrained_settings = {
     'nasnetalarge': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth',
             'input_space': 'RGB',
             'input_size': [3, 331, 331], # resize 354
             'input_range': [0, 1],
@@ -34,7 +32,6 @@ pretrained_settings = {
             'num_classes': 1000
         },
         'imagenet+background': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth',
             'input_space': 'RGB',
             'input_size': [3, 331, 331], # resize 354
             'input_range': [0, 1],
@@ -46,7 +43,7 @@ pretrained_settings = {
 }
 
 
-def nasnetalarge(num_classes=1001, pretrained='imagenet+background', localpth=None):
+def nasnetalarge(localpth, num_classes=1001, pretrained='imagenet+background'):
     r"""NASNetALarge model architecture from the
     `"NASNet" <https://arxiv.org/abs/1707.07012>`_ paper.
     """
@@ -57,11 +54,8 @@ def nasnetalarge(num_classes=1001, pretrained='imagenet+background', localpth=No
 
         # both 'imagenet'&'imagenet+background' are loaded from same parameters
         model = NASNetALarge(num_classes=1001)
-        if localpth is None:
-            model.load_state_dict(model_zoo.load_url(settings['url']))
-        else:
-            checkpoint = torch.load(localpth)
-            model.load_state_dict(checkpoint)
+        checkpoint = torch.load(localpth)
+        model.load_state_dict(checkpoint)
         if pretrained == 'imagenet':
             new_last_linear = nn.Linear(model.last_linear.in_features, 1000)
             new_last_linear.weight.data = model.last_linear.weight.data[1:]
@@ -84,7 +78,7 @@ def pth2onnx(input_file, output_file):
     param input_file: input pth model path
     param output_file: output onnx model path
     """
-    model = nasnetalarge(num_classes=1001, pretrained='imagenet+background', localpth=input_file)
+    model = nasnetalarge(localpth=input_file, num_classes=1001, pretrained='imagenet+background')
     model.eval()
     input_names = ["image"]
     output_names = ["class"]
