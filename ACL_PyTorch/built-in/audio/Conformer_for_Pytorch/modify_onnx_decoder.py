@@ -13,10 +13,53 @@
 # limitations under the License.
 
 # -*- coding:utf-8 -*-
-
 import sys
-from graph_fusion import GraphFusion
+from auto_optimizer import OnnxGraph
+from graph_fusion import GraphFusion, create_mask
 
-input_model = sys.argv[1]
-output_model = sys.argv[2]
-GraphFusion(input_model=input_model, output_model=output_model, opt_type=2)
+
+def build_mask(graph, input_node, out_nodes):
+    # build mask:
+    # input_node -> build_mask -> add -> out_node1
+    #                          -> add -> out_node2
+
+    mask_end_node = create_mask(graph, input_node)
+    unsqueeze_node = graph.add_node(
+        "Unsqueeze_mask",
+        "Unsqueeze",
+        attrs={
+            'axes': [1, 2]
+        },
+        inputs=mask_end_node.outputs,
+        outputs=["out_Unsqueeze_mask"]
+    )
+    # reconnect
+    for out_node in out_nodes:
+        out_node.inputs.append("out_Unsqueeze_mask")
+
+
+def get_mask_input(graph):
+    inserted_add_list = []
+    for softmax_node in graph.get_nodes(op_type="Softmax"):
+        pre_node = graph.get_prev_node(softmax_node.inputs[0])
+        if pre_node.op_type != "Add":
+            # cross attention block
+            inserted_add_node = graph.add_node(
+                f"Add_before_{pre_node.name}",
+                "Add"
+            )
+            graph.insert_node(softmax_node.name, inserted_add_node, mode='before')
+            inserted_add_list.append(inserted_add_node)
+    return inserted_add_list
+
+
+if __name__ == '__main__':
+    input_model = sys.argv[1]
+    output_model = sys.argv[2]
+    GraphFusion(input_model=input_model, output_model=output_model, opt_type=2)
+
+    onnx_graph = OnnxGraph.parse(output_model)
+    input_node = onnx_graph['memory']
+    out_nodes = get_mask_input(onnx_graph)
+    build_mask(onnx_graph, input_node, out_nodes)
+    onnx_graph.save(output_model)

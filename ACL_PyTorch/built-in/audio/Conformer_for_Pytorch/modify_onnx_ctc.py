@@ -15,22 +15,12 @@
 # -*- coding:utf-8 -*-
 import sys
 from auto_optimizer import OnnxGraph
-
-
-def keep_dymamic_batch(graph):
-    for input_node in graph.inputs:
-        input_node.shape[0] = 'batch'
-
-    for out_node in graph.outputs:
-        out_node.shape[0] = 'batch'
-
-    graph.infershape()
-    return graph
+from graph_fusion import keep_dynamic_batch
 
 
 if __name__ == '__main__':
     input_model = sys.argv[1]
     output_model = sys.argv[2]
     onnx_graph = OnnxGraph.parse(input_model)
-    onnx_graph = keep_dymamic_batch(onnx_graph)
+    keep_dynamic_batch(onnx_graph)
     onnx_graph.save(output_model)

@@ -1,5 +1,5 @@
 diff --git a/espnet_onnx/asr/abs_asr_model.py b/espnet_onnx/asr/abs_asr_model.py
-index d55e2c4..399ed48 100644
+index d55e2c4..1fecbeb 100644
 --- a/espnet_onnx/asr/abs_asr_model.py
 +++ b/espnet_onnx/asr/abs_asr_model.py
 @@ -11,6 +11,7 @@ from espnet_onnx.asr.scorer.length_bonus import LengthBonus
@@ -19,7 +19,7 @@ index d55e2c4..399ed48 100644
      def _build_beam_search(self, scorers, weights):
          if self.config.transducer.use_transducer_decoder:
              self.beam_search = BeamSearchTransducer(
-@@ -41,35 +42,53 @@ class AbsASRModel(AbsModel):
+@@ -41,35 +42,49 @@ class AbsASRModel(AbsModel):
                  if not isinstance(v, BatchScorerInterface)
              ]
              if len(non_batch) == 0:
@@ -45,10 +45,6 @@ index d55e2c4..399ed48 100644
 +        if only_use_encoder:
 +            self.encoder = get_encoder(self.config.encoder, providers, use_quantized, device_id)
 +            return self.encoder
-+        if not only_use_decoder:
-+            self.encoder = get_encoder(self.config.encoder, providers, use_quantized, device_id)
-+        else:
-+            self.encoder = None
 +        decoder = get_decoder(self.config.decoder, providers, use_quantized, device_id)
          scorers = {'decoder': decoder}
          weights = {}
@@ -92,7 +88,7 @@ index d55e2c4..399ed48 100644
          if lm is not None:
              scorers.update(lm=lm)
              weights.update(lm=self.config.weights.lm)
-@@ -79,3 +98,6 @@ class AbsASRModel(AbsModel):
+@@ -79,3 +94,6 @@ class AbsASRModel(AbsModel):
          self._build_token_converter()
          self.scorers = scorers
          self.weights = weights
@@ -100,7 +96,7 @@ index d55e2c4..399ed48 100644
 +            return decoder, ctc, joint_network, lm
 +        return self.encoder, decoder, ctc, joint_network, lm
 diff --git a/espnet_onnx/asr/asr_model.py b/espnet_onnx/asr/asr_model.py
-index 93e7de3..040ab97 100644
+index 93e7de3..3386ff8 100644
 --- a/espnet_onnx/asr/asr_model.py
 +++ b/espnet_onnx/asr/asr_model.py
 @@ -22,22 +22,34 @@ class Speech2Text(AbsASRModel):
@@ -151,37 +147,46 @@ index 93e7de3..040ab97 100644
      def __call__(self, speech: np.ndarray) -> List[
          Tuple[
              Optional[str],
-@@ -66,18 +77,31 @@ class Speech2Text(AbsASRModel):
-         if speech.dtype != np.float32:
-             speech = speech.astype(np.float32)
+@@ -60,24 +71,37 @@ class Speech2Text(AbsASRModel):
+         Returns:
+             text, token, token_int, hyp
+         """
+-        assert check_argument_types()
++        # assert check_argument_types()
+ 
+         # check dtype
+-        if speech.dtype != np.float32:
+-            speech = speech.astype(np.float32)
++        # if speech.dtype != np.float32:
++        #     speech = speech.astype(np.float32)
++
++        if not self.only_use_decoder:
++            if isinstance(speech, np.ndarray):
++                speech = speech[np.newaxis, :]
++                lengths = np.array([speech.shape[1]]).astype("int64")
++                enc, _ = self.encoder(speech=speech, speech_length=lengths)
++            else:
++                # support for multibatch
++                enc, _ = self.encoder(speech)
  
 -        # data: (Nsamples,) -> (1, Nsamples)
 -        speech = speech[np.newaxis, :]
 -        # lengths: (1,)
 -        lengths = np.array([speech.shape[1]]).astype(np.int64)
-+        if not self.only_use_decoder:
-+            # data: (Nsamples,) -> (1, Nsamples)
-+            speech = speech[np.newaxis, :]
-+            # lengths: (1,)
-+            lengths = np.array([speech.shape[1]]).astype(np.int64)
-+
-+            # b. Forward Encoder
-+            enc, _ = self.encoder(speech=speech, speech_length=lengths)
++        if self.only_use_encoder:
++            return enc
  
 -        # b. Forward Encoder
 -        enc, _ = self.encoder(speech=speech, speech_length=lengths)
 -        if isinstance(enc, tuple):
 -            enc = enc[0]
 -        assert len(enc) == 1, len(enc)
-+        if self.only_use_encoder:
-+            return enc
- 
--        nbest_hyps = self.beam_search(enc[0])[:1]
 +        if not self.only_use_decoder:
 +            if isinstance(enc, tuple):
 +                enc = enc[0]
 +            assert len(enc) == 1, len(enc)
-+
+ 
+-        nbest_hyps = self.beam_search(enc[0])[:1]
 +            nbest_hyps = self.beam_search(enc[0])[:1]
 +        else:
 +            enc = speech
@@ -482,10 +487,10 @@ index 3a2cb40..0854ad8 100644
 -        return Encoder(config, providers, use_quantized)
 +        return Encoder(config, providers, use_quantized, device_id)
 diff --git a/espnet_onnx/asr/model/encoders/encoder.py b/espnet_onnx/asr/model/encoders/encoder.py
-index bb52644..24dc8d5 100644
+index bb52644..a95fd35 100644
 --- a/espnet_onnx/asr/model/encoders/encoder.py
 +++ b/espnet_onnx/asr/model/encoders/encoder.py
-@@ -13,6 +13,7 @@ from espnet_onnx.utils.function import (
+@@ -13,28 +13,37 @@ from espnet_onnx.utils.function import (
      mask_fill
  )
  from espnet_onnx.utils.config import Config
@@ -493,12 +498,19 @@ index bb52644..24dc8d5 100644
  
  
  class Encoder:
-@@ -21,20 +22,26 @@ class Encoder:
-         encoder_config: Config,
-         providers: List[str],
-         use_quantized: bool = False,
-+        device_id: int = 0,
+     def __init__(
+-        self,
+-        encoder_config: Config,
+-        providers: List[str],
+-        use_quantized: bool = False,
++            self,
++            encoder_config: Config,
++            providers: List[str],
++            use_quantized: bool = False,
++            device_id: int = 0,
++            rank_mode: bool = True
      ):
++        self.rank_mode = rank_mode
          self.config = encoder_config
          # Note that id model was optimized and quantized,
          # then the quantized model should be optimized.
@@ -529,35 +541,86 @@ index bb52644..24dc8d5 100644
  
          self.frontend = Frontend(self.config.frontend, providers, use_quantized)
          if self.config.do_normalize:
-@@ -49,6 +56,7 @@ class Encoder:
+@@ -49,26 +58,30 @@ class Encoder:
          # if self.config.do_postencoder:
          #     self.postencoder = Postencoder(self.config.postencoder)
  
 +
      def __call__(
-         self, speech: np.ndarray, speech_length: np.ndarray
+-        self, speech: np.ndarray, speech_length: np.ndarray
++        self, speech, speech_length = None
      ) -> Tuple[np.ndarray, np.ndarray]:
-@@ -82,10 +90,16 @@ class Encoder:
+         """Frontend + Encoder. Note that this method is used by asr_inference.py
+         Args:
+             speech: (Batch, Length, ...)
+             speech_lengths: (Batch, )
+         """
+-        # 1. Extract feature
+-        feats, feat_length = self.frontend(speech, speech_length)
++        if isinstance(speech, list):
++            # 1. Extract feature
++            feats, feat_length = self.frontend(speech, speech_length)
+ 
+-        # 2. normalize with global MVN
+-        if self.config.do_normalize:
+-            feats, feat_length = self.normalize(feats, feat_length)
++            # 2. normalize with global MVN
++            if self.config.do_normalize:
++                feats, feat_length = self.normalize(feats, feat_length)
+ 
+-        # 3. forward encoder
+-        encoder_out, encoder_out_lens = \
+-            self.forward_encoder(feats, feat_length)
+-        encoder_out = self.mask_output(encoder_out, encoder_out_lens)
++            # 3. forward encoder
++            encoder_out, encoder_out_lens = \
++                self.forward_encoder(feats, feat_length)
+ 
++        else:
++            encoder_out, encoder_out_lens = self.forward_encoder(speech)
++        encoder_out = self.mask_output(encoder_out, encoder_out_lens)
+         # if self.config.do_postencoder:
+         #     encoder_out, encoder_out_lens = self.postencoder(
+         #         encoder_out, encoder_out_lens
+@@ -81,12 +94,32 @@ class Encoder:
+             feats = mask_fill(feats, make_pad_mask(feat_length, feats, 1), 0.0)
          return feats, feat_length
  
-     def forward_encoder(self, feats, feat_length):
+-    def forward_encoder(self, feats, feat_length):
 -        encoder_out, encoder_out_lens = \
 -            self.encoder.run(["encoder_out", "encoder_out_lens"], {
 -                "feats": feats
 -            })
-+        if self.providers == "NPU":  
-+            outputs = self.encoder.infer([feats],
-+                                         mode="dymshape",
-+                                         custom_sizes=self.config.output_size)
-+            encoder_out, encoder_out_lens = outputs
+-        
++    def forward_encoder(self, datas, feat_length=None):
++        if self.providers == "NPU":
++            if len(datas) == 2:
++                # dynamic batch mode
++                feats, feat_length = datas
++                outputs = self.encoder.infer([feats],
++                                             mode="dymshape",
++                                             custom_sizes=self.config.output_size)
++                encoder_out, encoder_out_lens = outputs
++            else:
++                # multi batch mode
++                feats, feat_length, mask, pos_mask, conv_mask, encoder_out_lens = datas
++                if self.rank_mode:
++                    mode = 'dymdims'
++                else:
++                    mode = 'dymshape'
++                outputs = self.encoder.infer([feats, mask, pos_mask, conv_mask],
++                                             mode=mode,
++                                             custom_sizes=self.config.output_size)
++                encoder_out = outputs[0]
 +        else:
 +            encoder_out, encoder_out_lens = \
 +                self.encoder.run(["encoder_out", "encoder_out_lens"], {
 +                    "feats": feats
 +                })
-         
++
          if self.config.enc_type == 'RNNEncoder':
              encoder_out = mask_fill(encoder_out, make_pad_mask(
+                 feat_length, encoder_out, 1), 0.0)
 diff --git a/espnet_onnx/asr/model/joint_network.py b/espnet_onnx/asr/model/joint_network.py
 index ce17fd3..11e5ac4 100644
 --- a/espnet_onnx/asr/model/joint_network.py
@@ -872,7 +935,7 @@ index a5bc200..6e41f81 100644
  
          # if first iteration, remove the first row
 diff --git a/espnet_onnx/asr/scorer/ctc_prefix_scorer.py b/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
-index c6d094e..b375c3c 100644
+index c6d094e..71046e2 100644
 --- a/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
 +++ b/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
 @@ -10,6 +10,7 @@ from scipy.special import (
@@ -930,7 +993,7 @@ index c6d094e..b375c3c 100644
          """
 -        x = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
 +        if self.providers == "NPU":
-+            x = self.ctc.infer([x[None, :]],
++            x = self.ctc.infer([x[None, :].astype("float16")],
 +                               mode="dymshape",
 +                               custom_sizes=self.config.output_size)
 +            x = x[0]
@@ -939,7 +1002,7 @@ index c6d094e..b375c3c 100644
          logp = np.squeeze(x, axis=0)
          # TODO(karita): use CTCPrefixScoreTH
          self.impl = CTCPrefixScore(logp, 0, self.eos, np)
-@@ -185,11 +198,38 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+@@ -185,11 +198,35 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
              x (np.ndarray): The encoded feature tensor
          Returns: initial state
          """
@@ -962,7 +1025,7 @@ index c6d094e..b375c3c 100644
 +        Returns: initial state
 +        """
 +        if self.providers == "NPU":
-+            logp = self.ctc.infer([x],
++            logp = self.ctc.infer([x.astype("float16")],
 +                                  mode="dymshape",
 +                                  custom_sizes=self.config.output_size)
 +            logp = logp[0]
@@ -970,57 +1033,29 @@ index c6d094e..b375c3c 100644
 +            logp = self.ctc.run(["ctc_out"], {"x": x})[0]
 +        xlen = np.sum((x[:, :, 0] != 0), axis=-1)
 +        xlen = np.expand_dims(xlen, axis=-1)
-+        self.impl_list = [
-+            CTCPrefixScoreTH(
-+                logp[idx: idx+1, :xlen[idx][0], :], xlen[idx: idx+1], 0, self.eos) for idx in range(x.shape[0])
-+        ]
++        self.impl = CTCPrefixScoreTH(logp, np.squeeze(xlen), 0, self.eos)
 +        return None
 +
      def batch_score_partial(self, y, ids, state, x):
          """Score new token.
          Args:
-@@ -212,7 +252,33 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+@@ -212,7 +249,8 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
          else:
              batch_state = None
          return self.impl(y, batch_state, ids)
 -    
 +
-+    def multi_batch_score_partial(self, y, ids, state, x, batch_idx):
-+        """Score new token.
-+        Args:
-+            y (np.ndarray): 1D prefix token
-+            ids (np.ndarray): torch.int64 next token to score
-+            state: decoder state for prefix tokens
-+            x (np.ndarray): 2D encoder feature that generates ys
-+            batch_idx (int): batch idx for input tensor
-+        Returns:
-+            tuple[np.ndarray, Any]:
-+                Tuple of a score tensor for y that has a shape `(len(next_tokens),)`
-+                and next state for ys
-+        """
-+        end_frame = self.impl_list[batch_idx].end_frames[0][0] + 1
-+        if state[0] is not None:
-+            batch_state = (
-+                np.concatenate([s[0][..., None] for s in state], axis=2)[:end_frame],
-+                np.concatenate([s[1][None, :] for s in state]),
-+                state[0][2],
-+                state[0][3],
-+            )
-+        else:
-+            batch_state = None
-+
-+        return self.impl_list[batch_idx](y, batch_state, ids)
 +
      def extend_prob(self, x: np.ndarray):
          """Extend probs for decoding.
  
-@@ -223,7 +289,13 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+@@ -223,7 +261,13 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
              x (np.ndarray): The encoded feature tensor
  
          """
 -        x = self.ctc.run(["ctc_out"], {"x": x[None, :]})[0]
 +        if self.providers == "NPU":
-+            x = self.ctc.infer([x[None, :]],
++            x = self.ctc.infer([x[None, :].astype("float16")],
 +                               mode="dymshape",
 +                               custom_sizes=self.config.output_size)
 +            x = x[0]
@@ -1029,7 +1064,7 @@ index c6d094e..b375c3c 100644
          logp = log_softmax(x, axis=-1)
          self.impl.extend_prob(logp)
  
-@@ -299,7 +371,7 @@ class CTCPrefixScoreTH:
+@@ -299,7 +343,7 @@ class CTCPrefixScoreTH:
          self.idx_b = np.arange(self.batch)
          self.idx_bo = (self.idx_b * self.odim)[:, None]
  
@@ -1038,7 +1073,7 @@ index c6d094e..b375c3c 100644
          """Compute CTC prefix scores for next labels
          :param list y: prefix label sequences
          :param tuple state: previous CTC state
-@@ -412,8 +484,12 @@ class CTCPrefixScoreTH:
+@@ -412,8 +456,12 @@ class CTCPrefixScoreTH:
                  axis=0,
              )
  

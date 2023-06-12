@@ -121,6 +121,9 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_revise.onnx
    python3 modify_onnx_ctc.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc.onnx \
    /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_dynamic.onnx
+   python3 modify_onnx_encoder.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder.onnx \
+   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_mutibatch.onnx 8
+
    ```
    
 3. 使用`ATC`工具将`ONNX`模型转为`OM`模型  
@@ -160,21 +163,22 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 
    修改/root/.cache/espnet_onnx/asr_train_asr_qkv/目录下config配置文件参数，给每个模型增加input_size,output_size参数以及修改对应的weight参数中的ctc, decoder, lm，给出样例如下
 
-   | 项          | 子项        |                                                                         路径或值 |
-   | :------     | ----------- |                     ------------------------------------------------------------ |
-   | encoder     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_${os}_${arch}.om |
-   |             | output_size |                                                                         10000000 |
-   | decoder     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder_${os}_${arch}.om |
-   |             | output_size |                                                                         10000000 |
-   | ctc         | model_path  |             /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_${os}_${arch}.om |
-   |             | output_size |                                                                        100000000 |
-   | lm          | model_path  |  /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_${os}_${arch}.om |
-   |             | output_size |                                                                         10000000 |
-   | beam_search | beam_size   |                                                                                2 |
-   | weights     | ctc         |                                                                              0.3 |
-   |             | decoder     |                                                                              0.7 |
-   |             | lm          |                                                                              0.3 |
+   | 项          | 子项        |                                                                           路径或值 |
+   | :------     | ----------- |                       ------------------------------------------------------------ |
+   | encoder     | model_path  |            /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_rank.om |
+   |             | output_size |                                                                           10000000 |
+   | decoder     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder_{os}_{arch}.om |
+   |             | output_size |                                                                           10000000 |
+   | ctc         | model_path  |             /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_{os}_{arch}.om |
+   |             | output_size |                                                                          100000000 |
+   | lm          | model_path  |  /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_{os}_{arch}.om |
+   |             | output_size |                                                                           10000000 |
+   | beam_search | beam_size   |                                                                                  2 |
+   | weights     | ctc         |                                                                                0.3 |
+   |             | decoder     |                                                                                0.7 |
+   |             | lm          |                                                                                0.3 |
 
+   说明：{os}_{arch}为对应系统/架构名，如：{linux}_{aarch64}
 
 2. 执行推理 & 精度验证
    运行`om_val.py`推理OM模型，生成的结果txt文件在当前文件夹下。
@@ -196,10 +200,8 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    调用ACL接口推理计算，性能&精度参考下列数据:
    备注说明：NPU推理采用多进程推理方案，依赖CPU性能，参考机器：96核CPU(aarch64)/CPU max MHZ: 2600/251G内存/NPU310P3
 
-   | 芯片型号    | 配置                                 | 数据集  | 精度(overall) | 性能(fps)                                |
-   |:-----------:|:------------------------------------:|:-------:|:-------------:|:----------------------------------------:|
-   | GPU         | encoder/decoder/ctc/lm(beam_size=20) | aishell | 95.27%        | ---                                      |
-   | GPU         | encoder/decoder/ctc/lm(beam_size=2)  | aishell | 95.08%        | ---                                      |
-   | Ascend310P3 | encoder/decoder/ctc/lm(default)      | aishell | 95.09%        | encode:34fps, decode:47fps, total:18fps  |
-   | Ascend310P3 | encoder/decoder/ctc                  | aishell | 95.07%        | encode:34fps, decode:115fps, total:26fps |
-   | Ascend310P3 | encoder/decoder                      | aishell | 94.81%        | encode:34fps, decode:120fps, total:27fps |
+   | 芯片型号      | 配置                                   | 数据集    |   精度(overall) | 性能(fps)                                  |
+   | :-----------: | :------------------------------------: | :-------: | :-------------: | :----------------------------------------: |
+   | GPU           | encoder/decoder/ctc/lm(beam_size=20)   | aishell   |          95.27% | ---                                        |
+   | GPU           | encoder/decoder/ctc/lm(beam_size=2)    | aishell   |          95.08% | 50                                         |
+   | Ascend310P3   | encoder/decoder/ctc/lm(default)        | aishell   |          95.03% | encode:211fps, decode:66fps, total:50fps   |
