@@ -125,3 +125,8 @@ Wenet是一款开源的、面向工业落地应用的语音识别工具包，主
 2023.06.07：首次发布。
 
 ## FAQ
+
+
+## 代码涉及公网地址
+
+代码涉及公网地址参考[public_address_statement.md](./public_address_statement.md)

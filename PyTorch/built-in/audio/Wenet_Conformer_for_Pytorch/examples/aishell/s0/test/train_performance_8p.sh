@@ -57,7 +57,7 @@ fi
 #################启动训练脚本#################
 
 # 必要参数替换配置文件
-cd $cur_path/egs/aishell/asr1
+cd $test_path_dir/..
 
 start_time=$(date +%s)
 

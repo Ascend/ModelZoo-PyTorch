@@ -40,7 +40,7 @@ do
     elif [[ $para == --stage* ]];then
         stage=$((`echo ${para#*=}`))
     elif [[ $para == --stop_stage* ]];then
-        stage=$((`echo ${para#*=}`))
+        stop_stage=$((`echo ${para#*=}`))
     fi
 done
 
@@ -63,6 +63,7 @@ fi
 #################启动训练脚本#################
 
 # 必要参数替换配置文件
+cd $test_path_dir/..
 
 start_time=$(date +%s)
 
