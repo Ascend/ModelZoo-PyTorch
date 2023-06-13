@@ -167,7 +167,7 @@ Ernie通过训练数据中的词法结构，语法结构，语义信息从而进
    2. 执行推理。
 
         ```
-        python3 infer.py --task_name cls --model_path model.om --use_pyacl 1 --device npu --device_id 0 --batch_size 8 --model_name_or_path ernie-3.0-base-zh
+        python3 infer.py --task_name csl --model_path model.om --use_pyacl 1 --device npu --device_id 0 --batch_size 8 --model_name_or_path ernie-3.0-base-zh
         ```
 
         -   参数说明：
