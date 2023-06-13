@@ -642,6 +642,17 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                     if optimizer_sparse:
                         optimizer_sparse.step()
         else:
+            log_step += 1
+            target_tokens += target.numel()
+
+            for param in model.parameters():
+                param.grad = None
+            data=data.npu(non_blocking=True)
+            target=target.npu(non_blocking=True)
+
+            data_chunks = torch.chunk(data, args.batch_chunk, 1)
+            target_chunks = torch.chunk(target, args.batch_chunk, 1)
+
             for i in range(args.batch_chunk):
                 if i < args.batch_chunk - 1 and isinstance(para_model, DistributedDataParallel):
                     with para_model.no_sync():
@@ -710,7 +721,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 throughput = utils.distributed.all_reduce_item(throughput, op='sum')
                 meters['train_throughput'].update(throughput)
                 target_tokens = 0
-
+                
                 log_str = '| epoch {:3d} step {:>8d} | batches {:>6d} / {:d} | lr {:.3e} ' \
                     '| ms/batch {:5.1f} | tok/s {:7.0f} | loss {:5.2f}'.format(
                         epoch,
