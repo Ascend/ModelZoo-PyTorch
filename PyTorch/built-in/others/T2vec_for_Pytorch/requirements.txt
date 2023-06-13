@@ -1,0 +1,5 @@
+bokeh
+funcy
+h5py
+numpy
+scikit_learn
