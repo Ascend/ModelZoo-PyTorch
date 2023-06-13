@@ -116,6 +116,13 @@ commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
       ```shell
       python3 googlenet_pth2onnx.py ./googlenet-1378be20.pth googlenet.onnx
       ```
+      请访问[auto-optimizer推理工具](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)代码仓，根据readme文档进行工具安装。
+      
+      运行onnx_optimize.py脚本，优化模型。
+      ```
+      python3 onnx_optimize.py --model_path=googlenet.onnx --save_path=googlenet_opt.onnx
+      ```
+      生成优化后的onnx模型：googlenet_opt.onnx
 
    4. 使用ATC工具将ONNX模型转OM模型。
 
@@ -133,7 +140,7 @@ commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
          # 请根据需要设置Batch size
          bs=8
 
-         atc --framework=5 --model=./googlenet.onnx --output=googlenet_bs${bs} --input_format=NCHW --input_shape="actual_input_1:${bs},3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
+         atc --framework=5 --model=./googlenet_opt.onnx --output=googlenet_bs${bs} --input_format=NCHW --input_shape="366:${bs},3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
          ```
 
         参数说明：
@@ -174,10 +181,10 @@ commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
 
 c.  精度验证。
 
-调用imagenet_acc_eval.py脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据，结果保存在result.json中。
+调用vision_metric_ImageNet.py脚本与数据集标签val_label.txt比对，可以获得Accuracy Top5数据，结果保存在result.json中。
 
 ```shell
-python3 imagenet_acc_eval.py result/ ImageNet/val_label.txt ./ result.json
+python3 vision_metric_ImageNet.py result/ ImageNet/val_label.txt ./ result.json
 ```
 -   参数说明：
    - 第一个参数为生成推理结果所在路径
