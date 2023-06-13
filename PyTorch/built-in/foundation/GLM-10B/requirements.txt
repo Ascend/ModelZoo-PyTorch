@@ -21,3 +21,4 @@ transformers
 rouge_score
 fasttext
 unidecode
+deepspeed==0.6.0

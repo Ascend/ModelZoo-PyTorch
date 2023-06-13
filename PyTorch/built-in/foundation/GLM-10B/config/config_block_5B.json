@@ -1,5 +1,5 @@
 {
-  "train_micro_batch_size_per_gpu": 12,
+  "train_micro_batch_size_per_gpu": 4,
   "gradient_accumulation_steps": 1,
   "steps_per_print": 50,
   "gradient_clipping": 1.0,
@@ -8,7 +8,7 @@
     "contiguous_gradients": false,
     "overlap_comm": true,
     "reduce_scatter": true,
-    "reduce_bucket_size": 250000000,
+    "reduce_bucket_size": 50000000,
     "allgather_bucket_size": 500000000
   },
   "zero_allow_untested_optimizer": true,
@@ -22,19 +22,20 @@
   "optimizer": {
     "type": "Adam",
     "params": {
-      "lr": 0.000003,
+      "lr": 0.000004,
       "betas": [
         0.9,
         0.95
       ],
       "eps": 1e-8,
       "weight_decay": 1e-1,
-      "torch_adam": true
+	  "torch_adam": true
     }
   },
   "activation_checkpointing": {
     "partition_activations": false,
-    "contiguous_memory_optimization": false
+    "contiguous_memory_optimization": false,
+    "cpu_checkpointing": false
   },
-  "wall_clock_breakdown": false
+  "wall_clock_breakdown": true
 }

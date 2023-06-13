@@ -20,7 +20,7 @@ import math
 
 import torch
 import torch.nn.init as init
-from apex.normalization.fused_layer_norm import FusedLayerNorm as LayerNorm
+from torch.nn import LayerNorm
 
 from .initialize import get_model_parallel_world_size
 from .layers import ColumnParallelLinear
@@ -305,7 +305,7 @@ class ParallelSelfAttention(torch.nn.Module):
             attention_scores *= self.attention_scale
         # if torch.distributed.get_rank() == 0:
         #     print(min_attention_scores, attention_scores.max().item())
-        attention_scores = attention_scores + (-65504.0) * (1.0 - ltor_mask)
+        attention_scores = attention_scores + (-10000.0) * (1.0 - ltor_mask)
         # Attention probabilities. [b, np, s, s]
         attention_probs = torch.nn.Softmax(dim=-1)(attention_scores)
         # This is actually dropping out entire tokens to attend to, which might
@@ -333,8 +333,7 @@ class ParallelSelfAttention(torch.nn.Module):
 @torch.jit.script
 def gelu_impl(x):
     """OpenAI's gelu implementation."""
-    return 0.5 * x * (1.0 + torch.tanh(0.7978845608028654 * x *
-                                       (1.0 + 0.044715 * x * x)))
+    return torch.fast_gelu(x)
 
 
 def gelu(x):
@@ -466,8 +465,6 @@ class ParallelDecoderLayer(torch.nn.Module):
             output_layer_init_method=output_layer_init_method)
 
     def forward(self, hidden_states, encoder_states, ltor_mask, cross_mask=None):
-        # hidden_states: [b, s, h]
-        # ltor_mask: [1, 1, s, s]
 
         # Layer norm at the begining of the transformer layer.
         layernorm_output = self.input_layernorm(hidden_states)

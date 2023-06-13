@@ -418,7 +418,7 @@ class BertData(PromptReader):
 
 class Pile(PromptReader):
     is_json = True
-    PATH = "/mnt/train"
+    PATH = os.getenv("DATAPATH")
     filtered_sources = ["Github", "StackExchange", "DM Mathematics", "Ubuntu IRC", "EuroParl", "YoutubeSubtitles",
                         "Enron Emails"]
     downsample_sources = {"PubMed Central": 0.3, "ArXiv": 0.3, "FreeLaw": 0.3}

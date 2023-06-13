@@ -3,7 +3,7 @@
 script_path=$(realpath $BASH_SOURCE)
 script_dir=$(dirname $script_path)
 
-config_json="$script_dir/config_block_10B.json"
+config_json="$script_dir/config_block_5B.json"
 gpt_options=" \
        --block-lm \
        --task-mask \
@@ -23,11 +23,12 @@ gpt_options=" \
        --save ./checkpoints \
        --log-interval 1 \
        --eval-interval 1000 \
-       --save-interval 2000 \
+       --save-interval 20000 \
        --train-iters 250000 \
-       --train-data pile \
+       --train-data pile\
        --resume-dataloader \
        --filter-english \
+       --loader-scatter 1 \
        --tokenizer-type GPT2BPETokenizer \
        --split 949,50,1 \
        --distributed-backend nccl \

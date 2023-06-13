@@ -1,6 +1,6 @@
-DATA_ROOT=/dataset/fd5061f6/tuteng/BlockLM/data
-CHECKPOINT_PATH=/dataset/fd5061f6/english_data/checkpoints
-SAVE_PATH=/dataset/fd5061f6/tuteng/BlockLM/finetune_checkpoints
+DATA_ROOT=./data
+CHECKPOINT_PATH=./checkpoints
+SAVE_PATH=./finetune_checkpoints
 DATESTR=$(date +"%m-%d-%H-%M")
 
 source $1    # Model
@@ -27,6 +27,7 @@ run_cmd="${DISTRIBUTED_ARGS} finetune_glm.py \
        --save ${CHECKPOINT_PATH} \
        --seq-length ${MAX_SEQ_LEN} \
        --checkpoint-activations \
+       --deepspeed-activation-checkpointing \
        --eval-batch-size 16 \
        --save-epoch 100000 \
        --num-workers 1 \

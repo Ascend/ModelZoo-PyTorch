@@ -33,6 +33,10 @@ import torch.distributed as dist
 PARTITION_ACTIVATIONS = False
 PA_CORRECTNESS_TEST= False
 
+CKPT_INIT_FLAG = False
+CKPT_OVERFLOW_FLAG = False
+CKPT_CONST_VAR = None
+
 def see_memory_usage(message, force=False):
     if not force:
         return
@@ -110,7 +114,7 @@ def _set_cuda_rng_state(new_state, device=-1):
             idx = device.index
             if idx is None:
                 idx = torch.cuda.current_device()
-            default_generator = torch.cuda.default_generators[idx]
+            default_generator = torch.npu.default_generators[idx]
             default_generator.set_state(new_state)
 
     _lazy_call(cb)
@@ -359,8 +363,16 @@ class CheckpointFunction(torch.autograd.Function):
             current_stream=torch.cuda.current_stream()
             current_stream.wait_stream(transport_stream)
 
+        global CKPT_INIT_FLAG, CKPT_OVERFLOW_FLAG, CKPT_CONST_VAR
+        if not CKPT_INIT_FLAG:
+            CKPT_INIT_FLAG = True
+            CKPT_CONST_VAR = torch.tensor([65504.], dtype=torch.float16).npu()
+
+        CKPT_OVERFLOW_FLAG = torch.npu.get_npu_overflow_flag()
+
         with torch.enable_grad():
             outputs = ctx.run_function(*detached_inputs)
+            torch.npu.clear_npu_overflow_flag()
 
         # Set the states back to what it was at the start of this function.
         torch.set_rng_state(bwd_cpu_rng_state)
@@ -370,6 +382,11 @@ class CheckpointFunction(torch.autograd.Function):
         if isinstance(outputs, torch.Tensor):
             outputs = (outputs,)
         torch.autograd.backward(outputs, args)
+
+        temp = torch.npu.get_npu_overflow_flag()
+        CKPT_OVERFLOW_FLAG = CKPT_OVERFLOW_FLAG or temp
+        CKPT_CONST_VAR + CKPT_OVERFLOW_FLAG * 10000
+
         return (None,) + tuple(inp.grad for inp in detached_inputs)
 
 

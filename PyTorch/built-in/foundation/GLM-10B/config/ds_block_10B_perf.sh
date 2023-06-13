@@ -24,7 +24,7 @@ gpt_options=" \
        --log-interval 1 \
        --eval-interval 1000 \
        --save-interval 2000 \
-       --train-iters 250000 \
+       --train-iters 200 \
        --train-data pile \
        --resume-dataloader \
        --filter-english \

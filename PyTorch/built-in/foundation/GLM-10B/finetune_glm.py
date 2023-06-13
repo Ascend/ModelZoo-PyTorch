@@ -28,7 +28,10 @@ from pretrain_glm import forward_step as lm_forward_step
 import pathlib
 import mpu
 
+import deepspeed_npu
 import torch
+import torch_npu
+import bugfix
 import torch.utils.data
 from configure_data import prepare_tokenizer
 
@@ -42,6 +45,7 @@ from pretrain_glm import initialize_distributed
 from pretrain_glm import set_random_seed
 from configure_data import make_data_loader
 
+torch.npu.set_compile_mode(jit_compile=False)
 
 def process_batch(batch, args):
     """Process batch and produce inputs for the model."""

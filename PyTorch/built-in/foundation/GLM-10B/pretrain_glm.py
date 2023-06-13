@@ -21,14 +21,19 @@ from datetime import datetime
 import os
 import random
 import math
+from contextlib import ExitStack
 
+import deepspeed_npu
+import torch
+import torch_npu
+import bugfix
 import torch.distributed
 from filelock import FileLock
 import numpy as np
 import torch
 
 import deepspeed
-from contextlib import ExitStack
+
 from arguments import get_args
 from configure_data import configure_data, prepare_tokenizer, build_multi_task_dataset
 import mpu
@@ -44,6 +49,7 @@ from utils import print_rank_0
 from utils import get_sample_writer, get_log_dir, get_hostname
 import torch.distributed as dist
 
+torch.npu.set_compile_mode(jit_compile=False)
 
 def get_masks_and_position_ids(data,
                                eod_token,
@@ -217,12 +223,11 @@ def forward_step(data_iterator, model, args, timers, mems):
         data["mode"] = "multi-task"
     else:
         data = next(data_iterator[0]) if data_iterator[0] else None
-    # print_rank_0("data iterator")
+
     timers('data loader').stop()
     tokens, labels, loss_mask, attention_mask, position_ids = get_batch(data, args)
     timers('batch generator').stop()
 
-    # print_rank_0("get batch")
 
     def print_masked_text(batch_id):
         block_position_ids = position_ids[:, 1]
@@ -356,13 +361,7 @@ def train(model, optimizer, lr_scheduler,
             if report_memory_flag:
                 report_memory('after {} iterations'.format(args.iteration))
                 report_memory_flag = False
-            # for i in range(torch.distributed.get_world_size()):
-            #     if i == torch.distributed.get_rank():
-            #         print(get_hostname())
-            #         timers.log(['forward', 'backward', 'optimizer',
-            #                     'batch generator', 'data loader'],
-            #                    normalizer=args.log_interval, reset=False)
-            #     torch.distributed.barrier()
+
             if args.deepspeed or args.DDP_impl == 'torch':
                 timers.log(['forward', 'backward', 'optimizer',
                             'batch generator', 'data loader'],

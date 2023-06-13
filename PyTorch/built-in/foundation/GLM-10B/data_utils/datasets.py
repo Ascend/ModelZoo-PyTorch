@@ -588,7 +588,7 @@ class BlockDataset(data.Dataset):
         self.is_lazy = False
         if self.filter_english:
             import fasttext
-            self.model = fasttext.load_model('/mnt/lid.176.bin')
+            self.model = fasttext.load_model('./lid.176.bin')
             print_rank_0("Load language detection model")
         if hasattr(self.ds, 'is_lazy') and self.ds.is_lazy:
             self.is_lazy = True
