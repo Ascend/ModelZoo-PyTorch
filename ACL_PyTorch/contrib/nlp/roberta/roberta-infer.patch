@@ -4,18 +4,8 @@ new mode 100644
 index 7f215a3b..95d51728
 --- a/examples/roberta/preprocess_GLUE_tasks.sh
 +++ b/examples/roberta/preprocess_GLUE_tasks.sh
-@@ -15,9 +15,9 @@ fi
- GLUE_DATA_FOLDER=$1
+
  
- # download bpe encoder.json, vocabulary and fairseq dictionary
--wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/encoder.json'
--wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/vocab.bpe'
--wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/dict.txt'
-+wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/encoder.json' --no-check-certificate
-+wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/vocab.bpe' --no-check-certificate
-+wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/dict.txt' --no-check-certificate
- 
- TASKS=$2 # QQP
  
 @@ -134,7 +134,7 @@ do
      do

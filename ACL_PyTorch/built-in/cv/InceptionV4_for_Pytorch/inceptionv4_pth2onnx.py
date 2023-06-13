@@ -16,15 +16,21 @@
 import sys
 import ssl
 
+import os
+from configparser import ConfigParser
 import torch
 import torch.onnx
 import torch.utils.model_zoo as model_zoo
 
-sys.path.append(r"./pretrained-models.pytorch")
+
 from pretrainedmodels.models.inceptionv4 import InceptionV4
+sys.path.append(r"./pretrained-models.pytorch")
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="pth_url")
 
 
-url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth'
+url = str(value)
 pretrained_settings = {
     'inceptionv4': {
         'imagenet': {
@@ -52,13 +58,13 @@ pretrained_settings = {
 def inceptionv4(num_classes=1000, pretrained='imagenet', localpath=None):
     if pretrained:
         settings = pretrained_settings['inceptionv4'][pretrained]
-        assert num_classes == settings['num_classes'], \
+        assert num_classes is settings['num_classes'], \
             "num_classes should be {}, but is {}".format(settings['num_classes'], 
                                                          num_classes)
 
         # both 'imagenet'&'imagenet+background' are loaded from same parameters
         model = InceptionV4(num_classes=1001)
-        if localpath == None:
+        if localpath is None:
             model.load_state_dict(model_zoo.load_url(settings['url']))
         else:
             checkpoint = torch.load(localpath)

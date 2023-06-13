@@ -12,4 +12,3 @@ onnx-simplifier==0.3.5
 matplotlib
 sympy
 pillow
-git+https://github.com/NVIDIA/dllogger@v0.1.0#egg=dllogger

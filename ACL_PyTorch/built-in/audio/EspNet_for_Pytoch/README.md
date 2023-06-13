@@ -258,3 +258,6 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
 | 模型              | 310P性能   | T4性能     | 310P/T4 |
 |-----------------|----------|----------|---------|
 | Espnet_conformer | 分档：430fps；动态：25fps | 261fps | 1.647 |
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

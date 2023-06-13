@@ -271,3 +271,6 @@
 |   310P3        | 8          | coco | 0.653/AP 0.709/AR | 132 |
 
 说明：OM为分档模型，性能是平均FPS性能
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

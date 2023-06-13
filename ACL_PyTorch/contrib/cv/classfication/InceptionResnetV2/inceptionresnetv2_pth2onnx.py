@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+from configparser import ConfigParser
 
 import  sys
 import  torch
@@ -19,9 +21,11 @@ import torch.utils.model_zoo as model_zoo
 sys.path.append(r"./pretrained-models.pytorch")
 import pretrainedmodels.models as models
 from pretrainedmodels.models.inceptionresnetv2 import InceptionResNetV2 
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="data")
 
-
-url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth'
+url = str(value)
 pretrained_settings = {
     'inceptionresnetv2': {
         'imagenet': {

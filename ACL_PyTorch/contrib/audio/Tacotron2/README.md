@@ -127,6 +127,8 @@ Tacotron 模型是一个直接从文本合成语音的神经网络架构。系�
 
    ```
    pip3 install -r requirements.txt
+   pip3 install git+https://github.com/NVIDIA/dllogger@v0.1.0#egg=dllogger
+
    ```
    > **须知：** 
    > dllogger容易安装失败，可通过下载《[源码](https://github.com/NVIDIA/dllogger)》，解压后进入dllogger目录，执行python3 setup.py install。

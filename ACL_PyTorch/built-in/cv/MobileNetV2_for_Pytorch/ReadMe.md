@@ -223,3 +223,7 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
 | 芯片型号  | Batch Size | 数据集      | 精度                    | 性能      |
 |-------|------------|----------|-----------------------|---------|
 | 310P3  | 4          | ImageNet | 71.87/Top1 90.32/Top5 | 7072fps |
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

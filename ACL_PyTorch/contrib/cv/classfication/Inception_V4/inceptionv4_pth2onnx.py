@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from configparser import ConfigParser
+
 
 import sys
 import ssl
@@ -19,12 +22,13 @@ import ssl
 import torch
 import torch.onnx
 import torch.utils.model_zoo as model_zoo
-
-sys.path.append(r"./pretrained-models.pytorch")
 from pretrainedmodels.models.inceptionv4 import InceptionV4
+sys.path.append(r"./pretrained-models.pytorch")
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="data")
 
-
-url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth'
+url = str(value)
 pretrained_settings = {
     'inceptionv4': {
         'imagenet': {
@@ -58,7 +62,7 @@ def inceptionv4(num_classes=1000, pretrained='imagenet', localpath=None):
 
         # both 'imagenet'&'imagenet+background' are loaded from same parameters
         model = InceptionV4(num_classes=1001)
-        if localpath == None:
+        if localpath is None:
             model.load_state_dict(model_zoo.load_url(settings['url']))
         else:
             checkpoint = torch.load(localpath)

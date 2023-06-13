@@ -14,10 +14,10 @@
 # limitations under the License.
 import argparse
 import warnings
-
+import os
+from configparser import ConfigParser
 import numpy as np
 import torch
-
 from mmpose.apis import init_pose_model
 
 try:
@@ -144,6 +144,9 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    config = ConfigParser()
+    config.read(filenames='url.ini',encoding = 'UTF-8')
+    value = config.get(section="DEFAULT", option="code_url")
     args = parse_args()
 
     assert args.opset_version == 11, 'MMPose only supports opset 11 now'
@@ -156,7 +159,7 @@ if __name__ == '__main__':
     msg = white_background + bright_style + red_text
     msg += 'DeprecationWarning: This tool will be deprecated in future. '
     msg += blue_text + 'Welcome to use the unified model deployment toolbox '
-    msg += 'MMDeploy: https://github.com/open-mmlab/mmdeploy'
+    msg += str(value)
     msg += reset_style
     warnings.warn(msg)
 

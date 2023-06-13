@@ -265,3 +265,7 @@ PSENet(渐进式的尺度扩张网络)是一种文本检测器，能够很好地
 |     310P3     |     16       |   ICDAR2015     |   acc:0.805<br>recall:0.639   |   62   |
 |     310P3     |     32       |   ICDAR2015     |   acc:0.805<br>recall:0.639   |   60   |
 |     310P3     |     64       |   ICDAR2015     |   acc:0.805<br>recall:0.639   |   54   |
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

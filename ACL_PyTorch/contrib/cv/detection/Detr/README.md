@@ -107,6 +107,7 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
    git clone https://github.com/facebookresearch/detr.git
    cd detr
    git checkout b9048ebe86561594f1472139ec42327f00aba699
+   修改patch文件第298行，将***替换为https://dl.fbaipublicfiles.com/detr/detr-r50-e632da11.pth
    patch -p1 < ../detr.patch
    cd ..
    ```
@@ -287,3 +288,6 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
 - Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.805
 
   map=41.6>42.0*0.99
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

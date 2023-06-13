@@ -23,7 +23,7 @@ num_nodes=1
 node_rank=0
 # data
 data=/export/data/asr-data/OpenSLR/33/
-data_url=www.openslr.org/resources/33
+data_url=`sed '/^data_url=/!d;s/.*=//' url.ini`
 
 nj=16
 feat_dir=raw_wav

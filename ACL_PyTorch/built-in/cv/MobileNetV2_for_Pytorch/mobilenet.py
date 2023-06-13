@@ -11,17 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
+import os
+from configparser import ConfigParser
 from torch import nn
 # from .utils import load_state_dict_from_url
 
 
 __all__ = ['MobileNetV2', 'mobilenet_v2']
 
-
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="model_urls")
 model_urls = {
-    'mobilenet_v2': 'https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
+    'mobilenet_v2': str(value),
 }
 
 
@@ -52,7 +54,6 @@ class ConvBNReLU(nn.Sequential):
             nn.Conv2d(in_planes, out_planes, kernel_size, stride, padding, groups=groups, bias=False),
             nn.BatchNorm2d(out_planes),
             nn.ReLU6(inplace=True)
-            # nn.ReLU(inplace=True)
         )
 
 
@@ -146,7 +147,6 @@ class MobileNetV2(nn.Module):
 
         # building classifier
         self.classifier = nn.Sequential(
-            # p=0.2
             nn.Dropout(0.2),
             nn.Linear(self.last_channel, num_classes),
         )
@@ -187,8 +187,4 @@ def mobilenet_v2(pretrained=False, progress=True, **kwargs):
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     model = MobileNetV2(**kwargs)
-    # if pretrained:
-    #     state_dict = load_state_dict_from_url(model_urls['mobilenet_v2'],
-    #                                           progress=progress)
-    #     model.load_state_dict(state_dict)
     return model

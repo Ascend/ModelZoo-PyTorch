@@ -159,16 +159,21 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
 
    1. 获取权重文件。
-
-        通过download_finetuned.sh下载，model_dir若要更改的话，后面的脚本也需要将出现model_dir的位置替换成更改后的文件夹名称 
+        执行下方代码获取权重文件
 
         ```
-        bash download_finetuned.sh model_dir squad1
+        data_dir=$1
+        model=$2
+        echo Downloading $model
+        wget -P $data_dir http://dl.fbaipublicfiles.com/fairseq/models/spanbert_$model.tar.gz
+        mkdir $data_dir/$model
+        tar xvzf $data_dir/spanbert_$model.tar.gz -C $data_dir/$model
+        rm $data_dir/spanbert_$model.tar.gz
         ```
-
+        
         + 参数说明：
-          + 第一个参数：权重下载后存放的文件夹。
-          + 第二个参数：为任务名。
+          + data_dir：权重下载后存放的文件夹,默认使用model_dir。
+          + model：为任务名，默认使用squad1。
 
    2. 导出onnx文件。
 

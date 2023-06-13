@@ -114,4 +114,5 @@ python3.7 r2plus1d_postprocess.py --result_path=./lcmout/2022_xx_xx-xx_xx_xx/sum
 --result_path：推理结果中的json文件
 ```
 
-
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

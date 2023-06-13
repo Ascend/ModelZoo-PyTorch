@@ -83,3 +83,6 @@ cd examples/aishell/s0/
 bash run.sh --stage 5 --stop_stage 5
 ```
 在wenet/examples/aishell/s0/exp/conformer/test_attention_rescoring/text文件最后一行有fps性能数据
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

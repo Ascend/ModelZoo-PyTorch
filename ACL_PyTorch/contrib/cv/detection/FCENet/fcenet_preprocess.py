@@ -15,6 +15,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os
+from configparser import ConfigParser
 import warnings
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
@@ -37,7 +38,9 @@ from mmocr.apis.utils import disable_text_recog_aug_test
 from mmocr.datasets.pipelines.crop import crop_img
 from mmocr.models import build_detector
 from mmocr.utils.model import revert_sync_batchnorm
-
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="data")
 
 # Parse CLI arguments
 def parse_args():
@@ -156,7 +159,7 @@ class MMOCR:
                 det_config = os.path.join(config_dir, 'textdet/',
                                           textdet_models[self.td]['config'])
             if not det_ckpt:
-                det_ckpt = 'https://download.openmmlab.com/mmocr/textdet/' + \
+                det_ckpt = str(value) + \
                     textdet_models[self.td]['ckpt']
 
             self.detect_model = init_detector(
@@ -281,7 +284,7 @@ class MMOCR:
 
         return args
 
-def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
+def init_detector(config_, checkpoint=None, device='cuda:0', cfg_options=None):
     """Initialize a detector from config file.
 
     Args:
@@ -295,27 +298,27 @@ def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
     Returns:
         nn.Module: The constructed detector.
     """
-    if isinstance(config, str):
-        config = mmcv.Config.fromfile(config)
-    elif not isinstance(config, mmcv.Config):
+    if isinstance(config_, str):
+        config_det = mmcv.Config.fromfile(config_)
+    elif not isinstance(config_, mmcv.Config):
         raise TypeError('config must be a filename or Config object, '
                         f'but got {type(config)}')
     if cfg_options is not None:
-        config.merge_from_dict(cfg_options)
-    if config.model.get('pretrained'):
-        config.model.pretrained = None
-    config.model.train_cfg = None
-    model = build_detector(config.model, test_cfg=config.get('test_cfg'))
+        config_det.merge_from_dict(cfg_options)
+    if config_det.model.get('pretrained'):
+        config_det.model.pretrained = None
+    config_det.model.train_cfg = None
+    model = build_detector(config_det.model, test_cfg=config_det.get('test_cfg'))
     if checkpoint is not None:
-        checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
-        if 'CLASSES' in checkpoint.get('meta', {}):
-            model.CLASSES = checkpoint['meta']['CLASSES']
+        checkpoint_det = load_checkpoint(model, checkpoint, map_location='cpu')
+        if 'CLASSES' in checkpoint_det.get('meta', {}):
+            model.CLASSES = checkpoint_det['meta']['CLASSES']
         else:
             warnings.simplefilter('once')
             warnings.warn('Class names are not saved in the checkpoint\'s '
                           'meta data, use COCO classes by default.')
             model.CLASSES = get_classes('coco')
-    model.cfg = config  # save the config in the model for convenience
+    model.cfg = config_det  # save the config in the model for convenience
     model.to(device)
     model.eval()
     return model
@@ -387,8 +390,8 @@ def model_inference(model,
         # get tensor from list to stack for batch mode (text detection)
         if batch_mode:
             if cfg.data.test.pipeline[1].type == 'MultiScaleFlipAug':
-                for key, value in data.items():
-                    data[key] = value[0]
+                for key, value_ in data.items():
+                    data[key] = value_[0]
         datas.append(data)
     if isinstance(datas[0]['img'], list) and len(datas) > 1:
         raise Exception('aug test does not support '

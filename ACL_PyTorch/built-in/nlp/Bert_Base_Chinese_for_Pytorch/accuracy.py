@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Accuracy metric."""
+import os
+from configparser import ConfigParser
 
 from sklearn.metrics import accuracy_score
 
 import datasets
-
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="data")
 
 _DESCRIPTION = """
 Accuracy is the proportion of correct predictions among the total number of cases processed. It can be computed with:
@@ -77,7 +81,7 @@ class Accuracy(datasets.Metric):
                     "references": datasets.Value("int32"),
                 }
             ),
-            reference_urls=["https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html"],
+            reference_urls=[str(value)],
         )
 
     def _compute(self, predictions, references, normalize=True, sample_weight=None):

@@ -317,3 +317,6 @@ batch8的性能，benchmark工具在整个数据集上推理后生成result/perf
 
 
 >从profiling性能数据看出，TransData，SoftmaxV2，BatchMatMulV2耗时占比最高，其中SoftmaxV2算子存在对最后一维操作时性能低的问题，尝试通过转轴优化，TransData与BatchMatMulV2可以继续优化
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

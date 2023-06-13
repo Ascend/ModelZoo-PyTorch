@@ -215,7 +215,8 @@
 #     limitations under the License.
 import math
 import time
-
+import os
+from configparser import ConfigParser
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -223,13 +224,19 @@ import torch.utils.model_zoo as model_zoo
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
-
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+resnet18_url = config.get(section="DEFAULT", option="resnet18")
+resnet34_url = config.get(section="DEFAULT", option="resnet34")
+resnet50_url = config.get(section="DEFAULT", option="resnet50")
+resnet101_url = config.get(section="DEFAULT", option="resnet101")
+resnet152_url = config.get(section="DEFAULT", option="resnet152")
 model_urls = {
-    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3mb4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+    'resnet18': str(resnet18_url),
+    'resnet34': str(resnet34_url),
+    'resnet50': str(resnet50_url),
+    'resnet101': str(resnet101_url),
+    'resnet152': str(resnet152_url),
 }
 
 
@@ -324,8 +331,6 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        # self.avgpool = nn.AvgPool2d(7, stride=1)
-        # self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         # Top layer
         self.toplayer = nn.Conv2d(2048, 256, kernel_size=1, stride=1, padding=0)  # Reduce channels
@@ -393,12 +398,10 @@ class ResNet(nn.Module):
 
     def _upsample(self, x, y, scale=1):
         _, _, H, W = y.size()
-        # return self.upsample(x)
         return F.interpolate(x, size=(H // scale, W // scale), mode='nearest')
 
     def _upsample_add(self, x, y):
         _, _, H, W = y.size()
-        # return F.interpolate(x, size=(H, W), mode='bilinear', align_corners=False).half() + y
         return F.interpolate(x, size=(H, W), mode='nearest') + y
 
     def forward(self, x):
@@ -406,14 +409,8 @@ class ResNet(nn.Module):
         h = self.conv1(h)
         h = self.bn1(h)
         h = self.relu1(h)
-
-        #h = h.float()
         h = self.maxpool(h)
-        #h = h.half()
-        # self.maxpool = self.maxpool.cpu()
-        # h = self.maxpool(h.cpu())
-        # h = h.npu()
-        # self.maxpool = self.maxpool.npu()
+
 
         h = self.layer1(h)
         c2 = h
@@ -431,7 +428,6 @@ class ResNet(nn.Module):
         c4 = self.latlayer1(c4)
         c4 = self.latlayer1_relu(self.latlayer1_bn(c4))
         t = time.time()
-        # print('c4:',c4.type())
         p4 = self._upsample_add(p5, c4)
         p4 = self.smooth1(p4)
         p4 = self.smooth1_relu(self.smooth1_bn(p4))
@@ -439,9 +435,7 @@ class ResNet(nn.Module):
         c3 = self.latlayer2(c3)
         c3 = self.latlayer2_relu(self.latlayer2_bn(c3))
         t = time.time()
-        # print('t:',t)
         p3 = self._upsample_add(p4, c3)
-        # print('t2:',time.time()-t)
         p3 = self.smooth2(p3)
         p3 = self.smooth2_relu(self.smooth2_bn(p3))
 
@@ -455,26 +449,17 @@ class ResNet(nn.Module):
         p4 = self._upsample(p4, p2)
         p5 = self._upsample(p5, p2)
 
-        # p2, p3, p4, p5 = p2.cpu(), p3.cpu(), p4.cpu(), p5.cpu() 
+
         out = torch.cat((p2, p3, p4, p5), 1)
-        # out = out.to(dev)
 
-        # self.conv2 = self.conv2.cpu()
+
         out = self.conv2(out)
-        # self.conv2 = self.conv2.to(dev)
+       
 
-        # self.relu2 = self.relu2.cpu()
-        # self.bn2 = self.bn2.cpu()
         out = self.relu2(self.bn2(out))
-        # self.relu2 = self.relu2.to(dev)
-        # self.bn2 = self.bn2.to(dev)
 
-        # self.conv3 = self.conv3.cpu()
         out = self.conv3(out)
-        # self.conv3 = self.conv3.to(dev)
 
-        # out = out.to(dev)
-        # p2, p3, p4, p5 = p2.to(dev), p3.to(dev), p4.to(dev), p5.to(dev) 
         out = self._upsample(out, x, scale=self.scale)
 
         return out

@@ -114,6 +114,17 @@
    ```
    # 使用代码仓自带脚本下载&&完成部分前置处理工作
    bash fairseq_workspace/examples/roberta/preprocess_GLUE_tasks.sh data/ SST-2
+   若提示下载失败，则修改preprocess_GLUE_tasks.sh中wget部分代码
+   将：
+    wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/encoder.json'
+    wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/vocab.bpe'
+    wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/dict.txt'
+   修改为：
+    wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/encoder.json' --no-check-certificate
+    wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/vocab.bpe' --no-check-certificate
+    wget -N 'https://dl.fbaipublicfiles.com/fairseq/gpt2_bpe/dict.txt' --no-check-certificate
+    
+
    # 生成om推理所需预处理数据
    python3 RoBERTa_preprocess.py --data_path ./data/SST-2-bin --pad_length 70
    ```

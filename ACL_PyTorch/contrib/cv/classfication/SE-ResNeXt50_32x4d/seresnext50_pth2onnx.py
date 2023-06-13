@@ -12,16 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import os
+from configparser import ConfigParser
 import sys
 import torch
 import onnx
 from pretrainedmodels.models.senet import se_resnext50_32x4d, initialize_pretrained_model
-
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="data")
 pretrained_settings = {
     'se_resnext50_32x4d': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+            'url': str(value),
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],

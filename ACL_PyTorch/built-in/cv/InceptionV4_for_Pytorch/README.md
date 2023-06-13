@@ -230,3 +230,7 @@ InceptionV4中基本的Inception module还是沿袭了Inception v2/v3的结构�
 |Ascend310P3| 16        | ILSVRC2012  | Top1@Acc=79.99% Top5@Acc=94.86% | 1181.3 fps |
 |Ascend310P3| 32        | ILSVRC2012  | Top1@Acc=79.99% Top5@Acc=94.86% | 1163.6 fps |
 |Ascend310P3| 64        | ILSVRC2012  | Top1@Acc=79.99% Top5@Acc=94.86% | 1168.9 fps |
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

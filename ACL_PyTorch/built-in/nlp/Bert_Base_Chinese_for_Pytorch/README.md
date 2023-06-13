@@ -278,3 +278,5 @@
 ## 其他下游任务<a name="ZH-CN_TOPIC_0000001126121892"></a>
 
 + [序列标注(Sequence Labeling)](downstream_tasks/sequence_labeling/README.md)
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

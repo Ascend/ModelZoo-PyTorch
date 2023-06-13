@@ -1,7 +1,23 @@
-# Copyright (c) OpenMMLab. All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import warnings
 from argparse import ArgumentParser
 from functools import partial
+import os
+from configparser import ConfigParser
+
 
 import cv2
 import numpy as np
@@ -16,7 +32,9 @@ from mmocr.apis import init_detector
 from mmocr.core.deployment import ONNXRuntimeDetector, ONNXRuntimeRecognizer
 from mmocr.datasets.pipelines.crop import crop_img  # noqa: F401
 from mmocr.utils import is_2dlist
-
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="mmdeploy")
 
 def _convert_batchnorm(module):
     module_output = module
@@ -235,7 +253,7 @@ def main():
     msg = white_background + bright_style + red_text
     msg += 'DeprecationWarning: This tool will be deprecated in future. '
     msg += blue_text + 'Welcome to use the unified model deployment toolbox '
-    msg += 'MMDeploy: https://github.com/open-mmlab/mmdeploy'
+    msg += str(value)
     msg += reset_style
     warnings.warn(msg)
 

@@ -44,12 +44,7 @@ def pth2onnx(input_file, output_file, batch_size):
     if os.path.exists(input_file):
         checkpoint = torch.load(input_file, map_location=torch.device('cpu'))
     else:
-        print("download checkpoint from url ...")
-        checkpoint = torch.hub.load_state_dict_from_url(
-            url="https://conversationhub.blob.core.windows.net/beit-share-public/beit/"
-                "beit_base_patch16_224_pt22k_ft22kto1k.pth",
-            map_location="cpu", check_hash=True
-        )
+        print("download checkpoint from readme ...")
 
     model = beit_base_patch16_224(pretrained=False, num_classes=1000, drop_rate=0.0,
                                   drop_path_rate=0.1, attn_drop_rate=0.0, use_mean_pooling=True,

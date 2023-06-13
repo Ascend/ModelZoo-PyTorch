@@ -7,7 +7,7 @@ index cd8ac02..b749204 100644
  
  For details see [End-to-End Object Detection with Transformers](https://ai.facebook.com/research/publications/end-to-end-object-detection-with-transformers) by Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko.
 -
-+https://download.pytorch.org/models/resnet50-0676ba61.pth
+
  # Model Zoo
  We provide baseline DETR and DETR-DC5 models, and plan to include more in future.
  AP is computed on COCO 2017 val5k, and inference time is over the first 100 val5k COCO images,

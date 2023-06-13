@@ -39,7 +39,7 @@ recog_model=model.last${n_average}.avg.best # set a model to be used for decodin
 
 # data
 data=/export/data/asr-data/OpenSLR/33/
-data_url=www.openslr.org/resources/33
+data_url=`sed '/^data_url=/!d;s/.*=//' url.ini`
 
 # exp tag
 tag="" # tag for managing experiments.

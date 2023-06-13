@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+from configparser import ConfigParser
 
 import sys
 import torch
@@ -25,6 +27,9 @@ NB_CLS = 1000
 DROP = 0.0
 DROP_PATH = 0.1
 
+config = ConfigParser()
+config.read(filenames='url.ini',encoding = 'UTF-8')
+value = config.get(section="DEFAULT", option="data")
 
 @register_model
 def deit_small_patch16_224(pretrained=False, **kwargs):
@@ -34,7 +39,7 @@ def deit_small_patch16_224(pretrained=False, **kwargs):
     model.default_cfg = _cfg()
     if pretrained:
         checkpoint = torch.hub.load_state_dict_from_url(
-            url="https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth",
+            url=str(value),
             map_location="cpu", check_hash=True
         )
         model.load_state_dict(checkpoint["model"])
