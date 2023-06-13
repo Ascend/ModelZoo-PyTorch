@@ -49,16 +49,26 @@ class Upsample( nn.Module ):
       self.conv3d = nn.Conv3d( in_planes, out_planes, kernel_size=(3,3,3), stride=(1,1,1), padding=(1,1,1) )
       self.bn   = nn.BatchNorm3d( out_planes )
    def forward(self, x):
-      return F.elu( self.bn( self.conv3d( F.interpolate(x, scale_factor=self.scale_factor, mode='trilinear', align_corners=False) ) ), inplace=False )
+      
+      #Trilinear interpolation to Bilinear interpolation
+      z = []
+      for i in range(x.shape[0]) :
+         z.append(F.interpolate(x[i], scale_factor=(2, 2), mode='bilinear', align_corners=False))
+      z = torch.stack(z, 0)
+      return F.elu( self.bn( self.conv3d( z ) ), inplace=False )
 
 class UpsampleConcat( nn.Module ):
    def __init__(self, in_planes_up, in_planes_flat, out_planes):
       super(UpsampleConcat, self).__init__()
       self.conv3d = TempConv( in_planes_up + in_planes_flat, out_planes, kernel_size=(3,3,3), stride=(1,1,1), padding=(1,1,1) )
    def forward(self, x1, x2):
-      x1 = F.interpolate(x1, scale_factor=(1,2,2), mode='trilinear', align_corners=False)
-      x = torch.cat([x1, x2], dim=1)
-      return self.conv3d( x )
+      #Trilinear interpolation to Bilinear interpolation
+      z = []
+      for i in range(x1.shape[0]) :
+         z.append(F.interpolate(x1[i], scale_factor=(2, 2), mode='bilinear', align_corners=False))
+      z = torch.stack(z, 0)
+      x = torch.cat([z, x2], dim=1)
+      return self.conv3d(x)
 
 class SourceReferenceAttention(nn.Module):
     """
