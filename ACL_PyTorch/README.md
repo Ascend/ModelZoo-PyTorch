@@ -2659,6 +2659,22 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/SSD_resnet34">  SSD_resnet34 </a>
+        </td>
+        <td>coco</td>
+	<td></td>
+        <td>20%</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+	<td>37(bs1)</td>
+        <td></td>
+        <td>bs x 3 x 1200 x 1200</td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/swin_transformer">   swin_transformer </a>
         </td>
         <td>coco</td>
