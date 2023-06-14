@@ -21,8 +21,9 @@ import sys
 import time
 import warnings
 import math
-import numpy as np
+from collections import OrderedDict
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -36,12 +37,12 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torch.npu
-
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../'))
-from pthtar2onx import convert
-import DistributedResnet50.image_classification.resnet as nvmodels
 from apex import amp
 import moxing as mox
+
+import DistributedResnet50.image_classification.resnet as nvmodels
+from DistributedResnet50.image_classification import resnet
+
 
 BATCH_SIZE = 512
 EPOCHS_SIZE = 100
@@ -435,6 +436,32 @@ def convert_pth_to_onnx(args):
     pth_file = pth_file_list[0]
     onnx_path = pth_file.split(".")[0] + '.onnx'
     convert(pth_file, onnx_path)
+
+
+def convert(pth_file_path, onnx_file_path):
+    checkpoint = torch.load(pth_file_path, map_location='cpu')
+    checkpoint['state_dict'] = proc_node_module(checkpoint, 'state_dict')
+    model = resnet.build_resnet("resnet50", "classic")
+    model.load_state_dict(checkpoint['state_dict'],strict=False)
+    model.eval()
+    print(model)
+
+    input_names = ["actual_input_1"]
+    output_names = ["output1"]
+    dummy_input = torch.randn(16, 3, 224, 224)
+    torch.onnx.export(model, dummy_input, onnx_file_path, input_names=input_names, output_names=output_names,
+                      opset_version=11)
+
+
+def proc_node_module(checkpoint, AttrName):
+    new_state_dict = OrderedDict()
+    for k, v in checkpoint[AttrName].items():
+        if(k[0:7] == "module."):
+            name = k[7:]
+        else:
+            name = k[0:]
+        new_state_dict[name] = v
+    return new_state_dict
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
