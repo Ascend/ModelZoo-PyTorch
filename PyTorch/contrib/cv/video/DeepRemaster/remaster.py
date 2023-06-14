@@ -66,6 +66,12 @@ parser.add_argument('--npu',       action='store_true', default=False, help='Use
 parser.add_argument('--mindim',     type=int,   default='320',    help='Length of minimum image edges')
 opt = parser.parse_args()
 
+option = {}
+option["ACL_OP_COMPILER_CACHE_MODE"] = "enable"
+option["ACL_OP_COMPILER_CACHE_DIR"] = "./kernel_meta"
+print("option:", option)
+torch_npu.npu.set_option(option)
+
 device = torch.device('npu:0' if opt.npu else 'cpu')
 
 # Load remaster network
