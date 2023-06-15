@@ -168,7 +168,7 @@ EfficientNet是图像分类网络，在ImageNet上性能优异，并且在常用
       3. 执行ATC命令。
 
          ```
-         atc --model=Efficient-b0.onnx --framework=5 --input_shape="image:8,3,224,224"--output=b0_bs8 --soc_version=Ascend${chip\_name\}
+         atc --model=Efficient-b0.onnx --framework=5 --input_shape="image:8,3,224,224"--output=b0_bs8 --soc_version=Ascend${chip\_name\} --insert_op_conf=aipp.config --enable_small_channel=1
          ```
 
          - 参数说明：

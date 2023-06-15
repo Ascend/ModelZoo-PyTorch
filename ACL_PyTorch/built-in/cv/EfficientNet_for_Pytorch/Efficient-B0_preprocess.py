@@ -21,23 +21,14 @@ import tqdm
 
 from pycls.datasets import transforms
 
-_EIG_VALS = [[0.2175, 0.0188, 0.0045]]
-_EIG_VECS = [
-    [-0.5675, 0.7192, 0.4009],
-    [-0.5808, -0.0045, -0.8140],
-    [-0.5836, -0.6948, 0.4203],
-]
-_MEAN = [0.485, 0.456, 0.406]
-_STD = [0.229, 0.224, 0.225]
 
 train_size = 224
 test_size = 274
 
 def trans(im):
-	im = im[:, :, ::-1].astype(np.float32) / 255
+	im = im[:, :, ::-1].astype(np.float32)
 	im = transforms.scale_and_center_crop(im, test_size, train_size)
-	im = transforms.color_norm(im, _MEAN, _STD)
-	im = np.ascontiguousarray(im[:, :, ::-1].transpose([2, 0, 1]))
+	im = np.ascontiguousarray(im[:, :, ::-1])
 	return im
 
 def EffnetB1_preprocess(src_path, save_path):
@@ -50,7 +41,7 @@ def EffnetB1_preprocess(src_path, save_path):
 		for img in os.listdir(dirs):
 			img_path = os.path.join(dirs, img)
 			im = cv2.imread(img_path)
-			im = trans(im)
+			im = trans(im).astype(np.int8)
 			im.tofile(os.path.join(save_dir, img.split('.')[0] + ".bin"))
 
 if __name__ == '__main__':
