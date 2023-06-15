@@ -63,7 +63,7 @@ class opts(object):
                              help='random seed') # from CornerNet
     self.parser.add_argument('--local_rank', '--local-rank', type=int, default=0,
                              help='the current process id')
-    self.parser.add_argument('--port', type=str, default='44444',
+    self.parser.add_argument('--port', type=str, default='29500',
                              help='port')
     self.parser.add_argument('--world_size', type=int, default=-1,
                              help='world_size')

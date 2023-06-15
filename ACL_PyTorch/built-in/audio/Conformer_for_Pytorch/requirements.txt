@@ -1,4 +1,5 @@
-torch==1.13.0
+torch==1.10.0
+torchaudio=0.10.0
 librosa==0.8.2
 espnet==202211
 espnet-model-zoo==0.1.7

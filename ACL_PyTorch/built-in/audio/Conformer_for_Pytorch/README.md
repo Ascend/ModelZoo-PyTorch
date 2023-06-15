@@ -51,21 +51,22 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    
 3. 安装ais-bench/auto-optimizer
 
-   参考[ais-bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)/[auto-optimizer](https://gitee.com/ascend/auto-optimizer/tree/master)安装。
+   参考[ais-bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)/[auto-optimizer](https://gitee.com/ascend/ait/tree/master/ait/components/debug/surgeon)安装。
    
 
-4. 获取`OM`推理代码  
-   将推理部署代码放在espnet_onnx源码仓目录下。
+4. 获取`OM`推理代码
+
+   目录结构如下：
 
    ```
-   espnet_onnx 
-              ├──Conformer_for_Pytorch
-                    ├── pth2onnx.py        		放到Conformer_for_Pytorch下
-                    ├── modify_onnx_lm.py     		放到Conformer_for_Pytorch下
-                    ├── modify_onnx_decoder.py     放到Conformer_for_Pytorch下
-                    ├── graph_fusion.py     		放到Conformer_for_Pytorch下
-                    └── om_val.py          		放到Conformer_for_Pytorch下
-              ├── export_acc.patch   				放到espnet_onnx下
+   ├──Conformer_for_Pytorch
+      ├── pth2onnx.py
+      ├── modify_onnx_lm.py
+      ├── modify_onnx_decoder.py
+      ├── graph_fusion.py
+      ├── export_acc.patch
+      ├── espnet_onnx
+      ├── ...
    ```
 
 
@@ -187,7 +188,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    # 生成的om.txt可以跟标杆对比即可:
    python3 om_val.py --dataset_path ${dataset_path}/wav/test --model_path /root/.cache/espnet_onnx/asr_train_asr_qkv
 
-   # text是标杆文件
+   # text是标杆文件: 默认打印error值，最终精度取ACC值：100%-error
    python3 compute-wer.py --char=1 --v=1 text om.txt
    ```
 
@@ -198,10 +199,14 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    模型推理性能&精度:
 
    调用ACL接口推理计算，性能&精度参考下列数据:
-   备注说明：NPU推理采用多进程推理方案，依赖CPU性能，参考机器：96核CPU(aarch64)/CPU max MHZ: 2600/251G内存/NPU310P3
+   备注说明：
+
+   1. NPU推理采用多进程推理方案，依赖CPU性能，参考机器：96核CPU(aarch64)/CPU max MHZ: 2600/251G内存/NPU310P3
+   
+   2. 性能以最终total的端到端性能为准
 
    | 芯片型号      | 配置                                   | 数据集    |   精度(overall) | 性能(fps)                                  |
    | :-----------: | :------------------------------------: | :-------: | :-------------: | :----------------------------------------: |
    | GPU           | encoder/decoder/ctc/lm(beam_size=20)   | aishell   |          95.27% | ---                                        |
-   | GPU           | encoder/decoder/ctc/lm(beam_size=2)    | aishell   |          95.08% | 50                                         |
+   | GPU           | encoder/decoder/ctc/lm(beam_size=2)    | aishell   |          95.08% | total: 50                                         |
    | Ascend310P3   | encoder/decoder/ctc/lm(default)        | aishell   |          95.03% | encode:211fps, decode:66fps, total:50fps   |

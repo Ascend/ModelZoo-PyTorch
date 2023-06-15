@@ -856,14 +856,11 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
             assert query_seq_len == key_seq_len, \
                 "causal mask is only for self attention"
             if self.mask_tri is None:
-                self.mask_tri = torch.triu(
-                    torch_npu.npu_format_cast(torch.ones(
-                        (1, 1, input.shape[2], input.shape[3]), 
-                        dtype=input.dtype,
-                        device=input.device),
+                self.mask_tri = torch_npu.npu_format_cast(
+                    torch.triu(
+                        torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
                         diagonal=1
                     ), 29).bool()
-
             probs = torch.npu_scaled_masked_softmax(input, self.mask_tri, scale * (1.0 / norm_factor), False)
             probs = probs.half()
         else:
@@ -879,11 +876,9 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
 
         if self.attn_mask_type == AttnMaskType.causal:
             if self.mask_tri is None:
-                self.mask_tri = torch.triu(
-                    torch_npu.npu_format_cast(torch.ones(
-                        (1, 1, input.shape[2], input.shape[3]),
-                        dtype=input.dtype,
-                        device=input.device),
+                self.mask_tri = torch_npu.npu_format_cast(
+                    torch.triu(
+                        torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
                         diagonal=1
                     ), 29).bool()
             mask_output = self.mask_func(input, self.mask_tri)
