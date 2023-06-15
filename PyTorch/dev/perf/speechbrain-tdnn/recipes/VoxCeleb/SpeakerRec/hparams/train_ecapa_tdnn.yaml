@@ -36,7 +36,7 @@ batch_size: 32
 lr: 0.001
 base_lr: 0.00000001
 max_lr: !ref <lr>
-step_size: 65000
+step_size: 8000
 sample_rate: 16000
 sentence_len: 3.0 # seconds
 shuffle: True
@@ -54,7 +54,7 @@ out_n_neurons: 7205 #1211 for vox1  # 5994 for vox2, 7205 for vox1+vox2
 dataloader_options:
     batch_size: !ref <batch_size>
     shuffle: !ref <shuffle>
-    num_workers: 2
+    num_workers: 24
 
 # Functions
 compute_features: !new:speechbrain.lobes.features.Fbank
@@ -152,7 +152,7 @@ compute_cost: !new:speechbrain.nnet.losses.LogSoftmaxWrapper
 
 # compute_error: !name:speechbrain.nnet.losses.classification_error
 
-opt_class: !name:torch.optim.Adam
+opt_class: !name:torch_npu.optim.NpuFusedAdam
     lr: !ref <lr>
     weight_decay: 0.000002
 
