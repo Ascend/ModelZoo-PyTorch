@@ -14,86 +14,80 @@
 
 import os
 import sys
-import numpy as np
+import multiprocessing
 from PIL import Image
 from tqdm import tqdm
+import numpy as np
+
+
+def center_crop(img, output_size):
+    if isinstance(output_size, int):
+        output_size = (int(output_size), int(output_size))
+    image_width, image_height = img.size
+    crop_height, crop_width = output_size
+    crop_top = int(round((image_height - crop_height) / 2.))
+    crop_left = int(round((image_width - crop_width) / 2.))
+    return img.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
 
 
 def resize(img, size, interpolation=Image.BILINEAR):
-    r"""Resize the input PIL Image to the given size.
-
-    Args:
-        img (PIL Image): Image to be resized.
-        size (sequence or int): Desired output size. If size is a sequence like
-            (h, w), the output size will be matched to this. If size is an int,
-            the smaller edge of the image will be matched to this number maintaining
-            the aspect ratio. i.e, if height > width, then image will be rescaled to
-            :math:`\left(\text{size} \times \frac{\text{height}}{\text{width}}, \text{size}\right)`
-        interpolation (int, optional): Desired interpolation. Default is
-            ``PIL.Image.BILINEAR``
-
-    Returns:
-        PIL Image: Resized image.
-    """
-
     if isinstance(size, int):
         w, h = img.size
+
         if (w <= h and w == size) or (h <= w and h == size):
             return img
+            
         if w < h:
             ow = size
             oh = int(size * h / w)
-            return img.resize((ow, oh), interpolation)
         else:
             oh = size
             ow = int(size * w / h)
-            return img.resize((ow, oh), interpolation)
+
+        return img.resize((ow, oh), interpolation)
+
     else:
         return img.resize(size[::-1], interpolation)
 
 
-def center_crop(img, out_height, out_width):
-    height, width, _ = img.shape
-    left = int((width - out_width) / 2)
-    right = int((width + out_width) / 2)
-    top = int((height - out_height) / 2)
-    bottom = int((height + out_height) / 2)
-    img = img[top:bottom, left:right]
-    return img
+def gen_input_bin(_file_batch, _batches, _save_paths):
+    for file in tqdm(_file_batch[_batches]):
+        # RGBA to RGB
+        image = Image.open(file[1]).convert('RGB')
+        image = resize(image, 256) # Resize
+        image = center_crop(image, 244) # CenterCrop
+        img = np.array(image).astype(np.int8)
+        img.tofile(os.path.join(_save_paths, file[0].split('.')[0] + ".bin"))
 
 
-def preprocess(file_path, bin_path):
-    in_files = os.listdir(file_path)
-    if not os.path.exists(bin_path):
-        os.makedirs(bin_path)
-    i = 0
-
-    resize_size = 256
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
-
-    for file in tqdm(in_files):
-        i = i + 1
-
-        img = Image.open(os.path.join(file_path, file)).convert('RGB')
-
-        img = resize(img, resize_size) # transforms.Resize(256)
-        img = np.array(img, dtype=np.float32)
-        img = center_crop(img, 224, 224) # transforms.CenterCrop(224)
-        img = img / 255. # transforms.ToTensor()
-        # 均值方差
-        img[..., 0] -= mean[0]
-        img[..., 1] -= mean[1]
-        img[..., 2] -= mean[2]
-        img[..., 0] /= std[0]
-        img[..., 1] /= std[1]
-        img[..., 2] /= std[2]
-        img = img.transpose(2, 0, 1) # HWC -> CHW
-
-        img.tofile(os.path.join(bin_path, file.split('.')[0] + '.bin'))
+def preprocess(src_path, save_path):
+    files = os.listdir(src_path)
+    image_infos = []
+    for file_name in files:
+        file_path = os.path.join(src_path, file_name)
+        if os.path.isdir(file_path):
+            image_infos += [(image_name, os.path.join(file_path, image_name)) \
+            for image_name in os.listdir(file_path)]
+        else:
+            image_infos.append((file_name, file_path))
+    image_infos.sort()
+    if len(image_infos) < 500:
+        file_batches = [image_infos[0 : len(image_infos)]]
+    else:
+        file_batches = [image_infos[i:i + 500] for i in range(0, len(image_infos), 500) if image_infos[i:i + 500] != []]
+    thread_pool = multiprocessing.Pool(len(file_batches))
+    for batch in range(len(file_batches)):
+        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch, save_path))
+    thread_pool.close()
+    thread_pool.join()
+    print("in thread, except will not report! please ensure bin files generated.")
 
 
-if __name__ == "__main__":
-    file_path = os.path.abspath(sys.argv[1])
-    bin_path = os.path.abspath(sys.argv[2])
-    preprocess(file_path, bin_path)
+if __name__ == '__main__':
+    src_paths = sys.argv[1]
+    save_paths = sys.argv[2]
+    src_paths = os.path.realpath(src_paths)
+    save_paths = os.path.realpath(save_paths)
+    if not os.path.isdir(save_paths):
+        os.makedirs(os.path.realpath(save_paths))
+    preprocess(src_paths, save_paths)

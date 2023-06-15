@@ -160,7 +160,9 @@ ResNeXt50是一种用于图像分类的卷积神经网络，这个模型的默�
              --input_format=NCHW \
              --input_shape="actual_input_1:${bs},3,224,224" \
              --log=info \
-             --soc_version=Ascend${chip_name} 
+             --soc_version=Ascend${chip_name} \
+             --insert_op_conf=aipp.config \
+             --enable_small_channel=1
          ```
 
          - 参数说明：
