@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,58 +12,82 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
+import sys
 import multiprocessing
-
 from PIL import Image
-import torch
-import torch.utils.data
-from torch.autograd import Variable
-import torchvision.transforms as transforms
 from tqdm import tqdm
-
-def gen_input_bin(file_batches, batch, input_dir, output_dir):
-    """
-    Data augmentation and save data to binary files.
-    """
-    for file_name in file_batches[batch]:
-        pilimg = Image.open(os.path.join(input_dir, file_name))
-        pilimg = pilimg.convert("RGB")
-        val_transformer = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                        std=[0.229, 0.224, 0.225])
-        ])
-        img_tensor = val_transformer(pilimg)
-        img_tensor = torch.unsqueeze(img_tensor, dim=0).float()
-        img_tensor.reshape(1, 3, 224, 224)
-        img_numpy = img_tensor.cpu().numpy()
-        img_numpy.tofile(os.path.join(output_dir, file_name.split('.')[0] + ".bin"))
+import numpy as np
 
 
-def preprocess(input_dir, output_dir):
-    """
-    Preprocess data with multiprocess.
-    """
-    file_names = os.listdir(input_dir)
-    file_batches = [file_names[i:i+500] for i in range(0, 50000, 500) if file_names[i:i+500] != []]
+def center_crop(img, output_size):
+    if isinstance(output_size, int):
+        output_size = (int(output_size), int(output_size))
+    image_width, image_height = img.size
+    crop_height, crop_width = output_size
+    crop_top = int(round((image_height - crop_height) / 2.))
+    crop_left = int(round((image_width - crop_width) / 2.))
+    return img.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
 
-    pbar = tqdm(total=len(file_batches))
-    pbar.set_description("Preprocessing")
-    update = lambda *args:pbar.update()
+
+def resize(img, size, interpolation=Image.BILINEAR):
+    if isinstance(size, int):
+        w, h = img.size
+
+        if (w <= h and w == size) or (h <= w and h == size):
+            return img
+            
+        if w < h:
+            ow = size
+            oh = int(size * h / w)
+        else:
+            oh = size
+            ow = int(size * w / h)
+
+        return img.resize((ow, oh), interpolation)
+
+    else:
+        return img.resize(size[::-1], interpolation)
+
+
+def gen_input_bin(_file_batch, _batches, _save_paths):
+    for file in tqdm(_file_batch[_batches]):
+        # RGBA to RGB
+        image = Image.open(file[1]).convert('RGB')
+        image = resize(image, 256) # Resize
+        image = center_crop(image, 244) # CenterCrop
+        img = np.array(image).astype(np.int8)
+        img.tofile(os.path.join(_save_paths, file[0].split('.')[0] + ".bin"))
+
+
+def preprocess(src_path, save_path):
+    files = os.listdir(src_path)
+    image_infos = []
+    for file_name in files:
+        file_path = os.path.join(src_path, file_name)
+        if os.path.isdir(file_path):
+            image_infos += [(image_name, os.path.join(file_path, image_name)) \
+            for image_name in os.listdir(file_path)]
+        else:
+            image_infos.append((file_name, file_path))
+    image_infos.sort()
+    if len(image_infos) < 500:
+        file_batches = [image_infos[0 : len(image_infos)]]
+    else:
+        file_batches = [image_infos[i:i + 500] for i in range(0, len(image_infos), 500) if image_infos[i:i + 500] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
     for batch in range(len(file_batches)):
-        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch, input_dir, output_dir), callback=update)
+        thread_pool.apply_async(gen_input_bin, args=(file_batches, batch, save_path))
     thread_pool.close()
     thread_pool.join()
-    print("Except will not report in thread! Please ensure bin file_names generated.")
+    print("in thread, except will not report! please ensure bin files generated.")
 
-if __name__ == "__main__":
-    data_dir = sys.argv[1]
-    save_dir = sys.argv[2]
-    if not os.path.isdir(save_dir):
-        os.makedirs(os.path.realpath(save_dir))
-    preprocess(data_dir, save_dir)
+
+if __name__ == '__main__':
+    src_paths = sys.argv[1]
+    save_paths = sys.argv[2]
+    src_paths = os.path.realpath(src_paths)
+    save_paths = os.path.realpath(save_paths)
+    if not os.path.isdir(save_paths):
+        os.makedirs(os.path.realpath(save_paths))
+    preprocess(src_paths, save_paths)

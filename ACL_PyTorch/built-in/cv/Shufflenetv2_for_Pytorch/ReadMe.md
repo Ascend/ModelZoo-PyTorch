@@ -164,8 +164,9 @@ Shufflenetv2是Shufflenet的升级版本，作为轻量级网络，通过遵循�
          ```
           # bs = [1, 4, 8, 16, 32, 64]
           atc --model=${onnx_file} --framework=5 --output=shufflenetv2_bs${bs} \
-          --input-shape="input_0:${bs},3,224,224" --log=error --soc_version=Ascend${chip_name}
-      ```
+          --input-shape="input_0:${bs},3,224,224" --log=error --soc_version=Ascend${chip_name} \
+          --insert_op_conf=aipp.config --enable_small_channel=1
+         ```
       
          运行成功后生成shufflenetv2_bs${bs}.om模型文件。
       
@@ -207,8 +208,8 @@ Shufflenetv2是Shufflenet的升级版本，作为轻量级网络，通过遵循�
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
    
       ```
-    python3 shufflenetv2_postprocess.py  ${result_dir} ${gt_file} result.json
-    ```
+      python3 shufflenetv2_postprocess.py  ${result_dir} ${gt_file} result.json
+      ```
 
       参数说明：
    
