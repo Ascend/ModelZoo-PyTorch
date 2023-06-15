@@ -12,9 +12,9 @@ batch_size=256
 #网络名称，同目录名称
 Network="TransformerXL_RT2_ID4047_for_PyTorch"
 #Device数量，单卡默认为1
-RankSize=1
+RankSize=8
 #训练epoch，可选
-train_epochs=20
+train_epochs=40
 #训练step
 train_steps=40000
 #学习率
@@ -26,7 +26,7 @@ data_path=""
 precision_mode="allow_mix_precision"
 
 if [[ $1 == --help || $1 == --h ]];then
-	echo "usage:./train_performance_1p.sh "
+	echo "usage:./train_ID4047_TransformerXL_RT2_full_8p.sh "
 	exit 1
 fi
 
@@ -76,6 +76,7 @@ nohup python3 -m torch.distributed.launch \
     --batch_chunk=16 \
 	--data=$data_path \
 	--max_step=40000 \
+    --eval_interval=4999 \
 	--multi_gpu=ddp \
 	--precision_mode=$precision_mode ${fp32} ${hf32} ${prec} > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
