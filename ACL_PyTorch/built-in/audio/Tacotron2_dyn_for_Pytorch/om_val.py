@@ -14,6 +14,7 @@
 
 
 import os
+import platform
 import argparse
 
 import numpy as np
@@ -31,15 +32,17 @@ def parse_args(parser):
     """
     Parse commandline arguments
     """
+    system = platform.system().lower()
+    machine = platform.machine()
     parser.add_argument('-i', '--input', type=str, required=True,
                         help='input text')
     parser.add_argument('-o', '--output', required=False, default="output/audio", type=str,
                         help='output folder to save autio')
-    parser.add_argument('--encoder', default='./output/om/encoder_dyn.om', type=str,
+    parser.add_argument('--encoder', default=f'./output/om/encoder_dyn_{system}_{machine}.om', type=str,
                         help='load encoder model')
-    parser.add_argument('--decoder', default='./output/om/decoder_iter_dyn.om', type=str,
+    parser.add_argument('--decoder', default=f'./output/om/decoder_iter_dyn_{system}_{machine}.om', type=str,
                         help='load decoder model')
-    parser.add_argument('--postnet', default='./output/om/postnet_dyn.om', type=str,
+    parser.add_argument('--postnet', default=f'./output/om/postnet_dyn_{system}_{machine}.om', type=str,
                         help='load postnet model')
     parser.add_argument('-bs', '--batch_size', default=1, type=int,
                         help='Batch size')

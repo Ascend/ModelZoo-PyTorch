@@ -183,11 +183,11 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
 4. 性能验证  
    可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能。Tacotron2包括多个子模型，各子模型测试性能的参考命令如下：
    ```
-   python3 -m ais_bench --model output/om/encoder_dyn.om --loop 20 --batchsize ${bs} --dymShape "sequences:${bs},${seq_len};sequence_lengths:${bs}" --outputSize "3000000,3000000,3000000"
-   python3 -m ais_bench --model output/om/decoder_iter_dyn.om --loop 20 --batchsize ${bs} --dymShape "decoder_input:${bs},80;attention_hidden:${bs},1024;attention_cell:${bs},1024;decoder_hidden:${bs},1024;decoder_cell:${bs},1024;attention_weights:${bs},${seq_len};attention_weights_cum:${bs},${seq_len};attention_context:${bs},512;memory:${bs},${seq_len},512;processed_memory:${bs},${seq_len},128;mask:${bs},${seq_len}" --outputSize "20000,20000,20000,20000,20000,20000,20000,20000,20000"
-   python3 -m ais_bench --model output/om/postnet_dyn.om --loop 20 --batchsize ${bs} --dymShape "mel_outputs:${bs},80,250" --outputSize "640000"
+   python3 -m ais_bench --model output/om/encoder_dyn_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "sequences:${bs},${seq_len};sequence_lengths:${bs}" --outputSize "3000000,3000000,3000000"
+   python3 -m ais_bench --model output/om/decoder_iter_dyn_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "decoder_input:${bs},80;attention_hidden:${bs},1024;attention_cell:${bs},1024;decoder_hidden:${bs},1024;decoder_cell:${bs},1024;attention_weights:${bs},${seq_len};attention_weights_cum:${bs},${seq_len};attention_context:${bs},512;memory:${bs},${seq_len},512;processed_memory:${bs},${seq_len},128;mask:${bs},${seq_len}" --outputSize "20000,20000,20000,20000,20000,20000,20000,20000,20000"
+   python3 -m ais_bench --model output/om/_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "mel_outputs:${bs},80,250" --outputSize "640000"
    ```
-   其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度。
+   其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度，`os` 为操作系统（比如 linux），`arch` 为 CPU 架构（比如 x86_64、aarch64）。
 
 5. pyACL demo实现缓存的代码说明  
    我们在pyacl库上，基于ACL实现缓存功能，并开放了相关接口，暂未同步到ais_bench库。  
@@ -242,4 +242,4 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
 | Ascend310P3 |     4      | Disabled | LJSpeech | 人工判断语音质量 | 1709 wavs/s |
 | Ascend310P3 |     4      | Enabled | LJSpeech | 人工判断语音质量 | 2456 wavs/s |
 - 测试环境：数据在单台x86 CPU服务器下测得，CPU型号为 Intel Xeon Gold 6140 @ 2.30GHz.
-- 说明：由于模型推理为多个子模型串联，仅测量单个子模型性能没有意义，故性能采用端到端推理LJSpeech验证集中500条文本数据测得。
+- 说明：由于模型推理为多个子模型串联，仅测量单个子模型性能没有意义，故性能采用端到端推理LJSpeech验证集中500条文本数据测得，也就是用 om_val.py 跑出来的性能。

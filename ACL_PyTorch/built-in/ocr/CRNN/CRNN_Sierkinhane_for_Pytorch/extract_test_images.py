@@ -14,7 +14,6 @@
 
 # coding=utf-8
 
-import argparse
 import os
 import shutil
 import sys

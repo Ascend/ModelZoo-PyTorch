@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import os
-import sys
+import argparse
 import difflib
+import logging
+import os
+import platform
+import sys
 
 import wave
 import numpy as np
-import argparse
-import logging
 import torch
 import onnxruntime as rt
 import acl
@@ -33,19 +33,19 @@ from tacotron2.text import text_to_sequence
 from inference import MeasureTime
 
 
-def parse_args(parser):
-    """
-    Parse commandline arguments
-    """
+def parse_args():
+    system = platform.system().lower()
+    machine = platform.machine()
+    parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True,
                         help='input text')
     parser.add_argument('-o', '--output', required=False, default="output/audio", type=str,
                         help='output folder to save autio')
-    parser.add_argument('--encoder', default='./output/om/encoder_dyn.om', type=str,
+    parser.add_argument('--encoder', default=f'./output/om/encoder_dyn_{system}_{machine}.om', type=str,
                         help='load encoder model')
-    parser.add_argument('--decoder', default='./output/om/decoder_iter_dyn.om', type=str,
+    parser.add_argument('--decoder', default=f'./output/om/decoder_iter_dyn_{system}_{machine}.om', type=str,
                         help='load decoder model')
-    parser.add_argument('--postnet', default='./output/om/postnet_dyn.om', type=str,
+    parser.add_argument('--postnet', default=f'./output/om/postnet_dyn_{system}_{machine}.om', type=str,
                         help='load postnet model')
     parser.add_argument('-bs', '--batch_size', default=1, type=int,
                         help='Batch size')
@@ -63,7 +63,7 @@ def parse_args(parser):
                         help='device id')
     parser.add_argument('--use_dynamic_data_buffer', action='store_true',
                         help='debug mode')
-    return parser
+    return parser.parse_args()
 
 
 def pad_sequences(batch_seqs, batch_names):
@@ -298,9 +298,7 @@ class Tacotron2():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Tacotron2 inference')
-    parser = parse_args(parser)
-    args, _ = parser.parse_known_args()
+    args = parse_args()
     os.makedirs(args.output, exist_ok=True)
 
     # load wav_texts data
@@ -308,11 +306,26 @@ if __name__ == '__main__':
 
     # load model
     init_acl(args.device_id)
-    encoder = AclNet(model_path=args.encoder, device_id=args.device_id, input_data_shape=100000 * args.batch_size, output_data_shape=[624288 * 4, 624288 * 4, 4] * args.batch_size)
+    encoder = AclNet(
+        model_path=args.encoder,
+        device_id=args.device_id,
+        input_data_shape=100000 * args.batch_size,
+        output_data_shape=[624288 * 4, 624288 * 4, 4] * args.batch_size
+    )
     print("load encoder success")
-    decoder = AclNet(model_path=args.decoder, device_id=args.device_id, input_data_shape=100000 * args.batch_size, output_data_shape=20000 * args.batch_size)
+    decoder = AclNet(
+        model_path=args.decoder,
+        device_id=args.device_id,
+        input_data_shape=100000 * args.batch_size,
+        output_data_shape=20000 * args.batch_size
+    )
     print("load decoder success")
-    postnet = AclNet(model_path=args.postnet, device_id=args.device_id, input_data_shape=100000 * args.batch_size, output_data_shape=640000 * args.batch_size)
+    postnet = AclNet(
+        model_path=args.postnet,
+        device_id=args.device_id,
+        input_data_shape=100000 * args.batch_size,
+        output_data_shape=640000 * args.batch_size
+    )
     print("load postnet success")
     tacotron2 = Tacotron2(encoder, decoder, postnet,
                           args.device_id, use_dynamic_data_buffer=args.use_dynamic_data_buffer)
