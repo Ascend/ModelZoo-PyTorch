@@ -233,7 +233,9 @@ YOLOv3借鉴了YOLOv1和YOLOv2，在保持YOLO家族速度的优势的同时，�
 
    为了解决这个问题，建议在启动训练脚本前，先导入已经安装的符合 `yolov3` 模型需要的 `mmcv` 路径的环境变量。`export PYTHONPATH=mmcv的路径:$PYTHONPATH` 。
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 

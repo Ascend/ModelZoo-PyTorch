@@ -8,7 +8,8 @@ chmod +x ${curPath}/tools/*sh
 mkdir -p ${curPath}/data
 mkdir logs
 
-git clone -b v1.2.7 --depth=1 https://github.com/open-mmlab/mmcv.git
+code_url=`sed '/^code_url=/!d;s/.*=//' url.ini`
+git clone -b v1.2.7 --depth=1 ${code_url}
 export MMCV_WITH_OPS=1
 export MAX_JOBS=8
 
