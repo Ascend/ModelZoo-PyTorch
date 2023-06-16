@@ -74,13 +74,25 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
 
     其中，前五项语料为训练集+验证集；最后一项语料为测试集。
 
+2. 下载tokenize和分词工具。
+
+    进入数据集目录执行以下命令。
+    ```bash
+    cd examples/translation/
+    echo 'Cloning Moses github repository (for tokenization scripts)...'
+    git clone https://github.com/moses-smt/mosesdecoder.git
+    echo 'Cloning Subword NMT repository (for BPE pre-processing)...'
+    git clone https://github.com/rsennrich/subword-nmt.git
+    cd ../../
+    ```
+
 2. 数据预处理。
 
     进入数据集目录运行预处理脚本。该阶段需要进行分词，耗时较长，请耐心等待。
     ```bash
     cd examples/translation/
     bash prepare-wmt18en2de.sh
-    cd ../..
+    cd ../../
     ```
 
 3. 生成训练数据集。
@@ -154,6 +166,10 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
 
 > **说明：** 
    >由于该模型默认开启二进制，所以在性能测试时，需要安装二进制包，安装方式参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
 
 # 版本说明
 

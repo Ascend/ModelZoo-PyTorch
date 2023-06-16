@@ -187,16 +187,11 @@ def do_setup(package_data):
             exclude=[
                 "examples",
                 "examples.*",
-                "scripts",
-                "scripts.*",
-                "tests",
-                "tests.*",
             ]
         )
         + extra_packages,
         package_data=package_data,
         ext_modules=extensions,
-        test_suite="tests",
         entry_points={
             "console_scripts": [
                 "fairseq-eval-lm = fairseq_cli.eval_lm:cli_main",
