@@ -79,7 +79,7 @@ e2e_time=$(( $end_time - $start_time ))
 echo "------------------ Final result ------------------"
 sed -i "s|\r|\n|g" $cur_path/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log
 #输出性能FPS，需要模型审视修改
-FPS=`grep "FPS" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS" '{print$2}' | tr -d "(" | tr -d ")" | tr -d "',"|awk -F " " 'END{print$3}'`
+FPS=`grep "FPS" ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "FPS" '{print$2}' | tr -d "(" | tr -d ")" | tr -d "',"|awk -F " " 'END{print$2}'`
 
 #输出CompileTime
 CompileTime=`grep Iter_time ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |head -n 2|awk -F "Iter_time: " '{print$2}' |awk '{sum += $1} END {print sum}'`
