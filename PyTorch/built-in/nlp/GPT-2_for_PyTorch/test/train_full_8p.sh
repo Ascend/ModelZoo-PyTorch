@@ -1,10 +1,13 @@
 #!/bin/bash
 
 # 定义可选的模型大小
-SIZES=("345M" "1.3B" "2.7B" "3.7B")
+SIZES=("345M" "1.3B" "2.7B" "3.7B" "345M_without_mp")
 
 model_size="345M"
 data_path=""
+no_checkpoint_activate=0
+TRAIN_ITERS=500000
+LOSS_SCALE=0
 
 for para in $*
 do
@@ -13,6 +16,9 @@ do
     fi
     if [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
+    fi
+    if [[ $para == --train_iters* ]];then
+        TRAIN_ITERS=`echo ${para#*=}`
     fi
 done
 
@@ -48,6 +54,8 @@ CONFIG_JSON=./ds_config.json
 USE_DEEPSPEED=1
 ZERO_STAGE=0
 
+# 345M对应脚本：Megatron-DeepSpeed/examples/pretrain_gpt_distributed_with_mp.sh
+# 345M_without_mp对应脚本：Megatron-DeepSpeed/examples/pretrain_gpt_distributed.sh
 case $MODEL_SIZE in
   "345M")
     echo "Running 345M model..."
@@ -103,6 +111,22 @@ case $MODEL_SIZE in
     LR=1.2e-4
     MIN_LR=1.2e-5
     ;;
+  "345M_without_mp")
+    echo "Running 345M_without_mp model..."
+    TP=1
+    PP=1
+    HIDDEN=1024
+    LAYERS=24
+    SEQ=1024
+    GLOBAL_BATCH=64
+    MICRO_BATCH=8
+    NUM_ATTN_HEADS=16
+    LR=1.5e-4
+    MIN_LR=1.0e-5
+    no_checkpoint_activate=1
+    LOSS_SCALE=65536
+    export FusedAdam=1
+    ;;
 esac
 
 CHECKPOINT_PATH=ckpts/ckpts_tmp
@@ -117,7 +141,7 @@ options=" \
   --max-position-embeddings $SEQ \
 	--micro-batch-size $MICRO_BATCH \
 	--global-batch-size $GLOBAL_BATCH \
-	--train-iters 500000 \
+	--train-iters $TRAIN_ITERS \
   --lr-decay-iters 320000 \
   --save $CHECKPOINT_PATH \
   --data-path $DATASET \
@@ -145,6 +169,10 @@ options=" \
   --checkpoint-activations \
         "
 
+if [ ${no_checkpoint_activate} -eq 1 ]; then
+  options=$(echo $options | sed 's/ [^ ]*$//')
+fi
+
 if [ ${USE_DEEPSPEED} -eq 1 ]; then
 	echo "Using DeepSpeed"
 	options="${options} \
@@ -153,6 +181,9 @@ if [ ${USE_DEEPSPEED} -eq 1 ]; then
 		--zero-stage=${ZERO_STAGE} \
     --deepspeed-activation-checkpointing \
 	"
+  if [ ${no_checkpoint_activate} -eq 1 ]; then
+    options=$(echo $options | sed 's/ [^ ]*$//')
+  fi
 fi
 
 cat <<EOT > $CONFIG_JSON
@@ -170,7 +201,7 @@ cat <<EOT > $CONFIG_JSON
 
   "fp16": {
     "enabled": true,
-    "loss_scale": 0,
+    "loss_scale": $LOSS_SCALE,
     "loss_scale_window": 500,
     "hysteresis": 2,
     "min_loss_scale": 1,

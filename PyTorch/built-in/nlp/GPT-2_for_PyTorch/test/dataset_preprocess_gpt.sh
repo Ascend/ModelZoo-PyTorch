@@ -34,7 +34,7 @@ VOCAB=./gpt2-vocab.json
 MERGE=./gpt2-merges.txt
 mv $VOCAB ./data/
 mv $MERGE ./data/
-python3tools/preprocess_data.py \
+python3 tools/preprocess_data.py \
        --input $OUTDIR/wiki_all.json \
        --output-prefix $OUTDIR/my-gpt \
        --vocab $VOCAB \

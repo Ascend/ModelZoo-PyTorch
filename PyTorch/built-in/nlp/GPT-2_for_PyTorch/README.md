@@ -115,10 +115,11 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_path=$real_data_path --model_size=$selected_model_size
-     bash ./test/train_performance_8p.sh --data_path=$real_data_path --model_size=$selected_model_size
+     bash ./test/train_full_8p.sh --data_path=$real_data_path --model_size=$selected_model_size --train_iters=$train_iters
+     bash ./test/train_performance_8p.sh --data_path=$real_data_path --model_size=$selected_model_size --train_iters=$train_iters
      ```
-   - 备注：model_size代表模型参数量，目前只提供了4种：345M、1.3B、2.7B、3.7B，用户可从4种之中选1种，也可不选默认model_size=345M
+   - 备注1：model_size代表模型参数量，目前只提供了5种：345M、1.3B、2.7B、3.7B、345M_without_mp，用户可从5种之中选1种，也可不选默认model_size=345M
+   - 备注2：train_iters代表训练迭代次数，不设置时默认值500000
    - 训练完成后，权重文件保存在./ckpts/ckpts_tmp下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
@@ -129,27 +130,19 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 | -------  | -----  | -----  |------- | ----- | ------    |
 | 8p-竞品V  | 345M  | 26.375  |   37.8 | 1024 | 500000    |
 | 8p-NPU   | 345M | 26.485 |   59.7  | 1024 | 500000    |
-
-**表 3**  训练结果展示表
-
-| NAME     | params | PPL    | samples/s | seq_len |
-| -------  | -----  | -----  |------- | ----- |
 | 8p-竞品V  | 1.3B  | - |  15.71 | 1024 |
 | 8p-NPU   | 1.3B  | - |  21.47  | 1024 |
-
-**表 4**  训练结果展示表
-
-| NAME     | params | PPL    | samples/s | seq_len |
-| -------  | -----  | -----  |------- | ----- |
 | 8p-竞品V  | 2.7B  | - |   4.125 | 2048 |
 | 8p-NPU   | 2.7B  | - |   5.280  | 2048 |
-
-**表 5**  训练结果展示表
-
-| NAME     | params | PPL    | samples/s | seq_len |
-| -------  | -----  | -----  |------- | ----- |
 | 8p-竞品V  | 3.7B  | - |   3.120 | 2048 |
 | 8p-NPU   | 3.7B  | - |   4.558  | 2048 |
+
+**表 3**  345M_without_mp训练结果展示表
+
+| NAME     | params | PPL    | samples/s | seq_len | Steps     |
+| -------  | -----  | -----  |------- | ----- | ------    |
+| 8p-竞品A  | 345M  | 28.67 |   235 | 1024 | 100000    |
+| 8p-NPU   | 345M  | 28.71 |   227  | 1024 | 100000    |
 
 备注：一定要有竞品和NPU。
 
@@ -158,6 +151,7 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 ## 变更
 
 2023.03.20：首次发布
+2023.05.24：首次变更
 
 ## FAQ
 

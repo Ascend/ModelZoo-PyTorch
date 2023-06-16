@@ -27,8 +27,16 @@ import pretrain_gpt
 
 from torch import distributed as dist
 from torch.nn.parallel.distributed import DistributedDataParallel as torchDDP
+
 from deepspeed.runtime.utils import see_memory_usage
 from deepspeed.pipe import PipelineModule, LayerSpec, TiedLayerSpec
+from deepspeed.runtime import engine
+from deepspeed.utils import logger, log_dist
+from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU
+from deepspeed.runtime.config import LAMB_OPTIMIZER, ONEBIT_ADAM_OPTIMIZER
+from deepspeed.runtime.fp16.fused_optimizer import FP16_Optimizer
+from deepspeed.runtime.fp16.unfused_optimizer import FP16_UnfusedOptimizer
+
 from megatron.model.transformer import ParallelAttention, bias_dropout_add_fused_train, \
     bias_dropout_add_fused_inference, get_bias_dropout_add, ParallelMLP
 from pretrain_gpt import get_batch_pipe, get_batch, calculate_mos_loss, loss_func
@@ -826,8 +834,6 @@ def FusedScaleMaskSoftmaxInit(
     self.softmax_in_fp32 = softmax_in_fp32
     self.scale = scale
     self.mask_tri = None
-    p = torch.npu.get_device_properties(0) if torch.npu.is_available() else None
-    self.fused = p.name in ['Ascend910A', 'Ascend910ProB'] if p is not None else False
 
     assert (
             self.scale is None or softmax_in_fp32
@@ -848,7 +854,7 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
                                query_seq_len % 4 == 0 and attn_batch_size % 4 == 0
     
     # invoke custom kernel
-    if self.input_in_float16 and self.fused and \
+    if self.input_in_float16 and \
             custom_kernel_constraint and self.scaled_masked_softmax_fusion:
         scale = self.scale if self.scale is not None else 1.0
         
@@ -909,14 +915,6 @@ def MixedFusedLayerNormInit(self, normalized_shape, eps=1e-5):
 
 def MixedFusedLayerNormForward(self, input):
     return torch.nn.functional.layer_norm(input, self.normalized_shape, self.weight, self.bias, self.eps)
-
-
-from deepspeed.runtime import engine
-from deepspeed.utils import logger, log_dist
-from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU
-from deepspeed.runtime.config import LAMB_OPTIMIZER, ONEBIT_ADAM_OPTIMIZER
-from deepspeed.runtime.fp16.fused_optimizer import FP16_Optimizer
-from deepspeed.runtime.fp16.unfused_optimizer import FP16_UnfusedOptimizer
 
 
 def _configure_fp16_optimizer(self, optimizer):
@@ -1011,6 +1009,13 @@ def FromMeta(cls, meta, local_part, group, device='cuda'):
     return part_obj
 
 
+# monkey patching Megatron's _set_cuda_rng_state, which is not supported on npu. 
+# This function is used for the checkpoint activation feature of Megatron,
+# which already exists in DeepSpeed.
+def _set_cuda_rng_state(new_state, device=-1):
+    pass
+
+
 def cast_weight(self, device):
     def _format_cast(module, class_name):
         if (issubclass(class_name, (mpu.ColumnParallelLinear, \
@@ -1082,3 +1087,4 @@ megatron.model.gpt_model.CrossEntropy = CrossEntropy
 megatron.model.fused_layer_norm.MixedFusedLayerNorm.__init__ = MixedFusedLayerNormInit
 megatron.model.fused_layer_norm.MixedFusedLayerNorm.forward = MixedFusedLayerNormForward
 megatron.initialize._compile_dependencies = _compile_dependencies
+megatron.mpu.random._set_cuda_rng_state = _set_cuda_rng_state
