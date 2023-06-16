@@ -532,8 +532,9 @@ class SequenceGenerator(nn.Module):
             # {active_hypos} indicates which {beam_size} hypotheses
             # from the list of {2 * beam_size} candidates were
             # selected. Shapes: (batch size, beam size)
+            #TODO topkv2输入为int时largest参数无效
             new_cands_to_ignore, active_hypos = torch.topk(
-                active_mask, k=beam_size, dim=1, largest=False
+                active_mask.float(), k=beam_size, dim=1, largest=False
             )
 
             # update cands_to_ignore to ignore any finalized hypos.
@@ -688,7 +689,8 @@ class SequenceGenerator(nn.Module):
                 cum_unfin.append(prev)
         cum_fin_tensor = torch.tensor(cum_unfin, dtype=torch.int).to(bbsz_idx)
 
-        unfin_idx = torch.div(bbsz_idx, beam_size, rounding_mode="trunc")
+        #TODO torch.div的trunc模式输出dtype异常
+        unfin_idx = torch.div(bbsz_idx, beam_size, rounding_mode="trunc").long()
         sent = unfin_idx + torch.index_select(cum_fin_tensor, 0, unfin_idx)
 
         # Create a set of "{sent}{unfin_idx}", where

@@ -113,7 +113,9 @@ class FairseqOptimizer(object):
                     )
         for device, per_dtype_grads in per_device_and_dtype_grads.items():
             for grads in per_dtype_grads.values():
-                torch._foreach_mul_(grads, c.to(device) if torch.is_tensor(c) else c)
+                #TODO torch._foreach_mul_算子不支持
+                for g in grads:
+                    g.mul_(c.to(device) if torch.is_tensor(c) else c)
 
     def clip_grad_norm(self, max_norm, aggregate_norm_fn=None):
         """Clips gradient norm."""

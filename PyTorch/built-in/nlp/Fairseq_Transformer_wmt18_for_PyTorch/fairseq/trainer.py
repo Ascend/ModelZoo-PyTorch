@@ -320,11 +320,6 @@ class Trainer(object):
                 self.cfg, params, allow_unsupported=allow_unsupported
             )
         elif self.cfg.common.fp16 or self.cfg.common.bf16 or self.cfg.common.amp:
-            if self.cuda and torch.cuda.get_device_capability(0)[0] < 7:
-                logger.info(
-                    "NOTE: your device does NOT support faster training with --fp16 or --amp, "
-                    "please switch to FP32 which is likely to be faster"
-                )
             if (
                 self.cfg.common.memory_efficient_fp16
                 or self.cfg.common.memory_efficient_bf16
@@ -337,10 +332,6 @@ class Trainer(object):
             else:
                 self._optimizer = optim.FP16Optimizer.build_optimizer(self.cfg, params)
         else:
-            if self.cuda and torch.cuda.get_device_capability(0)[0] >= 7:
-                logger.info(
-                    "NOTE: your device may support faster training with --fp16 or --amp"
-                )
             self._optimizer = optim.build_optimizer(self.cfg.optimizer, params)
 
         if self.is_fsdp:

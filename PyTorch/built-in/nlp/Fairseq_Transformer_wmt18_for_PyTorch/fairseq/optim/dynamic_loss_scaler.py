@@ -3,6 +3,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import torch
+import torch_npu
 
 class DynamicLossScaler(object):
     def __init__(
@@ -24,6 +26,7 @@ class DynamicLossScaler(object):
         self._last_rescale_iter = -1
         self._overflows_since_rescale = 0
         self.min_loss_scale = min_loss_scale
+        self.found_inf = torch.npu.FloatTensor([0.0])
 
     def scale(self, outputs):
         return self.loss_scale * outputs
@@ -41,7 +44,15 @@ class DynamicLossScaler(object):
 
     def check_overflow(self, grad_norm):
         # detect inf and nan
-        if grad_norm == float("inf") or grad_norm != grad_norm:
+        self.found_inf.fill_(0.0)
+        has_overflow = torch.npu.get_npu_overflow_flag()
+        if has_overflow:
+            self.found_inf.fill_(1)
+        if torch.distributed.is_initialized():
+            torch.distributed.all_reduce(self.found_inf,
+                                         op=torch.distributed.ReduceOp.MAX)
+        found_inf_flag = self.found_inf.item() > 0
+        if found_inf_flag:
             # overflow has occured
             prev_scale = self.loss_scale
             iter_since_rescale = self._iter - self._last_rescale_iter

@@ -94,12 +94,6 @@ extensions.extend(
                 "fairseq/clib/libnat/edit_dist.cpp",
             ],
         ),
-        cpp_extension.CppExtension(
-            "alignment_train_cpu_binding",
-            sources=[
-                "examples/operators/alignment_train_cpu.cpp",
-            ],
-        ),
     ]
 )
 if "CUDA_HOME" in os.environ:
@@ -117,13 +111,6 @@ if "CUDA_HOME" in os.environ:
                 sources=[
                     "fairseq/clib/cuda/ngram_repeat_block_cuda.cpp",
                     "fairseq/clib/cuda/ngram_repeat_block_cuda_kernel.cu",
-                ],
-            ),
-            cpp_extension.CppExtension(
-                "alignment_train_cuda_binding",
-                sources=[
-                    "examples/operators/alignment_train_kernel.cu",
-                    "examples/operators/alignment_train_cuda.cpp",
                 ],
             ),
         ]
@@ -184,7 +171,7 @@ def do_setup(package_data):
             "numpy>=1.21.3",
             "regex",
             "sacrebleu>=1.4.12",
-            "torch>=1.13",
+            "torch>=1.11",
             "tqdm",
             "bitarray",
             "torchaudio>=0.8.0",
