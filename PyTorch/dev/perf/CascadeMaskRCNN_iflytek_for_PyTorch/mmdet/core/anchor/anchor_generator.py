@@ -1,6 +1,40 @@
+#
+# BSD 3-Clause License
+#
+# Copyright (c) 2023 xxxx
+# All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ============================================================================
+#
 import mmcv
 import numpy as np
 import torch
+import torch_npu
 from torch.nn.modules.utils import _pair
 
 from .builder import ANCHOR_GENERATORS
@@ -253,8 +287,8 @@ class AnchorGenerator:
         """
         # keep as Tensor, so that we can covert to ONNX correctly
         feat_h, feat_w = featmap_size
-        shift_x = torch.arange(0, feat_w, device=device) * stride[0]
-        shift_y = torch.arange(0, feat_h, device=device) * stride[1]
+        shift_x = torch.arange(0, feat_w, device=device, dtype=torch.int32) * stride[0]
+        shift_y = torch.arange(0, feat_h, device=device, dtype=torch.int32) * stride[1]
 
         shift_xx, shift_yy = self._meshgrid(shift_x, shift_y)
         shifts = torch.stack([shift_xx, shift_yy, shift_xx, shift_yy], dim=-1)
@@ -680,12 +714,11 @@ class YOLOAnchorGenerator(AnchorGenerator):
         multi_level_responsible_flags = []
         for i in range(self.num_levels):
             anchor_stride = self.strides[i]
-            flags = self.single_level_responsible_flags(
+            flags = torch_npu.contrib.npu_single_level_responsible_flags(
                 featmap_sizes[i],
                 gt_bboxes,
                 anchor_stride,
-                self.num_base_anchors[i],
-                device=device)
+                self.num_base_anchors[i])
             multi_level_responsible_flags.append(flags)
         return multi_level_responsible_flags
 

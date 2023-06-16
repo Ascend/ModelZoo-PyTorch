@@ -1,3 +1,36 @@
+#
+# BSD 3-Clause License
+#
+# Copyright (c) 2023 xxxx
+# All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ============================================================================
+#
 import numpy as np
 import torch
 import torch.nn as nn
@@ -156,7 +189,7 @@ class BBoxHead(BaseModule):
         # FG cat_id = [0, num_classes-1]
         labels = pos_bboxes.new_full((num_samples, ),
                                      self.num_classes,
-                                     dtype=torch.long)
+                                     dtype=torch.int32).long()
         label_weights = pos_bboxes.new_zeros(num_samples)
         bbox_targets = pos_bboxes.new_zeros(num_samples, 4)
         bbox_weights = pos_bboxes.new_zeros(num_samples, 4)
@@ -403,8 +436,8 @@ class BBoxHead(BaseModule):
                 min_xy = bboxes.new_tensor(0)
                 max_xy = torch.cat(
                     [max_shape] * 2, dim=-1).flip(-1).unsqueeze(-2)
-                bboxes = torch.where(bboxes < min_xy, min_xy, bboxes)
-                bboxes = torch.where(bboxes > max_xy, max_xy, bboxes)
+                bboxes = torch.lerp(bboxes, min_xy, (bboxes < min_xy).float())
+                bboxes = torch.lerp(bboxes, max_xy, (bboxes > max_xy).float())
 
         num_bboxes = bboxes.size(-2)
         if rescale and num_bboxes > 0:
@@ -598,7 +631,7 @@ class BBoxHead(BaseModule):
         # ignore background class
         scores = scores[..., :self.num_classes]
         labels = torch.arange(
-            self.num_classes, dtype=torch.long).to(scores.device)
+            self.num_classes, dtype=torch.int32).to(scores.device, non_blocking=True)
         labels = labels.view(1, 1, -1).expand_as(scores)
         labels = labels.reshape(batch_size, -1)
         scores = scores.reshape(batch_size, -1)

@@ -1,3 +1,36 @@
+#
+# BSD 3-Clause License
+#
+# Copyright (c) 2023 xxxx
+# All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ============================================================================
+#
 from abc import ABCMeta, abstractmethod
 
 import cv2
@@ -343,20 +376,20 @@ class BitmapMasks(BaseInstanceMasks):
 
         # convert bboxes to tensor
         if isinstance(bboxes, np.ndarray):
-            bboxes = torch.from_numpy(bboxes).to(device=device)
+            bboxes = torch.from_numpy(bboxes).to(device=device, non_blocking=True)
         if isinstance(inds, np.ndarray):
-            inds = torch.from_numpy(inds).to(device=device)
+            inds = torch.from_numpy(inds).to(device=device, non_blocking=True)
 
         num_bbox = bboxes.shape[0]
         fake_inds = torch.arange(
-            num_bbox, device=device).to(dtype=bboxes.dtype)[:, None]
+            num_bbox, device=device).to(dtype=bboxes.dtype, non_blocking=True)[:, None]
         rois = torch.cat([fake_inds, bboxes], dim=1)  # Nx5
-        rois = rois.to(device=device)
+        rois = rois.to(device=device, non_blocking=True)
         if num_bbox > 0:
-            gt_masks_th = torch.from_numpy(self.masks).to(device).index_select(
-                0, inds).to(dtype=rois.dtype)
+            gt_masks_th = torch.from_numpy(self.masks).to(device, non_blocking=True).index_select(
+                0, inds).to(dtype=rois.dtype, non_blocking=True)
             targets = roi_align(gt_masks_th[:, None, :, :], rois, out_shape,
-                                1.0, 0, 'avg', True).squeeze(1)
+                                1.0, 2, 'avg', True).squeeze(1)
             if binarize:
                 resized_masks = (targets >= 0.5).cpu().numpy()
             else:
