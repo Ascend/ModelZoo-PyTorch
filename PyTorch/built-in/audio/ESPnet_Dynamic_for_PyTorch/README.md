@@ -173,6 +173,10 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
 无。
 
 
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
+
+
 
 
 
