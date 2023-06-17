@@ -74,7 +74,20 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    ```
    pip3 install -r requirements.txt
    ```
+   
+   由于 onnxsim 存在的一个 [bug](https://github.com/daquexian/onnx-simplifier/issues/214#issuecomment-1315465297)，CPU 架构为 aarch64 的服务器上无法通过 `pip3 install onnxsim==0.4.8` 直接安装 onnxsim，需要从源码编译安装。
 
+   ```bash
+   pip3 install --upgrade pip setuptools wheel
+   git clone https://github.com/daquexian/onnx-simplifier.git -b v0.4.8
+   cd onnx-simplifier
+   sed -i 's/git@github.com:/https:\/\/github.com\//g' .gitmodules
+   git submodule update --init --recursive -- third_party/onnx-optimizer
+   git submodule update --init -- third_party/onnxruntime third_party/pybind11
+   python3 setup.py bdist_wheel
+   find . -name *.whl -exec pip3 install {} \;
+   ```
+   
 3. 获取`OM`推理代码  
    将推理部署代码放到`Pytorch`源码相应目录下。
    ```
@@ -206,7 +219,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
       - `pin_input`：表示每次迭代都不变的输入索引，索引的数据传入后缓存在device，每次迭代时直接读取，若不存在，可不写
       - `out_idx`：为每次迭代后需要传到device的输出索引，后续一般用于跳出循环的判断条件，若不存在判断条件，可不写  
       - out_to_in和pin_input中指定的中间数据，在推理过程中缓存在Device侧，不会搬运到Host侧
-  
+    
    - `AclNet`实例对象的调用接口参数说明：
       - `first_step`：为True时，会传入模型所有输入数据，为False时，只传入除pin_input索引的以外的输入数据
       - `last_step`：为True时，会输出模型所有输出数据，为False时，只传出out_idx索引的输出数据

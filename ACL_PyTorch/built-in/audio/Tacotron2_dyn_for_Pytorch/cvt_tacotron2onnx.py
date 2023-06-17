@@ -235,7 +235,7 @@ def main():
     with torch.no_grad():
         encoder(*dummy_input)
 
-    torch.onnx.export(encoder, dummy_input, args.output + "/" + "encoder.onnx",
+    torch.onnx.export(encoder, dummy_input, args.output + "/" + f"encoder_bs{batch_size}.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
                       input_names=["sequences", "sequence_lengths"],
@@ -278,7 +278,7 @@ def main():
     with torch.no_grad():
         decoder_iter(*dummy_input)
 
-    torch.onnx.export(decoder_iter, dummy_input, args.output + "/" + "decoder_iter.onnx",
+    torch.onnx.export(decoder_iter, dummy_input, args.output + "/" + f"decoder_iter_bs{batch_size}.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
                       input_names=["decoder_input",
@@ -314,7 +314,7 @@ def main():
     dummy_input = torch.randn((batch_size, 80, 620))
     if args.fp16:
         dummy_input = dummy_input.half()
-    torch.onnx.export(postnet, dummy_input, args.output + "/" + "postnet.onnx",
+    torch.onnx.export(postnet, dummy_input, args.output + "/" + f"postnet_bs{batch_size}.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
                       input_names=["mel_outputs"],

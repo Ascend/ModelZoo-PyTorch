@@ -38,18 +38,18 @@ fi
 
 echo "导出om：encoder"
 atc --framework=5 --input_format=ND --soc_version=${soc} \
-    --model=${onnx_path}/encoder.onnx --output=${om_path}/encoder_dyn \
+    --model=${onnx_path}/encoder_bs${bs}.onnx --output=${om_path}/encoder_dyn \
     --input_shape_range="sequences:[${bs},1~${max_seq_len}];sequence_lengths:[${bs}]" \
     --log=error
 
 echo "导出om：decoder"
 atc --framework=5 --input_format=ND --soc_version=${soc} \
-    --model=${onnx_path}/decoder_iter.onnx --output=${om_path}/decoder_iter_dyn \
+    --model=${onnx_path}/decoder_iter_bs${bs}.onnx --output=${om_path}/decoder_iter_dyn \
     --input_shape_range="decoder_input:[${bs},80];attention_hidden:[${bs},1024];attention_cell:[${bs},1024];decoder_hidden:[${bs},1024];decoder_cell:[${bs},1024];attention_weights:[${bs},1~${max_seq_len}];attention_weights_cum:[${bs},1~${max_seq_len}];attention_context:[${bs},512];memory:[${bs},1~${max_seq_len},512];processed_memory:[${bs},1~${max_seq_len},128];mask:[${bs},1~${max_seq_len}]" \
     --log=error
 
 echo "导出om：postnet"
 atc --framework=5 --input_format=ND --soc_version=${soc} \
-    --model=${onnx_path}/postnet.onnx --output=${om_path}/postnet_dyn \
+    --model=${onnx_path}/postnet_bs${bs}.onnx --output=${om_path}/postnet_dyn \
     --input_shape_range="mel_outputs:[${bs},80,1~2000]" \
     --log=error
