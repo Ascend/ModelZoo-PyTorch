@@ -123,7 +123,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    python3 modify_onnx_ctc.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc.onnx \
    /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_dynamic.onnx
    python3 modify_onnx_encoder.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder.onnx \
-   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_mutibatch.onnx 8
+   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_mutibatch.onnx 4
 
    ```
    
@@ -167,13 +167,13 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    | 项          | 子项        |                                                                           路径或值 |
    | :------     | ----------- |                       ------------------------------------------------------------ |
    | encoder     | model_path  |            /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_rank.om |
-   |             | output_size |                                                                           10000000 |
+   |             | output_size |                                                                           5000000 |
    | decoder     | model_path  | /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder_{os}_{arch}.om |
-   |             | output_size |                                                                           10000000 |
+   |             | output_size |                                                                           5000000 |
    | ctc         | model_path  |             /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_{os}_{arch}.om |
    |             | output_size |                                                                          100000000 |
    | lm          | model_path  |  /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_{os}_{arch}.om |
-   |             | output_size |                                                                           10000000 |
+   |             | output_size |                                                                           5000000 |
    | beam_search | beam_size   |                                                                                  2 |
    | weights     | ctc         |                                                                                0.3 |
    |             | decoder     |                                                                                0.7 |
@@ -208,5 +208,5 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    | 芯片型号      | 配置                                   | 数据集    |   精度(overall) | 性能(fps)                                  |
    | :-----------: | :------------------------------------: | :-------: | :-------------: | :----------------------------------------: |
    | GPU           | encoder/decoder/ctc/lm(beam_size=20)   | aishell   |          95.27% | ---                                        |
-   | GPU           | encoder/decoder/ctc/lm(beam_size=2)    | aishell   |          95.08% | total: 50                                         |
-   | Ascend310P3   | encoder/decoder/ctc/lm(default)        | aishell   |          95.03% | encode:211fps, decode:66fps, total:50fps   |
+   | GPU           | encoder/decoder/ctc/lm(beam_size=2)    | aishell   |          95.08% | total: 55                                  |
+   | Ascend310P3   | encoder/decoder/ctc/lm(default)        | aishell   |          95.04% | encode:200fps, decode:87fps, total:60fps   |

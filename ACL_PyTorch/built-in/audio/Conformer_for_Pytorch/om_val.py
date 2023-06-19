@@ -24,13 +24,12 @@ import re
 import time
 import librosa
 from math import ceil
-from copy import deepcopy
 import psutil
 from preprocess import Preprocessor
 
 PRE_PROCESSORS = {}
 
-def findAllFile(base):
+def find_files(base):
     for root, ds, fs in os.walk(base):
         for f in fs:
             if re.match(r'.*\d.*', f):
@@ -90,8 +89,6 @@ def align_data(data_list, target_batch, sample_data):
 
 def generate_batch_data(data_list, map_names, batch_num, device_ids, num_process,
                         enable_multiprocess=False, **kwargs):
-    # TODO: split data by num_process exactly
-    # TODO: keep data more balance between mutli processes
     def pack_data(datas, names):
         if batch_num == 1:
             return datas, names
@@ -119,16 +116,16 @@ def generate_batch_data(data_list, map_names, batch_num, device_ids, num_process
 
     # pack data by batch
     packed_datas, packed_names = pack_data(data_list, map_names)
-    preprocessor = kwargs.get("preprocessor")
-    if preprocessor is not None and PRE_PROCESSORS.get(preprocessor) is not None:
-        preprocessor = PRE_PROCESSORS.get(preprocessor)
+    preprocessor_name = kwargs.get("preprocessor")
+    if preprocessor_name is not None and PRE_PROCESSORS.get(preprocessor_name) is not None:
+        processor = PRE_PROCESSORS.get(preprocessor_name)
         if not enable_multiprocess:
-            packed_datas = [preprocessor(data) for data in packed_datas]
+            packed_datas = [processor(data) for data in packed_datas]
         else:
             num_cpu = psutil.cpu_count()
             _preprossed_datas = []
             with Pool(num_cpu) as p:
-                for _out_data in list(tqdm(p.imap(preprocessor, packed_datas))):
+                for _out_data in list(tqdm(p.imap(processor, packed_datas))):
                     _preprossed_datas.append(_out_data)
             packed_datas = _preprossed_datas
 
@@ -143,20 +140,23 @@ def generate_batch_data(data_list, map_names, batch_num, device_ids, num_process
     for idx in range(0, data_num, split_num):
         device_id = device_ids[idx // num_per_device]
         end_idx = idx + split_num
-        splited_packs.append(
-            (device_id, packed_datas[idx:end_idx], packed_names[idx:end_idx])
-        )
+        if args.bink_cpu:
+            splited_packs.append(
+                (idx // split_num, device_id, packed_datas[idx:end_idx], packed_names[idx:end_idx]))
+        else:
+            splited_packs.append(
+                (device_id, packed_datas[idx:end_idx], packed_names[idx:end_idx]))
     return splited_packs
 
 
 def process_unsplited():
-    # TODO: 支持多进程/存在部分精度差异
+    # NOTE: 支持多进程/存在部分精度差异
     speech2text = Speech2Text(
         model_dir=args.model_path,
         providers=["NPUExecutionProvider"],
         device_id=args.device_ids[0])
     total_t = 0
-    files = findAllFile(args.dataset_path)
+    files = find_files(args.dataset_path)
     files = list(files)
     num = len(files)
     res_list = []
@@ -172,7 +172,12 @@ def process_unsplited():
 
 
 def infer_multi(data_pack, mode='default'):
-    device_id, data_list, map_names = data_pack
+    if args.bink_cpu:
+        cpu_id, device_id, data_list, map_names = data_pack
+        p = psutil.Process(os.getpid())
+        p.cpu_affinity([cpu_id])
+    else:
+        device_id, data_list, map_names = data_pack
     if isinstance(data_list[0], np.ndarray):
         enable_multibatch = True if data_list[0].shape[0] > 1 else False
     else:
@@ -317,11 +322,12 @@ if __name__ == "__main__":
     parser.add_argument('--result_path', default="om.txt", type=str, help='path to result')
     parser.add_argument('--unsplit', action='store_true', help='enable unsplit mode')
     parser.add_argument('--num_process', default=1, type=int, help='num of process')
-    parser.add_argument('--batch_encoder', default=8, type=int, help='num of encode process')
+    parser.add_argument('--batch_encoder', default=4, type=int, help='num of encode process')
     parser.add_argument('--batch_decoder', default=16, type=int, help='num of encode process')
     parser.add_argument('--num_process_encoder', default=16, type=int, help='num of encode process')
-    parser.add_argument('--num_process_decoder', default=14, type=int, help='num of decode process')
+    parser.add_argument('--num_process_decoder', default=17, type=int, help='num of decode process')
     parser.add_argument('--device_ids', default='0', type=str, help='device ids for NPU infer')
+    parser.add_argument('--bink_cpu', action='store_true', help='enble bink cpu in multiprocessing mode')
     parser.add_argument('--seed', default=123, type=int, help='seed for data shuffle')
 
     args = parser.parse_args()

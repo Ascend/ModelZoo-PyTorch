@@ -65,7 +65,7 @@ class MultiBatchBeamSearch(BatchBeamSearch):
         )
         return tuple(out_states)
 
-    def search(self, running_hyps: BatchHypothesis, x: np.ndarray, remined_list: list) -> BatchHypothesis:
+    def search(self, running_hyps: BatchHypothesis, x: np.ndarray, remined_list = None) -> BatchHypothesis:
         """Search new tokens for running hypotheses and encoded speech x.
         Args:
             running_hyps (BatchHypothesis): Running hypotheses on beam
@@ -93,7 +93,7 @@ class MultiBatchBeamSearch(BatchBeamSearch):
                 else scores[self.pre_beam_score_key]
             )
             part_ids = topk(pre_beam_scores, self.pre_beam_size)
-        part_scores, part_states = self.score_partial(running_hyps, part_ids, x)
+        part_scores, part_states = self.score_partial(running_hyps, part_ids, x, remined_list)
         for k in self.part_scorers:
             weighted_scores += self.weights[k] * part_scores[k]
         # add previous hyp scores
@@ -145,7 +145,8 @@ class MultiBatchBeamSearch(BatchBeamSearch):
             maxlen: int,
             running_hyps: BatchHypothesis,
             ended_hyps_list: List[List[Hypothesis]],
-            keep_list: List[int]
+            keep_list: List[int],
+            dynamic_search: bool
     ):
         sample_num = len(running_hyps) // init_batch
         results = []
@@ -154,17 +155,20 @@ class MultiBatchBeamSearch(BatchBeamSearch):
         for batch_idx in range(init_batch):
             idxes = list(range(batch_idx*sample_num, (batch_idx+1)*sample_num))
             _hyps = self._batch_select(running_hyps, idxes)
-            if batch_idx not in keep_list:
+            end_idx = batch_idx
+            if dynamic_search:
+                end_idx = keep_list[batch_idx]
+            if not dynamic_search and batch_idx not in keep_list:
                 hyps_list.append(_hyps)
             else:
                 _hyps = self._batch_select(running_hyps, idxes)
                 remined_running_hyps, all_running_hyps = self.post_process(
-                    i, maxlen, _hyps, ended_hyps_list[batch_idx], keep_ori_hyps=True)
+                    i, maxlen, _hyps, ended_hyps_list[end_idx], keep_ori_hyps=True)
                 results.append(
                     (idxes, remined_running_hyps)
                 )
                 hyps_list.append(all_running_hyps)
-        if i == maxlen - 1:
+        if not dynamic_search and i == maxlen - 1:
             n_batch = hyps_list[0].yseq.shape[0]
             for _idx, _hyps in enumerate(hyps_list):
                 if _idx not in keep_list:
@@ -220,7 +224,6 @@ class MultiBatchBeamSearch(BatchBeamSearch):
         init_states = dict()
         init_scores = dict()
         for k, d in self.scorers.items():
-            # TODO: support ctc for multibatch
             if k in ['ctc']:
                 init_states[k] = d.multi_batch_init_state(x)
             else:
@@ -235,7 +238,8 @@ class MultiBatchBeamSearch(BatchBeamSearch):
             )] * batch_num)
 
     def __call__(
-        self, x: np.ndarray
+        self, x: np.ndarray,
+        dynamic_search: bool = True
     ) -> List[Hypothesis]:
         """Perform beam search.
         Args:
@@ -261,14 +265,20 @@ class MultiBatchBeamSearch(BatchBeamSearch):
         ended_hyps_list = [[] for _ in range(init_batch)]
         remined_list = list(range(init_batch))
 
+        init_batch = x.shape[0]
         for i in range(maxlen):
             logging.debug("position " + str(i))
-            best = self.search(running_hyps, x, remined_list)
+            if not dynamic_search:
+                best = self.search(running_hyps, x)
+            else:
+                best = self.search(running_hyps, x[remined_list], remined_list)
+                init_batch = len(remined_list)
             # post process of one iteration
             remined_running_hyps_list, running_hyps = self.multi_post_process(
-                i, x.shape[0], maxlen, best, ended_hyps_list, remined_list)
+                i, init_batch, maxlen, best, ended_hyps_list, remined_list, dynamic_search)
             # end detection
             remined_idx = 0
+            remined_idxes = []
             for _idx in remined_list.copy():
                 running_idxes, remined_running_hyps = remined_running_hyps_list[remined_idx]
                 ended_hyps = ended_hyps_list[_idx]
@@ -280,13 +290,16 @@ class MultiBatchBeamSearch(BatchBeamSearch):
                     logging.debug("No hypothesis. Finish decoding.")
                     remined_list.remove(_idx)
                 else:
+                    remined_idxes += running_idxes
                     logging.debug(f"Remained hypotheses: {len(running_hyps)}")
                 remined_idx += 1
             if not remined_list:
                 break
+            if dynamic_search:
+                running_hyps = self._batch_select(running_hyps, remined_idxes)
 
         nbest_hyps_list = []
-        for idx, ended_hyps in enumerate(ended_hyps_list):
+        for ended_hyps in ended_hyps_list:
             nbest_hyps = sorted(ended_hyps, key=lambda x: x.score, reverse=True)
             # check the number of hypotheses reaching to eos
             if len(nbest_hyps) == 0:
@@ -296,8 +309,8 @@ class MultiBatchBeamSearch(BatchBeamSearch):
                 )
                 return (
                     []
-                    if minlenratio < 0.1
-                    else self(x[_idx], self.maxlenratio, max(0.0, minlenratio - 0.1))
+                    if self.minlenratio < 0.1
+                    else self(x[_idx], self.maxlenratio, max(0.0, self.minlenratio - 0.1))
                 )
 
             # report the best result
