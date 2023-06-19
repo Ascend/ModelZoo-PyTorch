@@ -16,7 +16,7 @@ train_epochs=1
 device_id=0
 # 学习率
 learning_rate=0.001
-
+profiling='None'
 
 # 参数校验，data_path为必传参数， 其他参数的增删由模型自身决定；此处若新增参数需在上面有定义并赋值
 
@@ -31,6 +31,8 @@ do
         PREC="--opt-level "$apex_opt_level
     elif [[ $para == --device_id* ]];then
         device_id=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
     elif [[ $para == --fp32* ]];then
         fp32=`echo ${para#*=}`
     elif [[ $para == --hf32* ]];then
@@ -91,6 +93,11 @@ etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
+
+if [[ $profiling == "ge" ]];then                         
+    export GE_PROFILING_TO_STD_OUT=1                    
+fi
+
 ##################启动训练脚本##################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
@@ -104,6 +111,7 @@ python3 train.py \
     --batch-size=${batch_size} \
     --epochs=${train_epochs} \
     --rank=0 \
+    --profiling ${profiling} \
     $prec \
     --max_steps=100 \
     $fp32 $hf32 \

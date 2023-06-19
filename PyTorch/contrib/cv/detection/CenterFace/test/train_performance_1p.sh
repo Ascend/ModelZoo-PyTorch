@@ -56,6 +56,7 @@ if [[ $profiling == "GE" ]];then
     export GE_PROFILING_TO_STD_OUT=1
     profiling=True
 elif [[ $profiling == "CANN" ]];then
+    export PROFILE_TYPE=CANN
     profiling=True
 fi
 

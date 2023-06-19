@@ -61,7 +61,7 @@ parser.add_argument('--device', default='npu', type=str, help='npu or gpu')
 parser.add_argument('--addr', default='127.0.0.1', type=str, help='master addr')
 parser.add_argument('--device_num', default=-1, type=int, help='device_num')
 parser.add_argument('--device-list', default='0', type=str, help='device id list')
-
+parser.add_argument('--profiling', type=str, default='None', help='ge, cann, e2e')
 parser.add_argument('--amp', default=False, action='store_true', help='use amp to train the model')
 parser.add_argument('--loss-scale', default=64., type=float, help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt-level', default='O2', type=str, help='loss scale using in amp, default -1 means dynamic')
@@ -335,33 +335,140 @@ def train(train_loader, priors, step_index, train_loader_len, model, criterion, 
 
     for i, (images, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
-        if epoch in stepvalues:
-            step_index += 1
-        adjust_learning_rate(optimizer, gamma, epoch, step_index, train_loader_len* epoch + i, train_loader_len)
+        if args.profiling == 'cann':
+            if i >=10:
+                break
+            with torch.npu.profile(profiler_result_path="./cann_prof"):
+                if epoch in stepvalues:
+                    step_index += 1
+                
+                adjust_learning_rate(optimizer, gamma, epoch, step_index, train_loader_len * epoch + i, train_loader_len)
 
-        images = images.to(loc, non_blocking=True)
-        targets = [anno.to(loc) for anno in target]
-        optimizer.zero_grad()
-        # compute output
-        out = model(images)
-        loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
-        loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
-        if args.amp:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
+                images = images.to(loc, non_blocking=True)
+                targets = [anno.to(loc) for anno in target]
+                optimizer.zero_grad()
+                # compute output
+                out = model(images)
+                loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
+                loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
+                if args.amp:
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+                optimizer.step()
+
+                losses.update(loss.item(), images.size(0))
+
+                batch_time.update(time.time() - end)
+                end = time.time()
+                # measure elapsed time
+                if not args.distributed or (args.distributed and args.gpu == 0):
+                    progress.display(i)
+                if args.max_steps and i >= args.max_steps:
+                    break
+        elif args.profiling == 'e2e':
+            if i >=10:
+                break
+            with torch_npu.profiler.profile(
+                    activities=[torch_npu.profiler.ProfilerActivity.CPU,
+                                torch_npu.profiler.ProfilerActivity.NPU],
+                    with_stack=True,  # 采集torch op的函数调用栈的开关
+                    record_shapes=True,  # 采集torch op的input shape和input type的开关
+                    profile_memory=True,  # 采集memory相关数据的开关
+                    on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./e2e_prof")
+                    # 导出tensorboard可呈现的数据形式
+            ) as prof:
+                if epoch in stepvalues:
+                    step_index += 1
+                
+                adjust_learning_rate(optimizer, gamma, epoch, step_index, train_loader_len * epoch + i, train_loader_len)
+
+                images = images.to(loc, non_blocking=True)
+                targets = [anno.to(loc) for anno in target]
+                optimizer.zero_grad()
+                # compute output
+                out = model(images)
+                loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
+                loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
+                if args.amp:
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+                optimizer.step()
+
+                losses.update(loss.item(), images.size(0))
+
+                batch_time.update(time.time() - end)
+                end = time.time()
+                # measure elapsed time
+                if not args.distributed or (args.distributed and args.gpu == 0):
+                    progress.display(i)
+                if args.max_steps and i >= args.max_steps:
+                    break
+        elif args.profiling == 'ge':
+            if i >=10:
+                break
+            with torch.npu.profile(profiler_result_path="./ge_prof"):
+                if epoch in stepvalues:
+                    step_index += 1
+                
+                adjust_learning_rate(optimizer, gamma, epoch, step_index, train_loader_len * epoch + i, train_loader_len)
+
+                images = images.to(loc, non_blocking=True)
+                targets = [anno.to(loc) for anno in target]
+                optimizer.zero_grad()
+                # compute output
+                out = model(images)
+                loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
+                loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
+                if args.amp:
+                    with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    loss.backward()
+                optimizer.step()
+
+                losses.update(loss.item(), images.size(0))
+
+                batch_time.update(time.time() - end)
+                end = time.time()
+                # measure elapsed time
+                if not args.distributed or (args.distributed and args.gpu == 0):
+                    progress.display(i)
+                if args.max_steps and i >= args.max_steps:
+                    break
         else:
-            loss.backward()
-        optimizer.step()
+            if epoch in stepvalues:
+                step_index += 1
+            
+            adjust_learning_rate(optimizer, gamma, epoch, step_index, train_loader_len* epoch + i, train_loader_len)
 
-        losses.update(loss.item(), images.size(0))
+            images = images.to(loc, non_blocking=True)
+            targets = [anno.to(loc) for anno in target]
+            optimizer.zero_grad()
+            # compute output
+            out = model(images)
+            loss_l, loss_c, loss_landm = criterion(out, priors, targets, args.gpu)
+            loss = cfg['loc_weight'] * loss_l + loss_c + loss_landm
+            if args.amp:
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
+            optimizer.step()
 
-        batch_time.update(time.time() - end)
-        end = time.time()
-        # measure elapsed time
-        if not args.distributed or (args.distributed and args.gpu == 0):
-            progress.display(i)
-        if args.max_steps and i >= args.max_steps:
-            break
+            losses.update(loss.item(), images.size(0))
+
+            batch_time.update(time.time() - end)
+            end = time.time()
+            # measure elapsed time
+            if not args.distributed or (args.distributed and args.gpu == 0):
+                progress.display(i)
+            if args.max_steps and i >= args.max_steps:
+                break
+                
     if not args.distributed or (args.distributed and args.gpu == 0):
         if batch_time.avg > 0:
             print("[npu id:", args.gpu, "]",
