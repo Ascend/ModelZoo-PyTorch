@@ -35,7 +35,7 @@ ABINet的特点即是autonomous（自治的）、bidirectional（双向的）、
 
   | Torch_Version     | 三方库依赖版本 
   | --------          |:---------:
-  | PyTorch 1.8       |  mmcv==1.7.1; albumentations==1.2.1
+  | PyTorch 1.8       |  mmcv==1.7.1; albumentations==1.2.1; mmdet==2.28.1
 
 - 环境准备指导。
 
@@ -79,8 +79,6 @@ mv /path/to/label.txt .
 
 ```bash
 cd /${模型文件夹名称}/data/mixture
-
-mkdir IIIT5K && cd IIIT5K
 
 mv /path/to/IIIT5K-Word_V3.0.tar.gz .
 
