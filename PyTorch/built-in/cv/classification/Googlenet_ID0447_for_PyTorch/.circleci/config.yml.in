@@ -111,7 +111,8 @@ jobs:
       - checkout
       - run:
           command: |
-            curl -o conda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+            url=`sed '/^conda_mac_url=/!d;s/.*=//' ../url.ini`
+            curl -o conda.sh ${url}
             sh conda.sh -b
             source $HOME/miniconda3/bin/activate
             conda install -yq conda-build

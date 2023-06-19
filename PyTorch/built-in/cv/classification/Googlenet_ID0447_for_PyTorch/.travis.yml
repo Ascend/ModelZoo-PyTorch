@@ -17,7 +17,8 @@ matrix:
 
 before_install:
   - sudo apt-get update
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - url=`sed '/^conda_linux_url=/!d;s/.*=//' url.ini`
+  - wget ${url} -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r

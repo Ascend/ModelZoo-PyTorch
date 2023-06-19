@@ -42,6 +42,12 @@ import codecs
 from .utils import download_url, download_and_extract_archive, extract_archive, \
     makedir_exist_ok, verify_str_arg
 
+with open('../../url.ini', 'r') as f:
+    content = f.read()
+    mnist_url = content.split('mnist_url=')[1].split('\n')[0]
+    fashion_mnist_url = content.split('fashion_mnist_url=')[1].split('\n')[0]
+    kmnist_url = content.split('kmnist_url=')[1].split('\n')[0]
+
 
 class MNIST(VisionDataset):
     """`MNIST <http://yann.lecun.com/exdb/mnist/>`_ Dataset.
@@ -60,10 +66,10 @@ class MNIST(VisionDataset):
             target and transforms it.
     """
     urls = [
-        'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz',
-        'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz',
+        f'{mnist_url}train-images-idx3-ubyte.gz',
+        f'{mnist_url}train-labels-idx1-ubyte.gz',
+        f'{mnist_url}t10k-images-idx3-ubyte.gz',
+        f'{mnist_url}t10k-labels-idx1-ubyte.gz',
     ]
     training_file = 'training.pt'
     test_file = 'test.pt'
@@ -205,10 +211,10 @@ class FashionMNIST(MNIST):
             target and transforms it.
     """
     urls = [
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz',
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-labels-idx1-ubyte.gz',
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz',
-        'http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz',
+        f'{fashion_mnist_url}train-images-idx3-ubyte.gz',
+        f'{fashion_mnist_url}train-labels-idx1-ubyte.gz',
+        f'{fashion_mnist_url}t10k-images-idx3-ubyte.gz',
+        f'{fashion_mnist_url}t10k-labels-idx1-ubyte.gz',
     ]
     classes = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal',
                'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
@@ -231,10 +237,10 @@ class KMNIST(MNIST):
             target and transforms it.
     """
     urls = [
-        'http://codh.rois.ac.jp/kmnist/dataset/kmnist/train-images-idx3-ubyte.gz',
-        'http://codh.rois.ac.jp/kmnist/dataset/kmnist/train-labels-idx1-ubyte.gz',
-        'http://codh.rois.ac.jp/kmnist/dataset/kmnist/t10k-images-idx3-ubyte.gz',
-        'http://codh.rois.ac.jp/kmnist/dataset/kmnist/t10k-labels-idx1-ubyte.gz',
+        f'{kmnist_url}train-images-idx3-ubyte.gz',
+        f'{kmnist_url}train-labels-idx1-ubyte.gz',
+        f'{kmnist_url}t10k-images-idx3-ubyte.gz',
+        f'{kmnist_url}t10k-labels-idx1-ubyte.gz',
     ]
     classes = ['o', 'ki', 'su', 'tsu', 'na', 'ha', 'ma', 'ya', 're', 'wo']
 
@@ -259,7 +265,10 @@ class EMNIST(MNIST):
             target and transforms it.
     """
     # Updated URL from https://www.westernsydney.edu.au/bens/home/reproducible_research/emnist
-    url = 'https://cloudstor.aarnet.edu.au/plus/index.php/s/54h3OuGJhFLwAlQ/download'
+    with open('../../url.ini', 'r') as f:
+        content = f.read()
+        cloudstor_url = content.split('cloudstor_url=')[1].split('\n')[0]
+    url = cloudstor_url
     splits = ('byclass', 'bymerge', 'balanced', 'letters', 'digits', 'mnist')
 
     def __init__(self, root, split, **kwargs):
