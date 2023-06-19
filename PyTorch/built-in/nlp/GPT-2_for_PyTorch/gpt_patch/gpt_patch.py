@@ -867,11 +867,11 @@ def FusedScaleMaskSoftmaxForward(self, input, mask, norm_factor):
                         torch.ones((1, 1, input.shape[2], input.shape[3]), dtype=input.dtype, device=input.device),
                         diagonal=1
                     ), 29).bool()
-            probs = torch.npu_scaled_masked_softmax(input, self.mask_tri, scale * (1.0 / norm_factor), False)
+            probs = torch_npu.npu_scaled_masked_softmax(input, self.mask_tri, scale * (1.0 / norm_factor), False)
             probs = probs.half()
         else:
             assert self.attn_mask_type == AttnMaskType.padding
-            probs = torch.npu_scaled_masked_softmax(input, mask, scale * (1.0 / norm_factor), False)
+            probs = torch_npu.npu_scaled_masked_softmax(input, mask, scale * (1.0 / norm_factor), False)
             probs = probs.half()
     else:
         if self.input_in_float16 and self.softmax_in_fp32:

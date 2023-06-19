@@ -35,6 +35,8 @@ from gpt_patch import gpt_patch
 from pretrain_gpt import pretrain, train_valid_test_datasets_provider, forward_step, git_ds_info
 
 if __name__ == "__main__":
+    # Set jit_compile=True to eliminate TransData Op as the entire network is circulating in NZ Format.
+    torch_npu.npu.set_compile_mode(jit_compile=True)
     git_ds_info()
     pretrain(train_valid_test_datasets_provider, gpt_patch.model_provider, forward_step,
              args_defaults={'tokenizer_type': 'GPT2BPETokenizer'})
