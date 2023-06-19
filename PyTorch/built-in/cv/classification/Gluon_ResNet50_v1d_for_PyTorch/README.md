@@ -167,3 +167,7 @@ ResNet-d在ResNet-b的基础上，将identity部分的下采样交给avg pool去
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
