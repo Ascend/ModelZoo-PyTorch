@@ -185,14 +185,14 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
    1. 获取权重文件。
 
-      WeNet预训练模型[下载链接](https://github.com/wenet-e2e/wenet/blob/main/docs/pretrained_models.md)，选择aishell数据集对应的Checkpoint Model下载，将压缩文件放到${wenet_path}下解压。
+      WeNet预训练模型[下载链接](https://github.com/wenet-e2e/wenet/blob/main/docs/pretrained_models.md)，选择aishell数据集对应的Checkpoint Model下载，将压缩文件放到自己克隆wenet仓库的路径下解压。
       ```
       cd ../../../
-      tar -zvxf 20210601_u2++_conformer_exp.tar.gz
-      mkdir -p exp/20210601_u2++_conformer_exp
-      cp examples/aishell/s0/data/test/data.list 20210601_u2++_conformer_exp
-      cp examples/aishell/s0/data/test/text 20210601_u2++_conformer_exp
-      cp 20210601_u2++_conformer_exp/global_cmvn exp/20210601_u2++_conformer_exp
+      tar -zvxf aishell_u2pp_conformer_exp.tar.gz
+      mkdir -p exp/aishell_u2pp_conformer_exp
+      cp examples/aishell/s0/data/test/data.list aishell_u2pp_conformer_exp
+      cp examples/aishell/s0/data/test/text aishell_u2pp_conformer_exp
+      cp aishell_u2pp_conformer_exp/global_cmvn exp/aishell_u2pp_conformer_exp
       cp ../export_onnx_npu.py wenet/bin
       cp ../recognize_om.py wenet/bin
       cp ../cosine_similarity.py .
@@ -202,12 +202,17 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
       使用export_onnx_npu.py导出onnx文件。
 
+      配置python path
+      ```
+      export PYTHONPATH=${your_wenet_path}
+      ```
+
       ```
       # 非流式场景
-      python3 wenet/bin/export_onnx_npu.py --config 20210601_u2++_conformer_exp/train.yaml --checkpoint 20210601_u2++_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3
+      python3 wenet/bin/export_onnx_npu.py --config aishell_u2pp_conformer_exp/train.yaml --checkpoint aishell_u2pp_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3
       
       # 流式场景
-      python3 wenet/bin/export_onnx_npu.py --config 20210601_u2++_conformer_exp/train.yaml --checkpoint 20210601_u2++_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3 --streaming
+      python3 wenet/bin/export_onnx_npu.py --config aishell_u2pp_conformer_exp/train.yaml --checkpoint aishell_u2pp_conformer_exp/final.pt --output_onnx_dir ./onnx/ --num_decoding_left_chunks 4 --reverse_weight 0.3 --streaming
       ```
 
       - 参数说明：
@@ -275,7 +280,7 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-         运行成功后生成online_encoder_bs${batch_size}.om、offline_encoder_dynamic.om、offline_encoder_static_bs${batch_size}.om、offline_decoder_static_bs${batch_size}.om模型文件。
+         运行成功后生成online_encoder_bs${batch_size}.om、offline_encoder_dynamic.om、offline_encoder_static_bs${batch_size}.om、offline_decoder_static_bs${batch_size}.om 模型文件。
 
 2. 开始推理验证。
 
@@ -288,7 +293,7 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
       端到端encoder + decoder
 
       ```
-      python3 wenet/bin/recognize_om.py --config=20210601_u2++_conformer_exp/train.yaml --test_data=20210601_u2++_conformer_exp/data.list --dict=20210601_u2++_conformer_exp/units.txt --mode=attention_rescoring --result_file=static_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt
+      python3 wenet/bin/recognize_om.py --config=aishell_u2pp_conformer_exp/train.yaml --test_data=aishell_u2pp_conformer_exp/data.list --dict=aishell_u2pp_conformer_exp/units.txt --mode=attention_rescoring --result_file=static_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt
       ```
 
       - 参数说明：
@@ -306,13 +311,13 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
       ```
       # 精度验证
-      python3 tools/compute-wer.py --char=1 --v=1 20210601_u2++_conformer_exp/text static_result_bs${batch_size}.txt
+      python3 tools/compute-wer.py --char=1 --v=1 aishell_u2pp_conformer_exp/text static_result_bs${batch_size}.txt
       ```
 
       - 参数说明：
         - --char：是否逐词比对，0为整句比对，1为逐词比对。
         - --v：是否打印对比结果，0为不打印，1为打印。
-        - 20210601_u2++_conformer_exp/text：标签文件路径。
+        - aishell_u2pp_conformer_exp/text：标签文件路径。
         - static_result.txt：比对结果输出文件路径。
 
    3. 流式纯推理场景精度和性能验证。
