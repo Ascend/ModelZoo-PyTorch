@@ -77,7 +77,6 @@ else:
         StableDiffusionInpaintPipelineLegacy,
         StableDiffusionInstructPix2PixPipeline,
         StableDiffusionLatentUpscalePipeline,
-        StableDiffusionLDM3DPipeline,
         StableDiffusionModelEditingPipeline,
         StableDiffusionPanoramaPipeline,
         StableDiffusionPipeline,
