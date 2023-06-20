@@ -203,7 +203,9 @@ class _FP16OptimizerMixin(object):
             if grad_norm > max_norm > 0.0:
                 self._multiply_factor *= max_norm / grad_norm
 
-            self.scaler.check_overflow(grad_norm)
+            # Prevent persistent overflow from making training impossible
+            if self.scaler.loss_scale > self.scaler.threshold:
+                self.scaler.check_overflow(grad_norm)
         elif max_norm > 0.0:
             clip_coef = (max_norm / (grad_norm + 1e-6)).clamp_(max=1)
             self._multiply_factor *= clip_coef

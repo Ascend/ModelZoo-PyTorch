@@ -56,7 +56,5 @@ python3 fairseq_cli/hydra_validate.py -m \
     --config-name base \
     task.data=$data_path \
     common.user_dir=examples/data2vec \
-    common_eval.path=$checkpoint_path \
-    common.cpu=true \
-    common.fp16=false
+    common_eval.path=$checkpoint_path
 

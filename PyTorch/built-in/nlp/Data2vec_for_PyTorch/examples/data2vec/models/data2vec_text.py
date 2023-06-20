@@ -421,6 +421,7 @@ class Data2VecTextEncoder(FairseqEncoder):
 
         with torch.no_grad():
             # use EMA parameter as the teacher
+            self.ema.model.to(target_tokens.device)
             self.ema.model.eval()
 
             encoder_out = self.ema.model(
