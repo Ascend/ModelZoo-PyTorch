@@ -231,11 +231,12 @@ CV-classfication
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ViT_base"> ViT_base </a>
         </td>
         <td>ImageNet</td>
-	<td>80.68%</td>
+	<td>80.63%(patch32_224)</td>
         <td></td>
 	<td></td>
-	<td>1189(bs32)</td>
+	<td>1679.63(patch32_224 bs64)</td>
 	<td>bs x 3 x 224 x 224</td>
+    </tr>
 </table>
 
 

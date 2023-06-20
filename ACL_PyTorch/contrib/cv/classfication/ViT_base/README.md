@@ -176,8 +176,8 @@ mode_name = [
          ```bash
          python3 -m onnxsim models/onnx/${model_name}_bs${bs}.onnx models/onnx/${model_name}_bs${bs}_sim.onnx
          
-         # 输入参数: 1.原始模型文件路径 2.优化模型文件路径 3.batchsize
-         python3 opt_vit.py models/onnx/${model_name}_bs${bs}_sim.onnx models/onnx/${model_name}_bs${bs}_opt.onnx ${bs}
+         # 输入参数: 1.原始模型文件路径 2.优化模型文件路径 3.模型变体名称
+         python3 opt_vit.py models/onnx/${model_name}_bs${bs}_sim.onnx models/onnx/${model_name}_bs${bs}_opt.onnx ${model_name}
          ```
 
          获得```vit_base_patch8_224_bs1_opt.onnx```文件。
@@ -277,16 +277,15 @@ mode_name = [
 
 |芯片型号|            模型变体|   Batch Size|  数据集|    参考精度|    NPU精度|性能(fps)|
 |:------:|:------------------:|:-----------:|:------:|:----------:|:---------:|:-------:|
-|   310P3| ViT_base_patch8_224|            1|ImageNet| top1: 85.80|top1: 85.64|  72.8417|
-|   310P3| ViT_base_patch8_224| 1 (最优性能)|ImageNet| top1: 85.80|top1: 85.64|  72.8417|
-|   310P3|ViT_base_patch16_224|            1|ImageNet| top1: 84.53|top1: 84.23| 332.7798|
-|   310P3|ViT_base_patch16_224| 8 (最优性能)|ImageNet| top1: 84.53|top1: 84.23| 462.6925|
-|   310P3|ViT_base_patch16_384|            1|ImageNet| top1: 86.01|top1: 85.84| 102.1311|
-|   310P3|ViT_base_patch16_384| 4 (最优性能)|ImageNet| top1: 86.01|top1: 85.84| 103.0801|
-|   310P3|ViT_base_patch32_224|            1|ImageNet| top1: 80.72|top1: 80.65| 408.3216|
-|   310P3|ViT_base_patch32_224|16 (最优性能)|ImageNet| top1: 80.72|top1: 80.65|1590.8380|
-|   310P3|ViT_base_patch32_384|            1|ImageNet| top1: 83.35|top1: 83.28| 247.7265|
-|   310P3|ViT_base_patch32_384| 8 (最优性能)|ImageNet| top1: 83.35|top1: 83.28| 531.9361|
-|   310  |ViT_base_patch32_224|            1|ImageNet| top1: 80.72|top1: 80.71| 321.2008|
-|   310  |ViT_base_patch32_224| 4 (最优性能)|ImageNet| top1: 80.72|top1: 80.71| 444.8147|
+|   310P3| ViT_base_patch8_224|            1|ImageNet| top1: 85.80|top1: 85.58|    76.42|
+|   310P3| ViT_base_patch8_224| 8 (最优性能)|ImageNet| top1: 85.80|top1: 85.58|    98.48|
+|   310P3|ViT_base_patch16_224|            1|ImageNet| top1: 84.53|top1: 84.16|   342.34|
+|   310P3|ViT_base_patch16_224|16 (最优性能)|ImageNet| top1: 84.53|top1: 84.16|   660.64|
+|   310P3|ViT_base_patch16_384|            1|ImageNet| top1: 86.01|top1: 85.84|   108.87|
+|   310P3|ViT_base_patch16_384| 8 (最优性能)|ImageNet| top1: 86.01|top1: 85.84|   151.01|
+|   310P3|ViT_base_patch32_224|            1|ImageNet| top1: 80.72|top1: 80.63|   431.89|
+|   310P3|ViT_base_patch32_224|64 (最优性能)|ImageNet| top1: 80.72|top1: 80.63|  1679.63|
+|   310P3|ViT_base_patch32_384|            1|ImageNet| top1: 83.35|top1: 83.29|   267.01|
+|   310P3|ViT_base_patch32_384|32 (最优性能)|ImageNet| top1: 83.35|top1: 83.29|   596.55|
 
+> 完整性能数据请查阅文件：`performances.md`
