@@ -126,17 +126,30 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
 
       启动单卡训练。
 
+      fp16训练命令
       ```bash
-      bash ./test/train_performance_1p.sh --data_path=data-bin/wmt18_en_de  # 单卡性能
+      bash ./test/train_performance_1p_fp16.sh --data_path=data-bin/wmt18_en_de  # 单卡性能
+      ```
+      
+      fp32训练命令
+      ```bash
+      bash ./test/train_performance_1p_fp32.sh --data_path=data-bin/wmt18_en_de  # 单卡性能
       ```
 
     - 单机8卡训练。
 
       启动8卡训练。
 
+      fp16训练命令
       ```bash
-      bash ./test/train_full_8p.sh --data_path=data-bin/wmt18_en_de  # 8卡精度
-      bash ./test/train_performance_8p.sh --data_path=data-bin/wmt18_en_de  # 8卡性能
+      bash ./test/train_full_8p_fp16.sh --data_path=data-bin/wmt18_en_de  # 8卡精度
+      bash ./test/train_performance_8p_fp16.sh --data_path=data-bin/wmt18_en_de  # 8卡性能
+      ```
+      
+      fp32训练命令
+      ```bash
+      bash ./test/train_full_8p_fp32.sh --data_path=data-bin/wmt18_en_de  # 8卡精度
+      bash ./test/train_performance_8p_fp32.sh --data_path=data-bin/wmt18_en_de  # 8卡性能
       ```
 
       data_path为数据集路径，路径写到wmt18_en_de。
@@ -159,10 +172,13 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
 # 训练结果展示
 
 **表 3**  en_de数据集训练结果展示表
-| NAME  | Bleu  | WPS  | Epochs | AMP_Type | Torch_Version |
-| :---: | :---: | :---: | :---: | :---: | :---: |
-| 8p-竞品A | 41.14 | 450k | 20 | - | 1.11 |
-| 8p-NPU | 41.17 | 170k | 20 | - | 1.11 |
+
+| NAME  | MODE | Bleu  | WPS  | Epochs | AMP_Type | Torch_Version |
+| :---: |------|:-----:|:----:| :---: | :---: | :---: |
+| 8p-竞品A | fp16 | 41.14 | 450k | 20 | - | 1.11 |
+| 8p-NPU | fp16 | 41.17 | 170k | 20 | - | 1.11 |
+| 8p-竞品A | fp32 | 41.12 | 334k | 20 | - | 1.11 |
+| 8p-NPU | fp32 | 41.21 | 223k | 20 | - | 1.11 |
 
 > **说明：** 
    >由于该模型默认开启二进制，所以在性能测试时，需要安装二进制包，安装方式参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
