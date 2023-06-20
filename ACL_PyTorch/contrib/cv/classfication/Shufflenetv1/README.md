@@ -250,9 +250,9 @@
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|    Ascend310P3       |        1          |     imagenet       |     67.71%       |      2795           |
-|    Ascend310P3       |        4          |     imagenet       |            |       5791          |
-|    Ascend310P3       |        8          |     imagenet       |            |       7361          |
-|    Ascend310P3       |        16          |     imagenet       |            |       8747          |
-|    Ascend310P3       |        32          |     imagenet       |            |       5935          |
-|    Ascend310P3       |        64          |     imagenet       |            |       5582          |
+|    Ascend310P3       |        1          |     imagenet       |     67.71%       |      2105.9           |
+|    Ascend310P3       |        4          |     imagenet       |            |       4995.94          |
+|    Ascend310P3       |        8          |     imagenet       |            |       6736.81          |
+|    Ascend310P3       |        16          |     imagenet       |            |       7847.36          |
+|    Ascend310P3       |        32          |     imagenet       |            |       5707.72          |
+|    Ascend310P3       |        64          |     imagenet       |            |       5495.01          |
