@@ -93,7 +93,7 @@ class MultiBatchBeamSearch(BatchBeamSearch):
                 else scores[self.pre_beam_score_key]
             )
             part_ids = topk(pre_beam_scores, self.pre_beam_size)
-        part_scores, part_states = self.score_partial(running_hyps, part_ids, x, remined_list)
+        part_scores, part_states = self.score_partial(running_hyps, part_ids, x, remined_list=remined_list)
         for k in self.part_scorers:
             weighted_scores += self.weights[k] * part_scores[k]
         # add previous hyp scores

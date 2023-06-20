@@ -94,6 +94,8 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    cd espnet_onnx
    patch -p1 < ../export_acc.patch
    cp ../multi_batch_beam_search.py espnet_onnx/asr/beam_search
+   cp ../asr_npu_adapter.py espnet_onnx/asr
+   cp ../npu_model_adapter.py espnet_onnx/asr
    pip3 install .  #安装espnet_onnx
    cd ..
    ```
