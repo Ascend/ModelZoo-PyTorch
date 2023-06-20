@@ -148,7 +148,10 @@ class Tester(unittest.TestCase):
         with get_tmp_dir() as temp_dir:
             name = "hmdb51_Turnk_r_Pippi_Michel_cartwheel_f_cm_np2_le_med_6.avi"
             f_name = os.path.join(temp_dir, name)
-            url = "https://download.pytorch.org/vision_tests/io/" + name
+            with open('../url.ini', 'r') as _f:
+                _content = _f.read()
+                io_url = _content.split('io_url=')[1].split('\n')[0]
+            url = io_url + name
             try:
                 utils.download_url(url, temp_dir)
                 pts, fps = io.read_video_timestamps(f_name)
