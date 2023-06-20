@@ -186,7 +186,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    运行`om_val.py`或`val_pyacl_cache.py`推理OM模型，合成语音默认保存在`output/audio`文件夹下。
    ```
    # 推理tacotron2 om。如果选择使能缓存，请将'om_val.py'改为'val_pyacl_cache.py'
-   python3 om_val.py -i filelists/ljs_audio_text_test_filelist.txt -bs 1 -device_id 0
+   python3 om_val.py -i filelists/ljs_audio_text_test_filelist.txt -bs 1 --device_id 0
     
    # 推理waveglow生成wav文件。如果选择使能缓存，请将'om_val.py'改为'val_pyacl_cache.py'
    python3 om_val.py -i filelists/ljs_audio_text_test_filelist.txt -o output/audio -bs 1 -device_id 0 --gen_wav
@@ -198,7 +198,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
    ```
    python3 -m ais_bench --model output/om/encoder_dyn_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "sequences:${bs},${seq_len};sequence_lengths:${bs}" --outputSize "3000000,3000000,3000000"
    python3 -m ais_bench --model output/om/decoder_iter_dyn_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "decoder_input:${bs},80;attention_hidden:${bs},1024;attention_cell:${bs},1024;decoder_hidden:${bs},1024;decoder_cell:${bs},1024;attention_weights:${bs},${seq_len};attention_weights_cum:${bs},${seq_len};attention_context:${bs},512;memory:${bs},${seq_len},512;processed_memory:${bs},${seq_len},128;mask:${bs},${seq_len}" --outputSize "20000,20000,20000,20000,20000,20000,20000,20000,20000"
-   python3 -m ais_bench --model output/om/_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "mel_outputs:${bs},80,250" --outputSize "640000"
+   python3 -m ais_bench --model output/om/postnet_dyn_${os}_${arch}.om --loop 20 --batchsize ${bs} --dymShape "mel_outputs:${bs},80,250" --outputSize "640000"
    ```
    其中，`bs`为模型`batch_size`，`seq_len`为输入音频的长度，`os` 为操作系统（比如 linux），`arch` 为 CPU 架构（比如 x86_64、aarch64）。
 
@@ -250,9 +250,9 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
 
 |  芯片型号   | Batch Size |  缓存  |  数据集  |       精度       |    性能     |
 | :---------: | :--------: | :------: | :------: | :--------------: | :---------: |
-| Ascend310P3 |     1      | Disabled | LJSpeech | 人工判断语音质量 | 490 wavs/s  |
-| Ascend310P3 |     1      | Enabled | LJSpeech | 人工判断语音质量 | 646 wavs/s  |
-| Ascend310P3 |     4      | Disabled | LJSpeech | 人工判断语音质量 | 1709 wavs/s |
-| Ascend310P3 |     4      | Enabled | LJSpeech | 人工判断语音质量 | 2456 wavs/s |
+| Ascend310P3 |     1      | Disabled | LJSpeech | 人工判断语音质量 | 441.35 wavs/s  |
+| Ascend310P3 |     1      | Enabled | LJSpeech | 人工判断语音质量 | 889.92 wavs/s  |
+| Ascend310P3 |     4      | Disabled | LJSpeech | 人工判断语音质量 | 1415.13 wavs/s |
+| Ascend310P3 |     4      | Enabled | LJSpeech | 人工判断语音质量 | 3421.21 wavs/s |
 - 测试环境：数据在单台x86 CPU服务器下测得，CPU型号为 Intel Xeon Gold 6140 @ 2.30GHz.
 - 说明：由于模型推理为多个子模型串联，仅测量单个子模型性能没有意义，故性能采用端到端推理LJSpeech验证集中500条文本数据测得，也就是用 om_val.py 跑出来的性能。
