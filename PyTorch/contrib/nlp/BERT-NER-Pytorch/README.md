@@ -1,95 +1,57 @@
-## Chinese NER using Bert
+# BERT-NER-CRF for PyTorch
+- [概述](#概述) 
+- [准备训练环境](#准备训练环境)
+- [准备数据集](#准备数据集)
+- [开始训练](#开始训练)
+- [训练结果展示](#训练结果展示)
+- [版本说明](#版本说明)
 
-BERT for Chinese NER. 
+## 概述
+### 简述
+BERT-CRF 是用于自然语言处理中实体识别任务的模型
+* 参考实现 https://github.com/lonePatient/BERT-NER-Pytorch
+* 本代码仓为适配NPU的实现
 
-**update**：其他一些可以参考,包括Biaffine、GlobalPointer等:[examples](https://github.com/lonePatient/TorchBlocks/tree/master/examples)
+## 准备训练环境
+### 准备环境
+* 当前模型支持的PyTorch版本和已知三方库依赖如下表所示
+表1 依赖库列表
+| 依赖名 | 版本号 |
+| --- | --- |
+| PyTorch | 1.11.0 |
+| transformers | 4.29.2 |
 
-### dataset list
-
-1. cner: datasets/cner
-2. CLUENER: https://github.com/CLUEbenchmark/CLUENER
-
-### model list
-
-1. BERT+Softmax
-2. BERT+CRF
-3. BERT+Span
-
-### requirement
-
-1. 1.1.0 =< PyTorch < 1.5.0
-2. cuda=9.0
-3. python3.6+
-
-### input format
-
-Input format (prefer BIOS tag scheme), with each character its label for one line. Sentences are splited with a null line.
-
-```text
-美	B-LOC
-国	I-LOC
-的	O
-华	B-PER
-莱	I-PER
-士	I-PER
-
-我	O
-跟	O
-他	O
+* 环境中也需要安装对应版本的CANN和torch_npu，可参考《[PyTorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/63RC1alpha002/softwareinstall/instg/instg_000018.html)》
+* 安装依赖：
+```
+pip install -r requirements.txt
 ```
 
-### run the code
+### 准备数据集
+* 在https://www.cluebenchmarks.com/introduce.html 下载Cluener数据集，放到datasets目录下
 
-1. Modify the configuration information in `run_ner_xxx.py` or `run_ner_xxx.sh` .
-2. `sh scripts/run_ner_xxx.sh`
+### 准备预训练权重
+* 在https://huggingface.co/bert-base-chinese/tree/main/ 下载预训练权重和config文件等相关信息
 
-**note**: file structure of the model
-
-```text
-├── prev_trained_model
-|  └── bert_base
-|  |  └── pytorch_model.bin
-|  |  └── config.json
-|  |  └── vocab.txt
-|  |  └── ......
+## 开始训练
+### 运行训练脚本
+* 启动单机8卡训练
+```
+bash test/run_ner_crf.sh 
 ```
 
-### CLUENER result
+训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
-The overall performance of BERT on **dev**:
+## 训练结果展示
+表2 
 
-|              | Accuracy (entity)  | Recall (entity)    | F1 score (entity)  |
-| ------------ | ------------------ | ------------------ | ------------------ |
-| BERT+Softmax | 0.7897     | 0.8031     | 0.7963    |
-| BERT+CRF     | 0.7977 | 0.8177 | 0.8076 |
-| BERT+Span    | 0.8132 | 0.8092 | 0.8112 |
-| BERT+Span+adv    | 0.8267 | 0.8073 | **0.8169** |
-| BERT-small(6 layers)+Span+kd    | 0.8241 | 0.7839 | 0.8051 |
-| BERT+Span+focal_loss    | 0.8121 | 0.8008 | 0.8064 |
-| BERT+Span+label_smoothing   | 0.8235 | 0.7946 | 0.8088 |
+| Name | F1 |  ms/Iteration | Samples/Second | Epochs |
+| --- | --- | --- | --- | --- |
+| 8p-NPU | 79.16 | 171.9 | 1129.4 | 4 | 
 
-### ALBERT for CLUENER
+## 版本说明
+### 变更
+2023.6.19 首次发布
 
-The overall performance of ALBERT on **dev**:
-
-| model  | version       | Accuracy(entity) | Recall(entity) | F1(entity) | Train time/epoch |
-| ------ | ------------- | ---------------- | -------------- | ---------- | ---------------- |
-| albert | base_google   | 0.8014           | 0.6908         | 0.7420     | 0.75x            |
-| albert | large_google  | 0.8024           | 0.7520         | 0.7763     | 2.1x             |
-| albert | xlarge_google | 0.8286           | 0.7773         | 0.8021     | 6.7x             |
-| bert   | google        | 0.8118           | 0.8031         | **0.8074**     | -----            |
-| albert | base_bright   | 0.8068           | 0.7529         | 0.7789     | 0.75x            |
-| albert | large_bright  | 0.8152           | 0.7480         | 0.7802     | 2.2x             |
-| albert | xlarge_bright | 0.8222           | 0.7692         | 0.7948     | 7.3x             |
-
-### Cner result
-
-The overall performance of BERT on **dev(test)**:
-
-|              | Accuracy (entity)  | Recall (entity)    | F1 score (entity)  |
-| ------------ | ------------------ | ------------------ | ------------------ |
-| BERT+Softmax | 0.9586(0.9566)     | 0.9644(0.9613)     | 0.9615(0.9590)     |
-| BERT+CRF     | 0.9562(0.9539)     | 0.9671(**0.9644**) | 0.9616(0.9591)     |
-| BERT+Span    | 0.9604(**0.9620**) | 0.9617(0.9632)     | 0.9611(**0.9626**) |
-| BERT+Span+focal_loss    | 0.9516(0.9569) | 0.9644(0.9681)     | 0.9580(0.9625) |
-| BERT+Span+label_smoothing   | 0.9566(0.9568) | 0.9624(0.9656)     | 0.9595(0.9612) |
+### FAQ
+无

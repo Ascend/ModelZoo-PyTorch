@@ -1,3 +1,35 @@
+# BSD 3-Clause License
+#
+# Copyright (c) 2023 xxxx
+# All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ============================================================================
+
 import glob
 import logging
 import os
@@ -6,20 +38,23 @@ import time
 
 import torch
 import torch.nn as nn
+import torch_npu 
+from torch_npu.contrib import transfer_to_npu 
+from torch_npu.optim import NpuFusedAdamW
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
-from callback.optimizater.adamw import AdamW
-from callback.lr_scheduler import get_linear_schedule_with_warmup
-from callback.progressbar import ProgressBar
-from tools.common import seed_everything,json_to_text
-from tools.common import init_logger, logger
-
 from transformers import WEIGHTS_NAME, BertConfig,get_linear_schedule_with_warmup,AdamW, BertTokenizer
+
 from models.bert_for_ner import BertCrfForNer
 from processors.utils_ner import get_entities
 from processors.ner_seq import convert_examples_to_features
 from processors.ner_seq import ner_processors as processors
 from processors.ner_seq import collate_fn
+from callback.optimizater.adamw import AdamW
+from callback.lr_scheduler import get_linear_schedule_with_warmup
+from callback.progressbar import ProgressBar
+from tools.common import seed_everything,json_to_text
+from tools.common import init_logger, logger
 from metrics.ner_metrics import SeqEntityScore
 from tools.finetuning_argparse import get_argparse
 
@@ -61,7 +96,7 @@ def train(args, train_dataset, model, tokenizer):
          'lr': args.crf_learning_rate}
     ]
     args.warmup_steps = int(t_total * args.warmup_proportion)
-    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
+    optimizer = NpuFusedAdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps,
                                                 num_training_steps=t_total)
     # Check if saved optimizer or scheduler states exist
@@ -83,7 +118,8 @@ def train(args, train_dataset, model, tokenizer):
     if args.local_rank != -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                           output_device=args.local_rank,
-                                                          find_unused_parameters=True)
+                                                          find_unused_parameters=True,
+                                                          bucket_cap_mb=500)
     # Train!
     logger.info("***** Running training *****")
     logger.info("  Num examples = %d", len(train_dataset))
@@ -148,10 +184,10 @@ def train(args, train_dataset, model, tokenizer):
                 if args.fp16:
                     torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
                 else:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    optimizer.clip_grad_norm_fused_(args.max_grad_norm)
                 optimizer.step()
                 scheduler.step()  # Update learning rate schedule
-                model.zero_grad()
+                optimizer.zero_grad()
                 global_step += 1
                 if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
                     # Log metrics
@@ -371,9 +407,10 @@ def load_and_cache_examples(args, task, tokenizer, data_type='train'):
 
 
 def main():
+    torch_npu.npu.set_compile_mode(jit_compile=False)
     args = get_argparse().parse_args()
 
-    if not os.path.exists(args.output_dir):
+    if args.local_rank==0 and not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
     args.output_dir = args.output_dir + '{}'.format(args.model_type)
     if not os.path.exists(args.output_dir):
