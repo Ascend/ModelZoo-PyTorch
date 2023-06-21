@@ -410,7 +410,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--use_jit",
+        "--without_jit",
         action="store_true",
         help="Whether to use jit compile."
     )
@@ -448,7 +448,7 @@ def main():
     if args.device_id:
         torch.npu.set_device(args.device_id)
 
-    if args.use_jit:
+    if args.without_jit:
         torch_npu.npu.set_compile_mode(jit_compile=False)
 
 

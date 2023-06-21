@@ -75,7 +75,7 @@ python3 examples/text_to_image/train_text_to_image.py \
   --max_grad_norm=1 \
   --lr_scheduler="constant" --lr_warmup_steps=0 \
   --mixed_precision=$mixed_precision \
-  --use_jit \
+  --without_jit \
   --output_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
