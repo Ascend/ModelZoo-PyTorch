@@ -98,17 +98,18 @@ nohup python3 run_mlm.py \
         --max_seq_length 512 \
         --train_file ${data_path} \
         --eval_metric_path ./accuracy.py \
+        --preprocessing_num_workers 8 \
         --line_by_line \
         --pad_to_max_length \
         --remove_unused_columns false \
         --save_steps 5000 \
         --dataloader_num_workers 4 \
         --num_train_epochs ${train_epochs} \
+        --max_train_samples 10000 \
         --overwrite_output_dir \
         --per_device_train_batch_size ${batch_size} \
         --per_device_eval_batch_size ${batch_size} \
         --do_train \
-        --do_eval \
         --dataloader_drop_last true \
         --eval_accumulation_steps 100 \
         --fp16 \
