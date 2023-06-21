@@ -18,9 +18,9 @@ args =
     parse_args(s; as_symbols=true)
 end
 
-println("data: ",args[:datapath])
-datapath = args[:datapath]
-checkpoint=args[:pthpath]
+println("data: ",args[:data_path])
+datapath = args[:data_path]
+checkpoint=args[:pth_path]
 param = JSON.parsefile("./hyper-parameters.json")
 regionps = param["region"]
 cityname = regionps["cityname"]
