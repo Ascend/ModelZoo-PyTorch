@@ -16,6 +16,7 @@
 import argparse
 import logging
 import math
+import time
 import os
 import random
 from pathlib import Path
@@ -27,11 +28,11 @@ import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
 import transformers
-from accelerate import Accelerator
+from accelerate import Accelerator, DistributedDataParallelKwargs, GradScalerKwargs
 from accelerate.logging import get_logger
 from accelerate.state import AcceleratorState
 from accelerate.utils import ProjectConfiguration, set_seed
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from huggingface_hub import create_repo, upload_folder
 from packaging import version
 from torchvision import transforms
@@ -49,6 +50,10 @@ from diffusers.utils.import_utils import is_xformers_available
 
 if is_wandb_available():
     import wandb
+
+# Adapter to NPU
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
@@ -396,6 +401,29 @@ def parse_args():
             " more information see https://huggingface.co/docs/accelerate/v0.17.0/en/package_reference/accelerator#accelerate.Accelerator"
         ),
     )
+    # Adapter to NPU
+    parser.add_argument(
+        "--device_id",
+        type=int,
+        default=0,
+        help="device_id",
+    )
+
+    parser.add_argument(
+        "--without_jit",
+        action="store_true",
+        help="Whether to use jit compile."
+    )
+    parser.add_argument(
+        "--local_data_dir",
+        type=str,
+        default=None,
+        help=(
+            "Local data directory."
+        ),
+    )
+
+
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -416,6 +444,14 @@ def parse_args():
 def main():
     args = parse_args()
 
+    # Adapter to NPU
+    if args.device_id:
+        torch.npu.set_device(args.device_id)
+
+    if args.without_jit:
+        torch_npu.npu.set_compile_mode(jit_compile=False)
+
+
     if args.non_ema_revision is not None:
         deprecate(
             "non_ema_revision!=None",
@@ -429,12 +465,14 @@ def main():
 
     accelerator_project_config = ProjectConfiguration(total_limit=args.checkpoints_total_limit)
 
+    grad_kwargs = GradScalerKwargs(dynamic=False)
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
         log_with=args.report_to,
         logging_dir=logging_dir,
         project_config=accelerator_project_config,
+        kwargs_handlers=[grad_kwargs]
     )
 
     # Make one log on every process with the configuration for debugging.
@@ -625,24 +663,27 @@ def main():
 
     # In distributed training, the load_dataset function guarantees that only one local process can concurrently
     # download the dataset.
-    if args.dataset_name is not None:
-        # Downloading and loading a dataset from the hub.
-        dataset = load_dataset(
-            args.dataset_name,
-            args.dataset_config_name,
-            cache_dir=args.cache_dir,
-        )
+    if args.local_data_dir:
+        dataset = load_from_disk(args.local_data_dir)
     else:
-        data_files = {}
-        if args.train_data_dir is not None:
-            data_files["train"] = os.path.join(args.train_data_dir, "**")
-        dataset = load_dataset(
-            "imagefolder",
-            data_files=data_files,
-            cache_dir=args.cache_dir,
-        )
-        # See more about loading custom images at
-        # https://huggingface.co/docs/datasets/v2.4.0/en/image_load#imagefolder
+        if args.dataset_name is not None:
+            # Downloading and loading a dataset from the hub.
+            dataset = load_dataset(
+                args.dataset_name,
+                args.dataset_config_name,
+                cache_dir=args.cache_dir,
+            )
+        else:
+            data_files = {}
+            if args.train_data_dir is not None:
+                data_files["train"] = os.path.join(args.train_data_dir, "**")
+            dataset = load_dataset(
+                "imagefolder",
+                data_files=data_files,
+                cache_dir=args.cache_dir,
+            )
+            # See more about loading custom images at
+            # https://huggingface.co/docs/datasets/v2.4.0/en/image_load#imagefolder
 
     # Preprocessing the datasets.
     # We need to tokenize inputs and targets.
@@ -818,6 +859,7 @@ def main():
         unet.train()
         train_loss = 0.0
         for step, batch in enumerate(train_dataloader):
+            start_time = time.time()
             # Skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
                 if step % args.gradient_accumulation_steps == 0:
@@ -896,6 +938,10 @@ def main():
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
+                end_time = time.time()
+                logger.info(f"train_loss {loss}")
+                logger.info(f"train_samples_per_second {args.train_batch_size/(end_time-start_time)}")
+
 
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
