@@ -168,3 +168,7 @@ SSD 是利用不同尺度的特征图进行目标的检测的模型。
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
