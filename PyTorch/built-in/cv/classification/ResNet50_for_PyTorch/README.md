@@ -134,7 +134,7 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
      启动单卡评测。
 
      ```
-     bash ./test/train_eval_1p.sh --data_path=/data/xxx/
+     bash ./test/train_eval_1p.sh --data_path=/data/xxx/ --checkpoint=/checkpoint/xxx
      ```
 
    - 多机多卡性能数据获取流程。
@@ -144,7 +144,7 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
      如若遇到逻辑卡号与物理卡号不一致的情况，请手动在./test/train_performance_multinodes.sh中添加传参，例如--device-list='0,1,2,3'
      ```
 
-   --data_path参数填写数据集路径，需写到数据集的一级目录。
+   --data_path参数填写数据集路径，需写到数据集的一级目录,--checkpoint参数填写模型权重
 
    模型训练脚本参数说明如下。
 

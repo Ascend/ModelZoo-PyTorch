@@ -44,7 +44,7 @@ from apex import amp
 BATCH_SIZE = 512
 EPOCHS_SIZE = 100
 TRAIN_STEP = 8000
-LOG_STEP = 100
+LOG_STEP = 10
 
 CALCULATE_DEVICE = "npu:7"
 PRINT_DEVICE = "cpu"
@@ -354,7 +354,7 @@ def main_worker(gpu, ngpus_per_node, args):
             elif args.gpu is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
                 best_acc1 = best_acc1.to(args.gpu)
-            model.load_state_dict(checkpoint['state_dict'])
+            model.load_state_dict({k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()})
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
