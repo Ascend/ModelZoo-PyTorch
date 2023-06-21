@@ -46,6 +46,12 @@ import torch
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, CUDA_HOME
 
 
+with open('url.ini', 'r') as _f:
+    _content = _f.read()
+    vision_url = _content.split('vision_url=')[1].split('\n')[0]
+    email_url = _content.split('email_url=')[1].split('\n')[0]
+
+
 def read(*names, **kwargs):
     with io.open(
         os.path.join(os.path.dirname(__file__), *names),
@@ -193,8 +199,8 @@ setup(
     name=package_name,
     version=version,
     author='PyTorch Core Team',
-    author_email='soumith@pytorch.org',
-    url='https://github.com/pytorch/vision',
+    author_email=email_url,
+    url=vision_url,
     description='image and video datasets and models for torch deep learning',
     long_description=readme,
     license='BSD',

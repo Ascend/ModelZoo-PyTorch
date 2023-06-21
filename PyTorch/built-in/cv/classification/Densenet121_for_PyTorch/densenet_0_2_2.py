@@ -25,11 +25,18 @@ from collections import OrderedDict
 
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    densenet121_url = content.split('densenet121_url=')[1].split('\n')[0]
+    densenet169_url = content.split('densenet169_url=')[1].split('\n')[0]
+    densenet201_url = content.split('densenet201_url=')[1].split('\n')[0]
+    densenet161_url = content.split('densenet161_url=')[1].split('\n')[0]
+
 model_urls = {
-    'densenet121': 'https://download.pytorch.org/models/densenet121-a639ec97.pth',
-    'densenet169': 'https://download.pytorch.org/models/densenet169-b2777c0a.pth',
-    'densenet201': 'https://download.pytorch.org/models/densenet201-c1103571.pth',
-    'densenet161': 'https://download.pytorch.org/models/densenet161-8d451a50.pth',
+    'densenet121': densenet121_url,
+    'densenet169': densenet169_url,
+    'densenet201': densenet201_url,
+    'densenet161': densenet161_url,
 }
 
 

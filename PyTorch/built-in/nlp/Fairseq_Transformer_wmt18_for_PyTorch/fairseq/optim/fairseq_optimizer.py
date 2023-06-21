@@ -7,7 +7,7 @@ import torch
 from fairseq import utils
 from fairseq.dataclass.utils import gen_parser_from_dataclass
 from collections import defaultdict
-
+from .. import npu_fused_mode
 
 class FairseqOptimizer(object):
     def __init__(self, cfg):
@@ -102,6 +102,9 @@ class FairseqOptimizer(object):
 
     def multiply_grads(self, c):
         """Multiplies grads by a constant *c*."""
+        if npu_fused_mode:
+            self.optimizer.multiply_grads(c)
+            return
         per_device_and_dtype_grads = defaultdict(lambda: defaultdict(list))
         for p in self.params:
             if p.grad is not None:
@@ -119,6 +122,8 @@ class FairseqOptimizer(object):
 
     def clip_grad_norm(self, max_norm, aggregate_norm_fn=None):
         """Clips gradient norm."""
+        if npu_fused_mode:
+            return self.optimizer.clip_grad_norm_(self.params, max_norm, aggregate_norm_fn)
         return utils.clip_grad_norm_(self.params, max_norm, aggregate_norm_fn)
 
     def step(self, closure=None, scale=1.0, groups=None):
@@ -138,8 +143,9 @@ class FairseqOptimizer(object):
 
     def zero_grad(self):
         """Clears the gradients of all optimized parameters."""
-        for p in self.params:
-            p.grad = None
+        if not npu_fused_mode:
+            for p in self.params:
+                p.grad = None
         self.optimizer.zero_grad()
 
     @property

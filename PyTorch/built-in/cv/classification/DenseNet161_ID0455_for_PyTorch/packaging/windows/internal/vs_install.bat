@@ -1,6 +1,6 @@
 @echo off
 
-set VS_DOWNLOAD_LINK=https://aka.ms/vs/15/release/vs_buildtools.exe
+for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "vs_buildtools_url="') do set VS_DOWNLOAD_LINK=%%a
 IF "%VS_LATEST%" == "1" (
    set VS_INSTALL_ARGS= --nocache --norestart --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools
    set VSDEVCMD_ARGS=

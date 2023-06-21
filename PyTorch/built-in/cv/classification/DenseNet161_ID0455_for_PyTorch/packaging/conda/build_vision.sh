@@ -36,7 +36,8 @@ fi
 
 if [[ ! -d "$vision_rootdir" ]]; then
     rm -rf "$vision_rootdir"
-    git clone "https://github.com/pytorch/vision" "$vision_rootdir"
+    vision_url=`sed '/^vision_url=/!d;s/.*=//' ../../url.ini`
+    git clone ${vision_url} "$vision_rootdir"
     pushd "$vision_rootdir"
     git checkout v$TORCHVISION_BUILD_VERSION
     popd
@@ -49,6 +50,8 @@ if [[ "$OSTYPE" == "msys" ]]; then
     export miniconda_exe="${WIN_PACKAGE_WORK_DIR}\\miniconda.exe"
     rm -rf "$tmp_conda"
     rm -f "$miniconda_exe"
+    miniconda3_url=`sed '/^miniconda3_url=/!d;s/.*=//' ../../url.ini`
+    git clone ${miniconda3_url} "$vision_rootdir"
     curl -sSk https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe -o "$miniconda_exe"
     "$SOURCE_DIR/install_conda.bat" && rm "$miniconda_exe"
     pushd $tmp_conda

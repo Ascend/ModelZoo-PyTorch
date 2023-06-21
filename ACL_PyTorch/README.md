@@ -231,11 +231,12 @@ CV-classfication
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ViT_base"> ViT_base </a>
         </td>
         <td>ImageNet</td>
-	<td>80.68%</td>
+	<td>80.63%(patch32_224)</td>
         <td></td>
 	<td></td>
-	<td>1189(bs32)</td>
+	<td>1679.63(patch32_224 bs64)</td>
 	<td>bs x 3 x 224 x 224</td>
+    </tr>
 </table>
 
 
@@ -321,7 +322,7 @@ CV-detection
 	<td>bs x 1 x 32 x len</td>
     </tr>
     <tr>
-        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_Sierkinhane_for_Pytorch">CRNN_Sierkinhane_for_Pytorch</a></td>
+        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/CRNN/CRNN_Sierkinhane_for_Pytorch">CRNN_Sierkinhane_for_Pytorch</a></td>
         <td>GitHub 仓库提供的 360 万数据集</td>
 	    <td>78.37%</td>
         <td></td>

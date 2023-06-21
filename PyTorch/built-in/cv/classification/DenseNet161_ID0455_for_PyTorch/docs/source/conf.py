@@ -79,6 +79,12 @@ extensions = [
     'sphinxcontrib.googleanalytics',
 ]
 
+with open('../../url.ini', 'r') as _f:
+    _content = _f.read()
+    python_url = _content.split('python_url=')[1].split('\n')[0]
+    numpy_url = _content.split('numpy_url=')[1].split('\n')[0]
+    css_files_url = _content.split('css_files_url=')[1].split('\n')[0]
+
 napoleon_use_ivar = True
 
 googleanalytics_id = 'UA-90545585-1'
@@ -159,7 +165,7 @@ html_static_path = ['_static']
 # html_style_path = 'css/pytorch_theme.css'
 html_context = {
     'css_files': [
-        'https://fonts.googleapis.com/css?family=Lato',
+        css_files_url,
         '_static/css/pytorch_theme.css'
     ],
 }
@@ -224,8 +230,8 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'python': (python_url, None),
+    'numpy': (numpy_url, None),
 }
 
 # -- A patch that prevents Sphinx from cross-referencing ivar tags -------
