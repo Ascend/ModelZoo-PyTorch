@@ -187,7 +187,9 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 
 无。
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 
