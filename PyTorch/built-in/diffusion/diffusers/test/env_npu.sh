@@ -21,9 +21,6 @@ msnpureport -g error -d 5
 msnpureport -g error -d 6
 msnpureport -g error -d 7
 
-
-export BMMV2_ENABLE=1
-export SCALAR_TO_HOST_MEM=1
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #设置默认日志级别,0-debug/1-info/2-warning/3-error
@@ -32,8 +29,6 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_GLOBAL_EVENT_ENABLE=0
 #设置是否开启taskque,0-关闭/1-开启
 export TASK_QUEUE_ENABLE=1
-#设置是否开启PTCopy,0-关闭/1-开启
-export PTCOPY_ENABLE=1
 #设置是否开启combined标志,0-关闭/1-开启
 export COMBINED_ENABLE=1
 #HCCL白名单开关,1-关闭/0-开启
