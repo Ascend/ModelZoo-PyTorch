@@ -146,7 +146,9 @@ DeCLIP是一种数据高效的CLIP训练方法，通过利用图像-文本对之
 
 无。
 
+# 公网地址说明
 
+代码涉及公网地址参考 ```./public_address_statement.md```
 
 
 
