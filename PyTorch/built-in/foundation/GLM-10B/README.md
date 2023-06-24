@@ -81,14 +81,17 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
 
    用户自行获取原始数据集，预训练可选用的开源数据集The Pile等，微调可选用COPA数据集等。将数据集上传到服务器任意路径下并解压。
 
-   GLM-10B预训练使用到的Pile数据集目录结构参考如下所示，完整数据集解压处理后近3T，仅使用部分数据00.jsonl预训练作为参考。
+   GLM-10B预训练使用到的Pile数据集目录结构参考如下所示，完整数据集解压处理后近3T，仅使用部分数据00.jsonl预训练作为参考。多机预训练时，每节点上均须将Pile数据集移动或软连接到模型脚本目录下。默认仅使用00.jsonl文件进行预训练。
+   
+   目录结构参考如下：
 
    ```
-   ├── data
-         ├──00.jsonl
-         ├──02.jsonl
-         ├   ...
-         ├──29.jsonl
+   ├── GLM-10B
+        ├── pile
+             ├──00.jsonl
+             ├──02.jsonl
+             ├   ...
+             ├──29.jsonl
    ```
 
    微调可使用COPA数据集，目录结构参考如下。
@@ -150,9 +153,9 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
      启动16卡训练。
 
      ```
-     bash ./tests/train_pretrain_full_16p.sh --data_path=/data/xxx/00.jsonl  # 16卡预训练长稳
+     bash ./tests/train_pretrain_full_16p.sh # 16卡预训练长稳
      
-     bash ./tests/train_pretrain_performance_16p.sh --data_path=/data/xxx/00.jsonl  # 16卡预训练性能
+     bash ./tests/train_pretrain_performance_16p.sh # 16卡预训练性能
      ```
 
      --data_path参数填写数据集路径，若仅使用一个jsonl文件，指定到具体的文件，若使用多个，指定到上一级目录；
@@ -195,6 +198,9 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
 |:-:|:-:|:-:|:-:|:-:|
 | Finetune 8p-NPU  | 98  | 100 | fp16  | 1.11  |
 | Finetune 8p-GPU  | 98  | 100 | fp16  | 1.11  |
+
+   > **说明：** 
+   > Accuracy指微调过程中最高精度，实际验证NPU与GPU均存在1~2%波动。
 
 # 版本说明
 
