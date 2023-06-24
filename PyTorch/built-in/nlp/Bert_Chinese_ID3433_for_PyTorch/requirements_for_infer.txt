@@ -1,0 +1,7 @@
+transformers == 4.19.2
+datasets == 2.3.0
+onnx
+onnx-simplifier == 0.3.10
+wikiextractor
+sklearn == 0.0
+tqdm
