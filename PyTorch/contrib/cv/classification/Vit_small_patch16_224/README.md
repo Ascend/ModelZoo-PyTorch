@@ -166,3 +166,7 @@ Vit_small_patch16_224模型把Transformer设计思路用在视觉任务如图片
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
