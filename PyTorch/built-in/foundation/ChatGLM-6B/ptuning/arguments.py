@@ -18,6 +18,17 @@ from typing import Optional
 
 
 @dataclass
+class ProfilingArguments:
+    """
+    Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
+    """
+
+    profiling_step: int = field(
+        metadata={"help": "The step you want to profiling with"}
+    )
+
+
+@dataclass
 class ModelArguments:
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
@@ -221,8 +232,6 @@ class DataTrainingArguments:
             )
         },
     )
-
-    
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None and self.test_file is None:
