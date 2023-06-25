@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import numpy as np
 import functools
+import numpy as np
 from espnet_onnx.asr.frontend.frontend import Frontend
 from espnet_onnx.asr.frontend.normalize.global_mvn import GlobalMVN
 from espnet_onnx.asr.frontend.normalize.utterance_mvn import UtteranceMVN
@@ -83,7 +83,7 @@ def ctcprefixscorer_npu_init(func):
             self.eos = eos
             self.impl = None
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper
 
 
@@ -97,7 +97,7 @@ def ctcprefixscoreth_npu_init(func):
             self.ori_end_frames = self.end_frames.copy()
             self.ori_x = self.x.copy()
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper
 
 
@@ -169,7 +169,7 @@ def build_encoder_npu_model(func):
                 elif self.config.normalize.type == 'utterance_mvn':
                     self.normalize = UtteranceMVN(self.config.normalize)
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper
 
 
@@ -187,7 +187,7 @@ def build_decoder_npu_model(func):
             self.out_caches = [d.name for d in self.decoder.get_outputs()
                                if 'cache' in d.name]
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper
 
 
@@ -199,7 +199,7 @@ def build_joint_network_npu_model(func):
             self.config = args[1]
             self.joint_session = AscendInferSession(kwargs['device_id'], self.config, fp16=kwargs['fp16'])
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper
 
 
@@ -218,5 +218,5 @@ def build_transformer_lm_npu_model(func):
             self.nlayers = self.config.nlayers
             self.odim = self.config.odim
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper

@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import numpy as np
 import functools
+import numpy as np
 from espnet_onnx.asr.model.encoder import get_encoder
 from espnet_onnx.asr.model.decoder import get_decoder
 from espnet_onnx.asr.model.lm import get_lm
@@ -63,8 +63,10 @@ def build_speech_model_npu(self, device_id, only_use_encoder, only_use_decoder, 
     self.enable_multibatch = enable_multibatch
 
     if only_use_encoder or not only_use_decoder:
-        self.encoder = get_encoder(self.config.encoder, self.providers, use_quantized, use_npu=True, rank_mode=rank_mode,
-                                   device_id=device_id, disable_preprocess=disable_preprocess, fp16=False)
+        self.encoder = get_encoder(
+            self.config.encoder, self.providers, use_quantized, use_npu=True,
+            rank_mode=rank_mode, device_id=device_id, disable_preprocess=disable_preprocess,
+            fp16=False)
     if only_use_encoder:
         return
 
@@ -77,8 +79,8 @@ def build_speech_model_npu(self, device_id, only_use_encoder, only_use_decoder, 
     if not self.config.transducer.use_transducer_decoder:
         use_ctc = self.config.ctc.use_ctc if 'use_ctc' in self.config.ctc.keys() else True
         if use_ctc:
-            ctc = CTCPrefixScorer(self.config.ctc, self.config.token.eos, self.providers, use_quantized,
-                                  device_id=device_id, fp16=True)
+            ctc = CTCPrefixScorer(self.config.ctc, self.config.token.eos, self.providers,
+                                  use_quantized, device_id=device_id, fp16=True)
             scorers.update(
                 ctc=ctc,
                 length_bonus=LengthBonus(len(self.config.token.list))
@@ -139,7 +141,7 @@ def init_speech_npu(func):
                 self.start_idx = 1
                 self.last_idx = -1
         else:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
     return wrapper
 
 
