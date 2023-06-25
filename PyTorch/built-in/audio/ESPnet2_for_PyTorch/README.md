@@ -150,6 +150,8 @@ ESPNet是一套基于E2E的开源工具包，可进行语音识别等任务。�
      bash ./test/train_performance_8p.sh --stage=起始stage  # 8卡性能
      ```
    
+   --fp32开启FP32模式
+
 3. 启动训练后，日志输出路径为：<espnet-root>/egs2/aishell/asr1/nohup.out ，该日志中会打印二级日志（各个stage日志）的相对路径。
 如：stage 11 的日志路径为：“exp/asr_train_asr_conformer_raw_zh_char_sp/train.log”
 

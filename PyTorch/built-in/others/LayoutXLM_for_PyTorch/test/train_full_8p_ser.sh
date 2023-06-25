@@ -14,6 +14,9 @@ for para in $*; do
     batch_size=$(echo ${para#*=})
   elif [[ $para == --max_steps* ]]; then
     max_steps=$(echo ${para#*=})
+  elif [[ $para == --fp32 ]];then
+    fp32=`echo ${para#*=}`
+    export ALLOW_FP32=True
   fi
 done
 

@@ -222,7 +222,7 @@ class Trainer:
             )
 
         amp.register_half_function(torch_npu, 'npu_linear')
-        if trainer_options.use_amp:
+        if trainer_options.use_amp and not os.getenv('ALLOW_FP32'):
             model, optimizers = amp.initialize(model, optimizers, opt_level="O1", combine_grad=True, loss_scale="512")
 
         if distributed_option.distributed:
@@ -578,7 +578,7 @@ class Trainer:
             reporter.register(stats, weight)
 
             with reporter.measure_time("backward_time"):
-                if options.use_amp:
+                if options.use_amp and not os.getenv('ALLOW_FP32'):
                     with amp.scale_loss(loss, optimizers) as scaled_loss:
                         scaled_loss.backward()
                 else:
@@ -597,7 +597,7 @@ class Trainer:
                     )
 
                 # compute the gradient norm to check if it is normal or not
-                if options.use_amp:
+                if options.use_amp and not os.getenv('ALLOW_FP32'):
                     for iopt, optimizer in enumerate(optimizers):
                         if optim_idx is not None and iopt != optim_idx:
                             continue

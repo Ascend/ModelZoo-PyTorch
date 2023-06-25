@@ -67,6 +67,11 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
 from layoutlmft.utils import NPUTrainingArguments
 
+if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+    torch.npu.config.allow_internal_format = False
+    if os.getenv('ALLOW_FP32'):
+        torch.npu.conv.allow_hf32 = False
+        torch.npu.matmul.allow_hf32 = False
 torch.npu.set_compile_mode(jit_compile=False)
 option = {}
 # 二进制场景下，这三个算子前后存在大量aicpu上的transdata，性能较差；加入黑名单后性能提升明显

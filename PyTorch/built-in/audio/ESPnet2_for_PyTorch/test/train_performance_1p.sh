@@ -39,6 +39,10 @@ do
     if [[ $para == --use_amp* ]];then
         use_amp=`echo ${para#*=}`
     fi
+    if [[ $para == --fp32 ]];then
+        fp32=`echo ${para#*=}`
+        export ALLOW_FP32=True
+    fi
 done
 
 export USE_AMP=${use_amp}

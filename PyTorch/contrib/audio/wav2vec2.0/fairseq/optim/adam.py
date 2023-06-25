@@ -5,6 +5,7 @@
 
 import logging
 import math
+import os
 from collections.abc import Collection
 from dataclasses import dataclass, field
 from typing import Any, List
@@ -65,7 +66,7 @@ class FairseqAdam(FairseqOptimizer):
             # on TPUs we use the Adam defined here, since it
             # automatically casts gradients to FP32
             self._optimizer = Adam(params, **self.optimizer_config)
-        elif use_fused_adam:
+        elif use_fused_adam and not os.getenv('ALLPW_FP32') and not os.getenv('ALLOW_HF32'):
             logger.info("using FusedAdam")
             self._optimizer = fused_adam_cls(
                 params, use_fp16_stats=self.cfg.fp16_adam_stats, **self.optimizer_config

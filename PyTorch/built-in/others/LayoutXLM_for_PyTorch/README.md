@@ -116,6 +116,7 @@ LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消�
      bash test/train_performance_8p_ser.sh     # SER性能任务      
      ```
      
+   --fp32开启FP32模式
      
    + 脚本中调用的python命令参数说明如下：
      

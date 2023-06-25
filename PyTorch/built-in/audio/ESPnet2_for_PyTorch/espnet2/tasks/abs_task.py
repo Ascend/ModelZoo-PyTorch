@@ -109,7 +109,7 @@ def cpu_affinity(rank_id, rank_size):
 
 
 def get_npu_fused_adam():
-    if os.getenv('USE_AMP') == 'true':
+    if os.getenv('USE_AMP') == 'true' and not os.getenv('ALLOW_FP32'):
         return apex.optimizers.NpuFusedAdam
     else:
         from torch_npu import optim
@@ -117,7 +117,7 @@ def get_npu_fused_adam():
 
 
 def get_npu_fused_sgd():
-    if os.getenv('USE_AMP') == 'true':
+    if os.getenv('USE_AMP') == 'true' and not os.getenv('ALLOW_FP32'):
         return apex.optimizers.NpuFusedSGD
     else:
         from torch_npu import optim
@@ -1049,6 +1049,11 @@ class AbsTask(ABC):
 
     @classmethod
     def main(cls, args: argparse.Namespace = None, cmd: Sequence[str] = None):
+        if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+            torch.npu.config.allow_internal_format = False
+            if os.getenv('ALLOW_FP32'):
+                torch.npu.conv.allow_hf32 = False
+                torch.npu.matmul.allow_hf32 = False
         assert check_argument_types()
         print(get_commandline_args(), file=sys.stderr)
         if args is None:

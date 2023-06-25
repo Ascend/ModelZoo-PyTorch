@@ -60,6 +60,12 @@ def main(cfg: FairseqConfig) -> None:
 
     utils.import_user_module(cfg.common)
     add_defaults(cfg)
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        torch.npu.config.allow_internal_format = False
+        cfg.common.fp16 = False
+        if os.getenv('ALLOW_FP32'):
+            torch.npu.conv.allow_hf32 = False
+            torch.npu.matmul.allow_hf32 = False
 
     if (
         distributed_utils.is_master(cfg.distributed_training)

@@ -47,6 +47,9 @@ do
     loss_scale=`echo ${para#*=}`
   elif [[ $para == --fp16* ]];then
     fp16=`echo ${para#*=}`
+  elif [[ $para == --fp32 ]];then
+    fp32=`echo ${para#*=}`
+    export ALLOW_FP32=True
   fi
 done
 
