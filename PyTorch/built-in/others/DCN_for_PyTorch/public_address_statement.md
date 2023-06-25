@@ -1,0 +1,5 @@
+| 类型         | 开源代码地址                                                                    | 文件名                   | 公网IP地址/公网URL地址/域名/邮箱地址              | 用途说明                         |
+| ------------ | ------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------- | -------------------------------- |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/utils.py | ./deepctr_torch/utils.py | https://pypi.python.org/pypi/deepctr-torch/json   | 使用json获取pypi上的包的版本     |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/setup.py               | ./setup.py               | https://github.com/shenweichen/deepctr-torch      | setuptools的url配置选项          |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/setup.py               | ./setup.py               | https://github.com/shenweichen/deepctr-torch/tags | setuptools的download_url配置选项 |
