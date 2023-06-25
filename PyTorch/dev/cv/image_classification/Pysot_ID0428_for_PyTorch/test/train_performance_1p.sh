@@ -12,7 +12,7 @@ RANK_ID_START=0
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
-ckpt_path="/npu/traindata/ckpt"
+ckpt_path="/npu/traindata/ID0428_ckpt"
 
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
