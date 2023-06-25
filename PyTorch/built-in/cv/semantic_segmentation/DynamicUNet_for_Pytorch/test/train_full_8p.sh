@@ -2,7 +2,7 @@
 
 #网络名称，同目录名称
 Network="DynamicUNet_ID4080_for_Pytorch"
-batch_size=4
+batch_size=6
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -87,7 +87,7 @@ NGPUS=8
 nohup python3 -u -m torch.distributed.launch --nproc_per_node=$NGPUS runner.py \
 --model dynamicunet ${prec} \
 --dataset pascal_voc --dataset-path ${data_path} \
---warmup-iters 20 --lr 0.0001 --epochs 50 --worker 8 \
+--warmup-iters 20 --lr 0.00015 --epochs 50 --worker 8 \
 --pretrained ${pretrained_model} \
 --batch-size ${batch_size} \
 --log-iter 1 --val-epoch 5 \
