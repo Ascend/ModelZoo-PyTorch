@@ -48,6 +48,7 @@ ABINet的特点即是autonomous（自治的）、bidirectional（双向的）、
   ```bash
   pip install -r requirements.txt
   pip install -e .
+  /bin/cp -f mmcv_need/epoch_based_runner.py ./mmcv/mmcv/runner/
   ```
   
 ## 准备训练数据集
