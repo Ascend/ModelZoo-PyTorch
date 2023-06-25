@@ -108,7 +108,7 @@
    ```
    python3 preprocess.py --img_size 384 --input_dir /opt/npu/imagenet/val --out_dir ./preprocessed_data
    ```
-   
+
    - 参数说明：
 
      -   --img_size：模型输入尺寸：384/224。
@@ -178,7 +178,7 @@
 
          ```
          # bs8为例
-         atc --model=models/onnx/swin_base_patch4_window12_384_bs8_opt.onnx --framework=5 --output=models/om/swin_base_patch4_window12_384_bs8 --input_format=NCHW --log=debug --soc_version=${chip_name} --output_type=FP16 --input_fp16_nodes="image" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         atc --model=models/onnx/swin_base_patch4_window12_384_bs8_opt.onnx --framework=5 --output=models/om/swin_base_patch4_window12_384_bs8 --input_format=NCHW --log=debug --soc_version=${chip_name} --output_type=FP16 --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --insert_op_conf aipp.config --enable_small_channel 1
          ```
 
          - 参数说明：
@@ -215,7 +215,7 @@
 
 
         推理后的输出默认在当前目录outputs下。
-    
+
 
    3. 精度验证。
 
@@ -256,7 +256,7 @@
    | 基准性能 | 64         | ImageNet | -                               | 363 fps |
 
   其他配置参考性能精度如下(更新bs1/最优bs)：
-  
+
    | 芯片型号 | config                         | Batch Size | 数据集   | 参考精度                        | NPU精度                           | 性能    |
    |----------|--------------------------------|------------|----------|---------------------------------|-----------------------------------|---------|
    | 310P3    | swin_large_patch4_window12_384 | 1          | ImageNet | Top1 Acc: 87.3%;Top5 Acc: 98.2% | Top1 Acc: 87.27%;Top5 Acc: 98.23% | 51 fps  |

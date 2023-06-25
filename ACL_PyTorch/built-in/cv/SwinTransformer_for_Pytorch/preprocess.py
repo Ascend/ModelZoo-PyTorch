@@ -30,8 +30,6 @@ def build_transform(img_size, interpolation=InterpolationMode.BICUBIC):
     t.append(
         transforms.Resize((img_size, img_size),
                           interpolation=interpolation))
-    t.append(transforms.ToTensor())
-    t.append(transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD))
     return transforms.Compose(t)
 
 
@@ -72,7 +70,7 @@ def parse_arguments():
                         help='output dir for preprocessed data')
     parser.add_argument('-n', '--num_worker', type=int, default=16,
                         help='num of workers for preprocess data')
-    parser.add_argument('-d', '--dtype', type=str, default="float16",
+    parser.add_argument('-d', '--dtype', type=str, default="uint8",
                         help='dtype for preprocessed data')
     args = parser.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
