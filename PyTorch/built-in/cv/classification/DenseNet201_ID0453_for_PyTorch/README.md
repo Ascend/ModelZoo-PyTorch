@@ -172,3 +172,6 @@ DenseNet-201 是一个预训练模型，已经在 ImageNet 数据库的一个子
 
 无。
 
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
