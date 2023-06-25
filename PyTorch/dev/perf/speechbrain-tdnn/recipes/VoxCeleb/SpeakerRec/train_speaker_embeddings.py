@@ -1,4 +1,17 @@
 #!/usr/bin/python3
+# Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Recipe for training speaker embeddings (e.g, xvectors) using the VoxCeleb Dataset.
 We employ an encoder followed by a speaker classifier.
 
@@ -17,27 +30,22 @@ Author
 import os
 import sys
 import random
+import copy
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 import torchaudio
 import speechbrain as sb
 from speechbrain.utils.data_utils import download_file
 from hyperpyyaml import load_hyperpyyaml
 from speechbrain.utils.distributed import run_on_main
+from speechbrain.dataio.batch import PaddedBatch
 
-
-class SpeakerBrain(sb.core.Brain):
-    """Class for speaker embedding training"
-    """
-
-    def compute_forward(self, batch, stage):
-        """Computation pipeline based on a encoder + speaker classifier.
-        Data augmentation and environmental corruption are applied to the
-        input speech.
-        """
-        batch = batch.to(self.device)
+def collate_fn_train_warpper(augment_pipeline, compute_features_cpu, stage):
+    def collate_fn(batch):
+        batch = PaddedBatch(batch)
         wavs, lens = batch.sig
-
-        if stage == sb.Stage.TRAIN:
+        if stage:
 
             # Applying the augmentation pipeline
             wavs_aug_tot = []
@@ -62,11 +70,42 @@ class SpeakerBrain(sb.core.Brain):
                     wavs_aug_tot[0] = wavs
 
             wavs = torch.cat(wavs_aug_tot, dim=0)
-            self.n_augment = len(wavs_aug_tot)
+            batch.n_augment = len(wavs_aug_tot)
             lens = torch.cat([lens] * self.n_augment)
 
         # Feature extraction and normalization
         feats = self.modules.compute_features(wavs)
+        batch.sig = wavs, lens
+        batch.feats = feats
+        return batch
+    return collate_fn
+
+def collate_fn_valid_warpper(augment_pipeline, compute_features_cpu, stage):
+    def collate_fn(batch):
+        batch = PaddedBatch(batch)
+        wavs, lens = batch.sig
+        batch.sig = wavs, lens
+
+        # Feature extraction and normalization
+        feats = self.modules.compute_features(wavs)
+        batch.feats = feats
+        return batch
+    return collate_fn
+
+class SpeakerBrain(sb.core.Brain):
+    """Class for speaker embedding training"
+    """
+
+    def compute_forward(self, batch, stage):
+        """Computation pipeline based on a encoder + speaker classifier.
+        Data augmentation and environmental corruption are applied to the
+        input speech.
+        """
+        batch = batch.to(self.device, non_blocking=True)
+        wavs, lens = batch.sig
+        if stage == sb.Stage.TRAIN:
+            self.augment = batch.augment
+        
         feats = self.modules.mean_var_norm(feats, lens)
 
         # Embeddings + speaker classifier
@@ -194,6 +233,10 @@ def dataio_prep(hparams):
 
 if __name__ == "__main__":
 
+    torch.npu.conv.allow_hf32 = False
+    torch.npu.matmul.allow_hf32 = False
+    torch.npu.config.allow_internal_format = False
+
     # This flag enables the inbuilt cudnn auto-tuner
     torch.backends.cudnn.benchmark = True
 
@@ -248,11 +291,19 @@ if __name__ == "__main__":
         checkpointer=hparams["checkpointer"],
     )
 
+    hparams["compute_features_cpu"] = copy.deepcopy(hparams["compute_features"]).cpu()
+    train_loader_kwargs = hparams["dataloader_options"]
+    train_loader_kwargs["collate_fn"] = collate_fn_train_warpper(hparams["augment_pipeline"],
+                                                                hparams["compute_features_cpu"], True)
+    valid_loader_kwargs = copy.deepcopy(hparams["dataloader_options"])
+    valid_loader_kwargs["collate_fn"] = collate_fn_valid_warpper(hparams["augment_pipeline"],
+                                                                hparams["compute_features_cpu"], False)
+
     # Training
     speaker_brain.fit(
         speaker_brain.hparams.epoch_counter,
         train_data,
         valid_data,
-        train_loader_kwargs=hparams["dataloader_options"],
-        valid_loader_kwargs=hparams["dataloader_options"],
+        train_loader_kwargs=train_loader_kwargs,
+        valid_loader_kwargs=valid_loader_kwargs,
     )

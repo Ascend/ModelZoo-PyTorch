@@ -1,4 +1,17 @@
 #!/usr/bin/python3
+#Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Recipe for training a speaker verification system based on cosine distance.
 The cosine distance is computed on the top of pre-trained embeddings.
 The pre-trained model is automatically downloaded from the web if not specified.
@@ -13,7 +26,10 @@ Authors
 """
 import os
 import sys
+import copy
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 import logging
 import torchaudio
 import speechbrain as sb
@@ -22,10 +38,23 @@ from hyperpyyaml import load_hyperpyyaml
 from speechbrain.utils.metric_stats import EER, minDCF
 from speechbrain.utils.data_utils import download_file
 from speechbrain.utils.distributed import run_on_main
+from speechbrain.dataio.batch import PaddedBatch
+
+def collate_fn_eval_warpper(compute_features_cpu):
+    def collate_fn(batch):
+        batch = PaddedBatch(batch)
+        wavs, lens = batch.sig
+        batch.sig = wavs, lens
+
+        # Feature extraction and normalization
+        feats = self.modules.compute_features(wavs)
+        batch.feats = feats
+        return batch
+    return collate_fn
 
 
 # Compute embeddings from the waveforms
-def compute_embedding(wavs, wav_lens):
+def compute_embedding(wavs, wav_lens, batch):
     """Compute speaker embeddings.
 
     Arguments
@@ -38,7 +67,7 @@ def compute_embedding(wavs, wav_lens):
         in the length (e.g., [0.8 0.6 1.0])
     """
     with torch.no_grad():
-        feats = params["compute_features"](wavs)
+        feats = batch.feats.npu(non_blocking=True)
         feats = params["mean_var_norm"](feats, wav_lens)
         embeddings = params["embedding_model"](feats, wav_lens)
     return embeddings.squeeze(1)
@@ -247,6 +276,18 @@ if __name__ == "__main__":
         if "voxceleb_source" in params
         else None,
     )
+
+    params["compute_features_cpu"] = copy.deepcopy(params["compute_features"]).cpu()
+    train_loader_kwargs = params["train_dataloder_opts"]
+    train_loader_kwargs["collate_fn"] = collate_fn_eval_warpper(params["compute_features_cpu"]):
+    train_loader_kwargs["num_workers"] = 24
+    enrol_loader_kwargs = params["enrol_dataloder_opts"]
+    enrol_loader_kwargs["collate_fn"] = collate_fn_eval_warpper(params["compute_features_cpu"]):
+    enrol_loader_kwargs["num_workers"] = 24
+    test_loader_kwargs = params["test_dataloder_opts"]
+    test_loader_kwargs["collate_fn"] = collate_fn_eval_warpper(params["compute_features_cpu"]):
+    test_loader_kwargs["num_workers"] = 24
+
 
     # here we create the datasets objects as well as tokenization and encoding
     train_dataloader, enrol_dataloader, test_dataloader = dataio_prep(params)
