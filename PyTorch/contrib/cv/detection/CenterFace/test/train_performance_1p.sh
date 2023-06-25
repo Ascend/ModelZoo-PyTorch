@@ -136,6 +136,7 @@ taskset -c 0-23 python3 main.py $PREC --batch_size=$batch_size \
     --device_list=$device_id \
     --profiling ${profiling} \
     --start_step ${start_step} \
+    --num_workers 64 \
     --stop_step ${stop_step} \
     ${fp32} \
     ${hf32} \
