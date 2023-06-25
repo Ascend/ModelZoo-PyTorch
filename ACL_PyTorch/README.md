@@ -813,6 +813,17 @@ Audio
         <td>99.93%</td>
 	<td>1682(bs64)</td>
 	<td nowrap="nowrap">bs x 1800 x 24</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/Conformer_for_Pytorch">  Conformer_for_Pytorch </a>
+        </td>
+        <td>aishell</td>
+	<td></td>
+        <td></td>
+        <td>95.04%</td>
+	<td>60</td>
+	<td nowrap="nowrap">多尺度</td>
 </table>
 
 Nlp

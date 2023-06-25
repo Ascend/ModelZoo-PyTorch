@@ -36,14 +36,13 @@ def asr_npu_call(self, speech: np.ndarray):
         else:
             # support for multibatch
             enc, _ = self.encoder(speech, None)
+    else:
+        enc = [speech]
 
     if self.only_use_encoder:
         return enc
 
-    if not self.only_use_decoder:
-        enc = enc[0]
-    else:
-        enc = speech
+    enc = enc[0]
     init_batch = enc.shape[0]
     nbest_hyps_list = self.beam_search(enc)
     nbest_hyps = []
@@ -62,22 +61,22 @@ def build_speech_model_npu(self, device_id, only_use_encoder, only_use_decoder, 
     self.only_use_decoder = only_use_decoder
     self.enable_multibatch = enable_multibatch
 
-    if only_use_encoder or not only_use_decoder:
+    if not only_use_decoder:
         self.encoder = get_encoder(
             self.config.encoder, self.providers, use_quantized, use_npu=True,
             rank_mode=rank_mode, device_id=device_id, disable_preprocess=disable_preprocess,
             fp16=False)
-    if only_use_encoder:
-        return
+        if only_use_encoder:
+            return
 
     decoder = get_decoder(self.config.decoder, self.providers, use_quantized,
                           use_npu=True, device_id=device_id, fp16=True)
     scorers = {'decoder': decoder}
     weights = {}
-    ctc = None
-    joint_network = None
     if not self.config.transducer.use_transducer_decoder:
-        use_ctc = self.config.ctc.use_ctc if 'use_ctc' in self.config.ctc.keys() else True
+        use_ctc = True
+        if 'use_ctc' in self.config.ctc.keys():
+            use_ctc = self.config.ctc.use_ctc
         if use_ctc:
             ctc = CTCPrefixScorer(self.config.ctc, self.config.token.eos, self.providers,
                                   use_quantized, device_id=device_id, fp16=True)

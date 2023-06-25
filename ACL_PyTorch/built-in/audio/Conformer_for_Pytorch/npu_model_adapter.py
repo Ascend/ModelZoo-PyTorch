@@ -131,10 +131,6 @@ def encoder_npu_call(func):
             datas = args[1]
             # multi batch mode
             feats, feat_length, mask, pos_mask, conv_mask, encoder_out_lens = datas
-            if self.rank_mode:
-                mode = 'dymdims'
-            else:
-                mode = 'dymshape'
             outputs = self.encoder.run_sequence([feats, mask, pos_mask, conv_mask])
             encoder_out = outputs[0]
 

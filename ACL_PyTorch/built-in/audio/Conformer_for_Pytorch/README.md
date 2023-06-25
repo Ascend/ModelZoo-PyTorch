@@ -51,7 +51,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    
 3. 安装ais-bench/auto-optimizer
 
-   参考[ais-bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)/[auto-optimizer](https://gitee.com/ascend/ait/tree/master/ait/components/debug/surgeon)安装。
+   参考[ais-bench](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)/[auto-optimizer](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer/auto_optimizer)安装。
    
 
 4. 获取`OM`推理代码
@@ -125,7 +125,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    python3 modify_onnx_ctc.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc.onnx \
    /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_dynamic.onnx
    python3 modify_onnx_encoder.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder.onnx \
-   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_mutibatch.onnx 4
+   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder_multibatch.onnx 4
 
    ```
    
