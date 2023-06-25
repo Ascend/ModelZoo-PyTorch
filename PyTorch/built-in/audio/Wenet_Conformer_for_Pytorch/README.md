@@ -117,6 +117,14 @@ Wenet是一款开源的、面向工业落地应用的语音识别工具包，主
 | 8p-竞品A |   -   |      800.44        |   -    |    -     |      1.11      |
 | 8p-NPU  |   -   |      500.28        |   -    |    -     |      1.11      |
 
+**表 3** conformer result
+* Feature info: using fbank feature, dither, cmvn, online speed perturb
+* Training info: lr 0.002, batch size 18, 4 gpu, acc_grad 4, 240 epochs, dither 0.1
+* Decoding info: ctc_weight 0.5, average_num 20
+
+| decoding mode             | WER   |
+|:------:|:------:|
+| ctc greedy search        | 4.81  |
 
 # 版本说明
 
