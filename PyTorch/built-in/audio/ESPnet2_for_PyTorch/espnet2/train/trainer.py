@@ -14,6 +14,7 @@
 
 """Trainer module."""
 import argparse
+import os
 from contextlib import contextmanager
 import dataclasses
 from dataclasses import is_dataclass
@@ -56,6 +57,17 @@ from espnet2.train.distributed_utils import DistributedOption
 from espnet2.train.reporter import Reporter
 from espnet2.train.reporter import SubReporter
 from espnet2.utils.build_dataclass import build_dataclass
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 if torch.distributed.is_available():
     from torch.distributed import ReduceOp
@@ -505,9 +517,12 @@ class Trainer:
         iterator_stop = torch.tensor(0).to("cuda" if ngpu > 0 else "cpu")
 
         start_time = time.perf_counter()
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for iiter, (_, batch) in enumerate(
             reporter.measure_iter_time(iterator, "iter_time"), 1
         ):
+            profiler.start()
             assert isinstance(batch, dict), type(batch)
 
             if distributed:
@@ -661,7 +676,7 @@ class Trainer:
                     reporter.tensorboard_add_scalar(summary_writer, -log_interval)
                 if use_wandb:
                     reporter.wandb_log()
-
+            profiler.end()
         else:
             if distributed:
                 iterator_stop.fill_(1)
