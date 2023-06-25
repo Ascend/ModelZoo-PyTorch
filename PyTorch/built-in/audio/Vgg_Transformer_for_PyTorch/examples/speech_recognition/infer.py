@@ -16,6 +16,9 @@ import sys
 import editdistance
 import numpy as np
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from fairseq import checkpoint_utils, options, progress_bar, tasks, utils
 from fairseq.data.data_utils import post_process
 from fairseq.logging.meters import StopwatchMeter, TimeMeter
@@ -249,6 +252,8 @@ class ExistingEmissionsDecoder(object):
 def main(args, task=None, model_state=None):
     check_args(args)
 
+    torch.npu.set_compile_mode(jit_compile=False)
+
     if args.max_tokens is None and args.batch_size is None:
         args.max_tokens = 4000000
     logger.info(args)
@@ -297,27 +302,7 @@ def main(args, task=None, model_state=None):
     # Initialize generator
     gen_timer = StopwatchMeter()
 
-    def build_generator(args):
-        w2l_decoder = getattr(args, "w2l_decoder", None)
-        if w2l_decoder == "viterbi":
-            from examples.speech_recognition.w2l_decoder import W2lViterbiDecoder
-
-            return W2lViterbiDecoder(args, task.target_dictionary)
-        elif w2l_decoder == "kenlm":
-            from examples.speech_recognition.w2l_decoder import W2lKenLMDecoder
-
-            return W2lKenLMDecoder(args, task.target_dictionary)
-        elif w2l_decoder == "fairseqlm":
-            from examples.speech_recognition.w2l_decoder import W2lFairseqLMDecoder
-
-            return W2lFairseqLMDecoder(args, task.target_dictionary)
-        else:
-            print(
-                "only wav2letter decoders with (viterbi, kenlm, fairseqlm) options are supported at the moment"
-            )
-
-    # please do not touch this unless you test both generate.py and infer.py with audio_pretraining task
-    generator = build_generator(args)
+    generator = task.build_generator(models, args)
 
     if args.load_emissions:
         generator = ExistingEmissionsDecoder(

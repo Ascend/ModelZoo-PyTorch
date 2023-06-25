@@ -16,6 +16,9 @@ import sys
 
 import numpy as np
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from fairseq import (
     checkpoint_utils,
     distributed_utils,
@@ -41,6 +44,10 @@ logger = logging.getLogger("fairseq_cli.train")
 
 def main(args):
     utils.import_user_module(args)
+
+    torch.npu.set_compile_mode(jit_compile=False)
+    if args.distributed_world_size == 1:
+        torch.npu.set_device('npu:{}'.format(args.device_id))
 
     assert (
         args.max_tokens is not None or args.batch_size is not None

@@ -18,7 +18,7 @@ fi
 download_dir=${1%/}
 out_dir=${2%/}
 
-fairseq_root=~/fairseq-py/
+fairseq_root=`pwd`
 mkdir -p ${out_dir}
 cd ${out_dir} || exit
 

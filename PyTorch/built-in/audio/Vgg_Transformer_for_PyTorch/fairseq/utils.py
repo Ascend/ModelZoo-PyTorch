@@ -645,8 +645,6 @@ class CudaEnvironment(object):
         cur_device = torch.cuda.current_device()
         prop = torch.cuda.get_device_properties("cuda:{}".format(cur_device))
         self.name = prop.name
-        self.major = prop.major
-        self.minor = prop.minor
         self.total_memory_in_GB = prop.total_memory / 1024 / 1024 / 1024
 
     @staticmethod
@@ -662,7 +660,6 @@ class CudaEnvironment(object):
         for r, env in enumerate(cuda_env_list):
             logger.info(
                 "rank {:3d}: ".format(r)
-                + "capabilities = {:2d}.{:<2d} ; ".format(env.major, env.minor)
                 + "total memory = {:.3f} GB ; ".format(env.total_memory_in_GB)
                 + "name = {:40s}".format(env.name)
             )

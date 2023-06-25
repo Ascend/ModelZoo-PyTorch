@@ -202,11 +202,6 @@ class Trainer(object):
         )
 
         if self.args.fp16 or self.args.bf16:
-            if self.cuda and torch.cuda.get_device_capability(0)[0] < 7:
-                logger.info(
-                    "NOTE: your device does NOT support faster training with --fp16, "
-                    "please switch to FP32 which is likely to be faster"
-                )
             if self.args.memory_efficient_fp16 or self.args.memory_efficient_bf16:
                 self._optimizer = optim.MemoryEfficientFP16Optimizer.build_optimizer(
                     self.args, params
@@ -214,8 +209,6 @@ class Trainer(object):
             else:
                 self._optimizer = optim.FP16Optimizer.build_optimizer(self.args, params)
         else:
-            if self.cuda and torch.cuda.get_device_capability(0)[0] >= 7:
-                logger.info("NOTE: your device may support faster training with --fp16")
             self._optimizer = optim.build_optimizer(self.args, params)
 
         if self.args.use_bmuf:
@@ -443,7 +436,7 @@ class Trainer(object):
         self.criterion.train()
         self.zero_grad()
 
-        metrics.log_start_time("train_wall", priority=800, round=0)
+        metrics.log_start_time("train_wall", priority=800, round=4)
 
         # forward and backward pass
         logging_outputs, sample_size, ooms = [], 0, 0

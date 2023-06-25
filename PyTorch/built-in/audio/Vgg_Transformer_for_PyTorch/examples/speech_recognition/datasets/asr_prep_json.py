@@ -26,9 +26,9 @@ def process_sample(aud_path, lable, utt_id, sp, tgt_dict):
 
     input = {}
     output = {}
-    si, ei = torchaudio.info(aud_path)
+    si = torchaudio.info(aud_path)
     input["length_ms"] = int(
-        si.length / si.channels / si.rate / MILLISECONDS_TO_SECONDS
+        si.num_frames / si.num_channels / si.sample_rate / MILLISECONDS_TO_SECONDS
     )
     input["path"] = aud_path
 

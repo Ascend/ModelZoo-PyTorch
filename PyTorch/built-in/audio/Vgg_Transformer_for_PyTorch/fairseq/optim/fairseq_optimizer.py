@@ -3,9 +3,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import torch
 from fairseq import utils
 from fairseq.dataclass.utils import gen_parser_from_dataclass
+
+npu_fused_mode = os.environ.get("NPU_FUSED_ENABLE")
 
 
 class FairseqOptimizer(object):
@@ -96,13 +99,19 @@ class FairseqOptimizer(object):
 
     def multiply_grads(self, c):
         """Multiplies grads by a constant *c*."""
-        for p in self.params:
-            if p.grad is not None:
-                p.grad.data.mul_(c)
+        if npu_fused_mode and 'multiply_grads_fused' in dir(self):
+            self.multiply_grads_fused(c)
+        else:
+            for p in self.params:
+                if p.grad is not None:
+                    p.grad.data.mul_(c)
 
     def clip_grad_norm(self, max_norm, aggregate_norm_fn=None):
         """Clips gradient norm."""
-        return utils.clip_grad_norm_(self.params, max_norm, aggregate_norm_fn)
+        if npu_fused_mode:
+            return self.optimizer.clip_grad_norm_fused_(max_norm, 2.0)
+        else:
+            return utils.clip_grad_norm_(self.params, max_norm, aggregate_norm_fn)
 
     def step(self, closure=None, scale=1.0):
         """Performs a single optimization step."""
@@ -115,8 +124,7 @@ class FairseqOptimizer(object):
 
     def zero_grad(self):
         """Clears the gradients of all optimized parameters."""
-        for p in self.params:
-            p.grad = None
+        # In the FP32 scenario, the gradient reset operation does not need to be performed twice.
         self.optimizer.zero_grad()
 
     @property

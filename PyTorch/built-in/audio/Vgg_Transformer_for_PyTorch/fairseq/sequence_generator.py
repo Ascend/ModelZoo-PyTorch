@@ -480,9 +480,15 @@ class SequenceGenerator(nn.Module):
             # {active_hypos} indicates which {beam_size} hypotheses
             # from the list of {2 * beam_size} candidates were
             # selected. Shapes: (batch size, beam size)
+
+            # When the topk operation is performed on the NPU and the input tensor is integer, the largest=False
+            # parameter becomes invalid.
+            # TODO: torch.topk() in npu supports largest=False when the input tensor is integer
             new_cands_to_ignore, active_hypos = torch.topk(
-                active_mask, k=beam_size, dim=1, largest=False
+                active_mask.cpu(), k=beam_size, dim=1, largest=False
             )
+            new_cands_to_ignore = new_cands_to_ignore.npu()
+            active_hypos = active_hypos.npu()
 
             # update cands_to_ignore to ignore any finalized hypos.
             cands_to_ignore = new_cands_to_ignore.ge(cand_size)[:, :beam_size]

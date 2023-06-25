@@ -3,16 +3,22 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import torch.optim
+import torch_npu.optim
 
 from . import LegacyFairseqOptimizer, register_optimizer
 
+npu_fused_mode = os.environ.get("NPU_FUSED_ENABLE")
 
 @register_optimizer("adadelta")
 class Adadelta(LegacyFairseqOptimizer):
     def __init__(self, args, params):
         super().__init__(args)
-        self._optimizer = torch.optim.Adadelta(params, **self.optimizer_config)
+        if npu_fused_mode:
+            self._optimizer = torch_npu.optim.NpuFusedAdadelta(params, **self.optimizer_config)
+        else:
+            self._optimizer = torch.optim.Adadelta(params, **self.optimizer_config)
 
     @staticmethod
     def add_args(parser):
@@ -45,3 +51,15 @@ class Adadelta(LegacyFairseqOptimizer):
     @property
     def supports_flat_params(self):
         return True
+
+    def multiply_grads_fused(self, c):
+        if self._optimizer.get_combined_grads() == [None, None]:
+            for p in self.params:
+                if p.grad is not None:
+                    p.grad.data.mul_(c)
+        else:
+            for i, _ in enumerate(self._optimizer.param_groups):
+                combined_group_grads = self._optimizer.combined_grads_indexed_by_group[i]
+                for combined_grad in combined_group_grads:
+                    if combined_grad is not None:
+                        combined_grad.mul_(c)
