@@ -134,6 +134,20 @@ from .trainer_utils import (
 from .training_args import OptimizerNames, ParallelMode, TrainingArguments
 from .utils import logging
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 
 _is_torch_generator_available = False
 _is_native_amp_available = False
@@ -1400,6 +1414,8 @@ class Trainer:
             self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
 
             step = -1
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                               profile_type=os.getenv("PROFILE_TYPE"))
             for step, inputs in enumerate(epoch_iterator):
                 if epoch == 0 and step == args.skip_steps:
                     start_time = time.time()
@@ -1418,6 +1434,7 @@ class Trainer:
                 if step % args.gradient_accumulation_steps == 0:
                     self.control = self.callback_handler.on_step_begin(args, self.state, self.control)
 
+                profiler.start()
                 if (
                     ((step + 1) % args.gradient_accumulation_steps != 0)
                     and args.local_rank != -1
@@ -1508,6 +1525,7 @@ class Trainer:
                 else:
                     self.control = self.callback_handler.on_substep_end(args, self.state, self.control)
 
+                profiler.end()
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
             if step < 0:

@@ -59,6 +59,20 @@ import mlperf_logger
 
 from mhalib import *
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 # Global variables
 skipped_steps = 0
 cached_batches = []
@@ -838,6 +852,8 @@ def main():
 
                 dataset_future = pool.submit(create_pretraining_dataset, data_file, args.max_predictions_per_seq, shared_file_list, args, worker_init_fn=worker_init)
 
+                profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                                   profile_type=os.getenv("PROFILE_TYPE"))
                 for step, batch in enumerate(train_dataloader):
                     training_steps += 1
                     update_step = training_steps % args.gradient_accumulation_steps == 0
@@ -845,6 +861,7 @@ def main():
                     batch = [t.to(device) for t in batch]
                     input_ids, segment_ids, input_mask, masked_lm_positions, masked_lm_labels, next_sentence_labels = batch
 
+                    profiler.start()
                     loss, mlm_acc, _ = model(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask,
                                     masked_lm_positions=masked_lm_positions, masked_lm_labels=masked_lm_labels, next_sentence_label=next_sentence_labels,
                                     checkpoint_activations=args.checkpoint_activations)
@@ -921,6 +938,7 @@ def main():
                                         print("%f > %f, Target MLM Accuracy reached at %d"%(eval_avg_mlm_accuracy, args.target_mlm_accuracy, global_step))
 
                             eval_count += 1
+                    profiler.end()
                     average_loss += loss.item()
                     if args.target_mlm_accuracy and args.train_mlm_accuracy_window_size > 0:
                         accuracy_scores.append(mlm_acc)
