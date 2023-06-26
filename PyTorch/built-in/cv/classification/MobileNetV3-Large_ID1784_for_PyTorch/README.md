@@ -181,3 +181,7 @@ MobileNetV3结合了MobileNetV1的深度可分离卷积、MobileNetV2的Inverted
    ```
    https://github.com/pytorch/vision
    ```
+   
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

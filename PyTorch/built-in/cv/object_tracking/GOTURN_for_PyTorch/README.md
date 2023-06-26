@@ -220,3 +220,7 @@ GOTURN是Generic Object Tracking Using Regression Networks的缩写，是一种�
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -28,9 +28,11 @@ else:
 
 __all__ = ['MobileNetV2', 'mobilenet_v2']
 
-
+with open('url.ini', 'r') as f:
+    content = f.read()
+    mobilenet_v2_url = content.split('mobilenet_v2_url=')[1].split('\n')[0]
 model_urls = {
-    'mobilenet_v2': 'https://download.pytorch.org/models/mobilenet_v2-b0353104.pth',
+    'mobilenet_v2': mobilenet_v2_url,
 }
 
 

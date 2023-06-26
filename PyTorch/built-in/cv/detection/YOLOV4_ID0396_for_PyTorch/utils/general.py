@@ -1293,7 +1293,10 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(),
          'val GIoU', 'val Objectness', 'val Classification', 'mAP@0.5', 'mAP@0.5:0.95']
     if bucket:
         os.system('rm -rf storage.googleapis.com')
-        files = ['https://storage.googleapis.com/%s/results%g.txt' % (bucket, x) for x in id]
+        with open('../url.ini', 'r') as f:
+            content = f.read()
+            googleapis_url = content.split('googleapis_url=')[1].split('\n')[0]
+        files = ['%s/%s/results%g.txt' % (googleapis_url, bucket, x) for x in id]
     else:
         files = glob.glob(str(Path(save_dir) / 'results*.txt')) + glob.glob('../../Downloads/results*.txt')
     for fi, f in enumerate(files):

@@ -2,7 +2,8 @@ cd ../
 mkdir Lightning-AI
 # shellcheck disable=SC2164
 cd Lightning-AI
-git clone -b 0.7.1 https://github.com/Lightning-AI/lightning.git
+lightning_url=`sed '/^lightning_url=/!d;s/.*=//' ../../url.ini`
+git clone -b 0.7.1 ${lightning_url}
 mv lightning/pytorch_lightning ../
 # shellcheck disable=SC2103
 cd ..

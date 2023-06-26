@@ -193,3 +193,7 @@ wget http://www.robots.ox.ac.uk/~qwang/resnet.model
 Q: 为什么要在配置文件`$SiamMask-base/experiments/siammask_base/config.json`中修改学习率以及权重?
 
 A: 详见 [论文](https://arxiv.org/abs/1812.05050) 的 `3.3 Implementation details` 部分。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

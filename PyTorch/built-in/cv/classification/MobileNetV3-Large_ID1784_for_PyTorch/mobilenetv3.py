@@ -47,9 +47,13 @@ class hsigmoid(nn.Module):
         out = F.relu6(x + 3, inplace=True) / 6
         return out
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    mobilenet_v3_large = content.split('mobilenet_v3_large=')[1].split('\n')[0]
+    mobilenet_v3_small = content.split('mobilenet_v3_small=')[1].split('\n')[0]
 model_urls = {
-    "mobilenet_v3_large": "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
-    "mobilenet_v3_small": "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
+    "mobilenet_v3_large": mobilenet_v3_large,
+    "mobilenet_v3_small": mobilenet_v3_small,
 }
 
 

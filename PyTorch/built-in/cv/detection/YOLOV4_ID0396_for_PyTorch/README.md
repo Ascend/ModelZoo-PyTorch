@@ -158,3 +158,7 @@ YOLO是一个经典的物体检测网络，将物体检测作为回归问题求�
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
