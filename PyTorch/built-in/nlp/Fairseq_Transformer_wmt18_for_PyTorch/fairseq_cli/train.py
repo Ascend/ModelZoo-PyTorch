@@ -15,9 +15,7 @@ import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
 import torch
-sys.path.append("/usr/local/Ascend/ascend-toolkit/latest/tools/ms_fmk_transplt/torch_npu_bridge")
-import transfer_to_npu
-# from torch_npu.contrib import transfer_to_npu
+from torch_npu.contrib import transfer_to_npu
 from omegaconf import DictConfig, OmegaConf
 
 from fairseq import checkpoint_utils, options, quantization_utils, tasks, utils
