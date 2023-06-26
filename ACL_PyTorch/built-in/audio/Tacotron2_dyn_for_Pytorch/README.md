@@ -163,7 +163,7 @@ Tacotron2是由Google Brain在2017年提出来的一个End-to-End语音合成框
         -   `--input_shape`：输入数据的shape
         -   `--log`：日志级别
         -   `--soc_version`：处理器型号
-        -   `--input_shape_range`：指定模型输入数据的shape范围
+        -   `--input_shape`：指定模型输入数据的shape范围
 
     
 ### 2 开始推理验证

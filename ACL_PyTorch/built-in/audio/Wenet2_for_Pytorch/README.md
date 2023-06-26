@@ -259,7 +259,7 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
          atc --input_format=ND --framework=5 --model=onnx/online_encoder.onnx --input_shape="chunk_xs:${batch_size},67,80;chunk_lens:${batch_size};offset:${batch_size},1;att_cache:${batch_size},12,4,64,128;cnn_cache:${batch_size},12,256,7;cache_mask:${batch_size},1,64" --output=om/online_encoder_bs${batch_size} --log=error --soc_version=Ascend${chip_name}
          
          # 非流式动态shape场景encoder部分
-         atc --input_format=ND --framework=5 --model=onnx/offline_encoder.onnx --input_shape_range="speech:[1~64,1~1500,80];speech_lengths:[1~64]" --output=om/offline_encoder_dynamic --log=error --soc_version=Ascend${chip_name}
+         atc --input_format=ND --framework=5 --model=onnx/offline_encoder.onnx --input_shape="speech:[1~64,1~1500,80];speech_lengths:[1~64]" --output=om/offline_encoder_dynamic --log=error --soc_version=Ascend${chip_name}
          
          # 非流式分档场景encoder部分
          atc --input_format=ND --framework=5 --model=onnx/offline_encoder.onnx --input_shape="speech:${batch_size},-1,80;speech_lengths:${batch_size}" --dynamic_dims="262;326;390;454;518;582;646;710;774;838;902;966;1028;1284;1478" --output=om/offline_encoder_static_bs${batch_size} --log=error --soc_version=Ascend${chip_name}
@@ -275,7 +275,7 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
            -   --output：输出的OM模型。
            -   --input\_format：输入数据的格式。
            -   --input\_shape：输入数据的shape。
-           -   --input\_shape\_range：输入数据的shape范围。
+           -   --input\_shape\：输入数据的shape范围。
            -   --dynamic\_dims：设置ND格式下动态维度的档位。 
            -   --log：日志级别。
            -   --soc\_version：处理器型号。

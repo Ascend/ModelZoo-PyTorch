@@ -168,7 +168,7 @@
 
       ```shell
       # Ascend${chip_name}请根据实际查询结果填写 
-      atc --model=crnn_dy.onnx --framework=5 --output=om/crnn_dy --input_format=ND --input_shape_range="imgs:[1~16,1,32,32~6400]" --log=error --soc_version=Ascend${chip_name}
+      atc --model=crnn_dy.onnx --framework=5 --output=om/crnn_dy --input_format=ND --input_shape="imgs:[1~16,1,32,32~6400]" --log=error --soc_version=Ascend${chip_name}
       ```
       
       参数说明:  
@@ -181,7 +181,7 @@
       
       - --input_format：输入数据的格式 
       
-      - --input_shape_range：输入数据的shape范围
+      - --input_shape：输入数据的shape范围
       
       - --log：日志级别 
       

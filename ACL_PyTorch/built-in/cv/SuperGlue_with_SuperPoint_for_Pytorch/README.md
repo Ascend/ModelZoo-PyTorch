@@ -222,7 +222,7 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
       atc --model superpoint.onnx --output superpoint --framework 5 --log=error --soc_version Ascend310P3
       
       # superglue
-      atc --model superglue_sim.onnx --output superglue --framework 5 --log=error --soc_version Ascend310P3 --input_shape_range "keypoints0:[1,-1,2];scores0:[1,-1];descriptors0:[1,256,-1];keypoints1:[1,-1,2];scores1:[1,-1];descriptors1:[1,256,-1]"
+      atc --model superglue_sim.onnx --output superglue --framework 5 --log=error --soc_version Ascend310P3 --input_shape "keypoints0:[1,-1,2];scores0:[1,-1];descriptors0:[1,256,-1];keypoints1:[1,-1,2];scores1:[1,-1];descriptors1:[1,256,-1]"
       ```
    
       参数说明：
@@ -232,7 +232,7 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
       - --framework：5代表ONNX模型。
       - --log：日志级别。
       - --soc_version：处理器型号。
-      - --input_shape_range：指定动态输入的输入范围。
+      - --input_shape：指定动态输入的输入范围。
    
 2. 开始推理验证。
 

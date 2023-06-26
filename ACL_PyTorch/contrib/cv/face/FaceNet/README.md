@@ -226,9 +226,9 @@
       3. 执行ATC命令。
          ```
          # MTCNN：动态
-         atc --framework=5 --model=./weights/PNet_truncated_fix.onnx --output=./weights/PNet_dynamic --input_format=NCHW --input_shape_range='image:[1~32,3,1~1500,1~1500]' --log=debug --soc_version=Ascend${chip_name} --log=error
-         atc --framework=5 --model=./weights/RNet_truncated_fix.onnx --output=./weights/RNet_dynamic --input_format=NCHW --input_shape_range='image:[1~2000,3,24,24]' --log=debug --soc_version=Ascend${chip_name} --log=error
-         atc --framework=5 --model=./weights/ONet_truncated_fix.onnx --output=./weights/ONet_dynamic --input_format=NCHW --input_shape_range='image:[1~1000,3,48,48]' --log=debug --soc_version=Ascend${chip_name} --log=error
+         atc --framework=5 --model=./weights/PNet_truncated_fix.onnx --output=./weights/PNet_dynamic --input_format=NCHW --input_shape='image:[1~32,3,1~1500,1~1500]' --log=debug --soc_version=Ascend${chip_name} --log=error
+         atc --framework=5 --model=./weights/RNet_truncated_fix.onnx --output=./weights/RNet_dynamic --input_format=NCHW --input_shape='image:[1~2000,3,24,24]' --log=debug --soc_version=Ascend${chip_name} --log=error
+         atc --framework=5 --model=./weights/ONet_truncated_fix.onnx --output=./weights/ONet_dynamic --input_format=NCHW --input_shape='image:[1~1000,3,48,48]' --log=debug --soc_version=Ascend${chip_name} --log=error
          # FaceNet: 以bs1为例
          atc --framework=5 --model=./weights/Inception_facenet_vggface2_fix.onnx --output=./weights/Inception_facenet_vggface2_bs1 --input_format=NCHW --input_shape="image:1,3,160,160" --soc_version=Ascend${chip_name} --log=error
          ```
@@ -240,7 +240,7 @@
            -   --output：输出的OM模型。
            -   --input\_format：输入数据的格式。
            -   --input\_shape：输入数据的shape。
-           -   --input\_shape\_range：动态模型输入数据的shape range。
+           -   --input\_shape\：动态模型输入数据的shape range。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
