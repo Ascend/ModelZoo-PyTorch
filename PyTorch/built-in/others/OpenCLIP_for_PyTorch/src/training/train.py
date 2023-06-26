@@ -119,14 +119,13 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
 
         if not args.skip_scheduler:
             scheduler(step)
-
+        profiler.start()
         images, texts = batch
         images = images.to(device=device, dtype=cast_dtype, non_blocking=True)
         texts = texts.to(device=device, non_blocking=True)
 
         data_time_m.update(time.time() - end)
         optimizer.zero_grad()
-        profiler.start()
         if args.accum_freq == 1:
             with autocast():
                 model_out = model(images, texts)
@@ -180,7 +179,6 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                     total_loss = sum(losses.values())
                     losses["loss"] = total_loss
                 backward(total_loss, scaler, optimizer)
-        profiler.end()
         if scaler is not None:
             if args.horovod:
                 optimizer.synchronize()
@@ -199,7 +197,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
             if args.grad_clip_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip_norm, norm_type=2.0)
             optimizer.step()
-
+        profiler.end()
         # reset gradient accum, if enabled
         if args.accum_freq > 1:
             accum_images, accum_texts, accum_features = [], [], {}
