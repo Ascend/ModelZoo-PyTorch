@@ -33,6 +33,7 @@
 import collections
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
+import os
 
 import torch
 from packaging import version
@@ -43,6 +44,20 @@ from transformers.trainer_utils import EvalPrediction, PredictionOutput, speed_m
 from transformers.utils import logging
 
 from .funsd_trainer import FunsdTrainer
+
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 
 if version.parse(torch.__version__) >= version.parse("1.6"):
@@ -123,7 +138,10 @@ class XfunReTrainer(FunsdTrainer):
         re_labels = None
         pred_relations = None
         entities = None
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for step, inputs in enumerate(dataloader):
+            profiler.start()
             outputs, labels = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
             re_labels = labels[1] if re_labels is None else re_labels + labels[1]
             pred_relations = (
@@ -132,6 +150,7 @@ class XfunReTrainer(FunsdTrainer):
             entities = outputs.entities if entities is None else entities + outputs.entities
 
             self.control = self.callback_handler.on_prediction_step(self.args, self.state, self.control)
+            profiler.end()
 
         gt_relations = []
         for b in range(len(re_labels)):

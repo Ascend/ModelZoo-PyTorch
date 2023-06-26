@@ -113,6 +113,20 @@ if is_training_run_on_sagemaker():
 if TYPE_CHECKING:
     import optuna
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 
 class FunsdTrainer(Trainer):
     def _prepare_inputs(self, inputs: Dict[str, Union[torch.Tensor, Any]]) -> Dict[str, Union[torch.Tensor, Any]]:
@@ -533,6 +547,8 @@ class FunsdTrainer(Trainer):
             )
             self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
 
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                               profile_type=os.getenv("PROFILE_TYPE"))
             for step, inputs in enumerate(epoch_iterator):
                 # 运行到skip_steps时，开始计时
                 if epoch == int(self.args.skip_steps / steps_in_epoch) \
@@ -544,6 +560,7 @@ class FunsdTrainer(Trainer):
                     steps_trained_in_current_epoch -= 1
                     continue
 
+                profiler.start()
                 if step % self.args.gradient_accumulation_steps == 0:
                     self.control = self.callback_handler.on_step_begin(self.args, self.state, self.control)
 
@@ -613,6 +630,7 @@ class FunsdTrainer(Trainer):
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
+                profiler.end()
 
             self.control = self.callback_handler.on_epoch_end(self.args, self.state, self.control)
             self._maybe_log_save_evaluate(tr_loss, model, trial, epoch)
