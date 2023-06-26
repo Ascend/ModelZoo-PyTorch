@@ -178,6 +178,24 @@ return session.request(method=method, url=url, **kwargs)
 ```python 
 return session.request(method=method, url=url, verify=False, **kwargs)
 ```
+2.无法连接hugginface的情况下，需要提前下载模型需要的配置文件以及权重文件，并且在模型代码中修改，如提前下载**xlm-roberta-base**相关文件，结构为：
+   ```
+   path/to/xlm-roberta-base
+   |  └——————config.json
+   |  └——————pytorch_model.bin
+   |  └——————sentencepiece.bpe.model
+   |  └——————tokenizer.json
+ 
+   ```
+修改**layoutlmft/data/datasets/xfun.py**中
+```python 
+ tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")
+```
+为
+```python 
+ tokenizer = AutoTokenizer.from_pretrained("path/to/xlm-roberta-base")
+```
+以及训练脚本中指定 **model_name_or_path** 为 **path/to/xlm-roberta-base** 。
 
 # 公网地址说明
 
