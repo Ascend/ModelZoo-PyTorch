@@ -39,6 +39,13 @@ from .vision import VisionDataset
 from .utils import download_and_extract_archive, makedir_exist_ok, verify_str_arg
 
 
+with open('../../url.ini', 'r') as _f:
+    _content = _f.read()
+    caltech101_1_url = _content.split('caltech101_1_url=')[1].split('\n')[0]
+    caltech101_2_url = _content.split('caltech101_2_url=')[1].split('\n')[0]
+    caltech256_1_url = _content.split('caltech256_1_url=')[1].split('\n')[0]
+
+
 class Caltech101(VisionDataset):
     """`Caltech 101 <http://www.vision.caltech.edu/Image_Datasets/Caltech101/>`_ Dataset.
 
@@ -143,12 +150,12 @@ class Caltech101(VisionDataset):
             return
 
         download_and_extract_archive(
-            "http://www.vision.caltech.edu/Image_Datasets/Caltech101/101_ObjectCategories.tar.gz",
+            caltech101_1_url,
             self.root,
             filename="101_ObjectCategories.tar.gz",
             md5="b224c7392d521a49829488ab0f1120d9")
         download_and_extract_archive(
-            "http://www.vision.caltech.edu/Image_Datasets/Caltech101/Annotations.tar",
+            caltech101_2_url,
             self.root,
             filename="101_Annotations.tar",
             md5="6f83eeb1f24d99cab4eb377263132c91")
@@ -229,7 +236,7 @@ class Caltech256(VisionDataset):
             return
 
         download_and_extract_archive(
-            "http://www.vision.caltech.edu/Image_Datasets/Caltech256/256_ObjectCategories.tar",
+            caltech256_1_url,
             self.root,
             filename="256_ObjectCategories.tar",
             md5="67b4f42ca05d46448c6bb8ecd2220f6d")

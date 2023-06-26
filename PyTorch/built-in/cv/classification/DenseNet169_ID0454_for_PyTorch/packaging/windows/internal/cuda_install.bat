@@ -31,14 +31,16 @@ exit /b 1
 
 :cuda90
 IF NOT EXIST "%SRC_DIR%\temp_build\cuda_9.0.176_windows.7z" (
-    curl -k -L https://www.dropbox.com/s/z5b7ryz0zrimntl/cuda_9.0.176_windows.7z?dl=1 --output "%SRC_DIR%\temp_build\cuda_9.0.176_windows.7z"
+    for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "cuda_9_0_176_windows_url="') do set cuda_9_0_176_windows_url=%%a
+    curl -k -L %cuda_9_0_176_windows_url% --output "%SRC_DIR%\temp_build\cuda_9.0.176_windows.7z"
     if errorlevel 1 exit /b 1
     set "CUDA_SETUP_FILE=%SRC_DIR%\temp_build\cuda_9.0.176_windows.7z"
     set "NVCC_PACKAGE=compiler_%CUDA_VERSION_STR%"
 )
 
 IF NOT EXIST "%SRC_DIR%\temp_build\cudnn-9.0-windows7-x64-v7.zip" (
-    curl -k -L https://www.dropbox.com/s/6p0xyqh472nu8m1/cudnn-9.0-windows7-x64-v7.zip?dl=1 --output "%SRC_DIR%\temp_build\cudnn-9.0-windows7-x64-v7.zip"
+    for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "cuda_9_0_windows_url="') do set cuda_9_0_windows_url=%%a
+    curl -k -L %cuda_9_0_windows_url% --output "%SRC_DIR%\temp_build\cudnn-9.0-windows7-x64-v7.zip"
     if errorlevel 1 exit /b 1
     set "CUDNN_SETUP_FILE=%SRC_DIR%\temp_build\cudnn-9.0-windows7-x64-v7.zip"
 )
@@ -48,14 +50,16 @@ goto cuda_common
 :cuda91
 
 IF NOT EXIST "%SRC_DIR%\temp_build\cuda_9.1.85_windows.7z" (
-    curl -k -L https://www.dropbox.com/s/7a4sbq0dln6v7t2/cuda_9.1.85_windows.7z?dl=1 --output "%SRC_DIR%\temp_build\cuda_9.1.85_windows.7z"
+    for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "cuda_9_1_85_windows_url="') do set cuda_9_1_85_windows_url=%%a
+    curl -k -L %cuda_9_1_85_windows_url% --output "%SRC_DIR%\temp_build\cuda_9.1.85_windows.7z"
     if errorlevel 1 exit /b 1
     set "CUDA_SETUP_FILE=%SRC_DIR%\temp_build\cuda_9.1.85_windows.7z"
     set "NVCC_PACKAGE=nvcc_%CUDA_VERSION_STR%"
 )
 
 IF NOT EXIST "%SRC_DIR%\temp_build\cudnn-9.1-windows7-x64-v7.zip" (
-    curl -k -L https://www.dropbox.com/s/e0prhgsrbyfi4ov/cudnn-9.1-windows7-x64-v7.zip?dl=1 --output "%SRC_DIR%\temp_build\cudnn-9.1-windows7-x64-v7.zip"
+    for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "cuda_9_1_windows_url="') do set cuda_9_1_windows_url=%%a
+    curl -k -L %cuda_9_1_windows_url% --output "%SRC_DIR%\temp_build\cudnn-9.1-windows7-x64-v7.zip"
     if errorlevel 1 exit /b 1
     set "CUDNN_SETUP_FILE=%SRC_DIR%\temp_build\cudnn-9.1-windows7-x64-v7.zip"
 )
@@ -77,7 +81,8 @@ exit /b 1
 set "CUDA_PREFIX=cuda%CUDA_VERSION%"
 
 IF NOT EXIST "%SRC_DIR%\temp_build\NvToolsExt.7z" (
-    curl -k -L https://www.dropbox.com/s/9mcolalfdj4n979/NvToolsExt.7z?dl=1 --output "%SRC_DIR%\temp_build\NvToolsExt.7z"
+    for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "nvtoolsext_url     ="') do set nvtoolsext_url=%%a
+    curl -k -L %nvtoolsext_url% --output "%SRC_DIR%\temp_build\NvToolsExt.7z"
     if errorlevel 1 exit /b 1
 )
 

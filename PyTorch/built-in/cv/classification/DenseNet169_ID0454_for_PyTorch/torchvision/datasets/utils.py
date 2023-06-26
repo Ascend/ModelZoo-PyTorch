@@ -185,7 +185,9 @@ def download_file_from_google_drive(file_id, root, filename=None, md5=None):
     """
     # Based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
     import requests
-    url = "https://docs.google.com/uc?export=download"
+    with open('../../url.ini', 'r') as _f:
+        _content = _f.read()
+        url = _content.split('google_download_url=')[1].split('\n')[0]
 
     root = os.path.expanduser(root)
     if not filename:

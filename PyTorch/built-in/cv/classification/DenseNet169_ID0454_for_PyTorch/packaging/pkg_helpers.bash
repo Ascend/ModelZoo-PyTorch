@@ -175,9 +175,11 @@ setup_pip_pytorch_version() {
       export PYTORCH_VERSION="$(pip show torch | grep ^Version: | sed 's/Version:  *//')"
     fi
   else
+    torch_stable_url=`sed '/^torch_stable_url=/!d;s/.*=//' ../url.ini`
+    torch_nightly_url=`sed '/^torch_nightly_url=/!d;s/.*=//' ../url.ini`
     pip_install "torch==$PYTORCH_VERSION$CUDA_SUFFIX" \
-      -f https://download.pytorch.org/whl/torch_stable.html \
-      -f https://download.pytorch.org/whl/nightly/torch_nightly.html
+      -f ${torch_stable_url} \
+      -f ${torch_nightly_url}
   fi
 }
 

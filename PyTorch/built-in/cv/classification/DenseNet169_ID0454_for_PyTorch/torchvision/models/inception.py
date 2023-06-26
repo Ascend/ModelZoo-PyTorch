@@ -40,9 +40,13 @@ from .utils import load_state_dict_from_url
 __all__ = ['Inception3', 'inception_v3']
 
 
+with open('../../url.ini', 'r') as _f:
+    _content = _f.read()
+    inception_url = _content.split('inception_url=')[1].split('\n')[0]
+
 model_urls = {
     # Inception v3 ported from TensorFlow
-    'inception_v3_google': 'https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth',
+    'inception_v3_google': inception_url,
 }
 
 _InceptionOutputs = namedtuple('InceptionOutputs', ['logits', 'aux_logits'])
