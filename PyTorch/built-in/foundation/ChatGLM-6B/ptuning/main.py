@@ -37,15 +37,19 @@ import logging
 import os
 import sys
 import json
-
 import numpy as np
+import jieba
+import torch
+import torch_npu
+import transformers
+import deepspeed_npu
+from torch_npu.contrib import transfer_to_npu
+
+from arguments import ModelArguments, DataTrainingArguments
 from datasets import load_dataset
-import jieba 
 from rouge_chinese import Rouge
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-import torch
-
-import transformers
+from trainer_seq2seq import Seq2SeqTrainer
 from transformers import (
     AutoConfig,
     AutoModel,
@@ -55,14 +59,12 @@ from transformers import (
     Seq2SeqTrainingArguments,
     set_seed,
 )
-from trainer_seq2seq import Seq2SeqTrainer
-
-from arguments import ModelArguments, DataTrainingArguments
 
 logger = logging.getLogger(__name__)
 
-def main():
 
+def main():
+    torch.distributed.default_pg_timeout = 7200
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
@@ -71,6 +73,12 @@ def main():
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
+    #Tag:单卡微调支持设置npu卡号
+    if training_args.NPU_VISIBLE_DEVICES:
+        torch.npu.set_device(torch.device(f"npu:{training_args.NPU_VISIBLE_DEVICES}"))  # 指定使用的npu卡号
+    
+    torch.npu.set_compile_mode(jit_compile=True)
+    
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -167,7 +175,7 @@ def main():
     prompt_column = data_args.prompt_column
     response_column = data_args.response_column
     history_column = data_args.history_column
-    
+
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
 
@@ -233,8 +241,8 @@ def main():
 
                 context_length = input_ids.index(tokenizer.bos_token_id)
                 mask_position = context_length - 1
-                labels = [-100] * context_length + input_ids[mask_position+1:]
-                
+                labels = [-100] * context_length + input_ids[mask_position + 1:]
+
                 pad_len = max_seq_length - len(input_ids)
                 input_ids = input_ids + [tokenizer.pad_token_id] * pad_len
                 labels = labels + [tokenizer.pad_token_id] * pad_len
@@ -245,9 +253,9 @@ def main():
                 model_inputs["labels"].append(labels)
 
         return model_inputs
-    
+
     def print_dataset_example(example):
-        print("input_ids",example["input_ids"])
+        print("input_ids", example["input_ids"])
         print("inputs", tokenizer.decode(example["input_ids"]))
         print("label_ids", example["labels"])
         print("labels", tokenizer.decode(example["labels"]))
@@ -339,9 +347,9 @@ def main():
             hypothesis = list(jieba.cut(pred))
             reference = list(jieba.cut(label))
             rouge = Rouge()
-            scores = rouge.get_scores(' '.join(hypothesis) , ' '.join(reference))
+            scores = rouge.get_scores(' '.join(hypothesis), ' '.join(reference))
             result = scores[0]
-            
+
             for k, v in result.items():
                 score_dict[k].append(round(v["f"] * 100, 4))
             bleu_score = sentence_bleu([list(label)], list(pred), smoothing_function=SmoothingFunction().method3)
@@ -399,7 +407,8 @@ def main():
     max_seq_length = data_args.max_source_length + data_args.max_target_length + 1
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
-        metrics = trainer.evaluate(metric_key_prefix="eval", do_sample=True, top_p=0.7, max_length=max_seq_length, temperature=0.95)
+        metrics = trainer.evaluate(metric_key_prefix="eval", do_sample=True, top_p=0.7, max_length=max_seq_length,
+                                   temperature=0.95)
         max_eval_samples = data_args.max_eval_samples if data_args.max_eval_samples is not None else len(eval_dataset)
         metrics["eval_samples"] = min(max_eval_samples, len(eval_dataset))
 
@@ -408,7 +417,8 @@ def main():
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
-        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict", max_length=max_seq_length, do_sample=True, top_p=0.7, temperature=0.95)
+        predict_results = trainer.predict(predict_dataset, metric_key_prefix="predict", max_length=max_seq_length,
+                                          do_sample=True, top_p=0.7, temperature=0.95)
         metrics = predict_results.metrics
         max_predict_samples = (
             data_args.max_predict_samples if data_args.max_predict_samples is not None else len(predict_dataset)

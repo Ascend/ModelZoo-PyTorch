@@ -28,7 +28,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-The Trainer class, to easily train a 🤗 Transformers from scratch or finetune it on a new task.
+The Trainer class, to easily train a 馃 Transformers from scratch or finetune it on a new task.
 """
 
 import contextlib
@@ -49,7 +49,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from tqdm.auto import tqdm
-
 
 # Integrations must be imported before ML frameworks:
 # isort: off
@@ -72,6 +71,7 @@ from transformers.integrations import (
 
 import numpy as np
 import torch
+import torch_npu
 import torch.distributed as dist
 from huggingface_hub import Repository, create_repo
 from packaging import version
@@ -89,7 +89,8 @@ from transformers.modelcard import TrainingSummary
 from transformers.modeling_utils import PreTrainedModel, load_sharded_checkpoint, unwrap_model
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES, MODEL_MAPPING_NAMES
 from transformers.optimization import Adafactor, get_scheduler
-from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS, is_torch_greater_or_equal_than_1_10, is_torch_less_than_1_11
+from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS, is_torch_greater_or_equal_than_1_10, \
+    is_torch_less_than_1_11
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 from transformers.trainer_callback import (
     CallbackHandler,
@@ -169,7 +170,6 @@ from transformers.utils import (
 )
 from transformers.utils.generic import ContextManagers
 
-
 _is_native_cpu_amp_available = is_torch_greater_or_equal_than_1_10
 
 DEFAULT_CALLBACKS = [DefaultFlowCallback]
@@ -200,7 +200,6 @@ if is_fairscale_available():
     from fairscale.optim import OSS
     from fairscale.optim.grad_scaler import ShardedGradScaler
 
-
 if is_sagemaker_mp_enabled():
     import smdistributed.modelparallel.torch as smp
     from smdistributed.modelparallel import __version__ as SMP_VERSION
@@ -211,7 +210,6 @@ if is_sagemaker_mp_enabled():
 else:
     IS_SAGEMAKER_MP_POST_1_10 = False
 
-
 skip_first_batches = None
 if is_accelerate_available():
     from accelerate import __version__ as accelerate_version
@@ -219,12 +217,10 @@ if is_accelerate_available():
     if version.parse(accelerate_version) >= version.parse("0.16"):
         from accelerate import skip_first_batches
 
-
 if TYPE_CHECKING:
     import optuna
 
 logger = logging.get_logger(__name__)
-
 
 # Name of the files used for checkpointing
 TRAINING_ARGS_NAME = "training_args.bin"
@@ -236,7 +232,7 @@ SCALER_NAME = "scaler.pt"
 
 class Trainer:
     """
-    Trainer is a simple but feature-complete training and eval loop for PyTorch, optimized for 🤗 Transformers.
+    Trainer is a simple but feature-complete training and eval loop for PyTorch, optimized for 馃 Transformers.
 
     Args:
         model ([`PreTrainedModel`] or `torch.nn.Module`, *optional*):
@@ -245,7 +241,7 @@ class Trainer:
             <Tip>
 
             [`Trainer`] is optimized to work with the [`PreTrainedModel`] provided by the library. You can still use
-            your own models defined as `torch.nn.Module` as long as they work the same way as the 🤗 Transformers
+            your own models defined as `torch.nn.Module` as long as they work the same way as the 馃 Transformers
             models.
 
             </Tip>
@@ -1097,10 +1093,10 @@ class Trainer:
                     for module in opt_model.modules():
                         if isinstance(module, nn.Embedding):
                             skipped += sum({p.data_ptr(): p.numel() for p in module.parameters()}.values())
-                            print(f"skipped {module}: {skipped/2**20}M params")
+                            print(f"skipped {module}: {skipped / 2 ** 20}M params")
                             manager.register_module_override(module, "weight", {"optim_bits": 32})
                             logger.debug(f"bitsandbytes: will optimize {module} in fp32")
-                    print(f"skipped: {skipped/2**20}M params")
+                    print(f"skipped: {skipped / 2 ** 20}M params")
 
         if is_sagemaker_mp_enabled():
             self.optimizer = smp.DistributedOptimizer(self.optimizer)
@@ -1401,10 +1397,6 @@ class Trainer:
         # Mixed precision training with apex (torch < 1.6)
         if self.use_apex and training:
             model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level)
-
-        # Multi-gpu training (should be after apex fp16 initialization)
-        if self.args.n_gpu > 1:
-            model = nn.DataParallel(model)
 
         if self.args.jit_mode_eval:
             start_time = time.time()
@@ -1716,6 +1708,7 @@ class Trainer:
             or self.fsdp is not None
         )
         if args.deepspeed:
+            torch.distributed.barrier()
             deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(
                 self, num_training_steps=max_steps, resume_from_checkpoint=resume_from_checkpoint
             )
@@ -1999,6 +1992,7 @@ class Trainer:
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
+
             if step < 0:
                 logger.warning(
                     "There seems to be not a single sample in your epoch_iterator, stopping training at step"
@@ -2381,9 +2375,9 @@ class Trainer:
         if torch.cuda.is_available():
             if self.args.local_rank == -1:
                 # In non distributed, we save the global CUDA RNG state (will take care of DataParallel)
-                rng_states["cuda"] = torch.cuda.random.get_rng_state_all()
+                rng_states["cuda"] = torch.npu.random.get_rng_state_all()
             else:
-                rng_states["cuda"] = torch.cuda.random.get_rng_state()
+                rng_states["cuda"] = torch.npu.random.get_rng_state()
 
         if is_torch_tpu_available():
             rng_states["xla"] = xm.get_rng_state()
@@ -2871,7 +2865,7 @@ class Trainer:
             self.current_flos = 0
 
     def _sorted_checkpoints(
-        self, output_dir=None, checkpoint_prefix=PREFIX_CHECKPOINT_DIR, use_mtime=False
+            self, output_dir=None, checkpoint_prefix=PREFIX_CHECKPOINT_DIR, use_mtime=False
     ) -> List[str]:
         ordering_and_checkpoint_path = []
 
@@ -2991,7 +2985,7 @@ class Trainer:
         return output.metrics
 
     def predict(
-        self, test_dataset: Dataset, ignore_keys: Optional[List[str]] = None, metric_key_prefix: str = "test"
+            self, test_dataset: Dataset, ignore_keys: Optional[List[str]] = None, metric_key_prefix: str = "test"
     ) -> PredictionOutput:
         """
         Run prediction and returns predictions and potential metrics.
@@ -3053,12 +3047,12 @@ class Trainer:
         return PredictionOutput(predictions=output.predictions, label_ids=output.label_ids, metrics=output.metrics)
 
     def evaluation_loop(
-        self,
-        dataloader: DataLoader,
-        description: str,
-        prediction_loss_only: Optional[bool] = None,
-        ignore_keys: Optional[List[str]] = None,
-        metric_key_prefix: str = "eval",
+            self,
+            dataloader: DataLoader,
+            description: str,
+            prediction_loss_only: Optional[bool] = None,
+            ignore_keys: Optional[List[str]] = None,
+            metric_key_prefix: str = "eval",
     ) -> EvalLoopOutput:
         """
         Prediction/evaluation loop, shared by `Trainer.evaluate()` and `Trainer.predict()`.
@@ -3316,11 +3310,11 @@ class Trainer:
         return new_tensor
 
     def prediction_step(
-        self,
-        model: nn.Module,
-        inputs: Dict[str, Union[torch.Tensor, Any]],
-        prediction_loss_only: bool,
-        ignore_keys: Optional[List[str]] = None,
+            self,
+            model: nn.Module,
+            inputs: Dict[str, Union[torch.Tensor, Any]],
+            prediction_loss_only: bool,
+            ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
         Perform an evaluation step on `model` using `inputs`.
@@ -3473,8 +3467,8 @@ class Trainer:
 
         # By default, ignore the checkpoint folders
         if (
-            not os.path.exists(os.path.join(self.args.output_dir, ".gitignore"))
-            and self.args.hub_strategy != HubStrategy.ALL_CHECKPOINTS
+                not os.path.exists(os.path.join(self.args.output_dir, ".gitignore"))
+                and self.args.hub_strategy != HubStrategy.ALL_CHECKPOINTS
         ):
             with open(os.path.join(self.args.output_dir, ".gitignore"), "w", encoding="utf-8") as writer:
                 writer.writelines(["checkpoint-*/"])
@@ -3486,16 +3480,16 @@ class Trainer:
         self.push_in_progress = None
 
     def create_model_card(
-        self,
-        language: Optional[str] = None,
-        license: Optional[str] = None,
-        tags: Union[str, List[str], None] = None,
-        model_name: Optional[str] = None,
-        finetuned_from: Optional[str] = None,
-        tasks: Union[str, List[str], None] = None,
-        dataset_tags: Union[str, List[str], None] = None,
-        dataset: Union[str, List[str], None] = None,
-        dataset_args: Union[str, List[str], None] = None,
+            self,
+            language: Optional[str] = None,
+            license: Optional[str] = None,
+            tags: Union[str, List[str], None] = None,
+            model_name: Optional[str] = None,
+            finetuned_from: Optional[str] = None,
+            tasks: Union[str, List[str], None] = None,
+            dataset_tags: Union[str, List[str], None] = None,
+            dataset: Union[str, List[str], None] = None,
+            dataset_args: Union[str, List[str], None] = None,
     ):
         """
         Creates a draft of a model card using the information available to the `Trainer`.
@@ -3585,7 +3579,7 @@ class Trainer:
 
     def push_to_hub(self, commit_message: Optional[str] = "End of training", blocking: bool = True, **kwargs) -> str:
         """
-        Upload *self.model* and *self.tokenizer* to the 🤗 model hub on the repo *self.args.hub_model_id*.
+        Upload *self.model* and *self.tokenizer* to the 馃 model hub on the repo *self.args.hub_model_id*.
 
         Parameters:
             commit_message (`str`, *optional*, defaults to `"End of training"`):
@@ -3632,7 +3626,7 @@ class Trainer:
             self.create_model_card(model_name=model_name, **kwargs)
             try:
                 self.repo.push_to_hub(
-                    commit_message="update model card README.md", blocking=blocking, auto_lfs_prune=True
+                    commit_message="update model card Original_README.md", blocking=blocking, auto_lfs_prune=True
                 )
             except EnvironmentError as exc:
                 logger.error(f"Error pushing update to the model card. Please read logs and retry.\n${exc}")
@@ -3644,12 +3638,12 @@ class Trainer:
     #
 
     def prediction_loop(
-        self,
-        dataloader: DataLoader,
-        description: str,
-        prediction_loss_only: Optional[bool] = None,
-        ignore_keys: Optional[List[str]] = None,
-        metric_key_prefix: str = "eval",
+            self,
+            dataloader: DataLoader,
+            description: str,
+            prediction_loss_only: Optional[bool] = None,
+            ignore_keys: Optional[List[str]] = None,
+            metric_key_prefix: str = "eval",
     ) -> EvalLoopOutput:
         """
         Prediction/evaluation loop, shared by `Trainer.evaluate()` and `Trainer.predict()`.
