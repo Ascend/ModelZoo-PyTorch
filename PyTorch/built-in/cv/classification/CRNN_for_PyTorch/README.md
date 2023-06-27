@@ -364,3 +364,7 @@ CRNN (Convolutional Recurrent Neural Network) 于2015年由华中科技大学的
 | 芯片型号 | Batch Size | 数据集      | 精度   |
 | -------- | ---------- | ----------- | ------ |
 | 910A    | 16         | IIIT5K_lmdb | 76.57% |
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

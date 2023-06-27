@@ -6,3 +6,4 @@
 | 开源代码引入 | https://github.com/dangweili/pedestrian-attribute-recognition-pytorch.git | DeepMar_for_PyTorch/baseline/model/resnet.py | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 下载预训练模型 |
 | 开源代码引入 | https://github.com/dangweili/pedestrian-attribute-recognition-pytorch.git | DeepMar_for_PyTorch/baseline/model/resnet.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth | 下载预训练模型 |
 | 开源代码引入 | https://github.com/dangweili/pedestrian-attribute-recognition-pytorch.git | DeepMar_for_PyTorch/baseline/model/resnet.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth | 下载预训练模型 |
+| 开发引入   | /                                                                         | DeepMar_for_PyTorch/constant.py              | 127.0.0.1                                                  | 本机IP地址  |

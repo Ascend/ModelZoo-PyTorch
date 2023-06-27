@@ -53,6 +53,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from torchvision import datasets, transforms
 from apex import amp
 import torch.npu
+import constant
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -92,7 +93,7 @@ def parse_opts():
     parser.add_argument('--workers', default=0, type=int, help='set workers')
     parser.add_argument('--data_dir', default="", type=str,
                         help='set data_dir')
-    parser.add_argument('--addr', default='90.90.176.152', type=str,
+    parser.add_argument('--addr', default=constant.IP_ADDRESS, type=str,
                         help='master addr')
     parser.add_argument('--rank', default=-1, type=int,
                         help='node rank for distributed training')

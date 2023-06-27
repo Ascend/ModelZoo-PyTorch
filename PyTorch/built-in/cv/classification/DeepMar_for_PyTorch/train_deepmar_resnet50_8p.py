@@ -55,6 +55,7 @@ from baseline.utils.utils import seed_everything
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.utils.data.distributed
+import constant
 
 # Apex
 import numpy as np
@@ -119,7 +120,7 @@ class Config(object):
         parser.add_argument('--opt_level', default='O2', type=str,
                             help='opt level using in amp, default O2 means FP16')
         # distributed
-        parser.add_argument('--addr', default='90.90.176.152', type=str,
+        parser.add_argument('--addr', default=constant.IP_ADDRESS, type=str,
                             help='master addr')
         parser.add_argument('--world_size', default=-1, type=int,
                             help='number of nodes for distributed training')
