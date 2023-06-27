@@ -119,7 +119,7 @@ else
    python3 train_angry.py --data_url=${data_path}/ --train_url=${output_path} --train_time=${number} --train_epochs=${train_epochs} --para_path=${PWD}/param_data.csv 1>${print_log} 2>&1
 fi
 
-batch_size=`grep "batch_size" ${print_log}  | awk '{print $NF}'`
+batch_size=`grep "batch_size is" ${print_log}  | awk '{print $NF}'`
 emotion=`grep "emotion" ${print_log}  | awk '{print $NF}'`
 # 性能相关数据计算
 StepTime=`grep "steptime" ${print_log} | tail -n 10 | awk '{print $NF}' | awk '{sum+=$1} END {print sum/NR}'`
