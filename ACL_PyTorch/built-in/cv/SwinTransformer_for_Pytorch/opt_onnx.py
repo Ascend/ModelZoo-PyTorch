@@ -1,10 +1,10 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# https://opensource.org/licenses/BSD-3-Clause
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,42 +16,41 @@
 import os
 import argparse
 import numpy as np
-from magiconnx import OnnxGraph
-from magiconnx.optimize.optimizer_manager import OptimizerManager
-
-
-def get_value_info(graph, out_name):
-    for value in graph._model.graph.value_info:
-        if value.name == out_name:
-            return [dim.dim_value for dim in value.type.tensor_type.shape.dim]
+from auto_optimizer import OnnxGraph
+from auto_optimizer.graph_optimizer import GraphOptimizer
+from auto_optimizer.pattern import KnowledgeFactory
 
 
 def merge_add(graph):
+    def get_next_node(node):
+        return graph.get_next_nodes(node.outputs[0])[0]
+
     def check_next_node(node, op_type):
-        try:
-            next_node = graph.get_next_nodes(node.name)[0]
-            if next_node.op_type != op_type:
-                return False
-        except:
-            return False
-        return True
+        next_node = get_next_node(node)
+        return next_node.op_type == op_type
 
-    for matmul_node in graph.get_nodes(op_type="MatMul"):
+    def get_value_info(out_name):
+        for value in graph.value_infos:
+            if value.name == out_name:
+                return value.shape
+        return []
+
+    for matmul_node in graph.get_nodes('MatMul'):
         # check pattern: matmul->add->reshape->add->reshape
-        if not check_next_node(matmul_node, "Add"):
+        if not check_next_node(matmul_node, 'Add'):
             continue
-        add_node1 = graph.get_next_nodes(matmul_node.name)[0]
-        if not check_next_node(add_node1, "Reshape"):
+        add_node1 = get_next_node(matmul_node)
+        if not check_next_node(add_node1, 'Reshape'):
             continue
-        reshape_node1 = graph.get_next_nodes(add_node1.name)[0]
-        if not check_next_node(reshape_node1, "Add"):
+        reshape_node1 = get_next_node(add_node1)
+        if not check_next_node(reshape_node1, 'Add'):
             continue
-        add_node2 = graph.get_next_nodes(reshape_node1.name)[0]
-        if not check_next_node(add_node2, "Reshape"):
+        add_node2 = get_next_node(reshape_node1)
+        if not check_next_node(add_node2, 'Reshape'):
             continue
-        reshape_node2 = graph.get_next_nodes(add_node2.name)[0]
+        reshape_node2 = get_next_node(add_node2)
 
-        input_shape = get_value_info(graph, graph[matmul_node.name].outputs[0])
+        input_shape = get_value_info(graph[matmul_node.name].outputs[0])
         # merge add value
         add_value1 = graph[add_node1.inputs[1]].value
         add_value2 = graph[add_node2.inputs[1]].value
@@ -65,9 +64,9 @@ def merge_add(graph):
         graph[add_node1.inputs[1]].value = add_value1 + add_value2.reshape(out_shape)
 
         # del reshape->add->reshape
-        graph.del_node(reshape_node1.name)
-        graph.del_node(add_node2.name)
-        graph.del_node(reshape_node2.name)
+        graph.remove(reshape_node1.name)
+        graph.remove(add_node2.name)
+        graph.remove(reshape_node2.name)
 
 
 def parse_arguments():
@@ -83,15 +82,16 @@ def parse_arguments():
 
 if __name__ == '__main__':
     args = parse_arguments()
-    onnx_graph = OnnxGraph(args.input_path)
+    original_graph = OnnxGraph.parse(args.input_path)
     model_name = os.path.basename(args.input_path)
     model_name = os.path.splitext(model_name)[0].replace('_sim', '')
-    if model_name in ["swin_large_patch4_window12_384_bs16",
-                      "swin_large_patch4_window12_384_bs32",
-                      "swin_large_patch4_window12_384_bs64"]:
-        onnx_graph.save(args.out_path)
+    if model_name in {'swin_large_patch4_window12_384_bs16',
+                      'swin_large_patch4_window12_384_bs32',
+                      'swin_large_patch4_window12_384_bs64'}:
+        original_graph.save(args.out_path)
     else:
-        optimize_manager_base = OptimizerManager(onnx_graph)
-        optimize_manager_base.apply()
-        merge_add(onnx_graph)
-        onnx_graph.save(args.out_path)
+        knowledges = KnowledgeFactory.get_knowledge_pool()
+        optimizer = GraphOptimizer(list(knowledges.keys()))
+        optimized_graph, _ = optimizer.apply_knowledges(original_graph)
+        merge_add(optimized_graph)
+        optimized_graph.save(args.out_path)

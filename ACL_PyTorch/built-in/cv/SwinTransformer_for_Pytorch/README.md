@@ -81,13 +81,7 @@
    pip3 install -r requirements.txt
    ```
 
-   安装模型依赖:
-
-   ```
-   git clone https://gitee.com/Ronnie_zheng/MagicONNX
-   cd MagicONNX && git checkout dev
-   pip3 install . && cd ..
-   ```
+   安装 [ait](https://gitee.com/ascend/ait/tree/master/ait)。
 
 ## 准备数据集<a name="section183221994411"></a>
 
