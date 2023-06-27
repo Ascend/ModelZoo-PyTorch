@@ -34,6 +34,19 @@ from .distributed import is_master
 from .zero_shot import zero_shot_eval
 from .precision import get_autocast
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -98,20 +111,21 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
     batch_time_m = AverageMeter()
     data_time_m = AverageMeter()
     end = time.time()
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                    profile_type=os.getenv("PROFILE_TYPE"))
     for i, batch in enumerate(dataloader):
         i_accum = i // args.accum_freq
         step = num_batches_per_epoch * epoch + i_accum
 
         if not args.skip_scheduler:
             scheduler(step)
-
+        profiler.start()
         images, texts = batch
         images = images.to(device=device, dtype=cast_dtype, non_blocking=True)
         texts = texts.to(device=device, non_blocking=True)
 
         data_time_m.update(time.time() - end)
         optimizer.zero_grad()
-
         if args.accum_freq == 1:
             with autocast():
                 model_out = model(images, texts)
@@ -165,7 +179,6 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                     total_loss = sum(losses.values())
                     losses["loss"] = total_loss
                 backward(total_loss, scaler, optimizer)
-
         if scaler is not None:
             if args.horovod:
                 optimizer.synchronize()
@@ -184,7 +197,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
             if args.grad_clip_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip_norm, norm_type=2.0)
             optimizer.step()
-
+        profiler.end()
         # reset gradient accum, if enabled
         if args.accum_freq > 1:
             accum_images, accum_texts, accum_features = [], [], {}
