@@ -24,6 +24,22 @@ from ..utils.import_utils import is_xformers_available
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
+class NpuLinear(torch.nn.Linear):
+    def forward(self, x):
+        if not x.is_npu:
+            return super(NpuLinear, self).forward(x)
+        input_shape = x.size()
+        if x.dim() == 3:
+            x = x.reshape(-1, self.in_features)
+            return torch.npu_linear(x, self.weight, self.bias).view(input_shape[0],
+                                                                    input_shape[1], self.out_features)
+        elif x.dim() == 2:
+            return torch.npu_linear(x, self.weight, self.bias)
+        else:
+            raise RuntimeError('not support this dim')
+
+nn.Linear = NpuLinear
+
 if is_xformers_available():
     import xformers
     import xformers.ops
@@ -350,22 +366,11 @@ class Attention(nn.Module):
             key = key.float()
 
         if attention_mask is None:
-            baddbmm_input = torch.empty(
-                query.shape[0], query.shape[1], key.shape[1], dtype=query.dtype, device=query.device
-            )
-            beta = 0
+            attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
         else:
-            baddbmm_input = attention_mask
             beta = 1
-
-        attention_scores = torch.baddbmm(
-            baddbmm_input,
-            query,
-            key.transpose(-1, -2),
-            beta=beta,
-            alpha=self.scale,
-        )
-        del baddbmm_input
+            attention_scores = torch.add(torch.mul(beta, attention_mask),
+                                         torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
 
         if self.upcast_softmax:
             attention_scores = attention_scores.float()

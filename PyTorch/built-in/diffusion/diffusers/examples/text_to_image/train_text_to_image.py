@@ -53,6 +53,7 @@ if is_wandb_available():
 
 # Adapter to NPU
 import torch_npu
+from torch_npu.optim import NpuFusedAdamW
 from torch_npu.contrib import transfer_to_npu
 
 
@@ -423,7 +424,8 @@ def parse_args():
         ),
     )
 
-
+    parser.add_argument("--use_npu_fuse_adamW", action="store_true", help="Whether to use NpuFusedAdamW")
+    parser.add_argument("--use_clip_grad_norm_fused", action="store_true", help="Whether to use clip_grad_norm_fused")
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -638,17 +640,20 @@ def main():
         )
 
     # Initialize the optimizer
-    if args.use_8bit_adam:
-        try:
-            import bitsandbytes as bnb
-        except ImportError:
-            raise ImportError(
-                "Please install bitsandbytes to use 8-bit Adam. You can do so by running `pip install bitsandbytes`"
-            )
-
-        optimizer_cls = bnb.optim.AdamW8bit
+    if args.use_npu_fuse_adamW:
+        optimizer_cls = NpuFusedAdamW
     else:
-        optimizer_cls = torch.optim.AdamW
+        if args.use_8bit_adam:
+            try:
+                import bitsandbytes as bnb
+            except ImportError:
+                raise ImportError(
+                    "Please install bitsandbytes to use 8-bit Adam. You can do so by running `pip install bitsandbytes`"
+                )
+
+            optimizer_cls = bnb.optim.AdamW8bit
+        else:
+            optimizer_cls = torch.optim.AdamW
 
     optimizer = optimizer_cls(
         unet.parameters(),
@@ -934,7 +939,10 @@ def main():
                 # Backpropagate
                 accelerator.backward(loss)
                 if accelerator.sync_gradients:
-                    accelerator.clip_grad_norm_(unet.parameters(), args.max_grad_norm)
+                    if args.use_npu_fuse_adamW and args.use_clip_grad_norm_fused:
+                        optimizer.optimizer.clip_grad_norm_fused_(args.max_grad_norm)
+                    else:
+                        accelerator.clip_grad_norm_(unet.parameters(), args.max_grad_norm)
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
