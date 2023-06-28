@@ -149,28 +149,6 @@ def generate_batch_data(data_list, map_names, batch_num, device_ids, num_process
     return splited_packs
 
 
-def process_unsplited():
-    # NOTE: 支持多进程/存在部分精度差异
-    speech2text = Speech2Text(
-        model_dir=args.model_path,
-        providers=["NPUExecutionProvider"],
-        device_id=args.device_ids[0])
-    total_t = 0
-    files = find_files(args.dataset_path)
-    files = list(files)
-    num = len(files)
-    res_list = []
-    st = time.time()
-    for fl in files:
-        y, sr = librosa.load(fl, sr=16000)
-        nbest = speech2text(y)
-        res = "".join(nbest[0][1])
-        res_list.append('{} {}\n'.format(fl.split('/')[-1].split('.')[0], res))
-    et = time.time()
-    dump_result(args.result_path, res_list)
-    print("wav/second:", num/(et-st))
-
-
 def infer_multi(data_pack, mode='default'):
     if args.bink_cpu:
         cpu_id, device_id, data_list, map_names = data_pack
@@ -197,9 +175,12 @@ def infer_multi(data_pack, mode='default'):
         model_dir=args.model_path,
         providers=["NPUExecutionProvider"],
         device_id=device_id,
-        only_use_decoder=only_use_decoder,
+        disable_preprocess=True,
         only_use_encoder=only_use_encoder,
-        enable_multibatch=enable_multibatch)
+        only_use_decoder=only_use_decoder,
+        enable_multibatch=enable_multibatch,
+        rank_mode=args.rank_encoder_mode
+    )
 
     sync_num.append(1)
     while (len(sync_num) != num_process):
@@ -215,7 +196,7 @@ def infer_multi(data_pack, mode='default'):
         feature = speech2text(datas)
         if mode == 'encoder':
             feature = feature[0]
-        elif mode == 'decoder':
+        else:
             feature = [f[0] for f in feature]
         if isinstance(names, list):
             sample_num += len(names)
@@ -241,38 +222,74 @@ def decoder_prerocess(feature_list):
     return np.concatenate(out_list, axis=0)
 
 
+def sort_by_feature(datas, sort_axis=1):
+    # sort data in flattened data list
+    features = datas[0]
+    _res = []
+    sorted_idxes = sorted(np.arange(len(features)), key=lambda x:features[x].shape[sort_axis])
+    for data in datas:
+        _res.append(
+            [data[i] for i in sorted_idxes]
+        )
+    return _res
+
+
+def speech_preprocess(batch, num_process, device_ids, shuffle=False):
+    data_list, map_names = load_data(args.dataset_path)
+
+    data_list, map_names = sort_by_feature([data_list, map_names], sort_axis=0)
+    # align data num for batch num
+    align_data(data_list, batch, [data_list[0]])
+    align_data(map_names, batch, ["Unvalid data"])
+
+    global PRE_PROCESSORS
+    PRE_PROCESSORS['encoder'] = encoder_preprocess
+    splited_packs = generate_batch_data(data_list, map_names, batch,
+                                        device_ids, num_process, shuffle=shuffle,
+                                        sort=True, sort_impl=partial(sort_by_feature, sort_axis=0),
+                                        enable_multiprocess=True, preprocessor='encoder')
+    return splited_packs
+
+
+def process_unsplited():
+    infer_func = partial(infer_multi)
+    sample_num = 0
+    data_list, map_names = load_data(args.dataset_path)
+
+    splited_packs = speech_preprocess(args.batch, args.num_process, args.device_ids, shuffle=True)
+    args.num_process = min(len(splited_packs), args.num_process)
+    name_list = []
+    res = []
+    infer_times = []
+    with Pool(args.num_process) as p:
+        for _num, _duration, _re, _name in list(p.imap(infer_func, splited_packs)):
+            sample_num += _num
+            name_list += _name
+            infer_times.append(_duration)
+            res.extend(_re)
+
+    res = flat(res)
+    name_list = flat(name_list)
+    res = [res[idx] for idx in range(len(res)) if name_list[idx] != "Unvalid data"]
+    name_list = [name for name in name_list if name != "Unvalid data"]
+    out_list = [f"{name_list[i]} {res[i]}\n" for i in range(len(res))]
+    duration = max(_[1] for _ in infer_times) - min(_[0] for _ in infer_times)
+    total_fps = sample_num / duration
+    dump_result(args.result_path, out_list)
+    print(f"sample_num:{sample_num}")
+    print(f"total: {total_fps}wav/second")
+
+
 def process_splited():
     # encode process
     infer_encoder = partial(infer_multi, mode='encoder')
     sample_num = 0
     features = []
     encoder_times = []
-    data_list, map_names = load_data(args.dataset_path)
 
-    def sort_by_feature(datas, sort_axis=1):
-        # sort data in flattened data list
-        features = datas[0]
-        _res = []
-        sorted_idxes = sorted(np.arange(len(features)), key=lambda x:features[x].shape[sort_axis])
-        for data in datas:
-            _res.append(
-                [data[i] for i in sorted_idxes]
-            )
-        return _res
-
-    data_list, map_names = sort_by_feature([data_list, map_names], sort_axis=0)
-    # align data num for batch num
-    align_data(data_list, args.batch_encoder, [data_list[0]])
-    align_data(map_names, args.batch_encoder, ["Unvalid data"])
-
-    global PRE_PROCESSORS
-    PRE_PROCESSORS['encoder'] = encoder_preprocess
-    splited_packs = generate_batch_data(data_list, map_names, args.batch_encoder,
-                                        args.device_ids, args.num_process_encoder, shuffle=False,
-                                        sort=True, sort_impl=partial(sort_by_feature, sort_axis=0),
-                                        enable_multiprocess=True, preprocessor='encoder')
+    splited_packs = speech_preprocess(args.batch_encoder, args.num_process_encoder, args.device_ids)
     args.num_process_encoder = min(len(splited_packs), args.num_process_encoder)
-    map_names.clear()
+    map_names = []
     with Pool(args.num_process_encoder) as p:
         for _num, _duration, _fe, _name in list(p.imap(infer_encoder, splited_packs)):
             sample_num += _num
@@ -321,13 +338,15 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', default="/root/.cache/espnet_onnx/asr_train_asr_qkv", type=str, help='path to the om model and config')
     parser.add_argument('--result_path', default="om.txt", type=str, help='path to result')
     parser.add_argument('--unsplit', action='store_true', help='enable unsplit mode')
-    parser.add_argument('--num_process', default=1, type=int, help='num of process')
-    parser.add_argument('--batch_encoder', default=4, type=int, help='num of encode process')
-    parser.add_argument('--batch_decoder', default=16, type=int, help='num of encode process')
+    parser.add_argument('--batch', default=4, type=int, help='batch size of asr process')
+    parser.add_argument('--batch_encoder', default=4, type=int, help='batch size  of encode process')
+    parser.add_argument('--batch_decoder', default=16, type=int, help='batch size of decode process')
+    parser.add_argument('--num_process', default=35, type=int, help='num of process')
     parser.add_argument('--num_process_encoder', default=16, type=int, help='num of encode process')
     parser.add_argument('--num_process_decoder', default=17, type=int, help='num of decode process')
     parser.add_argument('--device_ids', default='0', type=str, help='device ids for NPU infer')
-    parser.add_argument('--bink_cpu', action='store_true', help='enble bink cpu in multiprocessing mode')
+    parser.add_argument('--rank_encoder_mode', default=True, type=bool, help='enable rank mode for encoder model')
+    parser.add_argument('--bink_cpu', action='store_true', help='enable bink cpu in multiprocessing mode')
     parser.add_argument('--seed', default=123, type=int, help='seed for data shuffle')
 
     args = parser.parse_args()
@@ -345,6 +364,4 @@ if __name__ == "__main__":
     if not args.unsplit:
         process_splited()
     else:
-        if args.num_process > 1 or len(args.device_ids) > 1:
-            raise NotImplementedError("Multiprocess not supported now in unsplited mode.")
         process_unsplited()
