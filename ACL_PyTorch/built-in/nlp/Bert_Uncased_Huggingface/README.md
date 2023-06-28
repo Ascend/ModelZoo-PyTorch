@@ -114,6 +114,12 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    python3 setup.py install&&cd ../..
    ```
 
+5. 前后处理的步骤涉及在线下载数据集，若遇SSL校验错误的情况，需配置环境变量如下：
+
+   ```shell
+   export CURL_CA_BUNDLE=
+   ```
+
 ## 准备数据集<a name="section183221994411"></a>
 
 1. 获取原始数据集。
@@ -145,6 +151,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    ```shell
    # model_size = [base, large]
    # seq = [64, 128, 256, 320, 384, 512]
+   # stride = [16, 64, 128, 128, 128, 128]
    
    python3 bert_process.py \
    --model_path bert_${model_size} \
@@ -152,18 +159,18 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    --save_dir prep_data \
    --pad_to_max_length \
    --max_seq_length ${seq} \
-   # --doc_stride ${stride}
+   --doc_stride ${stride} \
    # --offline_download
    ```
-
+   
    参数说明：
-
+   
    - --model_path：模型配置和权重文件所在文件夹路径。
    - --process_mode：此处为**预处理模式**。
    - --save_dir：预处理后数据的保存路径。
    - --pad_to_max_length：静态模型需要添加此参数。
    - --max_seq_length：序列长度 `${seq}`。
-   - --doc_stride：当序列长度 `${seq}` 小于等于 128 时需设置此参数为合适值（参考精度数据部分的 doc_stride 值）。
+   - --doc_stride：`${stride}`值与`${seq}`值一一对应。
    - --offline_download：若采用离线下载模式下载数据集，需要添加此参数。
 
 ## 模型推理<a name="section741711594517"></a>
@@ -322,6 +329,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    # model_size = [base, large]
    # seq = [64, 128, 256, 320, 384, 512]
    # bs = [1, 4, 8, 16, 32, 64]
+   # stride = [16, 64, 128, 128, 128, 128]
    
    python3 bert_process.py \
    --model_path bert_${model_size} \
@@ -330,7 +338,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    --pad_to_max_length \
    --max_seq_length ${seq} \
    --result_dir ./result/result_bs${bs}
-   # --doc_stride ${stride}
+   --doc_stride ${stride}
    # --offline_download
    ```
    
@@ -341,7 +349,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
    - --pad_to_max_length：静态模型需要添加此参数。
    - --max_seq_length：序列长度 `${seq}`。
    - --result_dir：推理结果所在路径。
-   - --doc_stride：当序列长度 `${seq}` 小于等于 128 时需设置此参数，需要与前处理统一（参考精度数据参考的 doc_stride 值）。
+   - --doc_stride：`${stride}`值与`${seq}`值一一对应，需要与前处理保持一致。
    - --offline_download：若采用离线下载模式下载数据集，需要添加此参数。
    
 4. 可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
@@ -378,19 +386,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
 | 芯片型号    | Sequence Length | Batch Size | NPU 性能（FPS） |
 | ----------- | --------------- | ---------- | --------------- |
-| Ascend310P3 | 16              | 1          | 640.15          |
-| ...         | ...             | 4          | 1713.31         |
-| ...         | ...             | 8          | 4172.25         |
-| ...         | ...             | 16         | 6495.53         |
-| ...         | ...             | 32         | 10067.93        |
-| ...         | ...             | 64         | 11368.05        |
-| ...         | 32              | 1          | 481.39          |
-| ...         | ...             | 4          | 2099.53         |
-| ...         | ...             | 8          | 3284.40         |
-| ...         | ...             | 16         | 4973.46         |
-| ...         | ...             | 32         | 5447.82         |
-| ...         | ...             | 64         | 5664.66         |
-| ...         | 64              | 1          | 421.30          |
+| Ascend310P3         | 64              | 1          | 421.30          |
 | ...         | ...             | 4          | 1672.77         |
 | ...         | ...             | 8          | 2507.14         |
 | ...         | ...             | 16         | 2699.84         |
@@ -444,19 +440,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
 | 芯片型号    | Sequence Length | Batch Size | NPU 性能（FPS） |
 | ----------- | --------------- | ---------- | --------------- |
-| Ascend310P3 | 16              | 1          | 223.7642        |
-| ...         | ...             | 4          | 648.9145        |
-| ...         | ...             | 8          | 1537.6926       |
-| ...         | ...             | 16         | 2300.591        |
-| ...         | ...             | 32         | 2858.7866       |
-| ...         | ...             | 64         | 3177.1877       |
-| ...         | 32              | 1          | 198.6156        |
-| ...         | ...             | 4          | 774.4043        |
-| ...         | ...             | 8          | 1145.1638       |
-| ...         | ...             | 16         | 1398.2274       |
-| ...         | ...             | 32         | 1519.1709       |
-| ...         | ...             | 64         | 1510.8532       |
-| ...         | 64              | 1          | 204.1607        |
+| Ascend310P3 | 64              | 1          | 204.1607        |
 | ...         | ...             | 4          | 572.3639        |
 | ...         | ...             | 8          | 694.0155        |
 | ...         | ...             | 16         | 762.6932        |
