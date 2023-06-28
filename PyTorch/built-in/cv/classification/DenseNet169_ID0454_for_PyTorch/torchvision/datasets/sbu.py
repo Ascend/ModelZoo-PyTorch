@@ -52,7 +52,9 @@ class SBU(VisionDataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    url = "http://www.cs.virginia.edu/~vicente/sbucaptions/SBUCaptionedPhotoDataset.tar.gz"
+    with open('../../url.ini', 'r') as _f:
+        _content = _f.read()
+        url = _content.split('sbucaption_dataset_url=')[1].split('\n')[0]
     filename = "SBUCaptionedPhotoDataset.tar.gz"
     md5_checksum = '9aec147b3488753cf758b4d493422285'
 

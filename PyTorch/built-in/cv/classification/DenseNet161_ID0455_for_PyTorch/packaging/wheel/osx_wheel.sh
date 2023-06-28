@@ -4,7 +4,8 @@ if [[ ":$PATH:" == *"conda"* ]]; then
 fi
 # download and activate anaconda
 rm -rf ~/minconda_wheel_env_tmp
-wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh && \
+miniconda3_mac_url=`sed '/^miniconda3_mac_url=/!d;s/.*=//' ../../url.ini`
+wget -q ${miniconda3_mac_url} && \
     chmod +x Miniconda3-latest-MacOSX-x86_64.sh && \
     ./Miniconda3-latest-MacOSX-x86_64.sh -b -p ~/minconda_wheel_env_tmp && \
     rm Miniconda3-latest-MacOSX-x86_64.sh
@@ -20,7 +21,8 @@ export MACOSX_DEPLOYMENT_TARGET=10.9 CC=clang CXX=clang++
 
 pushd /tmp
 rm -rf vision
-git clone https://github.com/pytorch/vision
+vision_url=`sed '/^vision_url=/!d;s/.*=//' ../../url.ini`
+git clone ${vision_url}
 pushd vision
 
 desired_pythons=( "2.7" "3.5" "3.6" "3.7" )
@@ -36,7 +38,8 @@ do
     pip uninstall -y torch_nightly || true
 
     export TORCHVISION_PYTORCH_DEPENDENCY_NAME=torch_nightly
-    pip install torch_nightly -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+    torch_nightly_cpu_url=`sed '/^torch_nightly_cpu_url=/!d;s/.*=//' ../../url.ini`
+    pip install torch_nightly -f ${torch_nightly_cpu_url}
     export TORCHVISION_PYTORCH_DEPENDENCY_VERSION="$(pip show torch_nightly | grep ^Version: | sed 's/Version:  *//')"
     echo "Building against ${TORCHAUDIO_PYTORCH_DEPENDENCY_VERSION}"
 

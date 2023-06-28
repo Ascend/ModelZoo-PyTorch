@@ -11,14 +11,14 @@ checkpoint:
   keep_interval_updates: 1
 
 distributed_training:
-  distributed_world_size: 16
+  distributed_world_size: 1
   ddp_backend: legacy_ddp
 
 task:
   _name: masked_lm
   data: ???
   sample_break_mode: complete_doc
-  tokens_per_sample: 512
+  tokens_per_sample: 64
   include_target_tokens: true
   random_token_prob: 0
   leave_unmasked_prob: 0
@@ -28,7 +28,7 @@ task:
 criterion: model
 
 dataset:
-  max_tokens: 8192
+  max_tokens: 1280
   ignore_unused_valid_subsets: true
   skip_invalid_size_inputs_valid_test: true
 

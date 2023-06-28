@@ -149,7 +149,7 @@
 
          ```
          mkdir -p models/om
-         atc --model=models/onnx/EDSR_x2.onnx --framework=5 --output=models/om/EDSR_x2 --input_format=ND --log=debug --soc_version=${chip_name} --input_fp16_nodes="image" --output_type=FP16 --input_shape_range="image:[1,3,100~1080,100~1920]"
+         atc --model=models/onnx/EDSR_x2.onnx --framework=5 --output=models/om/EDSR_x2 --input_format=ND --log=debug --soc_version=${chip_name} --input_fp16_nodes="image" --output_type=FP16 --input_shape="image:[1,3,100~1080,100~1920]"
          ```
 
          - 参数说明：

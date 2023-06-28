@@ -25,7 +25,7 @@ def cos_sim(a, b):
     return cos
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='recognize with your model')
+    parser = argparse.ArgumentParser(description='get cosine similaryty with your model')
     parser.add_argument('--encoder_onnx', required=True, help='encoder onnx file')
     parser.add_argument('--encoder_om', required=True, help='encoder om file')
     parser.add_argument('--batch_size', required=True, type=int, help='batch size')
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument('--decoding_chunk_size', default=16, type=int, 
                         help='decoding chunk size, <=0 is not supported')
     parser.add_argument('--num_decoding_left_chunks',
-                        default=5,
+                        default=4,
                         type=int,
                         required=False,
                         help="number of left chunks, <= 0 is not supported")

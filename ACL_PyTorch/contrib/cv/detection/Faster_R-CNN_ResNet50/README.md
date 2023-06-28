@@ -354,4 +354,4 @@ python3 coco_eval.py --detection_result coco_detection_result.json --ground_trut
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 | 基准性能 |
 | :------: | :---------: | :-----: | :---: | :--: | :--: |
-| Ascend310P | 1 | coco2017 | 37.2 | 15.759 | 19.4 |
+| Ascend310P | 1 | coco2017 | 37.2 | 14.84 | 19.4 |

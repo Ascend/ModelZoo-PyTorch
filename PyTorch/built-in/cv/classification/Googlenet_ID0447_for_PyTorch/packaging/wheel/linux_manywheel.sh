@@ -29,7 +29,8 @@ done
 OLD_PATH=$PATH
 cd /tmp
 rm -rf vision
-git clone https://github.com/pytorch/vision
+url=`sed '/^pytorch_url=/!d;s/.*=//' ../../url.ini`
+git clone ${url}
 
 cd /tmp/vision
 
@@ -42,7 +43,8 @@ for PYDIR in "${python_installations[@]}"; do
     pip uninstall -y torch_nightly || true
 
     export TORCHVISION_PYTORCH_DEPENDENCY_NAME=torch_nightly
-    pip install torch_nightly -f https://download.pytorch.org/whl/nightly/$CUVER/torch_nightly.html
+    url=`sed '/^nightly_url=/!d;s/.*=//' ../../url.ini`
+    pip install torch_nightly -f ${url}/$CUVER/torch_nightly.html
     # CPU/CUDA variants of PyTorch have ABI compatible PyTorch for
     # the CPU only bits.  Therefore, we
     # strip off the local package qualifier, but ONLY if we're

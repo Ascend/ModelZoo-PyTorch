@@ -56,6 +56,17 @@ from fairseq import checkpoint_utils, distributed_utils, options, progress_bar, 
 from fairseq.data import iterators
 from fairseq.trainer import Trainer
 from fairseq.meters import AverageMeter, StopwatchMeter
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 #hook
 def hook_func(name, save_dict, module):
@@ -232,11 +243,14 @@ def train(args, trainer, task, epoch_itr):
     else:
         torch.npu.global_step_inc()
     num_steps = 0
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
     for i, samples in enumerate(progress, start=epoch_itr.iterations_in_epoch):
         #if i == 60:
         #    exit(0)
         #for tt in samples:
         #    print(tt["net_input"]["src_tokens"].size())
+        profiler.start()
         start = time.time()
         if num_steps >= args.stop_step:
             if args.profiling == 'GE' or args.profiling == 'CANN':
@@ -314,6 +328,7 @@ def train(args, trainer, task, epoch_itr):
 
             if num_updates >= max_update:
                 break
+        profiler.end()
         num_steps = num_steps + 1
 
     # log end-of-epoch stats

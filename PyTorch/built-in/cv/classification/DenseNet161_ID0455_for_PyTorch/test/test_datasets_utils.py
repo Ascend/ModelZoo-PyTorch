@@ -53,6 +53,13 @@ TEST_FILE = get_file_path_2(
     os.path.dirname(os.path.abspath(__file__)), 'assets', 'grace_hopper_517x606.jpg')
 
 
+with open('../url.ini', 'r') as _f:
+    _content = _f.read()
+    vision_archive_http_url = _content.split('vision_archive_http_url=')[1].split('\n')[0]
+    vision_archive_https_url = _content.split('vision_archive_https_url=')[1].split('\n')[0]
+    vision_archive_url = _content.split('vision_archive_url=')[1].split('\n')[0]
+
+
 class Tester(unittest.TestCase):
 
     def test_check_md5(self):
@@ -74,7 +81,7 @@ class Tester(unittest.TestCase):
 
     def test_download_url(self):
         with get_tmp_dir() as temp_dir:
-            url = "http://github.com/pytorch/vision/archive/master.zip"
+            url = vision_archive_http_url
             try:
                 utils.download_url(url, temp_dir)
                 self.assertFalse(len(os.listdir(temp_dir)) == 0)
@@ -85,7 +92,7 @@ class Tester(unittest.TestCase):
 
     def test_download_url_retry_http(self):
         with get_tmp_dir() as temp_dir:
-            url = "https://github.com/pytorch/vision/archive/master.zip"
+            url = vision_archive_https_url
             try:
                 utils.download_url(url, temp_dir)
                 self.assertFalse(len(os.listdir(temp_dir)) == 0)
@@ -97,7 +104,7 @@ class Tester(unittest.TestCase):
     @unittest.skipIf(sys.version_info < (3,), "Python2 doesn't raise error")
     def test_download_url_dont_exist(self):
         with get_tmp_dir() as temp_dir:
-            url = "http://github.com/pytorch/vision/archive/this_doesnt_exist.zip"
+            url = vision_archive_url
             with self.assertRaises(URLError):
                 utils.download_url(url, temp_dir)
 

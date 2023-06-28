@@ -109,6 +109,10 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'eval'
 
 # 结果打印，不需要修改
 
+FPS=`grep -irn time  $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| tail -n 5 | awk '{print$4}' | awk '{sum+=$1} END {print ('$batch_size')/(sum/NR)}'`
+#打印，不需要修改
+echo "Final Performance images/sec : $FPS"
+
 # 输出训练精度,需要模型审视修改
 train_accuracy=`grep -a '* Acc@1'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk 'END {print}'|awk -F "Acc@1" '{print $NF}'|awk -F " " '{print $1}'`
 # 打印，不需要修改

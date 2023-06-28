@@ -14,7 +14,7 @@ RankSize=1
 #训练epoch，可选
 train_epochs=2
 #训练step
-train_steps=25
+train_steps=100
 #学习率
 learning_rate=0.495
 

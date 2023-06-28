@@ -14,6 +14,8 @@ except ImportError:
     with open(version_txt) as f:
         __version__ = f.read().strip()
 
+npu_fused_mode = os.environ.get("NPU_FUSED_MODE")
+
 __all__ = ["pdb"]
 
 # backwards compatibility to support `from fairseq.X import Y`

@@ -60,6 +60,7 @@ from utils.general import (
     get_latest_run, check_git_status, check_file, increment_dir, print_mutation, plot_evolution)
 from utils.google_utils import attempt_download
 from utils.torch_utils import init_seeds, ModelEMA, select_device, intersect_dicts
+import constant
 
 warnings.filterwarnings("ignore")
 
@@ -596,7 +597,7 @@ if __name__ == '__main__':
                         help='url used to set up distributed training')
     parser.add_argument('--dist_backend', default='nccl', type=str,
                         help='distributed backend')
-    parser.add_argument('--addr', default='90.90.176.152', type=str,
+    parser.add_argument('--addr', default=constant.IP_ADDRESS, type=str,
                         help='master addr')
     parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str,
                         help='device id list')

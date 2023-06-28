@@ -39,6 +39,20 @@ torch_npu.npu.set_compile_mode(jit_compile=False)
 torch.npu.config.allow_internal_format = False
 torch.set_grad_enabled(False)
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 def chunk(it, size):
     it = iter(it)
     return iter(lambda: tuple(islice(it, size)), ())
@@ -363,17 +377,18 @@ def main(opt):
     print("data : ", data)
     input_t = input("please input the prompt of the picture: ")
     print(" the prompt of the picture: ", input_t)
-
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
     while len(input_t) > 0:
         start_time = time.time()
         data = [batch_size * [input_t]]
-
         precision_scope = autocast if opt.precision == "autocast" or opt.bf16 else nullcontext
         with torch.no_grad(), \
                 precision_scope(opt.device), \
                 model.ema_scope():
             all_samples = list()
             for n in trange(opt.n_iter, desc="Sampling"):
+                profiler.start()
                 for prompts in tqdm(data, desc="data"):
                     uc = None
                     if opt.scale != 1.0:
@@ -405,7 +420,7 @@ def main(opt):
                         sample_count += 1
 
                     all_samples.append(x_samples)
-
+                profiler.end()
             # additionally, save as grid
             grid = torch.stack(all_samples, 0)
             grid = rearrange(grid, 'n b c h w -> (n b) c h w')
@@ -421,7 +436,6 @@ def main(opt):
             print("the prompt generate picture cost time is :", end_time - start_time)
             input_t = input("please input the prompt of the picture: ")
             print("the prompt of the picture: ", input_t)
-
     print(f"Your samples are ready and waiting for you here: \n{outpath} \n"
           f" \nEnjoy.")
 

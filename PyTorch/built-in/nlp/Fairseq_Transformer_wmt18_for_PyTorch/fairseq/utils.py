@@ -756,7 +756,7 @@ def xla_device_to_cpu(dat):
 class CudaEnvironment(object):
     def __init__(self):
         cur_device = torch.cuda.current_device()
-        prop = torch.cuda.get_device_properties("cuda:{}".format(cur_device))
+        prop = torch.cuda.get_device_properties("npu:{}".format(cur_device))
         self.name = prop.name
         self.total_memory_in_GB = prop.total_memory / 1024 / 1024 / 1024
 

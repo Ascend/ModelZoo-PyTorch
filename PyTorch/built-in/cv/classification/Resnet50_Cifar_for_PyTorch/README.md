@@ -176,6 +176,8 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 | 1p-NPU |   -   | 3938  |   2    |    O2    |      1.8      |    256     |  910B  |
 | 8p-NPU | 82.53 | 23011 |  200   |    O2    |      1.8      |    2048    |  910B  |
 
+  > **说明：** 该模型默认在二进制场景下进行训练。
+
 
 # 版本说明
 
@@ -187,10 +189,6 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
 
 无。
 
+# 公网地址说明
 
-
-
-
-
-
-
+代码涉及公网地址参考 public_address_statement.md

@@ -59,6 +59,20 @@ import mlperf_logger
 
 from mhalib import *
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 # Global variables
 skipped_steps = 0
 cached_batches = []
@@ -590,7 +604,7 @@ def take_optimizer_step(args, optimizer, model, overflow_buf, global_step):
         # manually allreduce gradients after all accumulation steps
         # check for Inf/NaN
         # 1. allocate an uninitialized buffer for flattened gradient
-        scaler = _amp_state.loss_scalers[0] if args.fp16 else None
+        scaler = _amp_state.loss_scalers[0] if args.fp16 and not os.getenv('ALLOW_FP32') else None
         master_grads = [p.grad for p in amp.master_params(optimizer) if p.grad is not None]
         flat_grad_size = sum(p.numel() for p in master_grads)
         allreduce_dtype = torch.float16 if args.allreduce_post_accumulation_fp16 else torch.float32
@@ -598,7 +612,7 @@ def take_optimizer_step(args, optimizer, model, overflow_buf, global_step):
         # 2. combine unflattening and predivision of unscaled 'raw' gradient
         allreduced_views = apex_C.unflatten(flat_raw, master_grads)
         overflow_buf.zero_()
-        scaler_loss_scale = scaler.loss_scale() if args.fp16 else 1.0
+        scaler_loss_scale = scaler.loss_scale() if args.fp16 and not os.getenv('ALLOW_FP32') else 1.0
         amp_C.multi_tensor_scale(65536,
             overflow_buf,
             [master_grads, allreduced_views],
@@ -613,7 +627,7 @@ def take_optimizer_step(args, optimizer, model, overflow_buf, global_step):
             1./scaler_loss_scale)
         # 5. update loss scale
         had_overflow = 0
-        if args.fp16:
+        if args.fp16 and not os.getenv('ALLOW_FP32'):
             scaler = _amp_state.loss_scalers[0]
             old_overflow_buf = scaler._overflow_buf
             scaler._overflow_buf = overflow_buf
@@ -633,7 +647,10 @@ def take_optimizer_step(args, optimizer, model, overflow_buf, global_step):
                     param.grad = None
     else:
         optimizer.step()
-        global_step += 0 if args.fp16 and _amp_state.loss_scalers[0]._has_overflow else 1
+        if args.fp16 and _amp_state.loss_scalers[0]._has_overflow and not os.getenv('ALLOW_FP32')：
+            global_step += 0
+        else：
+            global_step += 1
 
     for param in model.parameters():
         param.grad = None
@@ -835,6 +852,8 @@ def main():
 
                 dataset_future = pool.submit(create_pretraining_dataset, data_file, args.max_predictions_per_seq, shared_file_list, args, worker_init_fn=worker_init)
 
+                profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                                   profile_type=os.getenv("PROFILE_TYPE"))
                 for step, batch in enumerate(train_dataloader):
                     training_steps += 1
                     update_step = training_steps % args.gradient_accumulation_steps == 0
@@ -842,6 +861,7 @@ def main():
                     batch = [t.to(device) for t in batch]
                     input_ids, segment_ids, input_mask, masked_lm_positions, masked_lm_labels, next_sentence_labels = batch
 
+                    profiler.start()
                     loss, mlm_acc, _ = model(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask,
                                     masked_lm_positions=masked_lm_positions, masked_lm_labels=masked_lm_labels, next_sentence_label=next_sentence_labels,
                                     checkpoint_activations=args.checkpoint_activations)
@@ -852,7 +872,7 @@ def main():
                             # this division was merged into predivision
                             loss = loss / args.gradient_accumulation_steps
                             divisor = 1.0
-                    if args.fp16:
+                    if args.fp16 and not os.getenv('ALLOW_FP32'):
                         with amp.scale_loss(loss, optimizer, delay_overflow_check=args.allreduce_post_accumulation) as scaled_loss:
                             scaled_loss.backward()
                     else:
@@ -886,7 +906,7 @@ def main():
                             # zero model and optimizer grads happening in take_optimizer_step
                         else:
                             #zero model and optimizer grad
-                            if args.fp16:
+                            if args.fp16 and not os.getenv('ALLOW_FP32'):
                                 if _amp_state.opt_properties.master_weights:
                                     for param in optimizer._amp_stash.all_fp32_from_fp16_params:
                                         param.grad = None    
@@ -918,6 +938,7 @@ def main():
                                         print("%f > %f, Target MLM Accuracy reached at %d"%(eval_avg_mlm_accuracy, args.target_mlm_accuracy, global_step))
 
                             eval_count += 1
+                    profiler.end()
                     average_loss += loss.item()
                     if args.target_mlm_accuracy and args.train_mlm_accuracy_window_size > 0:
                         accuracy_scores.append(mlm_acc)
@@ -1004,7 +1025,7 @@ def main():
                             else:
                                 output_save_file = os.path.join(args.output_dir, "phase1_ckpt_{}.pt".format(samples_trained))
                             if args.do_train:
-                                if args.fp16:
+                                if args.fp16 and not os.getenv('ALLOW_FP32'):
                                     torch.save({'model': model_to_save.state_dict(),
                                                 'optimizer': optimizer.state_dict(),
                                                 'master params': list(amp.master_params(optimizer)),

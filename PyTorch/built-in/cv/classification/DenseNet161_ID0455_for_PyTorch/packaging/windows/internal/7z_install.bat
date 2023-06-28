@@ -1,6 +1,6 @@
 @echo off
-
-curl -k https://www.7-zip.org/a/7z1805-x64.exe -O
+for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "7zip_url="') do set 7zip_url=%%a
+curl -k %7zip_url% -O
 if errorlevel 1 exit /b 1
 
 start /wait 7z1805-x64.exe /S

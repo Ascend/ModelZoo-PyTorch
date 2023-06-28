@@ -42,6 +42,7 @@ from model.utils.config import cfg, cfg_from_file, cfg_from_list
 from model.utils.net_utils import adjust_learning_rate, save_checkpoint, clip_gradient
 from roi_data_layer.roibatchLoader import roibatchLoader
 from roi_data_layer.roidb import combined_roidb
+import constant
 
 
 def parse_args():
@@ -146,7 +147,7 @@ def parse_args():
                         help='opt level using in amp, default O2 means FP16')
 
     # 8p
-    parser.add_argument('--addr', default='51.38.67.77', type=str, help='master addr')
+    parser.add_argument('--addr', default=constant.IP_ADDRESS, type=str, help='master addr')
     parser.add_argument('--device_list', default='0,1,2,3,4,5,6,7', type=str, help='device id list')
     parser.add_argument('--world_size', default=-1, type=int,
                         help='number of nodes for distributed training')
@@ -274,7 +275,7 @@ def main():
     elif args.arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
 
-    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_ADDR'] = constant.IP_ADDRESS
     os.environ['MASTER_PORT'] = '29688'
     os.environ['WORLD_SIZE'] = '8'
 

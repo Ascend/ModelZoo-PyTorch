@@ -117,6 +117,11 @@ def prepare_model_and_optimizer(args, device):
                           lr=args.learning_rate,
                           betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2),
                           max_grad_norm=65536.0)
+    if os.getenv('ALLOW_FP32'):
+        optimizer = torch_npu.optim.NpuFusedLamb(optimizer_grouped_parameters,
+                          lr=args.learning_rate,
+                          betas=(args.opt_lamb_beta_1, args.opt_lamb_beta_2),
+                          max_grad_norm=65536.0)
     mlperf_logger.log_event(key='optimizer', value=optimizer.__class__.__name__, sync=False)
 
     mlperf_logger.log_event(key='opt_epsilon', value=optimizer.defaults['eps'],
@@ -137,7 +142,7 @@ def prepare_model_and_optimizer(args, device):
     lr_scheduler = LinearWarmupPolyDecayScheduler(optimizer, start_warmup_steps=warmup_start, warmup_steps=warmup_steps,
                                                   total_steps=args.max_steps, end_learning_rate=0.0, degree=1.0)
 
-    if args.fp16:
+    if args.fp16 and not os.getenv('ALLOW_FP32'):
         if args.loss_scale == 0:
             model, optimizer = amp.initialize(model, optimizer, opt_level="O2", loss_scale="dynamic",
                                               master_weights=True)
@@ -151,7 +156,7 @@ def prepare_model_and_optimizer(args, device):
         optimizer.load_state_dict(checkpoint['optimizer'])
 
         # Restore AMP master parameters
-        if args.fp16:
+        if args.fp16 and not os.getenv('ALLOW_FP32'):
             optimizer._lazy_init_maybe_master_weights()
             optimizer._amp_stash.lazy_init_called = True
             optimizer.load_state_dict(checkpoint['optimizer'])
@@ -194,5 +199,10 @@ def main():
 
 if __name__ == "__main__":
     torch_npu.npu.set_compile_mode(jit_compile=False)
+    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
+        torch.npu.config.allow_internal_format = False
+        if os.getenv('ALLOW_FP32'):
+            torch.npu.conv.allow_hf32 = False
+            torch.npu.matmul.allow_hf32 = False
     main()
 

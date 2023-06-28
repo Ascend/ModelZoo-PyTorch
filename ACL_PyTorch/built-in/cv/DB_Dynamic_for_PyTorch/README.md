@@ -175,7 +175,7 @@
       3. 执行ATC命令。
    
          ```sh
-         atc --framework=5 --model=./dbnet_fix.onnx --input_format=ND --input_shape_range="input:[1,3,640~4096,640~4096]" --output=om/dbnet_dy --log=error --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=./dbnet_fix.onnx --input_format=ND --input_shape="input:[1,3,640~4096,640~4096]" --output=om/dbnet_dy --log=error --soc_version=Ascend${chip_name}
          ```
       
          运行成功后生成<u>***om/dbnet_dy.om***</u>模型文件。
@@ -190,7 +190,7 @@
               
               - --input_format：输入数据的格式
               
-              - --input_shape_range：输入数据的shape范围
+              - --input_shape：输入数据的shape范围
               
               - --log：日志级别
 

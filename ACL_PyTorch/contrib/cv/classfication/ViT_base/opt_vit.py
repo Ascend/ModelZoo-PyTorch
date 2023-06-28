@@ -14,260 +14,229 @@
 
 
 import sys
+ 
 import numpy as np
 from auto_optimizer import OnnxGraph
-
-
-##################
-# basic function #
-##################
-def insert_shape_node(anchor_name, dst_shape, mode='after', index=0):
-    reshape_node = onnx_graph.add_node(
-        f"Reshape_{mode}_{anchor_name}",
-        "Reshape"
-    )
-    onnx_graph.insert_node(
-        anchor_name,
-        reshape_node,
-        refer_index=index,
-        mode=mode
-    )
-    reshape_init = onnx_graph.add_initializer(
-        f"{reshape_node.name}_shape",
-        np.array(dst_shape, dtype="int64")
-    )
-    reshape_node.inputs.append(reshape_init.name)
-
-
-def insert_slice_node(anchor_name, start_value, end_value, axis_value, mode='after', index=0):
-    slice_node = onnx_graph.add_node(
-        f"Slice_{mode}_{anchor_name}",
-        "Slice"
-    )
-    onnx_graph.insert_node(anchor_name, slice_node,
-                           refer_index=index, mode=mode)
-    slice_start = onnx_graph.add_initializer(
-        f"start_{slice_node.name}",
-        np.array(start_value, dtype="int64")
-    )
-    slice_end = onnx_graph.add_initializer(
-        f"end_{slice_node.name}",
-        np.array(end_value, dtype="int64")
-    )
-    slice_axis = onnx_graph.add_initializer(
-        f"axis_{slice_node.name}",
-        np.array(axis_value, dtype="int64")
-    )
-    slice_node.inputs.append(slice_start.name)
-    slice_node.inputs.append(slice_end.name)
-    slice_node.inputs.append(slice_axis.name)
-
-
-def insert_concat_node(anchor_name, concat_value, axis=0, mode='after'):
-    concat_node = onnx_graph.add_node(
-        f"Concat_{mode}_{anchor_name}",
-        "Concat",
-        attrs={
-            "axis": axis
-        }
-    )
-    onnx_graph.insert_node(anchor_name, concat_node, mode=mode)
-    concat_init = onnx_graph.add_initializer(
-        f"init_{concat_node.name}",
-        concat_value
-    )
-    concat_node.inputs.append(concat_init.name)
-
-
-#################
-# core function #
-#################
-def merge_bmm_axis(onnx_graph, first_add_name, reshape_nodes, last_add_node, bs, hidden_dim):
-    # merge 3 dim input to 2 dim: improve performance for bmm
-    insert_shape_node(first_add_name, [-1, hidden_dim], mode='before')
-
-    # merge const value for first add node
-    first_add_node = onnx_graph[first_add_name]
-    first_add_value = onnx_graph[first_add_node.inputs[1]].value
-    onnx_graph[first_add_node.inputs[1]].value = np.tile(
-        first_add_value, [bs, 1, 1]).reshape(-1, hidden_dim)
-
-    # modify dst shape value dim: 3 -> 2
-    for reshape_name in reshape_nodes:
-        reshape_node = onnx_graph[reshape_name]
-        reshape_init = onnx_graph[onnx_graph[reshape_name].inputs[1]]
-        reshape_init.value = np.array([-1, hidden_dim], dtype="int64")
-
-    # rescover model output dim: 2 -> 3
-    insert_shape_node(last_add_node, [bs, -1, hidden_dim])
-
-
-def pad_nz_block(onnx_graph, first_add_node, reshape_nodes,
-                 add_nodes, last_add_node, bs, hidden_dim1,
-                 hidden_dim2, padding_size):
-    # pad input to 16 aligned with zero value: friendly to hardware
-    first_concat_value = np.zeros([padding_size * bs, hidden_dim2]).astype("float32")
-    insert_concat_node(first_add_node, first_concat_value, mode="before")
-    add_init = onnx_graph[onnx_graph[first_add_node].inputs[1]]
-    assert add_init.op_type == "Initializer", "second input for first add must be initializer!"
-    add_init.value = np.concatenate(
-        [add_init.value, np.zeros([padding_size * bs, hidden_dim2])],
-        axis=0).astype("float32")
-
-    # unpad before attention block
-    for reshape_name in reshape_nodes:
-        insert_slice_node(reshape_name, [0], [hidden_dim1 * bs], [0], mode="before")
-
-    # pad again after attention block
-    concat_value = np.zeros([padding_size * bs, hidden_dim2]).astype("float32")
-    for add_name in add_nodes:
-        insert_concat_node(add_name, concat_value)
-
-    # unpad to rescover output ori shape
-    insert_slice_node(last_add_node, [0], [hidden_dim1 * bs], [0])
-
-
-def get_attention_reshape_nodes(onnx_graph, dst_shape,
-                                check_pre_nodes=None, check_next_nodes=None,
-                                pre_nodes_idxes=None, next_nodes_idxes=None):
-    node_list = []
-    for reshape_node in onnx_graph.get_nodes(op_type="Reshape"):
-        shape_input0 = onnx_graph.get_prev_node(reshape_node.inputs[0])
-        shape_input1 = onnx_graph.get_prev_node(reshape_node.inputs[1])
-        if shape_input0 is None:
-            out_shape = onnx_graph[reshape_node.inputs[0]]
-        elif shape_input1 is None:
-            out_shape = onnx_graph[reshape_node.inputs[1]]
-        else:
+ 
+ 
+optimize_plans = {
+     "vit_base_patch8_224": ["merge_bmm_axis", "pad_nz_block"],
+    "vit_base_patch16_224": ["pad_nz_block"],
+    "vit_base_patch16_384": ["merge_bmm_axis", "pad_nz_block"],
+    "vit_base_patch32_224": ["merge_bmm_axis"],
+    "vit_base_patch32_384": ["merge_bmm_axis", "pad_nz_block"],
+}
+ 
+ 
+def pattern_select(
+    graph: OnnxGraph,
+    candidate_nodes: list, 
+    preorders: list = None, 
+    successors: list = None
+) -> list:
+    ret = []
+    preorders = preorders or []
+    successors = successors or []
+    
+    for node in candidate_nodes:
+        pattern_check = True
+        current_node = node
+        for p in preorders[::-1]:
+            if isinstance(p, str):
+                op_type = p
+                input_idx = 0
+ 
+            elif isinstance(p, tuple):
+                op_type, input_idx = p
+ 
+            else:
+                raise TypeError(f"Invalid preorder type: {type(p)}!")
+ 
+            current_node = graph.get_prev_node(current_node.inputs[input_idx])
+            if not current_node or current_node.op_type != op_type:
+                pattern_check = False
+                break
+ 
+        if not pattern_check:
             continue
-
-        if out_shape.value.shape != dst_shape:
-            continue
-        check_succed = True
-        if check_pre_nodes is not None:
-            cur_node = reshape_node
-            for idx, pre_node_type in enumerate(check_pre_nodes):
-                cur_node = onnx_graph.get_prev_node(cur_node.inputs[pre_nodes_idxes[idx]])
-                if cur_node is None or cur_node.op_type != pre_node_type:
-                    check_succed = False
+        
+        current_node = node
+        for s in successors:
+            output_idx = 0
+            if isinstance(s, str):
+                op_type = s
+ 
+            elif isinstance(s, tuple):
+                op_type, output_idx = s
+                
+            else:
+                raise TypeError(f"Invalid successor type: {type(s)}!")
+ 
+            next_nodes = graph.get_next_nodes(current_node.outputs[output_idx])
+            pattern_check = False
+            for next_node in next_nodes:
+                if next_node.op_type == op_type:
+                    current_node = next_node
+                    pattern_check = True
                     break
-        if check_next_nodes is not None:
-            cur_node = reshape_node
-            for idx, next_node_type in enumerate(check_next_nodes):
-                cur_node = onnx_graph.get_next_nodes(cur_node.outputs[0])[next_nodes_idxes[idx]]
-                if cur_node is None or cur_node.op_type != next_node_type:
-                    check_succed = False
-                    break
-        if check_succed:
-            node_list.append(reshape_node.name)
-    return node_list
-
-
-def get_attention_add_nodes(onnx_graph, weight_shape,
-                            check_pre_nodes=None, check_next_nodes=None,
-                            pre_nodes_idxes=None, next_nodes_idxes=None):
-    node_list = []
-    for add_node in onnx_graph.get_nodes(op_type="Add"):
-        add_input0 = onnx_graph.get_prev_node(add_node.inputs[0])
-        add_input1 = onnx_graph.get_prev_node(add_node.inputs[1])
-        if add_input0 is None:
-            add_weight = onnx_graph[add_node.inputs[0]]
-        elif add_input1 is None:
-            add_weight = onnx_graph[add_node.inputs[1]]
-        else:
-            continue
-
-        if add_weight.value.shape != weight_shape:
-            continue
-        check_succed = True
-        if check_pre_nodes is not None:
-            cur_node = add_node
-            for idx, pre_node_type in enumerate(check_pre_nodes):
-                cur_node = onnx_graph.get_prev_node(cur_node.inputs[pre_nodes_idxes[idx]])
-                if cur_node is None or cur_node.op_type != pre_node_type:
-                    check_succed = False
-                    break
-        if check_next_nodes is not None:
-            cur_node = add_node
-            for idx, next_node_type in enumerate(check_next_nodes):
-                cur_node = onnx_graph.get_next_nodes(cur_node.outputs[0])[next_nodes_idxes[idx]]
-                if cur_node is None or cur_node.op_type != next_node_type:
-                    check_succed = False
-                    break
-        if check_succed:
-            node_list.append(add_node.name)
-    return node_list
-
-
-def cal_model_para(onnx_graph):
-    input_shape = onnx_graph.inputs[0].shape
-    assert input_shape[-1] == input_shape[-2], "input h != w"
-    input_size = input_shape[-1]
-    conv_node = onnx_graph.get_nodes(op_type="Conv")[0]
-    assert conv_node["kernel_shape"][0] == conv_node["kernel_shape"][1]
-    conv_kernel = conv_node["kernel_shape"][0]
-    assert conv_node["pads"][0] == conv_node["pads"][1]
-    assert conv_node["pads"][1] == conv_node["pads"][2]
-    assert conv_node["pads"][2] == conv_node["pads"][3]
-    conv_pad = conv_node["pads"][0]
-    assert conv_node["strides"][0] == conv_node["strides"][1]
-    conv_stride = conv_node["strides"][0]
-    output_size = (input_size - conv_kernel + 2 * conv_pad) / conv_stride + 1
-    hidden_dim = int(output_size * output_size + 1)
-    if hidden_dim % 16 == 0:
+ 
+            if not pattern_check:
+                break
+ 
+        if pattern_check:
+            ret.append(node)
+    
+    return ret
+ 
+    
+def get_attention_reshape_nodes(graph: OnnxGraph) -> list:
+    # Pattern: Transpose -> [Reshape] -> MatMul
+    all_reshape_nodes = graph.get_nodes("Reshape")
+    return pattern_select(graph, all_reshape_nodes, ["Transpose"], ["MatMul"])
+ 
+ 
+def get_layernorm_add_nodes(graph: OnnxGraph) -> list:
+    # Pattern : Mul -> MatMul -> Add -> [Add]
+    all_add_nodes = graph.get_nodes("Add")
+    return pattern_select(graph, all_add_nodes, ["Mul", "MatMul", ("Add", 1)])
+ 
+ 
+def get_layernorm_add_nodes_2(graph: OnnxGraph) -> list:
+    # Pattern : Reshape -> MatMul -> Add -> [Add]
+    all_add_nodes = graph.get_nodes("Add")
+    return pattern_select(graph, all_add_nodes, ["Reshape", "MatMul", ("Add", 1)])
+ 
+ 
+def merge_bmm_axis(graph: OnnxGraph, anchor_reshapes: list, anchor_adds: list) -> None:
+    reshape_inits = list(set(node.inputs[1] for node in anchor_reshapes))
+    original_shape = graph[reshape_inits[0]].value
+    original_shape_init = graph.add_initializer(f"original_shape", original_shape)
+ 
+    # change the target shape of reshape operators
+    for _init in reshape_inits:
+        b, x, y = graph[_init].value
+        graph[_init].value = np.array([b * x, y])
+ 
+    first_add_node = graph.get_nodes("Add")[0]
+    next_add_node = [node for node in graph.get_next_nodes(first_add_node.outputs[0]) if node.op_type == "Add"][0]
+    
+    new_reshape_name = f"Reshape_before_{next_add_node.name}"
+    graph.add_node(
+        new_reshape_name, 
+        "Reshape", 
+        inputs=[first_add_node.outputs[0], reshape_inits[0]],
+        outputs=[f"{new_reshape_name}/{next_add_node.name}"],
+    )
+    next_add_node.inputs[0] = f"{new_reshape_name}/{next_add_node.name}"
+ 
+    # Restore the original shape temporarily for operator fusion
+    for add_node in anchor_adds:
+        output_name = add_node.outputs[0]
+        new_reshape_name = f"Reshape_after_{add_node.name}"
+        graph.add_node(
+            new_reshape_name, 
+            "Reshape", 
+            inputs=[output_name, original_shape_init.name],
+            outputs=[f"{new_reshape_name}_output"],
+        )
+ 
+        for next_node in graph.get_next_nodes(output_name):
+            if next_node.op_type in ["ReduceMean", "Sub"]:
+                next_node.inputs[next_node.inputs.index(output_name)] = f"{new_reshape_name}_output"
+ 
+    # Restore the original shape at the end
+    gather_node = graph.get_nodes("Gather")[0]
+    new_reshape_name_2 = f"Reshape_before_{gather_node.name}"
+    new_reshape_node_2 = graph.add_node(new_reshape_name_2, "Reshape")
+    graph.insert_node(gather_node.name, new_reshape_node_2, mode="before")
+    new_reshape_node_2.inputs.append(original_shape_init.name)
+ 
+ 
+def cal_padding_shape(graph: OnnxGraph, merged: bool=False) -> tuple:
+    first_reshape = graph.get_nodes("Reshape")[0]
+    bs, hidden_dim1, hidden_dim2 = graph[first_reshape.inputs[1]].value
+    hidden_dim2 += 1
+ 
+    if hidden_dim2 % 16 == 0:
         padding_size = 0
     else:
-        padding_size = int((hidden_dim // 16 + 1) * 16 - hidden_dim)
-    return hidden_dim, padding_size
-
-
-if __name__ == '__main__':
-    onnx_graph = OnnxGraph.parse(sys.argv[1])
-    bs = int(sys.argv[3])
-    hidden_dim2 = 768
-    num_block = 12
-
-    # cal hidden_dim1 && padding size
-    hidden_dim1, padding_size = cal_model_para(onnx_graph)
-    reshape_nodes = get_attention_reshape_nodes(onnx_graph, dst_shape=(3,),
-                                                check_pre_nodes=["Transpose", "MatMul"],
-                                                pre_nodes_idxes=[0, 0])
-    add_nodes = onnx_graph.get_nodes(op_type="Add")
-    add_nodes = sorted(add_nodes, key=lambda x:int(x.name.split("_")[1]))
-    # merge input tensor for bmm
-    merge_bmm_axis(onnx_graph,
-                   first_add_name=add_nodes[0].name,
-                   reshape_nodes=reshape_nodes,
-                   last_add_node=add_nodes[-1].name,
-                   bs=bs,
-                   hidden_dim=hidden_dim2)
-
-    reshape_nodes = get_attention_reshape_nodes(onnx_graph, dst_shape=(5,),
-                                                check_next_nodes=["Transpose", "Split"],
-                                                next_nodes_idxes=[0, 0])
-    assert len(reshape_nodes) == num_block, "num of reshape node must equal to num of block."
-    att_add_nodes = get_attention_add_nodes(onnx_graph, weight_shape=(hidden_dim2,),
-                                            check_pre_nodes=["MatMul", "Reshape"],
-                                            pre_nodes_idxes=[1, 0]
-                                            )
-    if not att_add_nodes:
-        att_add_nodes = get_attention_add_nodes(onnx_graph, weight_shape=(hidden_dim2,),
-                                                check_pre_nodes=["MatMul", "Reshape"],
-                                                pre_nodes_idxes=[0, 0]
-                                                )
-    assert len(att_add_nodes) == num_block, "num of add node must equal to num of block."
-    # pad input shape for attention block: keep 16 aligned
-    pad_nz_block(onnx_graph,
-                 first_add_node=add_nodes[0].name,
-                 reshape_nodes=reshape_nodes,
-                 add_nodes=att_add_nodes,
-                 last_add_node=add_nodes[-1].name,
-                 bs=bs,
-                 hidden_dim1=hidden_dim1,
-                 hidden_dim2=hidden_dim2,
-                 padding_size=padding_size)
-
-    # check infer shape
-    onnx_graph.infershape()
-
-    onnx_graph.save(sys.argv[2])
+        padding_size = int((hidden_dim2 // 16 + 1) * 16 - hidden_dim2)
+ 
+    if merged:
+        return (bs * padding_size, hidden_dim1), (bs * hidden_dim2, hidden_dim1)
+ 
+    return (bs, padding_size, hidden_dim1), (bs, hidden_dim2, hidden_dim1)
+ 
+ 
+def pad_nz_block(
+        graph: OnnxGraph, 
+        anchor_reshapes: list, 
+        anchor_adds: list, 
+        anchor_adds_2: list, 
+        merged: bool=False
+    ) -> None:
+    padding_shape, original_shape = cal_padding_shape(graph, merged)
+    axis = 0 if merged else 1
+ 
+    new_concat_init = graph.add_initializer(f"padding_concat_init", np.zeros(padding_shape, dtype=np.float32))
+    add_node = anchor_adds_2[0]
+    new_concat_name = f"Concat_before_{add_node.name}"
+    new_concat_node = graph.add_node(new_concat_name, "Concat", attrs={"axis": axis})
+    graph.insert_node(add_node.name, new_concat_node, refer_index=0, mode="before")
+    new_concat_node.inputs.append(new_concat_init.name)
+    
+ 
+    for reshape in anchor_reshapes:
+        new_concat_name = f"Concat_after_{reshape.name}"
+        new_concat_node = graph.add_node(new_concat_name, "Concat", attrs={"axis": axis})
+        graph.insert_node(reshape.name, new_concat_node)
+        new_concat_node.inputs.append(new_concat_init.name)
+ 
+    for add_node in anchor_adds:
+        output_name = add_node.outputs[0]
+        new_slice_name = f"Slice_before_{add_node.name}"
+        new_slice_init_starts = graph.add_initializer(f"{new_slice_name}_init_starts", np.array([0]))
+        new_slice_init_ends = graph.add_initializer(f"{new_slice_name}_init_ends", np.array([original_shape[axis]]))
+        new_slice_init_axes = graph.add_initializer(f"{new_slice_name}_init_axes", np.array([axis]))
+        graph.add_node(
+            new_slice_name, 
+            "Slice",
+            inputs=[output_name, new_slice_init_starts.name, new_slice_init_ends.name, new_slice_init_axes.name],
+            outputs=[f"{new_slice_name}_output"],
+            )
+ 
+        for next_node in graph.get_next_nodes(output_name):
+            if next_node.op_type in ["ReduceMean", "Sub", "Reshape"]:
+                next_node.inputs[next_node.inputs.index(output_name)] = f"{new_slice_name}_output"
+ 
+ 
+def apply_optimization(onnx_path: str, save_path:str, model_config: str) -> None:
+    plan = optimize_plans.get(model_config)
+    merged_axis = False
+ 
+    g = OnnxGraph.parse(onnx_path)
+    reshapes = get_attention_reshape_nodes(g)
+    adds = get_layernorm_add_nodes(g)
+    adds_2 = get_layernorm_add_nodes_2(g)
+ 
+    for opt in plan:
+        if opt == "merge_bmm_axis":
+            merge_bmm_axis(g, reshapes, adds)
+            merged_axis = True
+ 
+        elif opt == "pad_nz_block":
+            pad_nz_block(g, reshapes, adds, adds_2, merged_axis)
+ 
+        g.update_map()
+ 
+    g.remove_unused_nodes()
+    g.infershape()
+    g.save(save_path)
+ 
+ 
+if __name__ == "__main__":
+    input_model = sys.argv[1]
+    output_model = sys.argv[2]
+    config = sys.argv[3]
+ 
+    apply_optimization(input_model, output_model, config)

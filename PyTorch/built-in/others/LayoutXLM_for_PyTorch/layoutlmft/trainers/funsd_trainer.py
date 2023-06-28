@@ -40,6 +40,7 @@ import warnings
 from logging import StreamHandler
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 import torch
+import torch_npu
 from packaging import version
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.distributed import DistributedSampler
@@ -112,6 +113,20 @@ if is_training_run_on_sagemaker():
 if TYPE_CHECKING:
     import optuna
 
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 
 class FunsdTrainer(Trainer):
     def _prepare_inputs(self, inputs: Dict[str, Union[torch.Tensor, Any]]) -> Dict[str, Union[torch.Tensor, Any]]:
@@ -144,7 +159,7 @@ class FunsdTrainer(Trainer):
             return model
 
         # Mixed precision training with apex (torch < 1.6)
-        if self.use_apex and training:
+        if self.use_apex and training and not os.getenv('ALLOW_FP32'):
             model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level,
                                                    loss_scale=256., combine_grad=True)
 
@@ -222,7 +237,9 @@ class FunsdTrainer(Trainer):
                 optimizer_kwargs = {"scale_parameter": False, "relative_step": False}
             else:
                 optimizer_cls = AdamW
-                if self.use_apex:
+                if os.getenv('ALLOW_FP32'):
+                    optimizer_cls = torch_npu.optim.NpuFusedAdamW
+                elif self.use_apex:
                     from apex.optimizers import NpuFusedAdamW
                     optimizer_cls = NpuFusedAdamW
                 optimizer_kwargs = {
@@ -241,6 +258,47 @@ class FunsdTrainer(Trainer):
 
         if is_sagemaker_mp_enabled():
             self.optimizer = smp.DistributedOptimizer(self.optimizer)
+
+    def training_step(self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]) -> torch.Tensor:
+        """
+        Perform a training step on a batch of inputs.
+
+        Subclass and override to inject custom behavior.
+
+        Args:
+            model (`nn.Module`):
+                The model to train.
+            inputs (`Dict[str, Union[torch.Tensor, Any]]`):
+                The inputs and targets of the model.
+
+                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+                argument `labels`. Check your model's documentation for all accepted arguments.
+
+        Return:
+            `torch.Tensor`: The tensor with training loss on this batch.
+        """
+        model.train()
+        inputs = self._prepare_inputs(inputs)
+
+        if is_sagemaker_mp_enabled():
+            loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
+            return loss_mb.reduce_mean().detach().to(self.args.device)
+
+        with self.compute_loss_context_manager():
+            loss = self.compute_loss(model, inputs)
+
+        if self.args.n_gpu > 1:
+            loss = loss.mean()  # mean() to average on multi-gpu parallel training
+
+        if self.do_grad_scaling and not os.getenv('ALLOW_FP32'):
+            self.scaler.scale(loss).backward()
+        elif self.use_apex and not os.getenv('ALLOW_FP32'):
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            self.accelerator.backward(loss)
+
+        return loss.detach() / self.args.gradient_accumulation_steps
 
     def train(
             self,
@@ -489,6 +547,8 @@ class FunsdTrainer(Trainer):
             )
             self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
 
+            profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                               profile_type=os.getenv("PROFILE_TYPE"))
             for step, inputs in enumerate(epoch_iterator):
                 # 运行到skip_steps时，开始计时
                 if epoch == int(self.args.skip_steps / steps_in_epoch) \
@@ -500,6 +560,7 @@ class FunsdTrainer(Trainer):
                     steps_trained_in_current_epoch -= 1
                     continue
 
+                profiler.start()
                 if step % self.args.gradient_accumulation_steps == 0:
                     self.control = self.callback_handler.on_step_begin(self.args, self.state, self.control)
 
@@ -529,7 +590,7 @@ class FunsdTrainer(Trainer):
                     if self.args.max_grad_norm is not None and self.args.max_grad_norm > 0 and not self.deepspeed:
                         # deepspeed does its own clipping
 
-                        if self.use_amp:
+                        if self.use_amp and not os.getenv('ALLOW_FP32'):
                             # AMP: gradients need unscaling
                             self.scaler.unscale_(self.optimizer)
 
@@ -551,7 +612,7 @@ class FunsdTrainer(Trainer):
                         pass  # called outside the loop
                     elif is_torch_tpu_available():
                         xm.optimizer_step(self.optimizer)
-                    elif self.use_amp:
+                    elif self.use_amp and not os.getenv('ALLOW_FP32'):
                         self.scaler.step(self.optimizer)
                         self.scaler.update()
                     else:
@@ -569,6 +630,7 @@ class FunsdTrainer(Trainer):
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
+                profiler.end()
 
             self.control = self.callback_handler.on_epoch_end(self.args, self.state, self.control)
             self._maybe_log_save_evaluate(tr_loss, model, trial, epoch)

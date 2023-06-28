@@ -37,9 +37,16 @@ from .utils import load_state_dict_from_url
 
 __all__ = ['SqueezeNet', 'squeezenet1_0', 'squeezenet1_1']
 
+
+with open('../../url.ini', 'r') as _f:
+    _content = _f.read()
+    squeezenet1_0_url = _content.split('squeezenet1_0_url=')[1].split('\n')[0]
+    squeezenet1_1_url = _content.split('squeezenet1_1_url=')[1].split('\n')[0]
+
+
 model_urls = {
-    'squeezenet1_0': 'https://download.pytorch.org/models/squeezenet1_0-a815701f.pth',
-    'squeezenet1_1': 'https://download.pytorch.org/models/squeezenet1_1-f364aa15.pth',
+    'squeezenet1_0': squeezenet1_0_url,
+    'squeezenet1_1': squeezenet1_1_url,
 }
 
 

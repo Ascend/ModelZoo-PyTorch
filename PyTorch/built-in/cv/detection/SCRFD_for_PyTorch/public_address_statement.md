@@ -1,0 +1,5 @@
+| 类型     | 开源代码地址                                                            | 文件名                                             | 公网IP地址/公网URL地址/域名/邮箱地址                                               | 用途说明   |
+|--------|-------------------------------------------------------------------|-------------------------------------------------|----------------------------------------------------------------------|--------|
+| 开源代码引入 | https://github.com/deepinsight/insightface/tree/master/detection/scrfd/mmdet/datasets/lvis.py | SCRFD_for_PyTorch/mmdet/datasets/lvis.py | http://images.cocodataset.org/ | 下载数据集  |
+| 开源代码引入 | https://github.com/deepinsight/insightface/tree/master/detection/scrfd/setup.py | SCRFD_for_PyTorch/setup.py | openmmlab@gmail.com | 作者邮箱   |
+| 开源代码引入 | https://github.com/deepinsight/insightface/tree/master/detection/scrfd/setup.py | SCRFD_for_PyTorch/setup.py | https://github.com/open-mmlab/mmdetection | 开源代码地址 |

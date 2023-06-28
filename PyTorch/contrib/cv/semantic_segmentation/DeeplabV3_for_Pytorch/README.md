@@ -17,10 +17,9 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 - 参考实现：
 
   ```
-  url=https://github.com/fregu856/deeplabv3
-  commit_id=415d983ec8a3e4ab6977b316d8f553371a415739
+  url=https://github.com/open-mmlab/mmsegmentation/tree/main/configs/deeplabv3
   ```
-
+  
 - 适配昇腾 AI 处理器的实现：
 
   ```

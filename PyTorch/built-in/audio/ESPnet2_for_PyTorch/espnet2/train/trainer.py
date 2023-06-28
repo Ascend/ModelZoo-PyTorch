@@ -14,6 +14,7 @@
 
 """Trainer module."""
 import argparse
+import os
 from contextlib import contextmanager
 import dataclasses
 from dataclasses import is_dataclass
@@ -56,6 +57,17 @@ from espnet2.train.distributed_utils import DistributedOption
 from espnet2.train.reporter import Reporter
 from espnet2.train.reporter import SubReporter
 from espnet2.utils.build_dataclass import build_dataclass
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 if torch.distributed.is_available():
     from torch.distributed import ReduceOp
@@ -222,7 +234,7 @@ class Trainer:
             )
 
         amp.register_half_function(torch_npu, 'npu_linear')
-        if trainer_options.use_amp:
+        if trainer_options.use_amp and not os.getenv('ALLOW_FP32'):
             model, optimizers = amp.initialize(model, optimizers, opt_level="O1", combine_grad=True, loss_scale="512")
 
         if distributed_option.distributed:
@@ -505,9 +517,12 @@ class Trainer:
         iterator_stop = torch.tensor(0).to("cuda" if ngpu > 0 else "cpu")
 
         start_time = time.perf_counter()
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         for iiter, (_, batch) in enumerate(
             reporter.measure_iter_time(iterator, "iter_time"), 1
         ):
+            profiler.start()
             assert isinstance(batch, dict), type(batch)
 
             if distributed:
@@ -578,7 +593,7 @@ class Trainer:
             reporter.register(stats, weight)
 
             with reporter.measure_time("backward_time"):
-                if options.use_amp:
+                if options.use_amp and not os.getenv('ALLOW_FP32'):
                     with amp.scale_loss(loss, optimizers) as scaled_loss:
                         scaled_loss.backward()
                 else:
@@ -597,7 +612,7 @@ class Trainer:
                     )
 
                 # compute the gradient norm to check if it is normal or not
-                if options.use_amp:
+                if options.use_amp and not os.getenv('ALLOW_FP32'):
                     for iopt, optimizer in enumerate(optimizers):
                         if optim_idx is not None and iopt != optim_idx:
                             continue
@@ -661,7 +676,7 @@ class Trainer:
                     reporter.tensorboard_add_scalar(summary_writer, -log_interval)
                 if use_wandb:
                     reporter.wandb_log()
-
+            profiler.end()
         else:
             if distributed:
                 iterator_stop.fill_(1)

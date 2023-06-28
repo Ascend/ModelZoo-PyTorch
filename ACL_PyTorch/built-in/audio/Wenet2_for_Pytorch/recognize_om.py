@@ -33,8 +33,7 @@
 This script is for testing exported ascend encoder and decoder from
 export_onnx_npu.py. The exported ascend models only support batch offline ASR inference.
 It requires a python wrapped c++ ctc decoder.
-Please install it by following:
-https://github.com/Slyne/ctc_decoder.git
+Please install it from ctc decoder in github
 """
 from __future__ import print_function
 
@@ -241,7 +240,7 @@ def main():
                         format='%(asctime)s %(levelname)s %(message)s')
 
     with open(args.config, 'r') as fin:
-        configs = yaml.safe_load(fin, Loader=yaml.FullLoader)
+        configs = yaml.safe_load(fin)
     if len(args.override_config) > 0:
         configs = override_config(configs, args.override_config)
 

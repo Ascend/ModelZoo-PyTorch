@@ -186,7 +186,7 @@ SDMGR是一种多模态端到端的文档关键信息抽取模型，它同时使
     # 执行 ATC 进行模型转换
     atc --framework=5 \
         --model=sdmgr/sdmgr_novisual_wildreceipt.onnx \
-        --input_shape_range="relations:[1~196,1~196,5];texts:[1~196,1~59];mask:[1~196,1~59,256]" \
+        --input_shape="relations:[1~196,1~196,5];texts:[1~196,1~59];mask:[1~196,1~59,256]" \
         --input_format=ND \
         --output=sdmgr/sdmgr_novisual_wildreceipt \
         --log=error \
@@ -197,7 +197,7 @@ SDMGR是一种多模态端到端的文档关键信息抽取模型，它同时使
     参数说明：
     + --framework: 5代表ONNX模型
     + --model: ONNX模型路径
-    + --input_shape_range: 模型各输入数据的shape
+    + --input_shape: 模型各输入数据的shape
     + --input_format: 输入数据的排布格式
     + --output: OM模型路径，无需加后缀
     + --log：日志级别

@@ -13,8 +13,8 @@ if "%RETRY_TIMES%" == "" (
     set /a RETRY_TIMES=%RETRY_TIMES%-1
     set /a SLEEP_TIME=%SLEEP_TIME%*2
 )
-
-for /f "usebackq tokens=*" %%i in (`curl -so NUL -w "%%{http_code}" -u %VSTS_AUTH% https://dev.azure.com/pytorch`) do (
+for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "azure_url="') do set url=%%a
+for /f "usebackq tokens=*" %%i in (`curl -so NUL -w "%%{http_code}" -u %VSTS_AUTH% %url%`) do (
     set STATUS_CODE=%%i
 )
 

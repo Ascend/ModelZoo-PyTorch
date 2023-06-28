@@ -39,17 +39,23 @@ from .folder import ImageFolder
 from .utils import check_integrity, download_and_extract_archive, extract_archive, \
     verify_str_arg
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    ILSVRC2012_img_train_url = content.split('ILSVRC2012_img_train_url=')[1].split('\n')[0]
+    ILSVRC2012_img_val_url = content.split('ILSVRC2012_img_val_url=')[1].split('\n')[0]
+    ILSVRC2012_devkit_t12_url = content.split('ILSVRC2012_devkit_t12_url=')[1].split('\n')[0]
+
 ARCHIVE_DICT = {
     'train': {
-        'url': 'http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_train.tar',
+        'url': ILSVRC2012_img_train_url,
         'md5': '1d675b47d978889d74fa0da5fadfb00e',
     },
     'val': {
-        'url': 'http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_img_val.tar',
+        'url': ILSVRC2012_img_val_url,
         'md5': '29b22e2961454d5413ddabcf34fc5622',
     },
     'devkit': {
-        'url': 'http://www.image-net.org/challenges/LSVRC/2012/nnoupb/ILSVRC2012_devkit_t12.tar.gz',
+        'url': ILSVRC2012_devkit_t12_url,
         'md5': 'fa75699e90414af021442c21a62c3abf',
     }
 }

@@ -171,3 +171,7 @@ SCRFD是通过NAS（神经网络搜索）得到的一个目标检测模型，通
 
 
 目前可能会出现mmpycocotools与pycocotools两个第三方库冲突的问题，如果出现pycocotools相关问题，需要首先将mmpycocotools和pycocotools全部卸载，然后重装mmpycocotools即可解决冲突问题。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

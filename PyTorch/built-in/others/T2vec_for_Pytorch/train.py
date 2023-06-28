@@ -44,6 +44,18 @@ import constants, time, os, shutil, logging, h5py
 import apex
 from apex import amp
 
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 
 def setup_seed(seed):
     import numpy as np
@@ -337,10 +349,13 @@ def train(args):
     num_iteration = args.max_step if args.max_step > 0 else 67000*128 // args.batch
     print("Iteration starts at {} "
           "and will end at {}".format(args.start_iteration, num_iteration-1))
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
     ## training
     for iteration in range(args.start_iteration, num_iteration):
         try:
             start = time.time()
+            profiler.start()
             m0_optimizer.zero_grad()
             m1_optimizer.zero_grad()
             ## generative loss
@@ -364,6 +379,7 @@ def train(args):
             ## one step optimization
             m0_optimizer.step()
             m1_optimizer.step()
+            profiler.end()
             torch.npu.synchronize()
             batch_time.update(time.time() - start)
             avg_genloss = genloss.item() / gendata.trg.size(0)

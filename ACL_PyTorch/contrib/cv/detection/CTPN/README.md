@@ -296,9 +296,9 @@ CTPN是一种文字检测算法，它结合了CNN与LSTM深度网络，能有效
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | :---------: | :----------------: | :----------: | :----------: | :---------------: |
-|    Ascend310P       |        1          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        136.64         |
-|    Ascend310P       |        4          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        154.43         |
-|    Ascend310P       |        8          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        159.09         |
-|    Ascend310P       |        16          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        166.07         |
-|    Ascend310P       |        32          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        167.33         |
-|    Ascend310P       |        64          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        169.07         |
+|    Ascend310P       |        1          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        141.11         |
+|    Ascend310P       |        4          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        153.24         |
+|    Ascend310P       |        8          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        167.68         |
+|    Ascend310P       |        16          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        162.42         |
+|    Ascend310P       |        32          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        164.31         |
+|    Ascend310P       |        64          |     ICDAR2013       |     precision: 86.84%;recall: 75.05%;hmean: 80.51%       |        160.14         |

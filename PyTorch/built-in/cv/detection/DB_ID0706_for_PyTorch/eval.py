@@ -196,11 +196,14 @@ class Eval:
                     if self.args['test_speed']:
                         time_cost = self.report_speed(model, batch, times=50)
                         continue
+                    start = time.time()
                     pred = model.forward(batch, training=False)
                     output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon'])
                     if not os.path.isdir(self.args['result_dir']):
                         os.mkdir(self.args['result_dir'])
                     self.format_output(batch, output)
+                    time_cost = (time.time() - start)
+                    print("Time:",time_cost)
                     raw_metric = self.structure.measurer.validate_measure(batch, output, is_output_polygon=self.args['polygon'], box_thresh=self.args['box_thresh'])
                     raw_metrics.append(raw_metric)
 

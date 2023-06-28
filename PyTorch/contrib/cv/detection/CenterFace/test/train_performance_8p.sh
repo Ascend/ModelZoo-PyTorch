@@ -99,6 +99,7 @@ do
     --world_size=8 \
     --batch_size=$batch_size \
     --local_rank ${RANK_ID} \
+    --num_workers 64 \
     --lr=2.5e-3 \
     --lr_step='85,120' \
     --num_epochs=2 \

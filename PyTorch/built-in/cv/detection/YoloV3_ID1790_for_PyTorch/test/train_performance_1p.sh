@@ -52,18 +52,8 @@ do
     elif [[ $para == --conda_name* ]];then
       conda_name=`echo ${para#*=}`
       echo "PATH TRAIN BEFORE: $PATH"
-      i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
-      j="1.8"
-      result=$(echo $i | grep "${j}")
-      if [[ "$result" != "" ]]
-      then
-          source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
-          source activate $conda_name
-      else
-          source ${test_path_dir}/set_conda.sh --conda_name=py1_1.11
-          source activate py1_1.11
-      fi
-      echo "PATH TRAIN AFTER: $PATH"
+      source ${test_path_dir}/set_conda.sh --conda_name=$conda_name
+      source activate $conda_name
     elif [[ $para == --profiling* ]];then
         profiling=`echo ${para#*=}`
     elif [[ $para == --stop_step* ]];then

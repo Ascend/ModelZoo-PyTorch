@@ -54,7 +54,9 @@ class Omniglot(VisionDataset):
             downloaded again.
     """
     folder = 'omniglot-py'
-    download_url_prefix = 'https://github.com/brendenlake/omniglot/raw/master/python'
+    with open('../../url.ini', 'r') as _f:
+        _content = _f.read()
+        download_url_prefix = _content.split('python_url=')[1].split('\n')[0]
     zips_md5 = {
         'images_background': '68d2efa1b9178cc56df9314c21c6e718',
         'images_evaluation': '6b91aef0f799c5bb55b94e3f2daec811'

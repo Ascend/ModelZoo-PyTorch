@@ -17,11 +17,26 @@ limitations under the License.
 import logging
 from contextlib import nullcontext
 import time
+import os
 
 # if your python version < 3.7 use the below one
 # from contextlib import suppress as nullcontext
 import torch
 from torch.nn.utils import clip_grad_norm_
+
+if torch.__version__ >= "1.8":
+    import torch_npu
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 
 
 class Executor:
@@ -58,6 +73,8 @@ class Executor:
         model_context = nullcontext
         num_seen_utts = 0
         total_train_data_num = 0
+        profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                           profile_type=os.getenv("PROFILE_TYPE"))
         with model_context():
             for batch_idx, batch in enumerate(data_loader):
                 key, feats, target, feats_lengths, target_lengths = batch
@@ -77,8 +94,8 @@ class Executor:
                     context = model.no_sync
                 else:
                     context = nullcontext
+                profiler.start()
                 with context():
-
                     loss_dict = model(feats, feats_lengths, target, target_lengths)
                     loss = loss_dict['loss']
                     if use_amp:
@@ -112,6 +129,7 @@ class Executor:
                             log_str += '{} {:.6f} '.format(name, value.item())
                     log_str += 'lr {:.8f} rank {}'.format(lr, rank)
                     logging.debug(log_str)
+                profiler.end()
             end_time = time.time()
             train_time = end_time - start_time
             self.total_train_time += train_time

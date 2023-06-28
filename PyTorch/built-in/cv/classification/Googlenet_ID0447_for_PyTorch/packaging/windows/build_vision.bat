@@ -34,7 +34,8 @@ if NOT "%CUDA_VERSION%" == "cpu" (
 )
 
 set BUILD_VISION=1
-set TORCH_WHEEL=torch -f https://download.pytorch.org/whl/%CUVER%/stable.html --no-index
+for /f "tokens=2 delims==" %%a in ('type ..\..\url.ini ^| findstr "whl_url="') do set url=%%a
+set TORCH_WHEEL=torch -f %url%/%CUVER%/stable.html --no-index
 
 IF "%DESIRED_PYTHON%" == "" set DESIRED_PYTHON=3.5;3.6;3.7
 set DESIRED_PYTHON_PREFIX=%DESIRED_PYTHON:.=%
@@ -49,7 +50,8 @@ set "tmp_conda=%CONDA_HOME%"
 set "miniconda_exe=%CD%\miniconda.exe"
 rmdir /s /q conda
 del miniconda.exe
-curl -k https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe -o "%miniconda_exe%"
+for /f "tokens=2 delims==" %%a in ('type ..\..\url.ini ^| findstr "conda_win_url="') do set url=%%a
+curl -k %url% -o "%miniconda_exe%"
 call ..\conda\install_conda.bat
 IF ERRORLEVEL 1 exit /b 1
 set "ORIG_PATH=%PATH%"

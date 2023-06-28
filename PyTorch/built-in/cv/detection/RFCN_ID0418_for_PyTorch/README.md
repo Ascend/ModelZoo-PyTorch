@@ -243,3 +243,7 @@ R-FCN是一个目标检测网络。位移不变性是卷积网络一个重要的
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

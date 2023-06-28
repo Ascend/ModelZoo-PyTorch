@@ -4,7 +4,8 @@ if [[ ":$PATH:" == *"conda"* ]]; then
 fi
 # download and activate anaconda
 rm -rf ~/minconda_wheel_env_tmp
-wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh && \
+miniconda3_mac_url=`sed '/^miniconda3_mac_url=/!d;s/.*=//' ../../url.ini`
+wget -q ${miniconda3_mac_url} && \
     chmod +x Miniconda3-latest-MacOSX-x86_64.sh && \
     ./Miniconda3-latest-MacOSX-x86_64.sh -b -p ~/minconda_wheel_env_tmp && \
     rm Miniconda3-latest-MacOSX-x86_64.sh

@@ -120,8 +120,15 @@ MobileNetV3结合了MobileNetV1的深度可分离卷积、MobileNetV2的Inverted
      
      bash ./test/train_performance_8p.sh --data_path=/data/xxx/ # 8卡性能
      ```
+   - 在线推理
 
-    --data_path参数填写数据集路径，需写到数据集的一级目录。
+     启动在线推理。
+
+     ```
+     bash ./test/eval.sh --data_path=/data/xxx/ --resume=/resume_path  # 在线推理
+     ```
+
+    --data_path参数填写数据集路径，需写到数据集的一级目录，--reusme参数填写模型权重
 
    模型训练脚本参数说明如下。
 
@@ -174,3 +181,7 @@ MobileNetV3结合了MobileNetV1的深度可分离卷积、MobileNetV2的Inverted
    ```
    https://github.com/pytorch/vision
    ```
+   
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

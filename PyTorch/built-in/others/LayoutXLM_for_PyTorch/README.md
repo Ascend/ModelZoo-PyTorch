@@ -116,6 +116,7 @@ LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消�
      bash test/train_performance_8p_ser.sh     # SER性能任务      
      ```
      
+   --fp32开启FP32模式
      
    + 脚本中调用的python命令参数说明如下：
      
@@ -177,3 +178,25 @@ return session.request(method=method, url=url, **kwargs)
 ```python 
 return session.request(method=method, url=url, verify=False, **kwargs)
 ```
+2.无法连接hugginface的情况下，需要提前下载模型需要的配置文件以及权重文件，并且在模型代码中修改，如提前下载**xlm-roberta-base**相关文件，结构为：
+   ```
+   path/to/xlm-roberta-base
+   |  └——————config.json
+   |  └——————pytorch_model.bin
+   |  └——————sentencepiece.bpe.model
+   |  └——————tokenizer.json
+ 
+   ```
+修改**layoutlmft/data/datasets/xfun.py**中
+```python 
+ tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")
+```
+为
+```python 
+ tokenizer = AutoTokenizer.from_pretrained("path/to/xlm-roberta-base")
+```
+以及训练脚本中指定 **model_name_or_path** 为 **path/to/xlm-roberta-base** 。
+
+# 公网地址说明
+
+代码涉及公网地址参考 ```./public_address_statement.md```

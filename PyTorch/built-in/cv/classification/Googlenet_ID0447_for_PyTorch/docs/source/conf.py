@@ -157,9 +157,14 @@ html_logo = '_static/img/pytorch-logo-dark.svg'
 html_static_path = ['_static']
 
 # html_style_path = 'css/pytorch_theme.css'
+
+with open('../../url.ini', 'r') as f:
+    content = f.read()
+    url = content.split('fonts_url=')[1].split('\n')[0]
+
 html_context = {
     'css_files': [
-        'https://fonts.googleapis.com/css?family=Lato',
+        url,
         '_static/css/pytorch_theme.css'
     ],
 }

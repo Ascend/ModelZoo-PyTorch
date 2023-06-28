@@ -1,5 +1,5 @@
 atc --model=xformer_encoder.onnx --framework=5 --output=xformer_encoder_dynamic --input_format=ND \
---input_shape_range="feats:[1,-1,80]" --log=error --op_select_implmode=high_performance --optypelist_for_implmode="Sigmoid" \
+--input_shape="feats:[1,-1,80]" --log=error --op_select_implmode=high_performance --optypelist_for_implmode="Sigmoid" \
 --soc_version=$1
 
 atc --model=xformer_encoder_multibatch.onnx --framework=5 --output=xformer_encoder_rank --input_format=ND \

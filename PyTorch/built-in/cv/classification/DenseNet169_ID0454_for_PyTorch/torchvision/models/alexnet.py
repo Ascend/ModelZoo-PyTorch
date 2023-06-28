@@ -38,8 +38,13 @@ from .utils import load_state_dict_from_url
 __all__ = ['AlexNet', 'alexnet']
 
 
+with open('../../url.ini', 'r') as _f:
+    _content = _f.read()
+    alexnet_url = _content.split('alexnet_url=')[1].split('\n')[0]
+
+
 model_urls = {
-    'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
+    'alexnet': alexnet_url,
 }
 
 
