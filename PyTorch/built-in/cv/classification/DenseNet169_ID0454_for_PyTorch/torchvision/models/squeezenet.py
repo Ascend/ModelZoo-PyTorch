@@ -31,6 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
 #import torch
+import os
 import torch.nn as nn
 import torch.nn.init as init
 from .utils import load_state_dict_from_url
@@ -38,7 +39,8 @@ from .utils import load_state_dict_from_url
 __all__ = ['SqueezeNet', 'squeezenet1_0', 'squeezenet1_1']
 
 
-with open('../../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
     _content = _f.read()
     squeezenet1_0_url = _content.split('squeezenet1_0_url=')[1].split('\n')[0]
     squeezenet1_1_url = _content.split('squeezenet1_1_url=')[1].split('\n')[0]

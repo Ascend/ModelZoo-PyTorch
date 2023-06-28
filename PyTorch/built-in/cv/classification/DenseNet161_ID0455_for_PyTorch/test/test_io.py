@@ -30,7 +30,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
-#import os
+import os
 import contextlib
 import tempfile
 import torch
@@ -53,6 +53,8 @@ try:
     io.video._check_av_available()
 except ImportError:
     av = None
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def _create_video_frames(num_frames, height, width):
@@ -148,7 +150,7 @@ class Tester(unittest.TestCase):
         with get_tmp_dir() as temp_dir:
             name = "hmdb51_Turnk_r_Pippi_Michel_cartwheel_f_cm_np2_le_med_6.avi"
             f_name = os.path.join(temp_dir, name)
-            with open('../url.ini', 'r') as _f:
+            with open(os.path.join(CURRENT_PATH, '../url.ini'), 'r') as _f:
                 _content = _f.read()
                 io_url = _content.split('io_url=')[1].split('\n')[0]
             url = io_url + name

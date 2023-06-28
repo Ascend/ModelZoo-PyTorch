@@ -30,7 +30,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
-#import os
+import os
 import sys
 import tempfile
 import torchvision.datasets.utils as utils
@@ -53,7 +53,8 @@ TEST_FILE = get_file_path_2(
     os.path.dirname(os.path.abspath(__file__)), 'assets', 'grace_hopper_517x606.jpg')
 
 
-with open('../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../url.ini'), 'r') as _f:
     _content = _f.read()
     vision_archive_http_url = _content.split('vision_archive_http_url=')[1].split('\n')[0]
     vision_archive_https_url = _content.split('vision_archive_https_url=')[1].split('\n')[0]

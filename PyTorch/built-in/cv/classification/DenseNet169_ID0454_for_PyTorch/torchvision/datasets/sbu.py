@@ -38,6 +38,9 @@ import os
 from .vision import VisionDataset
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
 class SBU(VisionDataset):
     """`SBU Captioned Photo <http://www.cs.virginia.edu/~vicente/sbucaptions/>`_ Dataset.
 
@@ -52,7 +55,7 @@ class SBU(VisionDataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    with open('../../url.ini', 'r') as _f:
+    with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
         _content = _f.read()
         url = _content.split('sbucaption_dataset_url=')[1].split('\n')[0]
     filename = "SBUCaptionedPhotoDataset.tar.gz"

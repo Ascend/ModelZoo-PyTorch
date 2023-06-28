@@ -31,6 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
 #import torch
+import os
 import torch.nn as nn
 from .utils import load_state_dict_from_url
 
@@ -40,7 +41,8 @@ __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'wide_resnet50_2', 'wide_resnet101_2']
 
 
-with open('../../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
     _content = _f.read()
     resnet18_url = _content.split('resnet18_url=')[1].split('\n')[0]
     resnet34_url = _content.split('resnet34_url=')[1].split('\n')[0]

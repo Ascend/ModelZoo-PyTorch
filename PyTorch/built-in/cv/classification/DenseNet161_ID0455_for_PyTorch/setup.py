@@ -46,7 +46,8 @@ import torch
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, CUDA_HOME
 
 
-with open('url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, 'url.ini'), 'r') as _f:
     _content = _f.read()
     vision_url = _content.split('vision_url=')[1].split('\n')[0]
     email_url = _content.split('email_url=')[1].split('\n')[0]

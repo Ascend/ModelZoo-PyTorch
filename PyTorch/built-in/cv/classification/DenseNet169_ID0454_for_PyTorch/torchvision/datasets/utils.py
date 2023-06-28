@@ -42,6 +42,9 @@ import torch
 from torch.utils.model_zoo import tqdm
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
 def gen_bar_updater():
     pbar = tqdm(total=None)
 
@@ -185,7 +188,7 @@ def download_file_from_google_drive(file_id, root, filename=None, md5=None):
     """
     # Based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
     import requests
-    with open('../../url.ini', 'r') as _f:
+    with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
         _content = _f.read()
         url = _content.split('google_download_url=')[1].split('\n')[0]
 

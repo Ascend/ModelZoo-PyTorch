@@ -31,6 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
 #import torch
+import os
 import torch.nn as nn
 from .utils import load_state_dict_from_url
 
@@ -41,7 +42,8 @@ __all__ = [
 ]
 
 
-with open('../../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
     _content = _f.read()
     vgg11_url = _content.split('vgg11_url=')[1].split('\n')[0]
     vgg13_url = _content.split('vgg13_url=')[1].split('\n')[0]

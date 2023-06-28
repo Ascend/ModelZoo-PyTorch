@@ -16,6 +16,7 @@
 # limitations under the License.
 
 
+import os
 import re
 import torch
 import torch.nn as nn
@@ -27,7 +28,8 @@ from torch.jit.annotations import List
 
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
-with open('url.ini', 'r') as f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, 'url.ini'), 'r') as f:
     content = f.read()
     densenet121_url = content.split('densenet121_url=')[1].split('\n')[0]
     densenet169_url = content.split('densenet169_url=')[1].split('\n')[0]

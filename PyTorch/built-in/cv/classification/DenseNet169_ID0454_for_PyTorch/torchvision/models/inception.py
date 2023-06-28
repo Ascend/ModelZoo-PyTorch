@@ -31,6 +31,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ============================================================================
 #from collections import namedtuple
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -40,7 +41,8 @@ from .utils import load_state_dict_from_url
 __all__ = ['Inception3', 'inception_v3']
 
 
-with open('../../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
     _content = _f.read()
     inception_url = _content.split('inception_url=')[1].split('\n')[0]
 

@@ -49,12 +49,14 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
 import torch
 import torchvision
 import sphinx_rtd_theme
+
+from docutils import nodes
+from sphinx.util.docfields import TypedField
+from sphinx import addnodes
 
 
 # -- General configuration ------------------------------------------------
@@ -79,7 +81,8 @@ extensions = [
     'sphinxcontrib.googleanalytics',
 ]
 
-with open('../../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
     _content = _f.read()
     python_url = _content.split('python_url=')[1].split('\n')[0]
     numpy_url = _content.split('numpy_url=')[1].split('\n')[0]
@@ -237,9 +240,6 @@ intersphinx_mapping = {
 # -- A patch that prevents Sphinx from cross-referencing ivar tags -------
 # See http://stackoverflow.com/a/41184353/3343043
 
-from docutils import nodes
-from sphinx.util.docfields import TypedField
-from sphinx import addnodes
 
 
 def patched_make_field(self, types, domain, items, **kw):

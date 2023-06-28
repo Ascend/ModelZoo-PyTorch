@@ -39,7 +39,8 @@ from .vision import VisionDataset
 from .utils import download_and_extract_archive, makedir_exist_ok, verify_str_arg
 
 
-with open('../../url.ini', 'r') as _f:
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
     _content = _f.read()
     caltech101_1_url = _content.split('caltech101_1_url=')[1].split('\n')[0]
     caltech101_2_url = _content.split('caltech101_2_url=')[1].split('\n')[0]
