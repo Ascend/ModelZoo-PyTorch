@@ -39,7 +39,7 @@ from .folder import ImageFolder
 from .utils import check_integrity, download_and_extract_archive, extract_archive, \
     verify_str_arg
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     ILSVRC2012_img_train_url = content.split('ILSVRC2012_img_train_url=')[1].split('\n')[0]
     ILSVRC2012_img_val_url = content.split('ILSVRC2012_img_val_url=')[1].split('\n')[0]

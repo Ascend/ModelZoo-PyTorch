@@ -40,7 +40,7 @@ __all__ = [
     'vgg19_bn', 'vgg19',
 ]
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     vgg11_url = content.split('vgg11_url=')[1].split('\n')[0]
     vgg13_url = content.split('vgg13_url=')[1].split('\n')[0]

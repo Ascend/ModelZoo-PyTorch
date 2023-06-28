@@ -38,7 +38,7 @@ import os.path
 from .vision import VisionDataset
 from .utils import download_and_extract_archive, makedir_exist_ok, verify_str_arg
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     url_101_ObjectCategories = content.split('url_101_ObjectCategories=')[1].split('\n')[0]
     Annotations_url = content.split('Annotations_url=')[1].split('\n')[0]

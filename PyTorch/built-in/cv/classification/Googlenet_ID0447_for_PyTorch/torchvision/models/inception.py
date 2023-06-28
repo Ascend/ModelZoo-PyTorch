@@ -39,7 +39,7 @@ from .utils import load_state_dict_from_url
 
 __all__ = ['Inception3', 'inception_v3']
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     inception_url = content.split('inception_url=')[1].split('\n')[0]
 model_urls = {

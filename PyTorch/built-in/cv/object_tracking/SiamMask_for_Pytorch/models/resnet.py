@@ -24,7 +24,7 @@ from utils.log_helper import log_once
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
 
-with open('../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     resnet18_url = content.split('resnet18_url=')[1].split('\n')[0]
     resnet34_url = content.split('resnet34_url=')[1].split('\n')[0]

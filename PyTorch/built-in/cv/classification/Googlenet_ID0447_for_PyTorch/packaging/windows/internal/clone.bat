@@ -8,7 +8,7 @@ IF "%BUILD_VISION%" == "" (
         goto submodule
     )
 )
-for /f "tokens=2 delims==" %%a in ('type ..\..\..\url.ini ^| findstr "github_url="') do set url=%%a
+for /f "tokens=2 delims==" %%a in ('type ..\..\url.ini ^| findstr "github_url="') do set url=%%a
 git clone %url%/%PYTORCH_REPO%/%MODULE_NAME%
 
 cd %MODULE_NAME%

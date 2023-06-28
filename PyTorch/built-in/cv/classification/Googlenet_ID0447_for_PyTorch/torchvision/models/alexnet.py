@@ -37,7 +37,7 @@ from .utils import load_state_dict_from_url
 
 __all__ = ['AlexNet', 'alexnet']
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     alexnet_url = content.split('alexnet_url=')[1].split('\n')[0]
 

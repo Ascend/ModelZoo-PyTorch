@@ -37,7 +37,7 @@ from .utils import load_state_dict_from_url
 
 __all__ = ['SqueezeNet', 'squeezenet1_0', 'squeezenet1_1']
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     squeezenet1_0_url = content.split('squeezenet1_0_url=')[1].split('\n')[0]
     squeezenet1_1_url = content.split('squeezenet1_1_url=')[1].split('\n')[0]

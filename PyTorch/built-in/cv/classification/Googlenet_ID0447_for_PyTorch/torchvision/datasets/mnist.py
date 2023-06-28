@@ -42,7 +42,7 @@ import codecs
 from .utils import download_url, download_and_extract_archive, extract_archive, \
     makedir_exist_ok, verify_str_arg
 
-with open('../../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     mnist_url = content.split('mnist_url=')[1].split('\n')[0]
     fashion_mnist_url = content.split('fashion_mnist_url=')[1].split('\n')[0]
@@ -265,7 +265,7 @@ class EMNIST(MNIST):
             target and transforms it.
     """
     # Updated URL from https://www.westernsydney.edu.au/bens/home/reproducible_research/emnist
-    with open('../../url.ini', 'r') as f:
+    with open('url.ini', 'r') as f:
         content = f.read()
         cloudstor_url = content.split('cloudstor_url=')[1].split('\n')[0]
     url = cloudstor_url

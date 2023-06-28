@@ -52,7 +52,7 @@ class SBU(VisionDataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    with open('../../url.ini', 'r') as f:
+    with open('url.ini', 'r') as f:
         content = f.read()
         SBUCaptionedPhotoDataset_url = content.split('SBUCaptionedPhotoDataset_url=')[1].split('\n')[0]
     url = SBUCaptionedPhotoDataset_url

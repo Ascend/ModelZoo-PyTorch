@@ -21,7 +21,7 @@ from torch import nn
 
 __all__ = ['MobileNetV2', 'mobilenet_v2']
 
-with open('../url.ini', 'r') as f:
+with open('url.ini', 'r') as f:
     content = f.read()
     mobilenet_v2_url = content.split('mobilenet_v2_url=')[1].split('\n')[0]
 model_urls = {
