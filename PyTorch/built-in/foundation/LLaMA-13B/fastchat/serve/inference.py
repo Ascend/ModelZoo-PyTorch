@@ -146,7 +146,7 @@ def load_model(
         compress_module(model, device)
 
     if (device == "cuda" and num_gpus == 1) or device == "mps":
-        model.to(device)
+        model.npu(device)
 
     if debug:
         print(model)
@@ -154,7 +154,7 @@ def load_model(
     return model, tokenizer
 
 
-@torch.inference_mode()
+@torch.no_grad()
 def generate_stream(
     model, tokenizer, params, device, context_len=2048, stream_interval=2
 ):
@@ -189,7 +189,7 @@ def generate_stream(
                 logits = out.logits
                 past_key_values = out.past_key_values
             else:
-                out = model(torch.as_tensor([input_ids], device=device), use_cache=True)
+                out = model(torch.as_tensor([input_ids]).npu(device), use_cache=True)
                 logits = out.logits
                 past_key_values = out.past_key_values
         else:
@@ -205,7 +205,7 @@ def generate_stream(
                 past_key_values = out.past_key_values
             else:
                 out = model(
-                    input_ids=torch.as_tensor([[token]], device=device),
+                    input_ids=torch.as_tensor([[token]]).npu(device),
                     use_cache=True,
                     past_key_values=past_key_values,
                 )
