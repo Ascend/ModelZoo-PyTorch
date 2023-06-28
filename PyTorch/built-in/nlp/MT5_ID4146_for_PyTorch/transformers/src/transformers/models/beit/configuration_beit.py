@@ -19,9 +19,11 @@ from ...utils import logging
 
 
 logger = logging.get_logger(__name__)
-
+with open('../../../url.ini', 'r') as f:
+    content = f.read()
+    beit_base_patch16_224_in22k = content.split('beit_base_patch16_224_in22k=')[1].split('\n')[0]
 BEIT_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "microsoft/beit-base-patch16-224-in22k": "https://huggingface.co/microsoft/beit-base-patch16-224-in22k/resolve/main/config.json",
+    "microsoft/beit-base-patch16-224-in22k": beit_base_patch16_224_in22k,
     # See all BEiT models at https://huggingface.co/models?filter=beit
 }
 

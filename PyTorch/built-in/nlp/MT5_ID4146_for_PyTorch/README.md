@@ -184,6 +184,9 @@ MT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
 
 无。	
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
 
 
 

@@ -356,10 +356,12 @@ def convert_beit_checkpoint(checkpoint_url, pytorch_dump_folder_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
+    with open('../../../../../url.ini', 'r') as f:
+        content = f.read()
+        beit_base_patch16_224_pt22k_ft22kto1k = content.split('beit_base_patch16_224_pt22k_ft22kto1k=')[1].split('\n')[0]
     parser.add_argument(
         "--checkpoint_url",
-        default="https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22kto1k.pth",
+        default=beit_base_patch16_224_pt22k_ft22kto1k,
         type=str,
         help="URL to the original PyTorch checkpoint (.pth file).",
     )

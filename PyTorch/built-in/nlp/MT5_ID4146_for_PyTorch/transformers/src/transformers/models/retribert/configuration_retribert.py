@@ -20,9 +20,13 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
+with open('../../../url.ini', 'r') as f:
+    content = f.read()
+    retribert_base_uncased = content.split('retribert_base_uncased=')[1].split('\n')[0]
+
 # TODO: upload to AWS
 RETRIBERT_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "retribert-base-uncased": "https://huggingface.co/distilbert-base-uncased/resolve/main/config.json",
+    "retribert-base-uncased": retribert_base_uncased,
 }
 
 

@@ -23,8 +23,12 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
+with open('../../../url.ini', 'r') as f:
+    content = f.read()
+    unispeech_sat_base_960h = content.split('unispeech_sat_base_960h=')[1].split('\n')[0]
+
 UNISPEECH_SAT_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "facebook/unispeech_sat-base-960h": "https://huggingface.co/facebook/unispeech_sat-base-960h/resolve/main/config.json",
+    "facebook/unispeech_sat-base-960h": unispeech_sat_base_960h,
     # See all UniSpeechSat models at https://huggingface.co/models?filter=unispeech_sat
 }
 

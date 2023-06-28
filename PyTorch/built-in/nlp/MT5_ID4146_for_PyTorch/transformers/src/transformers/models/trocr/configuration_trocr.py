@@ -20,8 +20,12 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
+with open('../../../url.ini', 'r') as f:
+    content = f.read()
+    microsoft_trocr_base = content.split('microsoft_trocr_base=')[1].split('\n')[0]
+
 TROCR_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "microsoft/trocr-base": "https://huggingface.co/microsoft/trocr-base/resolve/main/config.json",
+    "microsoft/trocr-base": microsoft_trocr_base,
     # See all TrOCR models at https://huggingface.co/models?filter=trocr
 }
 
