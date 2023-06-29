@@ -259,23 +259,23 @@ class FunsdTrainer(Trainer):
         if is_sagemaker_mp_enabled():
             self.optimizer = smp.DistributedOptimizer(self.optimizer)
 
-    def training_step(self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]) -> torch.Tensor:
+    def training_step(self, model: torch.nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]) -> torch.Tensor:
         """
         Perform a training step on a batch of inputs.
 
         Subclass and override to inject custom behavior.
 
         Args:
-            model (`nn.Module`):
+            model (:obj:`nn.Module`):
                 The model to train.
-            inputs (`Dict[str, Union[torch.Tensor, Any]]`):
+            inputs (:obj:`Dict[str, Union[torch.Tensor, Any]]`):
                 The inputs and targets of the model.
 
                 The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
-                argument `labels`. Check your model's documentation for all accepted arguments.
+                argument :obj:`labels`. Check your model's documentation for all accepted arguments.
 
         Return:
-            `torch.Tensor`: The tensor with training loss on this batch.
+            :obj:`torch.Tensor`: The tensor with training loss on this batch.
         """
         model.train()
         inputs = self._prepare_inputs(inputs)
@@ -284,21 +284,31 @@ class FunsdTrainer(Trainer):
             loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
             return loss_mb.reduce_mean().detach().to(self.args.device)
 
-        with self.compute_loss_context_manager():
+        if self.use_amp and not os.getenv('ALLOW_FP32'):
+            with autocast():
+                loss = self.compute_loss(model, inputs)
+        else:
             loss = self.compute_loss(model, inputs)
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
 
-        if self.do_grad_scaling and not os.getenv('ALLOW_FP32'):
+        if self.args.gradient_accumulation_steps > 1 and not self.deepspeed:
+            # deepspeed handles loss scaling by gradient_accumulation_steps in its `backward`
+            loss = loss / self.args.gradient_accumulation_steps
+
+        if self.use_amp and not os.getenv('ALLOW_FP32'):
             self.scaler.scale(loss).backward()
         elif self.use_apex and not os.getenv('ALLOW_FP32'):
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
+        elif self.deepspeed:
+            # loss gets scaled under gradient_accumulation_steps in deepspeed
+            loss = self.deepspeed.backward(loss)
         else:
-            self.accelerator.backward(loss)
+            loss.backward()
 
-        return loss.detach() / self.args.gradient_accumulation_steps
+        return loss.detach()
 
     def train(
             self,
