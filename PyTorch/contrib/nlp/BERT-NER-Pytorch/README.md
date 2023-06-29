@@ -29,16 +29,40 @@ pip install -r requirements.txt
 ```
 
 ### 准备数据集
-* 在https://www.cluebenchmarks.com/introduce.html 下载Cluener数据集，放到datasets目录下
+* 本模型在[Cluener](https://www.cluebenchmarks.com/introduce.html)数据集上完成训练和验证。在https://storage.googleapis.com/cluebenchmark/tasks/cluener_public.zip 下载Cluener数据集，解压后放到datasets目录下，形成如下的目录结构：
+
+```
+BERT-NER-Pytorch
+└── datasets
+    ├── cner
+    └── cluener 
+        ├── cluener_predict.json
+        ├── dev.json
+        ├── __init__.py 
+        ├── README.md
+        ├── test.json
+        └── train.json
+```
 
 ### 准备预训练权重
-* 在https://huggingface.co/bert-base-chinese/tree/main/ 下载预训练权重和config文件等相关信息
+* 在https://huggingface.co/bert-base-chinese/tree/main/ 下载预训练权重和config文件等相关信息，放在prev_trained_model目录下，形成如下的目录结构：
+
+```
+BERT-NER-Pytorch
+└── prev_trained_model
+    └── bert-base-chinese
+        ├── config.json
+        ├── pytorch_model.bin 
+        ├── tokenizer_config.json
+        ├── tokenizer.json
+        └── vocab.txt
+```
 
 ## 开始训练
 ### 运行训练脚本
 * 启动单机8卡训练
 ```
-bash test/run_ner_crf.sh 
+bash test/train_full_8p.sh 
 ```
 
 训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
