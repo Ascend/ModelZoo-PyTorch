@@ -170,7 +170,7 @@ LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消�
 
 2023.03.09：首次发布。
 ## FAQ
-1.下载数据集时，出现报错**SSLCertVerificationError**时，可以将 _/site-packages/requests/api.py_ 下的 
+1.下载数据集时，出现报错**SSLCertVerificationError**时，可以将 **site-packages/requests/api.py** 下的 
 ```python 
 return session.request(method=method, url=url, **kwargs)  
 ```
@@ -195,7 +195,17 @@ return session.request(method=method, url=url, verify=False, **kwargs)
 ```python 
  tokenizer = AutoTokenizer.from_pretrained("path/to/xlm-roberta-base")
 ```
-以及训练脚本中指定 **model_name_or_path** 为 **path/to/xlm-roberta-base** 。
+以及训练脚本中指定 **model_name_or_path** 为本地模型权重以及配置的路径。
+
+最后，修改 **site-packages/datasets/build.py**：
+
+```python 
+     version_data_dir = path_join(
+            self._cache_dir_root, self._relative_data_dir(with_version=True, is_local=is_local)
+        )
+```
+为实际的数据集路径。
+
 
 # 公网地址说明
 
