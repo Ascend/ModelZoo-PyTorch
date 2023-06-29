@@ -19,25 +19,32 @@ from __future__ import division
 
 import sys
 import os
+import numpy as np
 import cv2
 import torch
+import tqdm
 
-from lib.opts_pose import opts
-from lib.detectors.detector_factory import detector_factory
-from lib.datasets.dataset_factory import get_dataset
-    
+from utils.image import get_affine_transform
+
+def pre_process(img):
+    height, width = img.shape[0:2]
+    inp_height = inp_width = 800
+    c = np.array([width / 2., height / 2.], dtype=np.float32)
+    s = max(height, width) * 1.0
+    trans_input = get_affine_transform(c, s, 0, [inp_width, inp_height])
+    resized_image = cv2.resize(img, (width, height))
+    inp_image = cv2.warpAffine(
+        resized_image, trans_input, (inp_width, inp_height),
+        flags=cv2.INTER_LINEAR)
+    images = torch.from_numpy(inp_image)
+    return images
+
 def preprocess(file_path, bin_path):
-    opt = opts().parse('--task {} --load_model {}'.format('multi_pose', 'model_best.pth').split(' ')) 
-    Dataset = get_dataset(opt.dataset, opt.task)
-    opt = opts().update_dataset_info_and_set_heads(opt, Dataset)
-    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpus_str
-    Detector = detector_factory[opt.task]
-    detector = Detector(opt)
     in_files = os.listdir(file_path)
     
     if not os.path.exists(bin_path):
         os.makedirs(bin_path)
-    for file in sorted(in_files):
+    for file in tqdm.tqdm(sorted(in_files)):
        os.chdir(os.path.join(file_path, file))
        cur_path = os.getcwd()
        doc = os.listdir(cur_path)   
@@ -45,11 +52,10 @@ def preprocess(file_path, bin_path):
           if document=='output':
               break
           image = cv2.imread(os.path.join(cur_path, document))
-          for scale in opt.test_scales:
-             images, meta = detector.pre_process(image, scale, meta=None)
-             images.numpy().tofile(os.path.join(bin_path,document.split('.')[0] +'.bin'))
+          images = pre_process(image)
+          images.numpy().tofile(os.path.join(bin_path,document.split('.')[0] +'.bin'))
         
 if __name__ == "__main__":
-    file_path = os.path.abspath(sys.argv[1])
-    bin_path = os.path.abspath(sys.argv[2])
-    preprocess(file_path, bin_path)
+    fp = os.path.abspath(sys.argv[1])
+    bp = os.path.abspath(sys.argv[2])
+    preprocess(fp, bp)

@@ -75,7 +75,7 @@
 2. 整理代码结构
 
    ```
-   mv centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py pth2onnx.py move.sh ./center-face/src
+   mv centerface_pth_preprocess.py centerface_pth_postprocess.py convert.py pth2onnx.py aipp_centerface.aippconfig ./center-face/src
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -164,7 +164,7 @@
       3. 切换目录到center-face/src下，执行ATC命令。
 
          ```
-         atc --framework=5 --model=CenterFace.onnx --input_format=NCHW --input_shape="image:1,3,800,800" --output=CenterFace_bs1 --log=debug --soc_version=${chip_name}
+         atc --framework=5 --model=CenterFace.onnx --input_format=NCHW --input_shape="image:1,3,800,800" --output=CenterFace_bs1 --log=debug --soc_version=${chip_name} --enable_small_channel=1 --insert_op_conf=aipp_centerface.aippconfig
          ```
 
          - 参数说明：
