@@ -250,7 +250,6 @@ def train(args, trainer, task, epoch_itr):
         #    exit(0)
         #for tt in samples:
         #    print(tt["net_input"]["src_tokens"].size())
-        profiler.start()
         start = time.time()
         if num_steps >= args.stop_step:
             if args.profiling == 'GE' or args.profiling == 'CANN':
@@ -283,7 +282,9 @@ def train(args, trainer, task, epoch_itr):
                 #print(prof.key_averages().table())
                 prof.export_chrome_trace(("kdxf_transfomer_dynamic_step{}_npu.prof").format(i))
             else:
+                profiler.start()
                 log_output = trainer.train_step(samples)
+                profiler.end()
             '''
             if i >= 0 and i <=3:
                 print("===== grad of step {} start".format(i))
@@ -328,7 +329,6 @@ def train(args, trainer, task, epoch_itr):
 
             if num_updates >= max_update:
                 break
-        profiler.end()
         num_steps = num_steps + 1
 
     # log end-of-epoch stats
