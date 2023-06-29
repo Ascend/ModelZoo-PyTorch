@@ -17,7 +17,7 @@
 | ------------------------------------------------------------ | -------------------------- |
 | [ACL_Pytorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch) | 基于昇腾芯片的推理模型参考 |
 | [PyTorch](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/PyTorch) | 基于昇腾芯片的训练模型参考 |
-
+| [AscendIE](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE) | 基于昇腾芯片的推理引擎模型参考 |
 
 
 ## 免责声明
