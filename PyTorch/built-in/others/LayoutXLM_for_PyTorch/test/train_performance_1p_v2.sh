@@ -65,7 +65,7 @@ python3 -m torch.distributed.launch --nproc_per_node=1 examples/run_funsd.py \
         --max_steps ${max_steps} \
         --warmup_ratio 0.1 \
         --fp16 \
-        --fp16_backend apex \ >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+        --fp16_backend apex  >${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
