@@ -72,7 +72,7 @@ SE-SSD（Self-Ensembling Single-Stage Object Detector）是一种基于自集成
 2. 安装依赖
 
    ```bash
-   pip3 install -r requirements.txt
+   pip3 install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
    ```
 
 3. 从源码编译、安装SpConv库

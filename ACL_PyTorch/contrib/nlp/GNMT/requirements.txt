@@ -9,5 +9,3 @@ onnx-simplifier==0.4.8
 mpmath==1.2.1
 sympy==1.10.1
 onnxruntime==1.12.1
-git+https://github.com/rsennrich/subword-nmt.git@48ba99e657591c329e0003f0c6e32e493fa959ef
-git+https://github.com/NVIDIA/dllogger.git

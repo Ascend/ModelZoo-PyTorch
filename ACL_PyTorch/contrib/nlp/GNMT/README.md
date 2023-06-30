@@ -79,6 +79,8 @@ GNMT是一个端到端机器翻译系统，它解决了NMT训练速度慢、很�
 2. 安装依赖。
    ```bash
    pip3 install -r requirements.txt
+   pip3 install -v 'git+https://github.com/rsennrich/subword-nmt.git@48ba99e657591c329e0003f0c6e32e493fa959ef'
+   pip3 install -v 'git+https://github.com/NVIDIA/dllogger.git'
    ```
 
 

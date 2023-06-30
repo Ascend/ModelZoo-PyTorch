@@ -1,4 +1,4 @@
-# Pix2Pix模型-推理指导
+# Pix2Pix模型-推理
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -32,7 +32,7 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 - 参考实现：
 
   ```
-  url=//github.com/junyanz/pytorch-CycleGAN-and-pix2pix
+  url=https://github.com/OmriKaduri/pytorch-CycleGAN-and-pix2pix
   commit_id=master
   commit_id=aac572a869b6cfc7486d1d8e2846e5e34e3f0e05
   model_name=pix2pix
@@ -80,8 +80,15 @@ pix2pix是一个图像合成网络，是将GAN应用于有监督的图像到图�
 ## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
+   ```
+   git clone https://github.com/OmriKaduri/pytorch-CycleGAN-and-pix2pix.git
+   git reset --hard aac572a869b6cfc7486d1d8e2846e5e34e3f0e05
+   patch -p2 -i pix2pix.patch -d ./pytorch-CycleGAN-and-pix2pix/
+   cp -r ./pytorch-CycleGAN-and-pix2pix/* ./
+   
+   ```
 
-   目录结构如下：(注：可不用下载源码仓代码)
+   目录结构如下：
    ```
    ├─options
    ├─models
