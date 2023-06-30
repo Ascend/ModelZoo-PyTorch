@@ -647,9 +647,9 @@ def take_optimizer_step(args, optimizer, model, overflow_buf, global_step):
                     param.grad = None
     else:
         optimizer.step()
-        if args.fp16 and _amp_state.loss_scalers[0]._has_overflow and not os.getenv('ALLOW_FP32')：
+        if args.fp16 and _amp_state.loss_scalers[0]._has_overflow and not os.getenv('ALLOW_FP32'):
             global_step += 0
-        else：
+        else:
             global_step += 1
 
     for param in model.parameters():
