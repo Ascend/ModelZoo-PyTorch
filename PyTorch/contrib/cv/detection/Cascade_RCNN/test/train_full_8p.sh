@@ -89,7 +89,7 @@ then
             --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
             --num-gpus 8 \
             AMP 1\
-            OPT_LEVEL O2 \
+            OPT_LEVEL O1 \
             LOSS_SCALE_VALUE 64 \
             SOLVER.IMS_PER_BATCH ${batch_size} \
             SOLVER.MAX_ITER ${max_iter} \
@@ -108,7 +108,7 @@ else
             --device-ids 0 1 2 3 4 5 6 7 \
             --num-gpus 8 \
             AMP 1\
-            OPT_LEVEL O2 \
+            OPT_LEVEL O1 \
             LOSS_SCALE_VALUE 64 \
             SOLVER.IMS_PER_BATCH ${batch_size} \
             SOLVER.MAX_ITER ${max_iter} \

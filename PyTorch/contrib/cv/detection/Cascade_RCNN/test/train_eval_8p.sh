@@ -83,7 +83,7 @@ python tools/train_net.py \
     --num-gpus 8 \
     --eval-only \
     AMP 1\
-    OPT_LEVEL O2 \
+    OPT_LEVEL O1 \
     LOSS_SCALE_VALUE 64 \
     MODEL.RPN.NMS_THRESH 0.8 \
     MODEL.ROI_HEADS.NMS_THRESH_TEST 0.6 \

@@ -70,7 +70,7 @@ def find_top_rpn_proposals(
     for level_id, (proposals_i, logits_i) in enumerate(zip(proposals, pred_objectness_logits)):
         Hi_Wi_A = logits_i.shape[1]
         num_proposals_i = min(pre_nms_topk, Hi_Wi_A)
-        topk_scores_i, topk_idx = torch.topk(logits_i, num_proposals_i, dim=1)
+        topk_scores_i, topk_idx = torch.topk(logits_i.float(), num_proposals_i, dim=1)
         topk_proposals_i = proposals_i[batch_idx[:, None].long(),
                                        topk_idx.long()]  # N x topk x 4
         topk_proposals_list.append(topk_proposals_i)
@@ -113,7 +113,7 @@ def find_top_rpn_proposals(
         scores_per_img = cat(level_scores_per_img, dim=0)
         scores_per_img = scores_per_img * keep_mask.half()
 
-        topk_scores_i, indice = torch.topk(scores_per_img, post_nms_topk)
+        topk_scores_i, indice = torch.topk(scores_per_img.float(), post_nms_topk)
 
         res = Instances(image_size)
         res.proposal_boxes = boxes[indice.long()]

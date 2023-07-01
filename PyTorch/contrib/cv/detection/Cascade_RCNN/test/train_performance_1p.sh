@@ -93,7 +93,7 @@ python3 tools/train_net.py \
         --num-gpus 1 \
         --config-file configs/COCO-Detection/cascade_rcnn_R_101_FPN_1x.yaml \
         AMP 1 \
-        OPT_LEVEL O2 \
+        OPT_LEVEL O1 \
         LOSS_SCALE_VALUE 64 \
         MODEL.DEVICE npu:${ASCEND_DEVICE_ID} \
         SOLVER.IMS_PER_BATCH ${batch_size} \
