@@ -49,14 +49,13 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
 | 配套                    | 版本              | 
 |-----------------------|-----------------| 
-| CANN                  | 6.3.RC2.alph002 | 链接                                                          |
+| CANN                  | 6.3.RC2.alph002 | -                                                       |
 | Python                | 3.9.0           |                                                           
-| PyTorch               | 2.0.0           |
-| torchVison            | 0.15.1          |-
-| Ascend-cann-torch-aie |链接
-| Ascend-cann-aie       |链接
+| PyTorch               | 2.0.1           |
+| torchVison            | 0.15.2          |-
+| Ascend-cann-torch-aie | -               
+| Ascend-cann-aie       | -               
 | 芯片类型                  | Ascend310P3     | -                                                         |
-
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 ## 安装CANN包
@@ -81,8 +80,8 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
 ## 安装其他依赖
 ```
-pip3 install pytorch==2.0.0
-pip3 install torchVision==0.15.1
+pip3 install pytorch==2.0.1
+pip3 install torchVision==0.15.2
 ```
 
 
@@ -105,7 +104,7 @@ pip3 install torchVision==0.15.1
 
    ```
    # 参考https://github.com/pytorch/examples/tree/main/imagnet/extract_ILSVRC.sh的处理。
-   执行 valprep.sh脚本
+   执行 preprocess.sh脚本,将图片按类别分类到相同目录,会在当前路径下生成 ./imagenet/val
    
    ```
 ## 模型推理<a name="section741711594517"></a>
@@ -114,18 +113,25 @@ pip3 install torchVision==0.15.1
 
 前往[Pytorch官方文档](https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html#resnet50)下载对应权重，参考下载权重如下：
    
-      [权重](https://download.pytorch.org/models/resnet50-0676ba61.pth
+[权重](https://download.pytorch.org/models/resnet50-0676ba61.pth)
+
+
 2. 执行推理脚本
    ```
-    python3 resnet50.py ./resnet50-0676ba61.pth
+    python3 resnet50.py "./resnet50-0676ba61.pth" "./imagenet/val"
    ```
+   会在当前路径下生成resnet50.ts,用于执行c++样例。
+3.  运行C++样例
+    ```
+    bash run.sh
+    ```
 
 
 # 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用torch-aie推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度                                  | 性能 |
-| --------- | ---------------- | ---------- |-------------------------------------| --------------- |
-| 310P3 | 64 | ImageNet | top-1: 76.1624% <br>top-5: 92.8857% | 2580 |
+| 芯片型号 | Batch Size   | 数据集 | 精度                                   |
+| --------- | ---------------- | ---------- |------------------------------------- |
+| 310P3 | 64 | ImageNet | top-1: 76.1624% <br>top-5: 92.8857% |
 
