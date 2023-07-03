@@ -23,8 +23,12 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
+with open('../../../url.ini', 'r') as f:
+    content = f.read()
+    unispeech_base_960h = content.split('unispeech_base_960h=')[1].split('\n')[0]
+
 UNISPEECH_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "facebook/unispeech-base-960h": "https://huggingface.co/facebook/unispeech-base-960h/resolve/main/config.json",
+    "facebook/unispeech-base-960h": unispeech_base_960h,
     # See all UniSpeech models at https://huggingface.co/models?filter=unispeech
 }
 

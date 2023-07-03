@@ -23,8 +23,12 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
+with open('../../../url.ini', 'r') as f:
+    content = f.read()
+    wavlm_base_960h = content.split('wavlm_base_960h=')[1].split('\n')[0]
+
 WAVLM_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "facebook/wavlm-base-960h": "https://huggingface.co/facebook/wavlm-base-960h/resolve/main/config.json",
+    "facebook/wavlm-base-960h": wavlm_base_960h,
     # See all WavLM models at https://huggingface.co/models?filter=wavlm
 }
 

@@ -38,6 +38,12 @@ from transformers.utils import logging
 logging.set_verbosity_info()
 logger = logging.get_logger(__name__)
 
+with open('../../../../../url.ini', 'r') as f:
+    content = f.read()
+    img_url = content.split('img_url=')[1].split('\n')[0]
+    figure_url = content.split('figure_url=')[1].split('\n')[0]
+    pt_url = content.split('pt_url=')[1].split('\n')[0]
+
 
 # here we list all keys to be renamed (original name on the left, our name on the right)
 def create_rename_keys(encoder_config, decoder_config):
@@ -109,13 +115,13 @@ def rename_key(dct, old, new):
 # We will verify our results on an image of the IAM Handwriting Database
 def prepare_img(checkpoint_url):
     if "handwritten" in checkpoint_url:
-        url = "https://fki.tic.heia-fr.ch/static/img/a01-122-02-00.jpg"  # industry
+        url = img_url  # industry
         # url = "https://fki.tic.heia-fr.ch/static/img/a01-122-02-12.jpg" # have
         # url = "https://fki.tic.heia-fr.ch/static/img/a01-122-02-10.jpg" # let
         # url = "https://fki.tic.heia-fr.ch/static/img/a01-122-02.jpg"  #
         # url = "https://fki.tic.heia-fr.ch/static/img/a01-122.jpg"
     elif "printed" in checkpoint_url or "stage1" in checkpoint_url:
-        url = "https://www.researchgate.net/profile/Dinh-Sang/publication/338099565/figure/fig8/AS:840413229350922@1577381536857/An-receipt-example-in-the-SROIE-2019-dataset_Q640.jpg"
+        url = figure_url
     im = Image.open(requests.get(url, stream=True).raw).convert("RGB")
     return im
 
@@ -227,7 +233,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--checkpoint_url",
-        default="https://layoutlm.blob.core.windows.net/trocr/model_zoo/fairseq/trocr-base-handwritten.pt",
+        default=pt_url,
         type=str,
         help="URL to the original PyTorch checkpoint (.pth file).",
     )
