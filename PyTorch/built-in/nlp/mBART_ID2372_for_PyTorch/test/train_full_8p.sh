@@ -146,10 +146,12 @@ nohup fairseq-generate $data_path \
   --fp16 --path $model_dir --max-tokens 4096 \
   --task translation_from_pretrained_bart \
   --gen-subset test \
+  --results-path generate_output \
   -t ro_RO -s en_XX \
   --bpe 'sentencepiece' --sentencepiece-model $BPE_PATH \
   --scoring sacrebleu --remove-bpe 'sentencepiece' \
   --batch-size 32 --langs $langs > en_ro
+cp generate_output/generate-test.txt en_ro
 sed -i '$d' en_ro
 cat en_ro | grep -P "^H" |sort -V |cut -f 3- | sed 's/\[ro_RO\]//g' |$TOKENIZER ro > $HYP".txt"
 cat en_ro | grep -P "^T" |sort -V |cut -f 2- | sed 's/\[ro_RO\]//g' |$TOKENIZER ro > $REF".txt"
