@@ -55,7 +55,7 @@ if is_wandb_available():
 import torch_npu
 from torch_npu.optim import NpuFusedAdamW
 from torch_npu.contrib import transfer_to_npu
-
+from megatron_npu.adaptor_optimizer_optimizer import AdamW
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.17.0")
@@ -426,6 +426,7 @@ def parse_args():
 
     parser.add_argument("--use_npu_fuse_adamW", action="store_true", help="Whether to use NpuFusedAdamW")
     parser.add_argument("--use_clip_grad_norm_fused", action="store_true", help="Whether to use clip_grad_norm_fused")
+    parser.add_argument("--use_megatron_npu_adamW", action="store_true", help="Whether to use megatron_npu_adamW")
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -640,7 +641,9 @@ def main():
         )
 
     # Initialize the optimizer
-    if args.use_npu_fuse_adamW:
+    if args.use_megatron_npu_adamW:
+        optimizer_cls = AdamW
+    elif args.use_npu_fuse_adamW:
         optimizer_cls = NpuFusedAdamW
     else:
         if args.use_8bit_adam:
@@ -855,7 +858,7 @@ def main():
             resume_global_step = global_step * args.gradient_accumulation_steps
             first_epoch = global_step // num_update_steps_per_epoch
             resume_step = resume_global_step % (num_update_steps_per_epoch * args.gradient_accumulation_steps)
-
+    noise_scheduler.alphas_cumprod = noise_scheduler.alphas_cumprod.to(accelerator.device)
     # Only show the progress bar once on each machine.
     progress_bar = tqdm(range(global_step, args.max_train_steps), disable=not accelerator.is_local_main_process)
     progress_bar.set_description("Steps")
@@ -932,10 +935,6 @@ def main():
                     loss = loss.mean(dim=list(range(1, len(loss.shape)))) * mse_loss_weights
                     loss = loss.mean()
 
-                # Gather the losses across all processes for logging (if we use distributed training).
-                avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
-                train_loss += avg_loss.item() / args.gradient_accumulation_steps
-
                 # Backpropagate
                 accelerator.backward(loss)
                 if accelerator.sync_gradients:
@@ -946,6 +945,9 @@ def main():
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
+                # Gather the losses across all processes for logging (if we use distributed training).
+                avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
+                train_loss += avg_loss.item() / args.gradient_accumulation_steps
                 end_time = time.time()
                 logger.info(f"train_loss {loss}")
                 logger.info(f"train_samples_per_second {args.train_batch_size/(end_time-start_time)}")
