@@ -171,3 +171,7 @@ ResNet-b相比ResNet修改了下采样模块，将残差分支的下采样模块
 ## FAQ
 
 无。
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
