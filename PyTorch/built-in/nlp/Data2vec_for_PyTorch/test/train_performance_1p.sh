@@ -78,6 +78,7 @@ nohup python3 fairseq_cli/hydra_train.py -m \
     --config-name base \
     task.data=$data_path \
     common.user_dir=examples/data2vec \
+    common.threshold_loss_scale=0.001 \
     distributed_training.distributed_world_size=1 \
 	optimization.max_update=$max_update > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
