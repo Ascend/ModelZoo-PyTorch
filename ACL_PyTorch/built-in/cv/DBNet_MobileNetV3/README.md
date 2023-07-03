@@ -146,21 +146,13 @@ DBNet([Real-Time Scene Text Detection with Differentiable Binarization and Adapt
             --model_dir ./inference/det_db \
             --model_filename inference.pdmodel \
             --params_filename inference.pdiparams \
-            --save_file ./inference/det_db_onnx/DBNet_MobileNetV3_dybs.onnx \
+            --save_file ./inference/det_db_onnx/DBNet_MobileNetV3_bs${batchsize}.onnx \
             --opset_version 10 \
-            --input_shape_dict="{'x':[-1,3,-1,-1]}" \
+            --input_shape_dict="{'x':[${batchsize},3,-1,-1]}" \
             --enable_onnx_checker True
 
-         参数说明请通过paddle2onnx -h命令查看。 运行后在DBNet_MobileNetV3/inference/det_db_onnx目录下获得DBNet_MobileNetV3_dybs.onnx文件。
-      2. 优化onnx模型。
-         
-         使用onnx-simplifier工具简化onnx模型，onnx-simplifier工具说明参考[官方链接](https://github.com/daquexian/onnx-simplifier)。
-         
-         ```
-         onnxsim DBNet_MobileNetV3_dybs.onnx DBNet_MobileNetV3_sim_dybs.onnx
-         ```
-
-         参数说明:第一个为输入onnx，第二个为输出onnx。
+         参数说明请通过paddle2onnx -h命令查看。 运行后在DBNet_MobileNetV3/inference/det_db_onnx目录下获得DBNet_MobileNetV3_bs${batchsize}.onnx文件。
+         `${batchsize}`表示onnx模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -195,7 +187,7 @@ DBNet([Real-Time Scene Text Detection with Differentiable Binarization and Adapt
 	  
          ```
          atc --framework=5 \
-         --model=./inference/det_db_onnx/DBNet_MobileNetV3_sim_dybs.onnx \
+         --model=./inference/det_db_onnx/DBNet_MobileNetV3_bs${batchsize}.onnx \
          --output=./inference/det_db_om/DBNet_MobileNetV3_bs${batchsize} \
          --input_format=NCHW \
          --input_shape="x:${batchsize},3,736,1280" \
@@ -307,9 +299,9 @@ DBNet([Real-Time Scene Text Detection with Differentiable Binarization and Adapt
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | ---------- | ----------- | ---------- | ----------- | ---------------- |
-|Ascend310P3| 1           | ICDAR 2015 | precision:0.775;recall:0.7313;hmean:0.7525 | 196.102 fps |
-|Ascend310P3| 4           | ICDAR 2015 | precision:0.775;recall:0.7313;hmean:0.7525 | 161.343 fps |
-|Ascend310P3| 8           | ICDAR 2015 | precision:0.775;recall:0.7313;hmean:0.7525 | 158.040 fps |
-|Ascend310P3| 16          | ICDAR 2015 | precision:0.775;recall:0.7313;hmean:0.7525 | 152.316 fps |
-|Ascend310P3| 32          | ICDAR 2015 | precision:0.775;recall:0.7313;hmean:0.7525 | 152.485 fps |
-|Ascend310P3| 64          | ICDAR 2015 | precision:0.775;recall:0.7313;hmean:0.7525 | 153.007 fps |
+|Ascend310P3| 1           | ICDAR 2015 | Acc:0.775 | 196.102 fps |
+|Ascend310P3| 4           | ICDAR 2015 | Acc:0.775 | 161.343 fps |
+|Ascend310P3| 8           | ICDAR 2015 | Acc:0.775 | 158.040 fps |
+|Ascend310P3| 16          | ICDAR 2015 | Acc:0.775 | 152.316 fps |
+|Ascend310P3| 32          | ICDAR 2015 | Acc:0.775 | 152.485 fps |
+|Ascend310P3| 64          | ICDAR 2015 | Acc:0.775 | 153.007 fps |
