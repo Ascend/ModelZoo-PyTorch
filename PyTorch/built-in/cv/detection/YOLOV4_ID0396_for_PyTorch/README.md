@@ -59,6 +59,16 @@ YOLO是一个经典的物体检测网络，将物体检测作为回归问题求�
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。
 
+- 源码安装torchvision。
+
+  请使用源码编译安装torchvision，而非直接安装。
+  ```
+  git clone -b v0.9.1 https://github.com/pytorch/vision.git  # 以0.9.1版本为例，请根据torch版本选择对应的分支
+  cd vision
+  python setup.py bdist_wheel
+  pip3 install dist/*.whl
+  ```
+
 
 ## 准备数据集
 
