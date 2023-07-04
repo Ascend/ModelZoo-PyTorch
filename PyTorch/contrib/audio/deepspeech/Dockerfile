@@ -9,7 +9,7 @@ RUN apt-get install -y git curl ca-certificates bzip2 cmake tree htop bmon iotop
 
 # install warp-CTC
 ENV CUDA_HOME=/usr/local/cuda
-RUN git clone https://github.com/SeanNaren/warp-ctc.git
+RUN warp_ctc=`sed '/^warp_ctc=/!d;s/.*=//' url.ini` && git clone ${warp_ctc}
 RUN cd warp-ctc; mkdir build; cd build; cmake ..; make
 RUN cd warp-ctc; cd pytorch_binding; python setup.py install
 
@@ -18,7 +18,7 @@ RUN git clone --recursive https://github.com/parlance/ctcdecode.git
 RUN cd ctcdecode; pip install .
 
 # install apex
-RUN git clone --recursive https://github.com/NVIDIA/apex.git
+RUN apex=`sed '/^apex=/!d;s/.*=//' url.ini` && git clone --recursive ${apex}
 RUN cd apex; pip install .
 
 # install deepspeech.pytorch

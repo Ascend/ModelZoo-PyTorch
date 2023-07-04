@@ -24,7 +24,8 @@ elif [ -f "${PWD}/pretrained_models/fastpitch/nvidia_fastpitch_200518.pt" ]; the
   ln -s "${PWD}/pretrained_models/fastpitch/nvidia_fastpitch_200518.pt" "${CHECKPOINT_DIR}/nvidia_fastpitch_200518.pt"
 else
   echo "Downloading checkpoint ..."
-  wget --content-disposition https://api.ngc.nvidia.com/v2/models/nvidia/fastpitch_pyt_amp_ckpt_v1/versions/20.02.0/zip -O \
+  fastpitch_20_02=`sed '/^fastpitch_20_02=/!d;s/.*=//' url.ini`
+  wget --content-disposition ${fastpitch_20_02} -O \
     fastpitch_pyt_amp_ckpt_v1_20.02.0.zip || {
     echo "ERROR: Failed to download checkpoint from NGC"
     exit 1
@@ -47,7 +48,8 @@ elif [ -d "${PWD}/LJSpeech-1.1" ]; then
   ln -s "${PWD}/LJSpeech-1.1" "${DATASETS_DIR}/LJSpeech-1.1/LJSpeech-1.1_fastpitch"
 else
   echo "Downloading dataset ..."
-  wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2 ||
+  LJSpeech=`sed '/^LJSpeech=/!d;s/.*=//' url.ini`
+  wget ${LJSpeech} ||
     {
       echo "ERROR: Failed to download dataset from NGC"
       exit 1
@@ -60,4 +62,5 @@ else
 fi
 
 echo "Downloading cmudict-0.7b ..."
-wget https://github.com/Alexir/CMUdict/raw/master/cmudict-0.7b -qO cmudict/cmudict-0.7b
+cmudict=`sed '/^cmudict=/!d;s/.*=//' url.ini`
+wget ${cmudict} -qO cmudict/cmudict-0.7b

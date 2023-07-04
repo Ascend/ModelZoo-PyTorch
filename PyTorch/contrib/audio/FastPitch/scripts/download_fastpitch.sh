@@ -5,7 +5,8 @@ set -e
 : ${MODEL_DIR:="pretrained_models/fastpitch"}
 MODEL_ZIP="nvidia_fastpitch_210824.zip"
 MODEL="nvidia_fastpitch_210824.pt"
-MODEL_URL="https://api.ngc.nvidia.com/v2/models/nvidia/fastpitch_pyt_amp_ckpt_v1_1/versions/21.05.0/zip"
+fastpitch_21_05=`sed '/^fastpitch_21_05=/!d;s/.*=//' url.ini`
+MODEL_URL="${fastpitch_21_05}"
 
 mkdir -p "$MODEL_DIR"
 

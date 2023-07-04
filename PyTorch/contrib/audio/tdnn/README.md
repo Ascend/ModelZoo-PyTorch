@@ -399,3 +399,7 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
 |    Ascend310P       |    16   |   1800    |   Mini Librispeech         |     99.93%       |      1066.47fps           |
 |    Ascend310P       |    32   |   1800    |   Mini Librispeech         |     99.93%       |      1080.21fps           |
 |    Ascend310P       |    64   |   1800    |   Mini Librispeech         |     99.93%       |      1682.2fps           |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

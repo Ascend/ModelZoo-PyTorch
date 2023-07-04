@@ -1,0 +1,3 @@
+| 类型     | 开源代码地址                                                       | 文件名                                          | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明  |
+|--------|--------------------------------------------------------------|----------------------------------------------|------------------------|-------|
+| 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/SpeechSynthesis/Tacotron2/scripts/prepare_dataset.sh | Tacotron2_for_PyTorch/scripts/prepare_dataset.sh | http://data.keithito.com/data/speech/ | 下载数据集 |

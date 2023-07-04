@@ -5,7 +5,8 @@ set -e
 : ${MODEL_DIR:="pretrained_models/waveglow"}
 MODEL="nvidia_waveglow256pyt_fp16.pt"
 MODEL_ZIP="waveglow_ckpt_amp_256_20.01.0.zip"
-MODEL_URL="https://api.ngc.nvidia.com/v2/models/nvidia/waveglow_ckpt_amp_256/versions/20.01.0/zip"
+waveglow=`sed '/^waveglow=/!d;s/.*=//' url.ini`
+MODEL_URL="${waveglow}"
 
 mkdir -p "$MODEL_DIR"
 

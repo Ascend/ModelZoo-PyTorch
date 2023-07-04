@@ -20,11 +20,15 @@ import wget
 from deepspeech_pytorch.configs.inference_config import LMConfig
 from deepspeech_pytorch.enums import DecoderType
 from tests.smoke_test import DatasetConfig, DeepSpeechSmokeTest
-
+with open('../url.ini', 'r') as f:
+    content = f.read()
+    an4_pretrained_v2 = content.split('an4_pretrained_v2=')[1].split('\n')[0]
+    librispeech_pretrained_v2 = content.split('librispeech_pretrained_v2=')[1].split('\n')[0]
+    ted_pretrained_v2 = content.split('ted_pretrained_v2=')[1].split('\n')[0]
 pretrained_urls = [
-    'https://github.com/SeanNaren/deepspeech.pytorch/releases/latest/download/an4_pretrained_v2.pth',
-    'https://github.com/SeanNaren/deepspeech.pytorch/releases/latest/download/librispeech_pretrained_v2.pth',
-    'https://github.com/SeanNaren/deepspeech.pytorch/releases/latest/download/ted_pretrained_v2.pth'
+    an4_pretrained_v2,
+    librispeech_pretrained_v2,
+    ted_pretrained_v2
 ]
 
 lm_path = 'http://www.openslr.org/resources/11/3-gram.pruned.3e-7.arpa.gz'

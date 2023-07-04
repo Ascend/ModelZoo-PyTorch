@@ -6,7 +6,8 @@ scripts/download_cmudict.sh
 
 DATA_DIR="LJSpeech-1.1"
 LJS_ARCH="LJSpeech-1.1.tar.bz2"
-LJS_URL="http://data.keithito.com/data/speech/${LJS_ARCH}"
+speech=`sed '/^speech=/!d;s/.*=//' url.ini`
+LJS_URL="${speech}${LJS_ARCH}"
 
 if [ ! -d ${DATA_DIR} ]; then
   echo "Downloading ${LJS_ARCH} ..."

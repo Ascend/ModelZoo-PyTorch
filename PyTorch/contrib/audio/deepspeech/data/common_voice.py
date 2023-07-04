@@ -30,7 +30,11 @@ parser.add_argument("--tar-path", type=str, help="Path to the Common Voice *.tar
 parser.add_argument('--files-to-process', default="cv-valid-dev.csv,cv-valid-test.csv,cv-valid-train.csv",
                     type=str, help='list of *.csv file names to process')
 args = parser.parse_args()
-COMMON_VOICE_URL = "https://common-voice-data-download.s3.amazonaws.com/cv_corpus_v1.tar.gz"
+with open('../url.ini', 'r') as f:
+    content = f.read()
+    common_voice_url = content.split('common_voice_url=')[1].split('\n')[0]
+
+COMMON_VOICE_URL = common_voice_url
 
 
 def convert_to_wav(csv_file, target_dir):

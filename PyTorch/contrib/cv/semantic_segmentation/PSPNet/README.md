@@ -230,7 +230,9 @@ PSPNet，利用FCN中嵌入了不同场景的上下文特征。相比于FCN，�
 
 无。
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 

@@ -163,3 +163,6 @@ DeepSpeech2是一个建立在端到端深度学习之上，将大多数模块替
 
 无。
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

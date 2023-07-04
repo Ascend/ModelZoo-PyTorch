@@ -1,0 +1,20 @@
+| 类型     | 开源代码地址                                                       | 文件名                                          | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明  |
+|--------|--------------------------------------------------------------|----------------------------------------------|------------------------|-------|
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/an4.py | deepspeech/data/an4.py | https://github.com/SeanNaren/deepspeech.pytorch/releases/download/V3.0/an4.tar.gz | 下载数据集 |
+| 开发引入   | /                                                            | url.ini                                      | https://common-voice-data-download.s3.amazonaws.com/cv_corpus_v1.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/train-clean-100.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/train-clean-360.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/train-other-500.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/dev-clean.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/dev-other.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/test-clean.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/librispeech.py | deepspeech/data/librispeech.py | http://www.openslr.org/resources/12/test-other.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/ted.py | deepspeech/data/ted.py | http://www.openslr.org/resources/19/TEDLIUM_release2.tar.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/data/voxforge.py | deepspeech/data/voxforge.py | http://www.repository.voxforge1.org/downloads/SpeechCorpus/Trunk/Audio/Main/16kHz_16bit/ | 下载数据集 |
+| 开发引入 | /                                                            | url.ini | https://github.com/SeanNaren/warp-ctc.git | 下载三方库 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/Dockerfile | deepspeech/Dockerfile | https://github.com/parlance/ctcdecode.git | 下载三方库 |
+| 开发引入 | /                                                            | url.ini | https://github.com/NVIDIA/apex.git | 下载三方库 |
+| 开发引入 | /                                                            | url.ini | https://github.com/SeanNaren/deepspeech.pytorch/releases/latest/download/an4_pretrained_v2.pth | 下载权重文件 |
+| 开发引入 | /                                                            | url.ini | https://github.com/SeanNaren/deepspeech.pytorch/releases/latest/download/librispeech_pretrained_v2.pth | 下载权重文件 |
+| 开发引入 | /                                                            | url.ini | https://github.com/SeanNaren/deepspeech.pytorch/releases/latest/download/ted_pretrained_v2.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/SeanNaren/deepspeech.pytorch/blob/master/tests/pretrained_smoke_test.py | deepspeech/tests/pretrained_smoke_test.py | http://www.openslr.org/resources/11/3-gram.pruned.3e-7.arpa.gz | 下载数据集 |
