@@ -197,7 +197,7 @@ return session.request(method=method, url=url, verify=False, **kwargs)
 ```
 以及训练脚本中指定 **model_name_or_path** 为本地模型权重以及配置的路径。
 
-最后，修改 **site-packages/datasets/build.py**：
+最后，修改 **site-packages/datasets/builder.py**：
 
 ```python 
      version_data_dir = path_join(

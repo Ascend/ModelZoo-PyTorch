@@ -73,10 +73,6 @@ if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
         torch.npu.conv.allow_hf32 = False
         torch.npu.matmul.allow_hf32 = False
 torch.npu.set_compile_mode(jit_compile=False)
-option = {}
-option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Conv2DBackpropFilter,Conv2DBackpropInput,Conv2D"
-option["MM_BMM_ND_ENABLE"] = 'disable'
-torch.npu.set_option(option)
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.5.0")
