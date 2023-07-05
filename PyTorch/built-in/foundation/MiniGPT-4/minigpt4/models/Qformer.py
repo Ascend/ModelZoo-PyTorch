@@ -87,7 +87,7 @@ class BertEmbeddings(nn.Module):
         else:
             seq_length = 0
 
-        if position_ids is None:
+        if position_ids is None and seq_length != 0:
             position_ids = self.position_ids[
                 :, past_key_values_length : seq_length + past_key_values_length
             ].clone()

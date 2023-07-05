@@ -277,7 +277,7 @@ class RunnerBase:
 
     @property
     def cuda_enabled(self):
-        return self.device.type == "cuda"
+        return self.device.type == "npu"
 
     @property
     def max_epoch(self):

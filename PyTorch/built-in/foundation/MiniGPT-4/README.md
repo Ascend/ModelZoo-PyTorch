@@ -103,8 +103,8 @@ MiniGPT-4使用一个投影层将来自BLIP-2的冻结视觉编码器与冻结�
 
 1. 准备预训练的Vicuna权重
 
-   用户参照[链接](PrepareVicuna.md)自行获取模型文件，并放于model目录下，微调依赖该模型权重。
-   model参考目录如下
+   用户参照[链接](PrepareVicuna.md)自行获取模型文件，并放于自定义目录下，微调依赖该模型权重。
+   自定义参考目录如下
    ```
    vicuna_weights
    ├── config.json
@@ -112,7 +112,7 @@ MiniGPT-4使用一个投影层将来自BLIP-2的冻结视觉编码器与冻结�
    ├── pytorch_model.bin.index.json
    ├── pytorch_model-00001-of-00003.bin
    ```
-  
+  在配置文件[minigpt4.yaml](minigpt4/configs/models/minigpt4.yaml#L16)中修改vicuna权重所在的路径。
 2. 准备训练的MiniGPT-4检查点
 
    | Checkpoint Aligned with Vicuna 3B |  Checkpoint Aligned with Vicuna 7B  |
@@ -125,20 +125,26 @@ MiniGPT-4使用一个投影层将来自BLIP-2的冻结视觉编码器与冻结�
 
 # 开始训练
 
-## 预训练模型
+## 预训练
+
+   - 单机4卡预训练
+   
+      ```bash
+      bash test/pretrain_gpt_4p.sh
+      ```
+
+      要启动第一阶段预训练，请先在[laion/defaults.yaml](minigpt4/configs/datasets/laion/defaults.yaml)和[/cc_sbu/defaults.yaml](minigpt4/configs/datasets/cc_sbu/defaults.yaml)中指定预训练数据集路径。
 
 
-```bash
-torchrun --nproc-per-node NUM_GPU train.py --cfg-path train_configs/minigpt4_stage1_pretrain.yaml
-```
 
+## 微调
 
+   - 单机单卡微调
 
-## 第二阶段微调
-
-```bash
-torchrun --nproc-per-node NUM_GPU train.py --cfg-path train_configs/minigpt4_stage2_finetune.yaml
-```
+      ```bash
+      bash finetune_gpt_1p.sh
+      ```
+      要启动第二阶段微调对齐，请先1)在[minigpt4_stage2_finetune.yaml](minigpt4/configs/train_configs/minigpt4_stage2_finetune.yaml)中指定第1阶段预训练的检查点文件的路径；2)在[cc_sbu/align.yaml](minigpt4/configs/datasets/cc_sbu/align.yaml)中指定精调数据集路径。
 
 # 训练结果展示
 
@@ -156,6 +162,20 @@ torchrun --nproc-per-node NUM_GPU train.py --cfg-path train_configs/minigpt4_sta
 |:-------------:|:-------------:|:-:|:-:|:-:|
 | Finetune -GPU |     2805      | 200*2   | 12  | 1.11  | 
 | Finetune -NPU |     2433      | 240*2   | 10  | 1.11  | 
+
+# 在线演示
+1. 修改配置文件[minigpt4_eval.yaml](eval_configs/minigpt4_eval.yaml#L11)第11行，路径为微调好的权重所在路径。
+2. 运行脚本
+```bash
+python demo.py --cfg-path eval_configs/minigpt4_eval.yaml --gpu-id 0
+```
+3. 运行成功后，在服务器浏览器的输入URL链接：http://127.0.0.1:7860, 会加载UI界面。上传图像开始与MiniGPT-4聊天。
+4. 如需本地浏览器远程访问服务器，需要ssh进行端口映射：
+```bash
+ssh -L 6006:127.0.0.1:7860 yourname@server.ip
+```
+在本地浏览器输入URL链接：http://127.0.0.1:6006, 即可加载聊天界面。
+
 
 # 版本说明
 
