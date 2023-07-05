@@ -1,7 +1,8 @@
 # coding=utf-8
 # Copyright 2020 The Google AI Language Team Authors, Facebook AI Research authors and The HuggingFace Inc. team.
 # Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
-#
+# Copyright 2023 Huawei Technologies Co., Ltd
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -2575,9 +2576,7 @@ class GenerationMixin:
 
             # if eos_token was found in one sentence, set sentence to finished
             if eos_token_id_tensor is not None:
-                unfinished_sequences = unfinished_sequences.mul(
-                    next_tokens.tile(eos_token_id_tensor.shape[0], 1).ne(eos_token_id_tensor.unsqueeze(1)).prod(dim=0)
-                )
+                unfinished_sequences = unfinished_sequences.mul((sum(next_tokens != i for i in eos_token_id_tensor)).long())
 
             # stop when each sentence is finished, or if we exceed the maximum length
             if unfinished_sequences.max() == 0 or stopping_criteria(input_ids, scores):
@@ -3158,12 +3157,13 @@ class GenerationMixin:
             # Note: logits warpers are intentionally applied after adding running beam scores. On some logits warpers
             # (like top_p) this is indiferent, but on others (like temperature) it is not. For reference, see
             # https://github.com/huggingface/transformers/pull/5420#discussion_r449779867
-            next_token_scores = logits_warper(input_ids, next_token_scores)
+            device = next_token_scores.device
+            next_token_scores = logits_warper(input_ids, next_token_scores.cpu()).to(device=device)
 
             # Store scores, attentions and hidden_states when required
             if return_dict_in_generate:
                 if output_scores:
-                    scores += (logits_warper(input_ids, next_token_scores_processed),)
+                    scores += (logits_warper(input_ids, next_token_scores_processed.cpu()).to(device=device),)
                 if output_attentions:
                     decoder_attentions += (
                         (outputs.decoder_attentions,) if self.config.is_encoder_decoder else (outputs.attentions,)
@@ -3206,6 +3206,9 @@ class GenerationMixin:
             beam_scores = beam_outputs["next_beam_scores"]
             beam_next_tokens = beam_outputs["next_beam_tokens"]
             beam_idx = beam_outputs["next_beam_indices"]
+
+            if beam_scores.max() < -100:
+                beam_scores += -beam_scores.max()*0.9
 
             input_ids = torch.cat([input_ids[beam_idx, :], beam_next_tokens.unsqueeze(-1)], dim=-1)
 

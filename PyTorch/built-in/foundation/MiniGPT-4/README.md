@@ -64,6 +64,13 @@ MiniGPT-4使用一个投影层将来自BLIP-2的冻结视觉编码器与冻结�
   pip install -r requirements.txt  # PyTorch1.11版本
   ```
 
+- 替换transformers库中的相关文件。
+ 
+  将当前工程目录下的transformers_modify文件夹中的文件替换到transformers安装目录下的对应位置（基于transformers 4.28.0版本）：
+  ```
+  utils.py -> transformers/generation/utils.py
+  ```
+
 
 
 ## 准备数据集
