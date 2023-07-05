@@ -5,6 +5,8 @@ import random
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 import gradio as gr
 
 from minigpt4.common.config import Config
@@ -53,15 +55,15 @@ def setup_seeds(config):
 print('Initializing Chat')
 args = parse_args()
 cfg = Config(args)
-
+torch_npu.npu.set_device('npu:{}'.format(args.gpu_id))
 model_config = cfg.model_cfg
 model_config.device_8bit = args.gpu_id
 model_cls = registry.get_model_class(model_config.arch)
-model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
+model = model_cls.from_config(model_config).to('npu:{}'.format(args.gpu_id))
 
 vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
 vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
-chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
+chat = Chat(model, vis_processor, device='npu:{}'.format(args.gpu_id))
 print('Initialization Finished')
 
 # ========================================

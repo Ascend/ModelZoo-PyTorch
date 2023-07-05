@@ -1105,7 +1105,7 @@ class BertLMHeadModel(BertPreTrainedModel):
 
         # cut decoder_input_ids if past is used
         if past is not None:
-            input_ids = input_ids[:, -1:]
+            input_ids = input_ids.index_select(1, torch.tensor([input_ids.shape[-1] - 1], device=input_ids.device))
 
         return {
             "input_ids": input_ids,
