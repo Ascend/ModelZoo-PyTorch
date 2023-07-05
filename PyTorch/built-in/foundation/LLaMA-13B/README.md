@@ -1,334 +1,237 @@
-# FastChat
-An open platform for training, serving, and evaluating large language model based chatbots.
-
-## Release
-
-<p align="center">
-<a href="https://vicuna.lmsys.org"><img src="assets/vicuna_logo.jpeg" width="20%"></a>
-</p>
-
-- 🔥 We released **Vicuna: An Open-Source Chatbot Impressing GPT-4 with 90% ChatGPT Quality**. Checkout the blog [post](https://vicuna.lmsys.org) and [demo](https://chat.lmsys.org/).
-
-<a href="https://chat.lmsys.org"><img src="assets/demo_narrow.gif" width="70%"></a>
-
-Join our [Discord](https://discord.gg/h6kCZb72G7) server and follow our [Twitter](https://twitter.com/lmsysorg) to get the latest updates.
-
-## Contents
-- [Install](#install)
-- [Vicuna Weights](#vicuna-weights)
-- [Inference with Command Line Interface](#inference-with-command-line-interface)
-- [Serving with Web GUI](#serving-with-web-gui)
-- [API](#api)
-- [Evaluation](#evaluation)
-- [Fine-tuning](#fine-tuning)
-
-## Install
-
-### Method 1: With pip
-
-```bash
-pip3 install fschat
-```
-
-### Method 2: From source
-
-1. Clone this repository and navigate to the FastChat folder
-```bash
-git clone https://github.com/lm-sys/FastChat.git
-cd FastChat
-```
-
-If you are running on Mac:
-```bash
-brew install rust cmake
-```
-
-2. Install Package
-```bash
-pip3 install --upgrade pip  # enable PEP 660 support
-pip3 install -e .
-```
-
-## Vicuna Weights
-We release [Vicuna](https://vicuna.lmsys.org/) weights as delta weights to comply with the LLaMA model license.
-You can add our delta to the original LLaMA weights to obtain the Vicuna weights. Instructions:
-
-1. Get the original LLaMA weights in the huggingface format by following the instructions [here](https://huggingface.co/docs/transformers/main/model_doc/llama).
-2. Use the following scripts to get Vicuna weights by applying our delta. They will automatically download delta weights from our Hugging Face [account](https://huggingface.co/lmsys).
-
-**NOTE**:
-Weights v1.1 are only compatible with ```transformers>=4.28.0``` and ``fschat >= 0.2.0``.
-Please update your local packages accordingly. If you follow the above commands to do a fresh install, then you should get all the correct versions.
-
-### Vicuna-7B
-This conversion command needs around 30 GB of CPU RAM.
-See the "Low CPU Memory Conversion" section below if you do not have enough memory.
-```bash
-python3 -m fastchat.model.apply_delta \
-    --base /path/to/llama-7b \
-    --target /output/path/to/vicuna-7b \
-    --delta lmsys/vicuna-7b-delta-v1.1
-```
-
-### Vicuna-13B
-This conversion command needs around 60 GB of CPU RAM.
-See the "Low CPU Memory Conversion" section below if you do not have enough memory.
-```bash
-python3 -m fastchat.model.apply_delta \
-    --base /path/to/llama-13b \
-    --target /output/path/to/vicuna-13b \
-    --delta lmsys/vicuna-13b-delta-v1.1
-```
-
-### Old weights
-See [docs/weights_version.md](docs/weights_version.md) for all versions of weights and their differences.
-
-
-### Low CPU Memory Conversion
-You can try these methods to reduce the CPU RAM requirement of weight conversion.
-1. Append `--low-cpu-mem` to the commands above, which will split large weight files into smaller ones and use the disk as temporary storage. This can keep the peak memory at less than 16GB.
-2. Create a large swap file and rely on the operating system to automatically utilize the disk as virtual memory.
-
-## Inference with Command Line Interface
-
-(Experimental Feature: You can specify `--style rich` to enable rich text output and better text streaming quality for some non-ASCII content. This may not work properly on certain terminals.)
-
-<a href="https://chat.lmsys.org"><img src="assets/screenshot_cli.png" width="70%"></a>
-
-#### Single GPU
-The command below requires around 28GB of GPU memory for Vicuna-13B and 14GB of GPU memory for Vicuna-7B.
-See the "No Enough Memory" section below if you do not have enough memory.
-```
-python3 -m fastchat.serve.cli --model-path /path/to/vicuna/weights
-```
-
-#### Multiple GPUs
-You can use model parallelism to aggregate GPU memory from multiple GPUs on the same machine.
-```
-python3 -m fastchat.serve.cli --model-path /path/to/vicuna/weights --num-gpus 2
-```
-
-#### CPU Only
-This runs on the CPU only and does not require GPU. It requires around 60GB of CPU memory for Vicuna-13B and around 30GB of CPU memory for Vicuna-7B.
-```
-python3 -m fastchat.serve.cli --model-path /path/to/vicuna/weights --device cpu
-```
-
-#### Metal Backend (Mac Computers with Apple Silicon or AMD GPUs)
-Use `--device mps` to enable GPU acceleration on Mac computers (requires torch >= 2.0).
-Use `--load-8bit` to turn on 8-bit compression.
-```
-python3 -m fastchat.serve.cli --model-path /path/to/vicuna/weights --device mps --load-8bit
-```
-Vicuna-7B can run on a 32GB M1 Macbook with 1 - 2 words / second.
-
-
-#### No Enough Memory or Other Platforms
-If you do not have enough memory, you can enable 8-bit compression by adding `--load-8bit` to commands above.
-This can reduce memory usage by around half with slightly degraded model quality.
-It is compatible with the CPU, GPU, and Metal backend.
-Vicuna-13B with 8-bit compression can run on a single NVIDIA 3090/4080/V100(16GB) GPU.
-
-```
-python3 -m fastchat.serve.cli --model-path /path/to/vicuna/weights --load-8bit
-```
-
-Besides, we are actively exploring more methods to make the model easier to run on more platforms.
-Contributions and pull requests are welcome.
-
-## Serving with Web GUI
-
-<a href="https://chat.lmsys.org"><img src="assets/screenshot_gui.png" width="70%"></a>
-
-To serve using the web UI, you need three main components: web servers that interface with users, model workers that host one or more models, and a controller to coordinate the webserver and model workers. Here are the commands to follow in your terminal:
-
-#### Launch the controller
-```bash
-python3 -m fastchat.serve.controller
-```
-
-This controller manages the distributed workers.
-
-#### Launch the model worker
-```bash
-python3 -m fastchat.serve.model_worker --model-path /path/to/vicuna/weights
-```
-Wait until the process finishes loading the model and you see "Uvicorn running on ...". You can launch multiple model workers to serve multiple models concurrently. The model worker will connect to the controller automatically.
-
-To ensure that your model worker is connected to your controller properly, send a test message using the following command:
-```bash
-python3 -m fastchat.serve.test_message --model-name vicuna-13b
-```
-
-#### Launch the Gradio web server
-```bash
-python3 -m fastchat.serve.gradio_web_server
-```
-
-This is the user interface that users will interact with.
-
-By following these steps, you will be able to serve your models using the web UI. You can open your browser and chat with a model now.
-
-
-## API
-
-### Huggingface Generation APIs
-See [fastchat/serve/huggingface_api.py](fastchat/serve/huggingface_api.py)
-
-### OpenAI-compatible RESTful APIs & SDK
-
-(Experimental. We will keep improving the API and SDK.)
-
-#### Chat Completion
-
-Reference: https://platform.openai.com/docs/api-reference/chat/create
-
-Some features/compatibilities to be implemented:
-
-- [ ] streaming
-- [ ] support of some parameters like `top_p`, `presence_penalty`
-- [ ] proper error handling (e.g. model not found)
-- [ ] the return value in the client SDK could be used like a dict
-
-
-**RESTful API Server**
-
-First, launch the controller
-
-```bash
-python3 -m fastchat.serve.controller
-```
-
-Then, launch the model worker(s)
-
-```bash
-python3 -m fastchat.serve.model_worker --model-name 'vicuna-7b-v1.1' --model-path /path/to/vicuna/weights
-```
-
-Finally, launch the RESTful API server
-
-```bash
-export FASTCHAT_CONTROLLER_URL=http://localhost:21001
-python3 -m fastchat.serve.api --host localhost --port 8000
-```
-
-Test the API server
-
-```bash
-curl http://localhost:8000/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vicuna-7b-v1.1",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
-```
-
-**Client SDK**
-
-Assuming environment variable `FASTCHAT_BASEURL` is set to the API server URL (e.g., `http://localhost:8000`), you can use the following code to send a request to the API server:
-
-```python
-import os
-from fastchat import client
-
-client.set_baseurl(os.getenv("FASTCHAT_BASEURL"))
-
-completion = client.ChatCompletion.create(
-  model="vicuna-7b-v1.1",
-  messages=[
-    {"role": "user", "content": "Hello!"}
-  ]
-)
-
-print(completion.choices[0].message)
-```
-
-## Evaluation
-
-Our AI-enhanced evaluation pipeline is based on GPT-4. This section provides a high-level summary of the pipeline. For detailed instructions, please refer to the [evaluation](fastchat/eval) documentation.
-
-### Pipeline Steps
-
-1. Generate answers from different models: Use `qa_baseline_gpt35.py` for ChatGPT, or specify the model checkpoint and run `get_model_answer.py` for Vicuna and other models.
-
-2. Generate reviews with GPT-4: Use GPT-4 to generate reviews automatically. This step can also be performed manually if the GPT-4 API is not available to you.
-
-3. Generate visualization data: Run `generate_webpage_data_from_table.py` to generate data for a static website, which allows you to visualize the evaluation data.
-
-4. Visualize the data: Serve a static website under the `webpage` directory. You can use `python3 -m http.server` to serve the website locally.
-
-### Data Format and Contribution
-
-We use a data format encoded with JSON Lines for evaluation. The format includes information on models, prompts, reviewers, questions, answers, and reviews.
-
-You can customize the evaluation process or contribute to our project by accessing the relevant [data](fastchat/eval/table/).
-
-For detailed instructions, please refer to the [evaluation](fastchat/eval) documentation.
-
-## Fine-tuning
-### Data
-
-Vicuna is created by fine-tuning a LLaMA base model using approximately 70K user-shared conversations gathered from ShareGPT.com with public APIs. To ensure data quality, we convert the HTML back to markdown and filter out some inappropriate or low-quality samples. Additionally, we divide lengthy conversations into smaller segments that fit the model's maximum context length. For detailed instructions to clean the ShareGPT data, check out [here](docs/commands/data_cleaning.md).
-
-Due to some concerns, we may not release the ShareGPT dataset at the moment. If you would like to try the fine-tuning code, you can run it with some dummy questions in [dummy.json](playground/data/dummy.json). You can follow the same format and plug in your own data.
-
-### Code and Hyperparameters
-Our code is based on [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) with additional support for multi-round conversations.
-We use similar hyperparameters as the Stanford Alpaca.
-
-| Hyperparameter | Global Batch Size | Learning rate | Epochs | Max length | Weight decay |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Vicuna-13B | 128 | 2e-5 | 3 | 2048 | 0 |
-
-### Fine-tuning Vicuna-7B with Local GPUs
-You can use the following command to train Vicuna-7B with 4 x A100 (40GB).
-```bash
-torchrun --nproc_per_node=4 --master_port=20001 fastchat/train/train_mem.py \
-    --model_name_or_path ~/model_weights/llama-7b  \
-    --data_path playground/data/dummy.json \
-    --bf16 True \
-    --output_dir output \
-    --num_train_epochs 3 \
-    --per_device_train_batch_size 2 \
-    --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 16 \
-    --evaluation_strategy "no" \
-    --save_strategy "steps" \
-    --save_steps 1200 \
-    --save_total_limit 10 \
-    --learning_rate 2e-5 \
-    --weight_decay 0. \
-    --warmup_ratio 0.03 \
-    --lr_scheduler_type "cosine" \
-    --logging_steps 1 \
-    --fsdp "full_shard auto_wrap" \
-    --fsdp_transformer_layer_cls_to_wrap 'LlamaDecoderLayer' \
-    --tf32 True \
-    --model_max_length 2048 \
-    --gradient_checkpointing True \
-    --lazy_preprocess True
-```
-
-If you meet out-of-memory during model saving, see solutions [here](https://github.com/pytorch/pytorch/issues/98823).
-
-### Fine-tuning on Any Cloud with SkyPilot
-[SkyPilot](https://github.com/skypilot-org/skypilot) is a framework built by UC Berkeley for easily and cost effectively running ML workloads on any cloud (AWS, GCP, Azure, Lambda, etc.). 
-To use SkyPilot, install it with the following command and setup the cloud credentials locally following the instructions [here](https://skypilot.readthedocs.io/en/latest/getting-started/installation.html).
-```bash
-# Install skypilot from the master branch
-pip install git+https://github.com/skypilot-org/skypilot.git
-```
-#### Vicuna
-Vicuna can be trained on 8 A100 GPUs with 80GB memory. The following command will automatically launch a node satisfying the requirement, setup and run the training job on it.
-```bash
-sky launch -c vicuna -s scripts/train-vicuna.yaml --env WANDB_API_KEY
-```
-Other options are also valid:
-```bash
-# Launch it on managed spot to save 3x cost (train Vicuna-13B with around $300)
-sky spot launch -n vicuna scripts/train-vicuna.yaml --env WANDB_API_KEY
-
-# Train a 7B model
-sky launch -c vicuna -s scripts/train-vicuna.yaml --env WANDB_API_KEY --env MODEL_SIZE=7
-```
-Note: Please make sure the `WANDB_API_KEY` has been setup on your local machine. You can find the API key on your [wandb profile page](https://wandb.ai/authorize). If you would like to train the model without using wandb, you can replace the `--env WANDB_API_KEY` flag with `--env WANDB_MODE=offline`.
+# LLaMA-7B/13B for PyTorch
+
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
+
+
+
+# 概述
+
+## 简述
+
+LLaMA是由Meta AI发布的大语言系列模型，完整的名字是Large Language Model Meta 
+AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LLaMA-30B与LLaMA-65B。LLaMA
+模型的效果极好，LLaMA-13B在大多数基准测试中的表现都优于GPT-3（175B
+），且无需使用专门的数据集，只使用公开可用的数据集即可至训练至最优。本工程基于FastChat仓，主要聚焦于LLaMA-7B/13B模型。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/lm-sys/FastChat.git
+  commit_id=76f0424d1add61aadc8e5bdeed5ebe540f266ba3
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/foundation
+  ```
+  
+- 通过Git获取代码方法如下：
+
+  ```
+  git clone {url}       # 克隆仓库的代码
+  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
+  ```
+  
+- 通过单击“立即下载”，下载源码包。
+
+# 准备训练环境
+
+## 准备环境
+
+默认配置需要每张卡有60G以上空闲内存。
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
+
+  **表 1**  版本支持表
+
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------: |
+  | PyTorch 1.11 | deepspeed 0.6.0 |
+
+- 环境准备指导
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖（根据模型需求，按需添加所需依赖）。
+
+  ```
+  pip3 install --upgrade pip
+  pip3 install einops sympy regex decorator scipy setuptools scm prompt toolkit
+  ```
+- 编译安装fschat
+
+  在模型源码包根目录下执行命令，安装fachat库  
+  
+  ```
+  pip3 install -e.
+  ```
+
+- 安装deepspeed及对应deepspeed_npu插件
+  
+  ```
+  pip3 install deepspeed==0.6.0 
+  git clone https://gitee.com/ascend/DeepSpeed.git
+  cd DeepSpeed
+  python setup.py develop
+  ```
+  使用whereis命令查看deepspeed安装路径/path/to/deepspeed/bin/deepspeed
+  ，并将deepspeed_npu包导入  
+  
+  ```
+  import deepspeed_npu
+  ...
+  ```
+  
+- 替换transformers库中相关文件
+  
+  将当前工程目录下transformers_modify文件夹中的各个文件分别替换到transformers
+  安装目录下的对应位置（基于transformers 4.28.1版本）：
+  ```
+  training_args.py -> transformers/training_args.pu
+  trainer.py -> transformers/trainer.py
+  versions.py -> utils/versions.py
+  modeling_llama.py -? transformers/models/llama/modeling_llama.py
+  ```
+
+- 安装pdsh（多机训练需要）
+
+  deepspeed的多机训练需要安装pdsh，下载链接：https://github.com/chaos/pdsh/releases/download/pdsh-2.34/pdsh-2.34.tar.gz.
+
+  安装方法如下：
+  ```
+  chmod 777 configure
+  ./configure --with-ssh --build=arm-linux
+  make
+  make install
+  ```
+## 准备数据集
+
+1. 获取数据集
+
+   该任务以基于gpt3问答的数据集进行finetuning训练。
+
+   以alpaca-data-conversation数据集为例，数据集结构参考如下所示。
+
+   ```
+   [
+      {
+        "id": "1",
+        "conversations": [
+          {
+            "from": "human",
+            "value": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\nGive three tips for staying healthy.\n\n### Response:"
+          },
+          {
+            "from": "gpt",
+            "value": "1.Eat a balanced diet and make sure to include plenty of fruits and vegetables. \n2. Exercise regularly to keep your body active and strong. \n3. Get enough sleep and maintain a consistent sleep schedule."
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "conversations": [
+          {
+            "from": "human",
+            "value": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\nWhat are the three primary colors?\n\n### Response:"
+          },
+          {
+            "from": "gpt",
+            "value": "The three primary colors are red, blue, and yellow."
+          }
+        ]
+      },
+      ...
+   ```
+
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+
+2. 数据预处理（按需处理所需要的数据集）
+   
+   基于上述格式的数据集无需预处理即可训练，若为其他对话数据集，则需修改为上述格式。
+
+## 获取预训练模型
+
+请参考原始仓库上的README.md进行预训练模型获取。将获取的7B-vicuna/13B-vicuna预训练模型放至在工程源码根目录。
+
+# 开始训练
+
+## 训练模型
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机八卡训练和双机16卡训练。
+
+   - 单机八卡训练（LLaMA-7B）
+
+     ```
+     bash ./7B_finetune.sh    
+     ```
+
+   - 双机16卡训练
+
+     ```
+     bash ./13B_finetune.sh  
+     ```
+
+   模型训练脚本参数说明如下。
+
+   ```
+    --model_name_or_path                       // 预训练参数路径 
+    --data_path                                // 数据集路径 
+    --fp16                                     // 参数使用fp16保存
+    --num_train_epochs                         // 训练epoch数
+    --per_device_train_batch_size              // 每张卡上的训练batch size
+    --per_device_eval_batch_size               // 每张卡上的评估batch size
+    --gradient_accumulation_steps              // 梯度累积的步数
+    --evaluation_strategy                      // 评估策略
+    --save_strategy                            // ckpt保存策略
+    --save_steps                               // ckpt保存间隔步数
+    --save_total_limit                         // ckpt最大保存数量
+    --learning_rate                            // 学习率
+    --weight_decay                             // weight decay策略 
+    --warmup_ratio                             // warmup步数的比例
+    --lr_scheduler_type                        // 学习率衰减方式
+    --logging_steps                            // 训练日志打印间隔步数
+    --tf32 False                               // 使用tf32训练，npu暂不支持  
+    --model_max_length                         // 模型训练的sequence length
+    --gradient_checkpointing                   // 是否开启重计算 
+    --deepspeed                                // deepspeed配置脚本路径
+   ```
+   
+   deepspeed参数说明如下。
+
+   ```
+    --fp16                                     // 混合精度训练相关配置 
+    --optimizer                                // 优化器相关配置
+    --zero_optimization                        // zero优化器相关配置
+    --gradient_accumulation_steps              // 梯度累积步数
+    --gradient_clipping                        // 梯度裁剪
+    --train_batch_size                         // 训练batch size
+    --train_micro_batch_size_per_gpu           // 训练micro batch size
+
+   ```
+   
+   训练完成后，权重文件保存在output_dir下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME    | Acc@1 | FPS(tokens/s/p) | Epochs | Zero_Type |
+|---------|-------|----------------:|--------|----------:|
+| 7B-竞品   | -     |            2452 | 3      |     zero1 |
+| 7B-NPU  | -     |            2990 | 3      |     zero1 |
+| 13B-竞品  | -     |            1386 | 3      |     zero2 |
+| 13B-NPU | -     |            1498 | 3      |     zero2 |
