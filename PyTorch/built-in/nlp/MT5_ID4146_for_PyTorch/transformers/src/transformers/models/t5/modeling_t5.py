@@ -253,7 +253,7 @@ class T5LayerNorm(nn.Module):
         # w/o mean and there is no bias. Additionally we want to make sure that the accumulation for
         # half-precision inputs is done in fp32
 
-        variance = torch.var(hidden_states.to(torch.float32), dim=-1, unbiased=False, keepdim=True)
+        variance = hidden_states.to(torch.float32).pow(2).mean(-1, keepdim=True)
         hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
 
         # convert into half-precision if necessary
