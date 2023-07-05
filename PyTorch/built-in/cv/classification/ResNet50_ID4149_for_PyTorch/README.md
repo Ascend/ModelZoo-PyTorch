@@ -133,7 +133,7 @@ ResNet是由微软研究院的Kaiming He等四名华人提出，是ImageNet竞�
      启动多机多卡训练。
 
      ```
-     bash ./test/train_cluster.sh --data_path==xxx --batch_size="xxx" --lr=="xxx" --train_epochs="xxx" --world_size="xxx" --node_rank="xxx" --master_addr="xxx"
+     bash ./test/train_cluster.sh --data_path=xxx --batch_size="xxx" --lr="xxx" --train_epochs="xxx" --world_size="xxx" --node_rank="xxx" --master_addr="xxx"
      ```
 
    --data_path参数填写数据集路径，需写到数据集的一级目录；
