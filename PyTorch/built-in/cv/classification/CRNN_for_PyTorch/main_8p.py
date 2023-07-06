@@ -47,7 +47,7 @@ except ImportError:
 def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
     parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
-    parser.add_argument('--npu', help='npu id', type=str)
+    parser.add_argument('--npu', help='npu id', type=int)
     parser.add_argument('--bin', type=ast.literal_eval, default=False, help='enable run time2.0 model')
     parser.add_argument('--pro', type=ast.literal_eval, default=False, help='enable control steps number')
     parser.add_argument('--training_debug', type=ast.literal_eval,
@@ -101,7 +101,7 @@ def main():
     if config.DISTRIBUTED.MULTIPROCESSING_DISTRIBUTED:
         # For multiprocessing distributed training, rank needs to be the
         # global rank among all the processes
-        config.DISTRIBUTED.RANK = config.DISTRIBUTED.RANK * npus_per_node + int(npu)
+        config.DISTRIBUTED.RANK = config.DISTRIBUTED.RANK * npus_per_node + npu
 
     print("rank:", config.DISTRIBUTED.RANK)
     distributed = config.DISTRIBUTED.WORLD_SIZE > 1 or config.DISTRIBUTED.MULTIPROCESSING_DISTRIBUTED
