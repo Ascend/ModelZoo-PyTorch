@@ -233,6 +233,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+可参考实现
+https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/albert
 
 ## 获取源码<a name="section4622531142816"></a>
 
