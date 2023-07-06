@@ -221,14 +221,15 @@ CRNN (Convolutional Recurrent Neural Network) 于2015年由华中科技大学的
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 
-
+具体实现可参考实现https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_BuiltIn_for_Pytorch
+进入infer路径获取推理文件
 
 1. 安装依赖。
 
    ```
+   cd infer
    pip3 install -r requirments.txt
    ```
-
 
 ## 准备数据集<a name="section183221994411"></a>
 
