@@ -199,7 +199,7 @@ class CommonConfig(FairseqDataclass):
         },
     )
     amp_init_scale: int = field(
-        default=2**7, metadata={"help": "default AMP loss scale"}
+        default=8, metadata={"help": "default AMP loss scale"}
     )
     amp_scale_window: Optional[int] = field(
         default=None,
