@@ -733,11 +733,12 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
     ):
         if past_key_values:
             input_ids = input_ids[:, -1:]
+            input_ids = input_ids.index_select(1, torch.tensor([input_ids.shape[-1] - 1], device=input_ids.device))
 
         position_ids = kwargs.get("position_ids", None)
         if attention_mask is not None and position_ids is None:
             # create position_ids on the fly for batch generation
-            position_ids = attention_mask.long().cumsum(-1) - 1
+            position_ids = attention_mask.int().cumsum(-1) - 1
             position_ids.masked_fill_(attention_mask == 0, 1)
             if past_key_values:
                 position_ids = position_ids[:, -1].unsqueeze(-1)
