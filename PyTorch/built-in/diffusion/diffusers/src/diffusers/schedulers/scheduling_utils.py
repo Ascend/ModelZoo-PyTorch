@@ -145,7 +145,21 @@ class SchedulerMixin:
             **kwargs,
         )
         return cls.from_config(config, return_unused_kwargs=return_unused_kwargs, **kwargs)
-
+        
+        
+    def to(self,
+           torch_device: Optional[Union[str,torch.device]],
+           torch_dtype: Optional[Union[str,torch.dtype]],
+           ):
+        '''
+        Rewrite method to to suit NPU device, because torch.Generator Now in PT1.8 and PT1.11 are not support, 
+        so it can only run on cpu device. The result need to be cast to npu device to avoid errors
+        '''
+        for name, value in self.__dict__.items():
+            if isinstance(value, torch.Tensor):
+                self.__dict__[name] = value.to(torch_device, torch_dtype)
+        
+    
     def save_pretrained(self, save_directory: Union[str, os.PathLike], push_to_hub: bool = False, **kwargs):
         """
         Save a scheduler configuration object to the directory `save_directory`, so that it can be re-loaded using the

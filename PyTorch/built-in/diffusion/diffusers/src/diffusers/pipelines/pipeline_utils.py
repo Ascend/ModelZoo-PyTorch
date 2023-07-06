@@ -694,6 +694,7 @@ class DiffusionPipeline(ConfigMixin):
                     " support for`float16` operations on this device in PyTorch. Please, remove the"
                     " `torch_dtype=torch.float16` argument, or use another device for inference."
                 )
+        self.scheduler.to(torch_device, torch_dtype)
         return self
 
     @property
