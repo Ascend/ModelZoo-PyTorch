@@ -52,7 +52,8 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
 
   在模型源码包根目录下执行以下命令。
   ```bash
-  pip3.7 install -e ./ 
+  pip3 install sympy sacremoses
+  pip3 install -e ./
   ```
 
 
@@ -185,14 +186,17 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
 
 # 公网地址说明
 
-代码涉及公网地址参考 public_address_statement.md
+  代码涉及公网地址参考 public_address_statement.md
 
 # 版本说明
 
 ## 变更
 
-2023.6.9：首次发布。
+  2023.6.9：首次发布。
 
 ## FAQ
 
-无。
+  如遇到docker内运行不打日志问题，需要添加环境变量
+  ```bash
+  export PYTHONUNBUFFERED=0
+  ```

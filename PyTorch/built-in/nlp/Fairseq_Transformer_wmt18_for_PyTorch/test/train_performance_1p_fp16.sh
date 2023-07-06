@@ -96,7 +96,7 @@ nohup fairseq-train $data_path \
                     --max-tokens 4000 \
                     --disable-validation \
                     --no-save \
-                    --max-epoch 1 \
+                    --max-update 10000 \
                     > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
