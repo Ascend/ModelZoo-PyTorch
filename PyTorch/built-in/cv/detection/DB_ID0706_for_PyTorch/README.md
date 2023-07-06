@@ -256,6 +256,7 @@ DB(Differentiable Binarization)是一种使用可微分二值图来实时文字�
 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+可参考实现https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/DBNET
 
 ## 获取源码<a name="section4622531142816"></a>
 
