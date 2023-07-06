@@ -14,9 +14,9 @@
 
 import os
 import sys
-import multiprocessing
 from PIL import Image
 import numpy as np
+import multiprocessing
 
 
 normalization = {
@@ -70,8 +70,8 @@ def gen_input_bin(file_batches, batch):
         img.tofile(os.path.join(save_path, file.split('.')[0] + '.bin'))
 
 
-def preprocess(src_path_inp, save_path_inp):
-    files = os.listdir(src_path_inp)
+def preprocess(src_path, save_path):
+    files = os.listdir(src_path)
     file_batches = [
         files[i:i + 500] for i in range(0, 50000, 500) 
         if files[i:i + 500] != []

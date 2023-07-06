@@ -224,11 +224,13 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
 
 ----
 # 快速上手
-
+具体可参考实现https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/InceptionV3_for_Pytorch
+在infer_atc路径下获取推理文件
 ## 安装
 
 - 安装推理过程所需的依赖
     ```bash
+    cd infer_atc
     pip install -r requirements.txt
     ```
 
