@@ -20,15 +20,58 @@ out = sys.argv[2]
 
 g = OnnxGraph.parse(inp)
 
-g.remove('Shape_707')
-g.remove('Gather_709')
-g.remove('Unsqueeze_710')
-g.remove('Concat_712')
-g.remove('Cast_713')
-g.remove('ReduceMin_714')
-g.remove('Cast_715')
-g.remove('Unsqueeze_716')
+to_del_nodes = [
+	'NonMaxSuppression_683', 'Slice_688', 'Gather_690', 'Slice_695', 'Gather_697',
+	'Reshape_699', 'Shape_700', 'Gather_702', 'Mul_703', 'Add_704', 'Cast_705', 
+	'Gather_706', 'Shape_707', 'Gather_709', 'Unsqueeze_710', 'Concat_712', 
+	'Cast_713', 'ReduceMin_714', 'Cast_715', 'Unsqueeze_716', 'TopK_717', 
+	'Squeeze_719', 'Gather_720', 'Slice_725', 'Cast_726', 'Gather_727', 'Gather_729', 
+	'Unsqueeze_730', 'Gather_733', 'Unsqueeze_bboxes', 'Unsqueeze_scores'
+]
+for node_name in to_del_nodes:
+	g.remove(node_name, mapping={})
 
-topk = g['TopK_717']
-topk.inputs[1] = 'Constant_711'
+# =========================== add new nodes =============================
+new_node = g.add_node(
+	'Unsqueeze_new_0', 
+	'Unsqueeze',
+	outputs=['Unsqueeze_new_0_out_0'],
+	attrs={'axes': [2]}
+)
+g.insert_node('Concat_659', new_node, refer_index=0, mode='after')
+
+new_node = g.add_node(
+	'Transpose_new_0', 
+	'Transpose',
+	outputs=['Transpose_new_0_out_0'],
+	attrs={'perm': [0, 2, 1]}
+)
+g.insert_node('Slice_676', new_node, refer_index=0, mode='after')
+new_node = g.add_node(
+	'Cast_new_0', 
+	'Cast',
+	outputs=['Add_new_0_out_0'],
+	attrs={'to': 7}
+)
+g.insert_node('Add_labels', new_node, refer_index=0, mode='before')
+
+new_node = g.add_node(
+	'BatchMultiClassNMS_new_0', 
+	'BatchMultiClassNMS',
+	attrs=dict(
+		iou_threshold=0.5,
+	    max_size_per_class=200,
+	    max_total_size=200,
+	    score_threshold=0.05
+	)
+)
+g.connect_node(
+	new_node,
+	['Unsqueeze_new_0', 'Transpose_new_0'],
+	['bboxes', 'scores', 'Cast_new_0']
+)
+
+g.remove_unused_nodes()
+g.update_map()
+g.toposort()
 g.save(out)

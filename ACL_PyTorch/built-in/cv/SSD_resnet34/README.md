@@ -52,7 +52,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
   | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
-  | bboxes  | FLOAT32  | 1 x 4 x 200 | ND           |
+  | bboxes  | FLOAT32  | 1 x 200 x 4 | ND           |
   | labels  | INT64       | 1 x 200 | ND           |
   | scores | FLOAT32 | 1 x 200 | ND              |
 
@@ -172,14 +172,13 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
       3. 执行ATC命令。
 
          ```
-            atc --framework=5\ 
-                 --model=./resnet34modify-ssd1200.onnx\ 
-                 --output=./ssd_bs1\ 
-                 --input_format=NCHW\ 
-                 --input_shape="image:1,3,1200,1200"\ 
-                 --log=error\
-                 --soc_version=Ascend${ChipName}\
-                 --keep_dtype=execeptionlist.cfg
+            atc --framework=5 \ 
+                 --model=./resnet34modify-ssd1200.onnx \ 
+                 --output=./ssd_bs1 \ 
+                 --input_format=NCHW \ 
+                 --input_shape="image:1,3,1200,1200" \ 
+                 --log=error \
+                 --soc_version=Ascend${ChipName} 
          ```
 
          - 参数说明：
@@ -191,7 +190,6 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-           -   --keep_dtype:将算子保持fp32格式
 
         运行成功后生成ssd_bs1.om模型文件。
 
@@ -206,11 +204,11 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
         
     ```
-    python3 -m ais_bench --model ${om_path}/ssd_bs1.om\  
-                                  --input /path/to/ssd_npy/\ 
-                                  --output ./\ 
-                                  --batchsize 1\
-                                  --outfmt NPY\
+    python3 -m ais_bench --model ${om_path}/ssd_bs1.om \  
+                                  --input /path/to/ssd_npy/ \ 
+                                  --output ./ \ 
+                                  --batchsize 1 \
+                                  --outfmt NPY \
                                   --output_dirname result
                                   
     ```
@@ -270,4 +268,4 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
     | batchsize | 310P 性能 | 
     | ---- | ---- |
-    | 1 | 37|
+    | 1 | 44|
