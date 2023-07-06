@@ -83,8 +83,11 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   ，并将deepspeed_npu包导入  
   
   ```
+  vim /path/to/deepspeed/bin/deepspeed:
+  "
   import deepspeed_npu
   ...
+  "
   ```
   
 - 替换transformers库中相关文件
