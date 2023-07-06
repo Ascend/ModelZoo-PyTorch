@@ -2,7 +2,14 @@
 
 #当前路径,不需要修改
 cur_path=`pwd`
-
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
 #集合通信参数,不需要修改
 export HCCL_WHITELIST_DISABLE=1
 export RANK_SIZE=8
@@ -74,22 +81,22 @@ cd $cur_path
 echo "Device ID: $ASCEND_DEVICE_ID"
 export RANK_ID=$RANK_ID
 
-if [ -d $cur_path/output ];then
-   rm -rf $cur_path/output/*
-   mkdir -p $cur_path/output/$ASCEND_DEVICE_ID
+if [ -d $test_path_dir/output ];then
+   rm -rf $test_path_dir/output/*
+   mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 else
-   mkdir -p $cur_path/output/$ASCEND_DEVICE_ID
+   mkdir -p $test_path_dir/output/$ASCEND_DEVICE_ID
 fi
 wait
 
 #参数修改
-sed -i "487s|pass|break|g" ${cur_path}/../train/mobilenetv2_8p_main_anycard.py
+sed -i "487s|pass|break|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
 wait
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-python3 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
+python3 ${cur_path}/train/mobilenetv2_8p_main_anycard.py \
     --addr=$(hostname -I |awk '{print $1}') \
     --seed 49  \
     --workers 128 \
@@ -108,7 +115,7 @@ python3 ${cur_path}/../train/mobilenetv2_8p_main_anycard.py \
     --amp \
     --benchmark 0 \
     --graph_mode \
-    --data $data_path > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    --data $data_path > $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
@@ -116,13 +123,13 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 #参数改回
-sed -i "487s|break|pass|g" ${cur_path}/../train/mobilenetv2_8p_main_anycard.py
+sed -i "487s|break|pass|g" ${cur_path}/train/mobilenetv2_8p_main_anycard.py
 wait
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-FPS=`grep FPS ${cur_path}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
+FPS=`grep FPS ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk '{print $NF}'|awk '{sum+=$1} END {print  sum/NR}'`
 
 #打印，不需要修改
 echo "Final Performance images/sec : $FPS"
@@ -147,18 +154,18 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}'`
 
 #从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep Epoch $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F 'Loss' '{print $2}' |awk '{print $1}' > $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep Epoch $test_path_dir/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log|awk -F 'Loss' '{print $2}' |awk '{print $1}' > $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 #最后一个迭代loss值，不需要修改
-ActualLoss=`awk 'END {print}' $cur_path/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
+ActualLoss=`awk 'END {print}' $test_path_dir/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt`
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" > $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "CaseName = ${CaseName}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualFPS = ${ActualFPS}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainingTime = ${TrainingTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "Network = ${Network}" > $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >> $test_path_dir/output/$ASCEND_DEVICE_ID/${CaseName}.log
