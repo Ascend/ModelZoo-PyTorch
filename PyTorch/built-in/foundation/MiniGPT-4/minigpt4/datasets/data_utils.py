@@ -15,8 +15,8 @@ import random
 from typing import List
 from tqdm import tqdm
 
-import decord
-from decord import VideoReader
+#import decord
+#from decord import VideoReader
 import webdataset as wds
 import numpy as np
 import torch
@@ -26,7 +26,7 @@ from minigpt4.common.registry import registry
 from minigpt4.datasets.datasets.base_dataset import ConcatDataset
 
 
-decord.bridge.set_bridge("torch")
+#decord.bridge.set_bridge("torch")
 MAX_INT = registry.get("MAX_INT")
 
 

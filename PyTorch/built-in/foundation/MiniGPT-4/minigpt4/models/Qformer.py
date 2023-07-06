@@ -87,7 +87,7 @@ class BertEmbeddings(nn.Module):
         else:
             seq_length = 0
 
-        if position_ids is None:
+        if position_ids is None and seq_length != 0:
             position_ids = self.position_ids[
                 :, past_key_values_length : seq_length + past_key_values_length
             ].clone()
@@ -1105,7 +1105,7 @@ class BertLMHeadModel(BertPreTrainedModel):
 
         # cut decoder_input_ids if past is used
         if past is not None:
-            input_ids = input_ids[:, -1:]
+            input_ids = input_ids.index_select(1, torch.tensor([input_ids.shape[-1] - 1], device=input_ids.device))
 
         return {
             "input_ids": input_ids,

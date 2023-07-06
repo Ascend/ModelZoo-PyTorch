@@ -134,7 +134,7 @@ class RunnerBase:
 
         if amp:
             if self._scaler is None:
-                self._scaler = torch.cuda.amp.GradScaler()
+                self._scaler = torch.cuda.amp.GradScaler(dynamic=False)
 
         return self._scaler
 
@@ -277,7 +277,7 @@ class RunnerBase:
 
     @property
     def cuda_enabled(self):
-        return self.device.type == "cuda"
+        return self.device.type == "npu"
 
     @property
     def max_epoch(self):

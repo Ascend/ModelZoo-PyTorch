@@ -12,6 +12,8 @@ import random
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 
 import minigpt4.tasks as tasks
 from minigpt4.common.config import Config
@@ -100,4 +102,5 @@ def main():
 
 
 if __name__ == "__main__":
+    torch.npu.set_compile_mode(jit_compile=False)
     main()

@@ -1,170 +1,202 @@
-# MiniGPT-4: Enhancing Vision-language Understanding with Advanced Large Language Models
-[Deyao Zhu](https://tsutikgiau.github.io/)* (On Job Market!), [Jun Chen](https://junchen14.github.io/)* (On Job Market!), [Xiaoqian Shen](https://xiaoqian-shen.github.io), [Xiang Li](https://xiangli.ac.cn), and [Mohamed Elhoseiny](https://www.mohamed-elhoseiny.com/). *Equal Contribution
+# MiniGPT-4 for PyTorch
 
-**King Abdullah University of Science and Technology**
-
-<a href='https://minigpt-4.github.io'><img src='https://img.shields.io/badge/Project-Page-Green'></a>  <a href='https://arxiv.org/abs/2304.10592'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a> <a href='https://huggingface.co/spaces/Vision-CAIR/minigpt4'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue'></a> <a href='https://huggingface.co/Vision-CAIR/MiniGPT-4'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-blue'></a> [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1OK4kYsZphwt5DXchKkzMBjYF6jnkqh4R?usp=sharing) [![YouTube](https://badges.aleen42.com/src/youtube.svg)](https://www.youtube.com/watch?v=__tftoxpBAw&feature=youtu.be)
-
-
-## News
-We now provide a pretrained MiniGPT-4 aligned with Vicuna-7B! The demo GPU memory consumption now can be as low as 12GB.
-
-
-## Online Demo
-
-Click the image to chat with MiniGPT-4 around your images
-[![demo](figs/online_demo.png)](https://minigpt-4.github.io)
-
-
-## Examples
-  |   |   |
-:-------------------------:|:-------------------------:
-![find wild](figs/examples/wop_2.png) |  ![write story](figs/examples/ad_2.png)
-![solve problem](figs/examples/fix_1.png)  |  ![write Poem](figs/examples/rhyme_1.png)
-
-More examples can be found in the [project page](https://minigpt-4.github.io).
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
 
 
-## Introduction
-- MiniGPT-4 aligns a frozen visual encoder from BLIP-2 with a frozen LLM, Vicuna, using just one projection layer. 
-- We train MiniGPT-4 with two stages. The first traditional pretraining stage is trained using roughly 5 million aligned image-text pairs in 10 hours using 4 A100s. After the first stage, Vicuna is able to understand the image. But the generation ability of Vicuna is heavilly impacted.
-- To address this issue and improve usability, we propose a novel way to create high-quality image-text pairs by the model itself and ChatGPT together. Based on this, we then create a small (3500 pairs in total) yet high-quality dataset.
-- The second finetuning stage is trained on this dataset in a conversation template to significantly improve its generation reliability and overall usability. To our surprise, this stage is computationally efficient and takes only around 7 minutes with a single A100.
-- MiniGPT-4 yields many emerging vision-language capabilities similar to those demonstrated in GPT-4. 
+# 概述
+
+## 简述
+
+MiniGPT-4使用一个投影层将来自BLIP-2的冻结视觉编码器与冻结的LLM Vicuna对齐。通过两个阶段来训练MiniGPT-4，先是用500万图文对训练，然后再用一个3500对高质量数据集训练。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/Vision-CAIR/MiniGPT-4
+  commit_id=22d8888ca2cf0aac862f537e7d22ef5830036808
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/foundation
+  ```
 
 
-![overview](figs/overview.png)
+# 准备训练环境
 
+## 准备环境
 
-## Getting Started
-### Installation
+- 当前模型支持的PyTorch如下表所示。
 
-**1. Prepare the code and the environment**
+  **表 1**  版本支持表
 
-Git clone our repository, creating a python environment and ativate it via the following command
+  | 配套       | 版本                                 |
+  | :--------: | :------------: |
+  | PyTorch    | [1.11.0](https://gitee.com/ascend/pytorch/tree/v1.11.0/) |
+  
+- 环境准备指导。
 
-```bash
-git clone https://github.com/Vision-CAIR/MiniGPT-4.git
-cd MiniGPT-4
-conda env create -f environment.yml
-conda activate minigpt4
-```
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖。
 
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
 
-**2. Prepare the pretrained Vicuna weights**
+  ```
+  pip install -r requirements.txt  # PyTorch1.11版本
+  ```
 
-The current version of MiniGPT-4 is built on the v0 versoin of Vicuna-13B.
-Please refer to our instruction [here](PrepareVicuna.md) 
-to prepare the Vicuna weights.
-The final weights would be in a single folder in a structure similar to the following:
-
-```
-vicuna_weights
-├── config.json
-├── generation_config.json
-├── pytorch_model.bin.index.json
-├── pytorch_model-00001-of-00003.bin
-...   
-```
-
-Then, set the path to the vicuna weight in the model config file 
-[here](minigpt4/configs/models/minigpt4.yaml#L16) at Line 16.
-
-**3. Prepare the pretrained MiniGPT-4 checkpoint**
-
-Download the pretrained checkpoints according to the Vicuna model you prepare.
-
-|                                Checkpoint Aligned with Vicuna 13B                                |                               Checkpoint Aligned with Vicuna 7B                                |
-:------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------:
- [Downlad](https://drive.google.com/file/d/1a4zLvaiDBr-36pasffmgpvH5P7CKmpze/view?usp=share_link) | [Download](https://drive.google.com/file/d/1RY9jV0dyqLX-o38LrumkKRh6Jtaop58R/view?usp=sharing) 
-
-
-Then, set the path to the pretrained checkpoint in the evaluation config file 
-in [eval_configs/minigpt4_eval.yaml](eval_configs/minigpt4_eval.yaml#L10) at Line 11. 
+- 替换transformers库中的相关文件。
+ 
+  将当前工程目录下的transformers_modify文件夹中的文件替换到transformers安装目录下的对应位置（基于transformers 4.28.0版本）：
+  ```
+  utils.py -> transformers/generation/utils.py
+  ```
 
 
 
-### Launching Demo Locally
+## 准备数据集
 
-Try out our demo [demo.py](demo.py) on your local machine by running
+1. 获取预训练数据集。
 
-```
-python demo.py --cfg-path eval_configs/minigpt4_eval.yaml  --gpu-id 0
-```
+   要下载和准备Laion和CC数据集，请查看[第一阶段数据集准备说明](dataset/README_1_STAGE.md)。
+   数据集参考目录如下:
+   ```
+   laion_dataset
+   ├── 00000.parquet
+   ├── 00000_stats.json
+   ├── 00000.tar
+   ├── ...
+   
+   cc_sbu_dataset
+   ├── 00000.parquet
+   ├── 00000_stats.json
+   ├── 00000.tar
+   ├── ...
+   ```
 
-To save GPU memory, Vicuna loads as 8 bit by default, with a beam search width of 1. 
-This configuration requires about 23G GPU memory for Vicuna 13B and 11.5G GPU memory for Vicuna 7B. 
-For more powerful GPUs, you can run the model
-in 16 bit by setting low_resource to False in the config file 
-[minigpt4_eval.yaml](eval_configs/minigpt4_eval.yaml) and use a larger beam search width.
+2. 获取微调数据集
 
-Thanks [@WangRongsheng](https://github.com/WangRongsheng), you can also run our code on [Colab](https://colab.research.google.com/drive/1OK4kYsZphwt5DXchKkzMBjYF6jnkqh4R?usp=sharing)
+   要下载和准备小型高质量图像文本对数据集，请查看[第二阶段数据集准备说明](dataset/README_2_STAGE.md)。
+   数据集参考目录如下:
+   ```
+   cc_sbu_align
+   ├── filter_cap.json
+   ├── image
+      ├── 0.jpg
+      ├── ...
+   
+   ```
 
+## 准备模型权重
 
-### Training
-The training of MiniGPT-4 contains two alignment stages.
+1. 准备预训练的Vicuna权重
 
-**1. First pretraining stage**
+   用户参照[链接](PrepareVicuna.md)自行获取模型文件，并放于自定义目录下，微调依赖该模型权重。
+   自定义参考目录如下:
+   ```
+   vicuna_weights
+   ├── config.json
+   ├── generation_config.json
+   ├── pytorch_model.bin.index.json
+   ├── pytorch_model-00001-of-00003.bin
+   ```
 
-In the first pretrained stage, the model is trained using image-text pairs from Laion and CC datasets
-to align the vision and language model. To download and prepare the datasets, please check 
-our [first stage dataset preparation instruction](dataset/README_1_STAGE.md). 
-After the first stage, the visual features are mapped and can be understood by the language
-model.
-To launch the first stage training, run the following command. In our experiments, we use 4 A100. 
-You can change the save path in the config file 
-[train_configs/minigpt4_stage1_pretrain.yaml](train_configs/minigpt4_stage1_pretrain.yaml)
+    在配置文件[minigpt4.yaml](minigpt4/configs/models/minigpt4.yaml#L16)中修改vicuna权重所在的路径。
 
-```bash
-torchrun --nproc-per-node NUM_GPU train.py --cfg-path train_configs/minigpt4_stage1_pretrain.yaml
-```
+2. 准备训练的MiniGPT-4检查点:
 
-A MiniGPT-4 checkpoint with only stage one training can be downloaded 
-[here (13B)](https://drive.google.com/file/d/1u9FRRBB3VovP1HxCAlpD9Lw4t4P6-Yq8/view?usp=share_link) or [here (7B)](https://drive.google.com/file/d/1HihQtCEXUyBM1i9DQbaK934wW3TZi-h5/view?usp=share_link).
-Compared to the model after stage two, this checkpoint generate incomplete and repeated sentences frequently.
+   | Checkpoint Aligned with Vicuna 3B |  Checkpoint Aligned with Vicuna 7B  |
+   :-------------:|:-------------:
+   [链接](https://drive.google.com/file/d/1a4zLvaiDBr-36pasffmgpvH5P7CKmpze/view?usp=share_link) | [链接](https://drive.google.com/file/d/1RY9jV0dyqLX-o38LrumkKRh6Jtaop58R/view?usp=sharing) 
 
+   然后，在评估配置文件[minigpt4_eval.yaml](eval_configs/minigpt4_eval.yaml#L10)的第11行中设置预训练检查点的路径。
 
-**2. Second finetuning stage**
+3. 准备只有第一阶段训练的MiniGPT-4检查点[链接](https://drive.google.com/file/d/1u9FRRBB3VovP1HxCAlpD9Lw4t4P6-Yq8/view?usp=share_link)。
 
-In the second stage, we use a small high quality image-text pair dataset created by ourselves
-and convert it to a conversation format to further align MiniGPT-4.
-To download and prepare our second stage dataset, please check our 
-[second stage dataset preparation instruction](dataset/README_2_STAGE.md).
-To launch the second stage alignment, 
-first specify the path to the checkpoint file trained in stage 1 in 
-[train_configs/minigpt4_stage1_pretrain.yaml](train_configs/minigpt4_stage2_finetune.yaml).
-You can also specify the output path there. 
-Then, run the following command. In our experiments, we use 1 A100.
+# 开始训练
+  进入解压后的源码包根目录。
 
-```bash
-torchrun --nproc-per-node NUM_GPU train.py --cfg-path train_configs/minigpt4_stage2_finetune.yaml
-```
+  ```bash
+  cd /${模型文件夹名称}
+  ``` 
 
-After the second stage alignment, MiniGPT-4 is able to talk about the image coherently and user-friendly. 
-
-
-
-
-## Acknowledgement
-
-+ [BLIP2](https://huggingface.co/docs/transformers/main/model_doc/blip-2) The model architecture of MiniGPT-4 follows BLIP-2. Don't forget to check this great open-source work if you don't know it before!
-+ [Lavis](https://github.com/salesforce/LAVIS) This repository is built upon Lavis!
-+ [Vicuna](https://github.com/lm-sys/FastChat) The fantastic language ability of Vicuna with only 13B parameters is just amazing. And it is open-source!
-
-
-If you're using MiniGPT-4 in your research or applications, please cite using this BibTeX:
-```bibtex
-@article{zhu2023minigpt,
-  title={MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models},
-  author={Zhu, Deyao and Chen, Jun and Shen, Xiaoqian and Li, Xiang and Elhoseiny, Mohamed},
-  journal={arXiv preprint arXiv:2304.10592},
-  year={2023}
-}
-```
+## 预训练
 
 
-## License
-This repository is under [BSD 3-Clause License](LICENSE.md).
-Many codes are based on [Lavis](https://github.com/salesforce/LAVIS) with 
-BSD 3-Clause License [here](LICENSE_Lavis.md).
+   - 单机4卡预训练
+   
+      ```bash
+      bash test/pretrain_gpt_4p.sh
+      ```
+
+      要启动第一阶段预训练，请先在[laion/defaults.yaml](minigpt4/configs/datasets/laion/defaults.yaml)和[/cc_sbu/defaults.yaml](minigpt4/configs/datasets/cc_sbu/defaults.yaml)中指定预训练数据集路径。
+
+
+
+## 微调
+
+   - 单机单卡微调
+
+      ```bash
+      bash test/finetune_gpt_1p.sh
+      ```
+      要启动第二阶段微调对齐，请先在[minigpt4_stage2_finetune.yaml](train_configs/minigpt4_stage2_finetune.yaml)和[cc_sbu/align.yaml](minigpt4/configs/datasets/cc_sbu/align.yaml)中分别指定第1阶段预训练的检查点文件的路径和精调数据集路径。
+
+## 在线演示
+
+1. 修改配置文件[minigpt4_eval.yaml](eval_configs/minigpt4_eval.yaml#L11)第11行，路径为微调好的权重所在路径。
+
+2. 在线演示：
+    
+    ```bash
+    python demo.py --cfg-path eval_configs/minigpt4_eval.yaml --gpu-id 0
+    ```
+  
+3. 运行成功后，在服务器浏览器的输入URL链接：http://127.0.0.1:7860, 会加载UI界面。上传图像开始与MiniGPT-4聊天。
+
+4. 如需本地浏览器远程访问服务器，需要ssh进行端口映射：
+
+    ```bash
+    ssh -L 6006:127.0.0.1:7860 yourname@server.ip
+    ```
+
+    在本地浏览器输入URL链接：http://127.0.0.1:6006, 即可加载聊天界面。
+
+
+
+# 训练结果展示
+
+**表 1**  预训练结果展示表
+
+
+|     NAME      | TokensPerSec | Iterations  | BatchSize  | Torch_Version | 
+|:-------------:|:-------------:|:-:|:-:|:-:|
+| Pretrain -竞品A |     8866      | 5000*4   | 64  | 1.11  | 
+| Pretrain -NPU |     7517      | 8000*4   | 40  | 1.11  | 
+
+
+**表 2**  微调结果展示表
+|     NAME      | TokensPerSec | Iterations  | BatchSize  | Torch_Version | 
+|:-------------:|:-------------:|:-:|:-:|:-:|
+| Finetune -竞品A |     2805      | 200*2   | 12  | 1.11  | 
+| Finetune -NPU |     2433      | 240*2   | 10  | 1.11  | 
+
+
+
+# 版本说明
+
+## 变更
+
+2023.7.05：首次发布。
+
+## FAQ
+
+无。
