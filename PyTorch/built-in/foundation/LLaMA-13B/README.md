@@ -30,15 +30,6 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/foundation
   ```
-  
-- 通过Git获取代码方法如下：
-
-  ```
-  git clone {url}       # 克隆仓库的代码
-  cd {code_path}        # 切换到模型代码所在路径，若仓库下只有该模型，则无需切换
-  ```
-  
-- 通过单击“立即下载”，下载源码包。
 
 # 准备训练环境
 
@@ -57,7 +48,9 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-- 安装依赖（根据模型需求，按需添加所需依赖）。
+- 安装依赖
+
+  在模型源码包根目录下执行以下命令，安装依赖。
 
   ```
   pip3 install --upgrade pip
@@ -65,13 +58,15 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   ```
 - 编译安装fschat
 
-  在模型源码包根目录下执行命令，安装fachat库  
+  在模型源码包根目录下执行命令，安装fachat库。
   
   ```
   pip3 install -e.
   ```
 
-- 安装deepspeed及对应deepspeed_npu插件
+- 安装deepspeed及对应deepspeed_npu插件。
+  
+  在模型源码包根目录下执行以下命令，安装deepspeed。
   
   ```
   pip3 install deepspeed==0.6.0 
@@ -80,19 +75,23 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   python setup.py develop
   ```
   使用whereis命令查看deepspeed安装路径/path/to/deepspeed/bin/deepspeed
-  ，并将deepspeed_npu包导入  
+  ，并将deepspeed_npu包导入。  
+
+  打开"/path/to/deepspeed/bin/deepspeed"文件。
   
   ```
-  vim /path/to/deepspeed/bin/deepspeed:
-  "
+  vim /path/to/deepspeed/bin/deepspeed
+  ```
+  按“i”进入编辑模式，在“/path/to/deepspeed/bin/deepspeed”中增加以下内容。
+  ```
   import deepspeed_npu
-  ...
-  "
-  ```
   
+  ```
+  按“ESC”键，输入:wq!，按“Enter”保存并退出编辑。
+
 - 替换transformers库中相关文件
   
-  将当前工程目录下transformers_modify文件夹中的各个文件分别替换到transformers
+  将源码包根目录下transformers_modify文件夹中的各个文件分别替换到transformers
   安装目录下的对应位置（基于transformers 4.28.1版本）：
   ```
   training_args.py -> transformers/training_args.pu
@@ -154,13 +153,13 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
 
-2. 数据预处理（按需处理所需要的数据集）
+2. 数据预处理
    
    基于上述格式的数据集无需预处理即可训练，若为其他对话数据集，则需修改为上述格式。
 
 ## 获取预训练模型
 
-请参考原始仓库上的README.md进行预训练模型获取。将获取的7B-vicuna/13B-vicuna预训练模型放至在工程源码根目录。
+请参考原始仓库上的[README.md](https://github.com/lm-sys/FastChat/blob/76f0424d1add61aadc8e5bdeed5ebe540f266ba3/README.md)进行预训练模型获取。将获取的7B-vicuna/13B-vicuna预训练模型放至源码包根目录下。
 
 # 开始训练
 
@@ -174,7 +173,8 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
 2. 运行训练脚本。
 
-   该模型支持单机八卡训练和双机16卡训练。
+   该模型支持单机8卡训练和双机16卡训练。
+   - 将数据集置于源码包根目录下playground/data文件夹内（若路径不存在请用户自行创建）。
 
    - 单机八卡训练（LLaMA-7B）
 
@@ -182,7 +182,7 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
      bash ./7B_finetune.sh    
      ```
 
-   - 双机16卡训练
+   - 双机16卡训练（LLaMA-13B）
 
      ```
      bash ./13B_finetune.sh  
@@ -234,7 +234,17 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
 | NAME    | Acc@1 | FPS(tokens/s/p) | Epochs | Zero_Type |
 |---------|-------|----------------:|--------|----------:|
-| 7B-竞品   | -     |            2452 | 3      |     zero1 |
+| 7B-竞品A   | -     |            2452 | 3      |     zero1 |
 | 7B-NPU  | -     |            2990 | 3      |     zero1 |
-| 13B-竞品  | -     |            1386 | 3      |     zero2 |
+| 13B-竞品A  | -     |            1386 | 3      |     zero2 |
 | 13B-NPU | -     |            1498 | 3      |     zero2 |
+
+# 版本说明
+
+## 变更
+
+2023.07.05 首次发布。
+
+## FAQ
+
+无。
