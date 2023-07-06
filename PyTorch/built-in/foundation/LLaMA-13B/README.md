@@ -95,7 +95,7 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   training_args.py -> transformers/training_args.pu
   trainer.py -> transformers/trainer.py
   versions.py -> utils/versions.py
-  modeling_llama.py -? transformers/models/llama/modeling_llama.py
+  modeling_llama.py -> transformers/models/llama/modeling_llama.py
   ```
 
 - 安装pdsh（多机训练需要）
