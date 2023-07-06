@@ -192,6 +192,20 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
   --data\_path 参数填写数据集路径，需写到数据集的一级目录。   
 
 
+  - 在线推理  
+    启动在线推理。
+ 
+    ```
+    bash ./test/train_eval_1p.sh --data_path=real_data_path --device_id=xxx --checkpoint=real_checkpoint_path
+    ```
+
+    ```
+      --data_path： 数据集路径
+      --device_id：  在线推理时所使用的device_id
+      --checkpoint:  权重文件目录
+   ```
+       
+
 
    模型训练脚本参数说明如下。
 

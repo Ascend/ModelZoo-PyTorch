@@ -2470,8 +2470,11 @@ class Trainer:
         # Will be useful when we have an iterable dataset so don't know its length.
 
         observed_num_examples = 0
+        time_sum = 0
+        batch_num = 0
         # Main evaluation loop
         for step, inputs in enumerate(dataloader):
+            start = time.time()
             # Update the observed num examples
             observed_batch_size = find_batch_size(inputs)
             if observed_batch_size is not None:
@@ -2521,6 +2524,13 @@ class Trainer:
 
                 # Set back to None to begin a new accumulation
                 losses_host, preds_host, labels_host = [], [], []
+            if step > 20:
+                cost = time.time() - start
+                time_sum += cost
+                batch_num += 1
+                start = time.time()
+        print("batch_num", batch_num)
+        print("Time:", time_sum / batch_num)
 
         if args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop

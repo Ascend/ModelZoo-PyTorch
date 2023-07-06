@@ -1,0 +1,142 @@
+#!/bin/bash
+cur_path=`pwd`
+#集合通信参数,不需要修改
+export RANK_SIZE=1
+# 数据集路径,保持为空,不需要修改
+data_path=""
+device_id=0
+#权重路径
+checkpoint=""
+
+#基础参数，需要模型审视修改
+#网络名称，同目录名称
+Network="Bert_Chinese_ID3433_for_PyTorch"
+#训练batch_size 默认bert base batch size, 该参数外部可传入
+batch_size=32
+# 训练模型是bert base 还是bert large，默认bert base
+model_size=base
+warmup_ratio=0.0
+weight_decay=0.0
+
+
+#获取外部传参，可扩展
+for para in $*
+do
+    if [[ $para == --data_path* ]];then
+      data_path=`echo ${para#*=}`
+    elif [[ $para == --batch_size* ]];then
+      batch_size=`echo ${para#*=}`
+    elif [[ $para == --model_size* ]];then
+      model_size=`echo ${para#*=}`
+    elif [[ $para == --device_id* ]];then
+      device_id=`echo ${para#*=}`
+    elif [[ $para == --checkpoint* ]];then
+      checkpoint=`echo ${para#*=}`
+    elif [[ $para == --conda_name* ]];then
+        conda_name=`echo ${para#*=}`
+        source set_conda.sh
+        source activate $conda_name
+    fi
+done
+
+if [[ $conda_name != "" ]];then
+   cp -r $data_path/* $cur_path/../
+   data_path=$data_path/'train_huawei.txt'
+fi
+
+#校验是否传入data_path,不需要修改
+if [[ $data_path == "" ]];then
+    echo "[Error] para \"data_path\" must be confing"
+    exit 1
+fi
+
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
+else
+    test_path_dir=${cur_path}/test
+fi
+
+if [ $ASCEND_DEVICE_ID ];then
+    echo "device id is ${ASCEND_DEVICE_ID}"
+elif [ ${device_id} ];then
+    export ASCEND_DEVICE_ID=${device_id}
+    echo "device id is ${ASCEND_DEVICE_ID}"
+else
+    "[Error] device id must be config"
+    exit 1
+fi
+
+#################创建日志输出目录，不需要修改#################
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+fi
+
+#训练开始时间，不需要修改
+start_time=$(date +%s)
+# 非平台场景时source 环境变量
+check_etp_flag=`env | grep etp_running_flag`
+etp_flag=`echo ${check_etp_flag#*=}`
+if [ x"${etp_flag}" != x"true" ];then
+    source ${test_path_dir}/env_npu.sh
+fi
+
+nohup python3 run_mlm.py \
+        --model_type bert \
+        --config_name ./bert-${model_size}-chinese/config.json \
+        --tokenizer_name ./bert-${model_size}-chinese \
+        --max_seq_length 512 \
+        --train_file ${data_path} \
+        --model_name_or_path ${checkpoint} \
+        --eval_metric_path ./accuracy.py \
+        --line_by_line \
+        --pad_to_max_length \
+        --remove_unused_columns false \
+        --save_steps 5000 \
+        --dataloader_num_workers 4 \
+        --overwrite_output_dir \
+        --per_device_eval_batch_size ${batch_size} \
+        --do_eval \
+        --dataloader_drop_last true \
+        --eval_accumulation_steps 100 \
+        --device_id ${device_id} \
+        --output_dir ./output > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+wait
+
+#训练结束时间，不需要修改
+end_time=$(date +%s)
+e2e_time=$(( $end_time - $start_time ))
+
+#结果打印，不需要修改
+echo "------------------ Final result ------------------"
+
+#最后一个迭代FPS值
+FPS=`grep -a 'Time:' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | tail -n 1 | awk '{print$2}' | awk '{sum+=$1} END {print ('$batch_size')/(sum/NR)}'`
+FPS=${FPS#* }  # 去除前面的空格字符
+
+#输出训练精度,需要模型审视修改
+train_accuracy=`grep "eval_accuracy" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $3}'`
+
+#打印，不需要修改
+echo "Final Train Accuracy : ${train_accuracy}"
+echo "Final FPS : ${FPS}"
+echo "E2E Training Duration sec : $e2e_time"
+
+#性能看护结果汇总
+#训练用例信息，不需要修改
+BatchSize=${batch_size}
+DeviceType=`uname -m`
+CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+
+#从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
+grep "{'loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log |awk -F "{'loss" '{print $2}'|awk '{print $2}' | awk -F "," '{print $1}' > ${test_path_dir}/output/${ASCEND_DEVICE_ID}//train_${CaseName}_loss.txt
+#最后一个迭代loss值，不需要修改
+ActualLoss=`awk 'END {print}' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_loss.txt`
