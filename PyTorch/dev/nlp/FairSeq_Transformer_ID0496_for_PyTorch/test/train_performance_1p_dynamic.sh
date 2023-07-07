@@ -180,6 +180,7 @@ do
 	    --distributed-no-spawn \
 	    --max-tokens 15000 \
 	    --required-batch-size-multiple 32 \
+        --batch-size 32 \
         --max-epoch ${train_epochs} \
 	    --max-source-positions 1024 \
 	    --max-target-positions 1024 \
