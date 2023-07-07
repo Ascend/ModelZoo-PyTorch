@@ -171,7 +171,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 
 #### Vicuna-7B
 
-在源代码根目录下执行下列命令获得7B预训练模型（下载7B预训练模型大概需要占用30GB的CPU RAM空间）。
+在源码包根目录下执行下列命令获得7B预训练模型（下载7B预训练模型大概需要占用30GB的CPU RAM空间）。
   ```
   python3 -m fastchat.model.apply_delta \
   --base-model-path /path/to/llama-7b \
@@ -181,7 +181,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 
 #### Vicuna-13B
 
-在源代码根目录下执行下列命令获得13B预训练模型（下载7B预训练模型大概需要占用60GB的CPU RAM空间）。
+在源码包根目录下执行下列命令获得13B预训练模型（下载7B预训练模型大概需要占用60GB的CPU RAM空间）。
   ```
   python3 -m fastchat.model.apply_delta \
   --base-model-path /path/to/llama-13b \
@@ -189,7 +189,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
   --delta-path lmsys/vicuna-13b-delta-v1.1
   ```
 
-下载完毕后，可以在源代码根目录下找到对应的预训练参数文件夹。
+下载完毕后，可以在源码包根目录下找到对应的预训练参数文件夹。
 
 # 开始训练
 
@@ -273,7 +273,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 
 ## 支持模型
 
-· Vicuna，LLaMA
+- Vicuna，LLaMA
 
 ## 执行推理
 
