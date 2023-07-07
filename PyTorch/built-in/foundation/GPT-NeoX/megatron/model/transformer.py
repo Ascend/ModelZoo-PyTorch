@@ -175,7 +175,6 @@ class ParallelLinear(nn.Module):
     def forward(self, hidden_states):
         return self.final_linear(hidden_states)
 
-
 class ParallelSelfAttention(nn.Module):
     """Parallel self-attention layer abstract class.
 
@@ -342,7 +341,8 @@ class ParallelSelfAttention(nn.Module):
             device=torch.cuda.current_device(),
         )
 
-        # Raw attention scores. [b * np, sq, sk]
+        '''
+        ### Raw attention scores. [b * np, sq, sk]  # orig
         matmul_result = torch.baddbmm(
             matmul_result,
             query_layer.transpose(0, 1),  # [b * np, sq, hn]
@@ -350,6 +350,18 @@ class ParallelSelfAttention(nn.Module):
             beta=0.0,
             alpha=(1.0 / self.norm_factor),
         )
+        '''
+        ###bmmm
+        alpha = (1.0 / self.norm_factor)
+        query_layer *= alpha
+        matmul_result = torch.bmm(
+            # matmul_result,
+            query_layer.transpose(0, 1),  # [b * np, sq, hn]
+            key_layer.transpose(0, 1).transpose(1, 2),  # [b * np, hn, sk]
+            # beta=0.0,
+            # alpha=(1.0 / self.norm_factor),
+        )
+        
 
         # change view to [b, np, sq, sk]
         attention_scores = matmul_result.view(*output_size)
@@ -502,25 +514,36 @@ class ParallelSelfAttention(nn.Module):
         )
         mixed_x_layer = mixed_x_layer.view(*new_tensor_shape)
 
-        # [sq, b, np, 3 * hn] --> 3 [sq, b, np, hn]
+        #### [sq, b, np, 3 * hn] --> 3 [sq, b, np, hn]
         (query_layer, key_layer, value_layer) = mpu.split_tensor_along_last_dim(
             mixed_x_layer, 3
         )
 
         if exists(self.rotary_emb):
             if exists(self.rotary_ndims):
-                # partial rotary
+                # # partial rotary
+                '''
                 query_rot, query_pass = (
                     query_layer[..., : self.rotary_ndims],
                     query_layer[..., self.rotary_ndims :],
                 )
+
                 key_rot, key_pass = (
                     key_layer[..., : self.rotary_ndims],
                     key_layer[..., self.rotary_ndims :],
                 )
+                
+                # ### by xuhua
+                '''
+                query_section = [self.rotary_ndims, query_layer.size(-1) - self.rotary_ndims]
+                (query_rot, query_pass) = torch.split(query_layer, query_section, -1)
+                key_section = [self.rotary_ndims, key_layer.size(-1) - self.rotary_ndims]
+                (key_rot, key_pass) = torch.split(key_layer, key_section, -1)
+                
             else:
                 # full rotary
                 query_rot, key_rot = query_layer, key_layer
+
             apply_rotary_fn = (
                 apply_rotary_pos_emb_torch if self.bf16 else apply_rotary_pos_emb
             )
@@ -531,9 +554,12 @@ class ParallelSelfAttention(nn.Module):
                 offset = layer_past[0].shape[0]
                 seq_len += offset
             cos, sin = self.rotary_emb(value_layer, seq_len=seq_len)
+
+
             query_layer, key_layer = apply_rotary_fn(
                 query_rot, key_rot, cos, sin, offset=offset
             )
+
 
             if exists(self.rotary_ndims):
                 query_layer = torch.cat((query_layer, query_pass), dim=-1)

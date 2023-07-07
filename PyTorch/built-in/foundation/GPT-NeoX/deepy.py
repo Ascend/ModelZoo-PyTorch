@@ -16,7 +16,11 @@
 import logging
 import os
 
+import deepspeed_npu
 import deepspeed.launcher.runner
+
+import torch
+from torch_npu.contrib import transfer_to_npu
 
 
 def main():

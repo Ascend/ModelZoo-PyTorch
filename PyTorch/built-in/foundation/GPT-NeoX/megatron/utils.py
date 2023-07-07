@@ -394,9 +394,9 @@ def get_total_params(model):
         )
     else:
         params = 0
-
-    total_n_parameters = torch.tensor([params]).cuda(torch.cuda.current_device())
-    torch.distributed.all_reduce(total_n_parameters)
+    total_n_parameters = torch.tensor([float(params)]).cuda(torch.cuda.current_device())
+    # total_n_parameters = torch.tensor([params]).cuda(torch.cuda.current_device())
+    torch.distributed.all_reduce(total_n_parameters) #
     total_n_parameters = total_n_parameters.item()
     return total_n_parameters
 

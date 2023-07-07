@@ -22,11 +22,14 @@
 from datetime import datetime
 from functools import partial
 
+import torch_npu
+
 import math
 import sys
 
 import torch
 import deepspeed
+import time
 from deepspeed.runtime.data_pipeline.curriculum_scheduler import CurriculumScheduler
 import numpy as np
 
@@ -156,7 +159,7 @@ def mup_coord_check(neox_args, timers, lr_scheduler, train_data_iterator):
     print_rank_0("Saved coord check plots... exiting")
     sys.exit(1)
 
-def pretrain(neox_args):
+def pretrain(neox_args,prof):
     """Main training program.
 
     This function will run the following in the order provided:
@@ -222,7 +225,9 @@ def pretrain(neox_args):
             lr_scheduler=lr_scheduler,
             train_data_iterator=train_data_iterator,
             valid_data_iterator=valid_data_iterator,
+            prof=prof
         )
+
 
     if neox_args.do_valid:
         prefix = "the end of training for val data"
@@ -338,7 +343,8 @@ def forward_step(
 ):
     """Forward step."""
     if neox_args.is_pipe_parallel:
-        return model.eval_batch(data_iterator, return_logits=return_logits)
+        # return model.eval_batch(data_iterator, return_logits=return_logits)
+        return model.eval_batch(data_iterator)
 
     # Get the batch.
     if timers is not None:
@@ -512,15 +518,18 @@ def get_optimizer(model, neox_args):
                     )
                     raise Exception
             else:
-                try:
-                    # default to apex as it's slightly faster
-                    from apex.optimizers import FusedAdam as Adam
-                except ImportError:
-                    # if apex isn't installed, use deepspeed's FusedAdam
-                    print(
-                        "WARNING: APEX not installed - defaulting to deepspeed's fused adam"
-                    )
-                    from deepspeed.ops.adam import FusedAdam as Adam
+                # try:
+                #     # default to apex as it's slightly faster
+                #     from apex.optimizers import FusedAdam as Adam
+                # except ImportError:
+                #     # if apex isn't installed, use deepspeed's FusedAdam
+                #     print(
+                #         "WARNING: APEX not installed - defaulting to deepspeed's fused adam"
+                #     )
+                #     from deepspeed.ops.adam import FusedAdam as Adam
+                from torch.optim import AdamW as Adam
+                # from torch_npu.optim import NpuFusedAdam
+
                 adam_optimizer = Adam
         optimizer = adam_optimizer(
             param_groups,
@@ -616,7 +625,7 @@ def setup_model_and_optimizer(neox_args, use_cache=False, iteration=None):
         print_rank_0(f' > total params: {"{:,}".format(model.total_params)}')
 
         if neox_args.is_pipe_parallel:
-            model.set_has_attention_mask(True)
+            # model.set_has_attention_mask(True)
             if neox_args.curriculum_learning:
                 curr_scheduler = CurriculumScheduler(neox_args.curriculum_learning)
                 if iteration is not None and iteration > 0:
@@ -744,7 +753,7 @@ def train(
     optimizer,
     lr_scheduler,
     train_data_iterator,
-    valid_data_iterator,
+    valid_data_iterator,prof
 ):
     """Train the model function."""
 
@@ -765,7 +774,36 @@ def train(
 
     # to monitor if we've skipped many iterations in a row and trigger an early exit
     overflow_monitor = OverflowMonitor(optimizer)
+    time_str_result = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    '''
+    experimental_config = torch_npu.profiler._ExperimentalConfig(
+        profiler_level=torch_npu.profiler.ProfilerLevel.Level2,
+        # 设置Profiling采集的Level，默认Level0（支持设置Level0、Level1和Level2）
+        aic_metrics=torch_npu.profiler.AiCMetrics.PipeUtilization,
+        # Level0默认不采集AIC Metrics，Level1和Level2默认开启Metrics，默认为PipeUtilization（支持 PipeUtilization、ArithmeticUtilization、Memory、MemoryL0、MemoryUB、ResourceConflictRatio、L2Cache）
+        l2_cache=False  # 选择是否采集L2Cache的数据，耗时开关，默认False
+    )
+    '''
+
+    import os
+    # with torch_npu.profiler.profile(
+    #         activities=[
+    #             torch_npu.profiler.ProfilerActivity.CPU,
+    #             torch_npu.profiler.ProfilerActivity.NPU
+    #         ],
+    #         schedule=torch_npu.profiler.schedule(wait=1, warmup=0, active=1, repeat=1, skip_first=1),
+    #         on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./../result/result_" + time_str_result[:len(time_str_result)-3]),
+    #         # experimental_config=experimental_config,
+    #         record_shapes=True,
+    #         profile_memory=True,
+    #         with_stack=True,
+    #         with_flops=True,
+    #         with_modules=True) as prof:
+    # # #     ### print("当前进程：", os.getpid(), " 父进程：", os.getppid())
+    #if str(neox_args.rank) == "0":
+    #    print("当前进程：", os.getpid(), " 父进程：", os.getppid())
     while iteration < neox_args.train_iters:
+        # NPU_PROFILING_START
         loss_dict, skipped_iter = train_step(
             neox_args=neox_args,
             timers=timers,
@@ -774,8 +812,15 @@ def train(
             optimizer=optimizer,
             lr_scheduler=lr_scheduler,
         )
+        
+        #print(f'MemoryReserved: {torch.npu.memory_reserved() / 1024 / 1024} MB')
+        # NPU_PROFILING_END
         iteration += 1
         neox_args.iteration = iteration
+
+        # if iteration == 1:
+        #     time.sleep(10)
+        #     return
 
         overflow_monitor.check(skipped_iter)  # check for repeated overflow
         if neox_args.log_gradient_noise_scale:  # log noise scale if applicable
@@ -842,6 +887,9 @@ def train(
                 )
             )
             sys.exit()
+            # prof.step()
+
+
 
     return iteration
 

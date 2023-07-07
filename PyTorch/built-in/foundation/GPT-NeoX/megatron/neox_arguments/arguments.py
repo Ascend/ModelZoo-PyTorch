@@ -29,7 +29,7 @@ from socket import gethostname
 try:
     from typing import Literal, Union
 except ImportError:
-    from typing_extensions import Literal, Union
+    from typing_extensions import Literal #, Union
 from deepspeed.launcher.runner import DLTS_HOSTFILE
 from megatron.logging import Tee
 from megatron.tokenizer import build_tokenizer
@@ -1167,17 +1167,17 @@ class NeoXArgs(*BASE_CLASSES):
                         + f"{field_name}: '{actual_value}' Not in accepted values: '{accepted_values}'"
                     )
                     return False
-                elif field_def.type.__origin__ == Union:
-                    accepted_types = field_def.type.__args__
-                    if actual_type in accepted_types:
-                        continue
-                    else:
-                        logging.error(
-                            self.__class__.__name__
-                            + ".validate_types() "
-                            + f"{field_name}: '{actual_type}' not in {accepted_types}"
-                        )
-                        return False
+                # elif field_def.type.__origin__ == Union:
+                #     accepted_types = field_def.type.__args__
+                #     if actual_type in accepted_types:
+                #         continue
+                #     else:
+                #         logging.error(
+                #             self.__class__.__name__
+                #             + ".validate_types() "
+                #             + f"{field_name}: '{actual_type}' not in {accepted_types}"
+                #         )
+                #         return False
 
                 logging.error(
                     self.__class__.__name__
