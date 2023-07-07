@@ -732,7 +732,6 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         self, input_ids, query_embeds=None, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
     ):
         if past_key_values:
-            input_ids = input_ids[:, -1:]
             input_ids = input_ids.index_select(1, torch.tensor([input_ids.shape[-1] - 1], device=input_ids.device))
 
         position_ids = kwargs.get("position_ids", None)
