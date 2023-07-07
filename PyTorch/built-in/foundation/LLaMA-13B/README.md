@@ -159,7 +159,37 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
 ## 获取预训练模型
 
-请参考原始仓库上的[README.md](https://github.com/lm-sys/FastChat/blob/76f0424d1add61aadc8e5bdeed5ebe540f266ba3/README.md)进行预训练模型获取。将获取的7B-vicuna/13B-vicuna预训练模型放至源码包根目录下。
+参考链接：原始仓库上的[README.md](https://github.com/lm-sys/FastChat/blob/76f0424d1add61aadc8e5bdeed5ebe540f266ba3/README.md)
+
+### Vicuna预训练参数介绍
+
+Vicuna预训练参数以增量权重的形式发布，以符合LLaMA模型的license。用户可以通过将该增量权重叠加到
+LLaMA原始权重上实现来使用，主要分为如下两步：
+
+1. 通过该[链接](https://huggingface.co/docs/transformers/main/model_doc/llama)获取huggingface形式的llama原始模型参数；
+2. 使用下面步骤获取Vicuna增量权重，它会自动从[huggingface](https://huggingface.co/lmsys)上下载增量权重；
+
+#### Vicuna-7B
+
+在源码包根目录下执行下列命令获得7B预训练模型（下载7B预训练模型大概需要占用30GB的CPU RAM空间）。
+  ```
+  python3 -m fastchat.model.apply_delta \
+  --base-model-path /path/to/llama-7b \
+  --target-model-path /output/path/to/vicuna-7b \
+  --delta-path lmsys/vicuna-7b-delta-v1.1
+  ```
+
+#### Vicuna-13B
+
+在源码包根目录下执行下列命令获得13B预训练模型（下载7B预训练模型大概需要占用60GB的CPU RAM空间）。
+  ```
+  python3 -m fastchat.model.apply_delta \
+  --base-model-path /path/to/llama-13b \
+  --target-model-path /output/path/to/vicuna-13b \
+  --delta-path lmsys/vicuna-13b-delta-v1.1
+  ```
+
+下载完毕后，可以在源码包根目录下找到对应的预训练参数文件夹。
 
 # 开始训练
 
@@ -238,6 +268,21 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 | 7B-NPU  | -     |            2990 | 3      |     zero1 |
 | 13B-竞品A  | -     |            1386 | 3      |     zero2 |
 | 13B-NPU | -     |            1498 | 3      |     zero2 |
+
+# 模型推理
+
+## 支持模型
+
+- Vicuna，LLaMA
+
+## 执行推理
+
+执行下列命令以完成模型推理（基于单NPU，推理13B模型大约需要28GB显存，推理7B模型大约需要14G显存）。
+
+  ```
+  python3 -m fastchat.serve.cli --model-path path/to/FastChat/7B-vicuna --num-gpus 1
+  python3 -m fastchat.serve.cli --model-path path/to/FastChat/13B-vicuna --num-gpus 1
+  ```
 
 # 版本说明
 
