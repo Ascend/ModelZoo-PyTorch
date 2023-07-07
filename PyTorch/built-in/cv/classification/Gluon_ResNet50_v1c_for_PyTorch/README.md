@@ -169,3 +169,7 @@ ResNet-c相比ResNet将输入部分的7×7卷积替换为3个3×3卷积核，降
 ## FAQ
 
 无。
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
