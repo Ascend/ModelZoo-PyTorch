@@ -2,10 +2,10 @@
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+
 import torch
 if torch.__version__ >= '1.8':
     import torch_npu
-
 
 class DynamicLossScaler(object):
     def __init__(
@@ -43,24 +43,16 @@ class DynamicLossScaler(object):
         if self.threshold is not None:
             self.loss_scale = max(self.loss_scale, self.threshold)
 
-    def get_npu_overflow_flag(self):
-        float_status = torch.zeros(8).npu()
-        result = torch_npu.npu_get_float_status(float_status)
-        if float_status.cpu()[0] != 0:
-            return True
-        else:
-            return False
-
     def check_overflow(self, grad_norm):
         # detect inf and nan
         self.found_inf.fill_(0.0)
-        has_overflow = self.get_npu_overflow_flag()
+        has_overflow = torch.npu.get_npu_overflow_flag()
         if has_overflow:
             self.found_inf.fill_(1)
         if torch.distributed.is_initialized():
             torch.distributed.all_reduce(self.found_inf,
-                                        op=torch.distributed.ReduceOp.MAX)
-        found_inf_flag = (self.found_inf.item()) > 0
+                                         op=torch.distributed.ReduceOp.MAX)
+        found_inf_flag = self.found_inf.item() > 0
         if found_inf_flag:
             # overflow has occured
             prev_scale = self.loss_scale

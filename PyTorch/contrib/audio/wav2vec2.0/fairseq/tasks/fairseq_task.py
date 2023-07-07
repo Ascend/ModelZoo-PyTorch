@@ -485,17 +485,6 @@ class FairseqTask(object):
             search_strategy=search_strategy,
             **extra_gen_cls_kwargs,
         )
-    def clear_npu_overflow_flag(self):
-        float_status = torch.zeros(8).npu()
-        result = torch_npu.npu_clear_float_status(float_status)
-
-    def get_npu_overflow_flag(self):
-        float_status = torch.zeros(8).npu()
-        result = torch_npu.npu_get_float_status(float_status)
-        if float_status.cpu()[0] != 0:
-            return True
-        else:
-            return False
 
     def train_step(
         self, sample, model, criterion, optimizer, update_num, ignore_grad=False
@@ -532,7 +521,7 @@ class FairseqTask(object):
                     #with torch.npu.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))): TODO crm
                     loss, sample_size, logging_output = criterion(model, sample)
 
-                self.clear_npu_overflow_flag()
+                torch.npu.clear_npu_overflow_flag()
                 if ignore_grad:
                     loss *= 0
                 with torch.autograd.profiler.record_function("backward"):
@@ -544,7 +533,7 @@ class FairseqTask(object):
             with torch.autograd.profiler.record_function("forward"):
                 # with torch.npu.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))): TODO crm
                 loss, sample_size, logging_output = criterion(model, sample)
-            self.clear_npu_overflow_flag()
+            torch.npu.clear_npu_overflow_flag()
             if ignore_grad:
                 loss *= 0
             with torch.autograd.profiler.record_function("backward"):
