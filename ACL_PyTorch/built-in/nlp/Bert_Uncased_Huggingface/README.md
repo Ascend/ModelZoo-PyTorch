@@ -8,6 +8,7 @@
 
 - [快速上手](#ZH-CN_TOPIC_0000001126281700)
 
+
   - [获取源码](#section4622531142816)
   - [准备数据集](#section183221994411)
   - [模型推理](#section741711594517)
@@ -221,7 +222,9 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
       - --位置参数2：简化后onnx文件。
       - --input-shape：指定输入维度信息。
 
-   4. 修改静态onnx文件。
+   4. onnx模型优化。
+   
+      静态onnx模型优化：
 
       ```shell
       # model_size = [base, large]
@@ -240,12 +243,28 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
       - --output_file：修改后onnx文件。
       - --model_size：指定模型大小为 base 或 large。
 
+      动态onnx模型优化（Transformer加速库优化）：
+      
+      ```shell
+      # model_size = [base, large]
+      python3 fix_onnx2unpad.py \
+      --input_file onnx/bert_${model_size}_dynamic.onnx \
+      --output_file onnx/bert_${model_size}_unpad.onnx
+      ```
+      
+      参数说明：
+      
+      - --input_file: 原始动态onnx文件。
+      - --output_file: 修改后onnx文件。
+      
    5. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          # 使能transformer加速库：动态Unpad方案必需
+          source ${ASCENDIE_HOME}/set_env.sh
          ```
 
       2. 执行命令查看芯片名称（${chip_name}）。
@@ -254,7 +273,7 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
          npu-smi info
          # 该设备芯片名为Ascend310P3 （自行替换）
          回显如下：
-         +-------------------+-----------------+------------------------------------------------------+
+         +-------------------|-----------------|------------------------------------------------------+
          | NPU     Name      | Health          | Power(W)     Temp(C)           Hugepages-Usage(page) |
          | Chip    Device    | Bus-Id          | AICore(%)    Memory-Usage(MB)                        |
          +===================+=================+======================================================+
@@ -267,6 +286,8 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
          ```
 
    6. 执行ATC命令。
+   
+      静态模型转化：
 
       ```shell
       # model_size = [base, large]
@@ -293,7 +314,34 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
       - --soc_version：处理器型号。
       - --optypelist_for_implmode：指定算子类型。
       - --op_select_implmode：与optypelist_for_implmode配合使用，指定算子的实现模式。
+      
+      动态模型转化：
 
+      ```shell
+      # model_size = [base, large]
+      atc --model onnx/bert_${model_size}_unpad.onnx \
+      --output om/bert_${model_size}_unpad \
+      --framework 5 \
+      --log=error \
+      --soc_version Ascend${chip_name} \
+      --optypelist_for_implmode="Gelu" \
+      --op_select_implmode=high_performance \
+      --input_shape="input_ids:-1,384;attention_mask:-1,384;token_type_ids:-1,384"
+      ```
+
+      运行成功后生成 `bert_${model_size}_unpad_${os}_${arch}.om` 模型文件。
+
+      参数说明：
+      
+      - --model：为ONNX模型文件。
+      - --output：输出的OM模型。
+      - --framework：5代表ONNX模型。
+      - --log：日志级别。
+      - --soc_version：处理器型号。
+      - --optypelist_for_implmode：指定算子类型。
+      - --op_select_implmode：与optypelist_for_implmode配合使用，指定算子的实现模式。
+      - --input_shape: 模型的输入shape信息。
+      
 2. 开始推理验证。
 
    1. 使用ais-bench工具进行推理。
@@ -302,6 +350,8 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
    2. 执行推理。
 
+      静态模型推理：
+  
       ```shell
       # model_size = [base, large]
       # seq = [64, 128, 256, 320, 384, 512]
@@ -320,6 +370,28 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
       - --output：推理结果输出路径。
       - --output_dirname：推理结果输出子文件夹。
       - --outfmt：推理结果输出格式
+      
+      动态模型推理：
+      
+        ```shell
+      # model_size = [base, large]
+      # bs = [4, 8, 16, 32]
+      
+      python3 -m ais_bench --model=om/bert_${model_size}_unpad_${os}_${arch}.om \
+      --input ${prep_data}/input_ids,${prep_data}/attention_mask,${prep_data}/token_type_ids \
+      --output result_unpad --output_dirname result_bs${bs} --outfmt NPY \
+      --dymShape "input_ids:32,384;attention_mask:32,384;token_type_ids:32,384" --outputSize 1000000,1000000
+      ```
+      
+      参数说明：
+      
+      - --model：om模型路径。
+      - --input：输入数据所在路径。
+      - --output：推理结果输出路径。
+      - --output_dirname：推理结果输出子文件夹。
+      - --outfmt：推理结果输出格式。
+      - --dymShape: 动态模型输入shape。
+      - --outputSize： 动态模型输出buffer大小。
    
 3. 精度验证。
 
@@ -373,20 +445,21 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 
 - 精度数据参考（数据集推理场景）：采用 SQuAD v1.1 验证集
 
-| 芯片型号    | Sequence Length | Doc Stride | Batch Size | pth 精度（ F1 \| EM ）                                       | NPU 精度（ F1 \|EM ） |
-| ----------- | --------------- | ---------- | ---------- | ------------------------------------------------------------ | --------------------- |
-| Ascend310P3 | 64              | 16         | 1          | 83.84 \| 76.43                                               | 83.90 \| 76.42        |
-| ...         | 128             | 64         | 1          | 86.77 \| 79.56                                               | 86.96 \| 79.85        |
-| ...         | 256             | 128        | 1          | 87.99 \| 80.64                                               | 87.96 \| 80.58        |
-| ...         | 320             | 128        | 1          | 80.86 \| 88.20                                               | 88.15 \| 80.77        |
-| ...         | 384             | 128        | 1          | [88.2  \| 80.9](https://huggingface.co/csarron/bert-base-uncased-squad-v1) | 88.20 \| 80.84        |
-| ...         | 512             | 128        | 1          | 88.10 \| 80.77                                               | 88.19 \| 80.80        |
+| 模型方案 | 芯片型号    | Sequence Length | Doc Stride | pth 精度（ F1 \| Batch Size | EM ）                                                            | NPU 精度（ F1 \|EM ） |
+|----------|-------------|-----------------|------------|-----------------------------|------------------------------------------------------------------|-----------------------|
+| 静态     | Ascend310P3 | 64              | 16         | 83.84 \| 1                  | 76.43                                                            | 83.90 \| 76.42        |
+| 静态     | ...         | 128             | 64         | 86.77 \| 1                  | 79.56                                                            | 86.96 \| 79.85        |
+| 静态     | ...         | 256             | 128        | 87.99 \| 1                  | 80.64                                                            | 87.96 \| 80.58        |
+| 静态     | ...         | 320             | 128        | 80.86 \| 1                  | 88.20                                                            | 88.15 \| 80.77        |
+| 静态     | ...         | 384             | 128        | [88.2  \| 1                 | 80.9](https://huggingface.co/csarron/bert-base-uncased-squad-v1) | 88.20 \| 80.84        |
+| 静态     | ...         | 512             | 128        | 88.10 \| 1                  | 80.77                                                            | 88.19 \| 80.80        |
+| 动态     | ...         | 384             | 128        | [88.2  \| 1                 | 80.9](https://huggingface.co/csarron/bert-base-uncased-squad-v1) | 87.98 \| 80.64        |
 
-- 性能数据参考（纯推理场景）
+- 静态性能数据参考（纯推理场景）
 
 | 芯片型号    | Sequence Length | Batch Size | NPU 性能（FPS） |
 | ----------- | --------------- | ---------- | --------------- |
-| Ascend310P3         | 64              | 1          | 421.30          |
+| Ascend310P3 | 64              | 1          | 421.30          |
 | ...         | ...             | 4          | 1672.77         |
 | ...         | ...             | 8          | 2507.14         |
 | ...         | ...             | 16         | 2699.84         |
@@ -423,20 +496,30 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 | ...         | ...             | 32         | 218.18          |
 | ...         | ...             | 64         | 212.47          |
 
+- 动态性能数据参考（数据集推理）
+
+| 芯片型号    | 数据集     | Sequence Length | Batch Size | NPU 性能（FPS） |
+| ----------- | ------     | ---------       | ---------- | --------------- |
+| Ascend310P3 | SQuAD v1.1 | 384             | 4          | 374             |
+| ...         | ...        | ...             | 8          | 421             |
+| ...         | ...        | ...             | 16         | 440             |
+| ...         | ...        | ...             | 32         | 447             |
+
 ### BERT-Large 模型
 
 - 精度数据参考（数据集推理场景）：采用 SQuAD v1.1 验证集
 
-| 芯片型号    | Sequence Length | Doc Stride | Batch Size | pth 精度（ F1 \| EM ）                                       | NPU 精度（ F1 \|EM ） |
-| ----------- | --------------- | ---------- | ---------- | ------------------------------------------------------------ | --------------------- |
-| Ascend310P3 | 64              | 16         | 1          | 88.74 \| 82.10                                               | 88.51 \| 81.79        |
-| ...         | 128             | 64         | 1          | 92.08 \|  85.87                                              | 91.92 \| 85.82        |
-| ...         | 256             | 128        | 1          | 93.06 \| 86.84                                               | 93.01 \| 86.84        |
-| ...         | 320             | 128        | 1          | 93.15 \| 86.92                                               | 93.00 \| 86.90        |
-| ...         | 384             | 128        | 1          | [93.15 \| 86.91](https://huggingface.co/bert-large-uncased-whole-word-masking-finetuned-squad) | 93.10 \| 86.94        |
-| ...         | 512             | 128        | 1          | 93.16 \| 86.93                                               | 93.10 \| 86.94        |
+| 模型方案 | 芯片型号    | Sequence Length | Doc Stride | Batch Size | pth 精度（ F1 \| EM ）                                                                         | NPU 精度（ F1 \|EM ） |
+|----------|-------------|-----------------|------------|------------|------------------------------------------------------------------------------------------------|-----------------------|
+| 静态     | Ascend310P3 | 64              | 16         | 1          | 88.74 \| 82.10                                                                                 | 88.51 \| 81.79        |
+| 静态     | ...         | 128             | 64         | 1          | 92.08 \|  85.87                                                                                | 91.92 \| 85.82        |
+| 静态     | ...         | 256             | 128        | 1          | 93.06 \| 86.84                                                                                 | 93.01 \| 86.84        |
+| 静态     | ...         | 320             | 128        | 1          | 93.15 \| 86.92                                                                                 | 93.00 \| 86.90        |
+| 静态     | ...         | 384             | 128        | 1          | [93.15 \| 86.91](https://huggingface.co/bert-large-uncased-whole-word-masking-finetuned-squad) | 93.10 \| 86.94        |
+| 静态     | ...         | 512             | 128        | 1          | 93.16 \| 86.93                                                                                 | 93.10 \| 86.94        |
+| 动态     | ...         | 384             | 128        | 32         | [93.15 \| 86.91](https://huggingface.co/bert-large-uncased-whole-word-masking-finetuned-squad) | 92.99 \| 86.83        |
 
-- 性能参考数据（纯推理场景）
+- 静态性能参考数据（纯推理场景）
 
 | 芯片型号    | Sequence Length | Batch Size | NPU 性能（FPS） |
 | ----------- | --------------- | ---------- | --------------- |
@@ -476,3 +559,12 @@ BERT（Bidirectional Encoder Representations from Transformers）是一种预训
 | ...         | ...             | 16         | 71.5686         |
 | ...         | ...             | 32         | 70.5622         |
 | ...         | ...             | 64         | 70.0256         |
+
+- 动态性能数据参考（数据集推理）
+
+| 芯片型号    | 数据集     | Sequence Length | Batch Size | NPU 性能（FPS） |
+| ----------- | ------     | ---------       | ---------- | --------------- |
+| Ascend310P3 | SQuAD v1.1 | 384             |          4 |             133 |
+| ...         | ...        | ...             |          8 |             142 |
+| ...         | ...        | ...             |         16 |             144 |
+| ...         | ...        | ...             |         32 |             140 |

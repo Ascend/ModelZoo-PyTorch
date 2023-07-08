@@ -167,10 +167,19 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
       2. 优化ONNX文件。
 
+         静态ONNX模型:
+
          ```
          # 以seq128/bs32为例
          python3 -m onnxsim ./outputs/albert_seq128_bs32.onnx ./outputs/albert_seq128_bs32_sim.onnx
          python3 opt_onnx.py --input_file ./outputs/albert_seq128_bs32_sim.onnx --output_file ./outputs/albert_seq128_bs32_opt.onnx
+         ```
+         
+         动态ONNX模型:
+         
+         ```
+         # bs: [4, 8, 16, 32]
+         python3 fix_onnx2unpad.py --input_file ./outputs/albert_seq128_bs${bs}.onnx --output_file ./outputs/albert_seq128_bs${bs}_unpad.onnx
          ```
 
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -179,6 +188,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
          ```
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          # 使能transformer加速库：动态Unpad方案必需
+          source ${ASCENDIE_HOME}/set_env.sh
          ```
 
          > **说明：**
@@ -203,6 +214,9 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
          ```
 
       3. 执行ATC命令。
+      
+         静态模型转化:
+     
          ```
          # 以seq128/bs32为例
          atc --input_format=ND --framework=5 --model=./outputs/albert_seq128_bs32_opt.onnx --output=./outputs/albert_seq128_bs32 --log=error --soc_version=${chip_name} --input_shape="input_ids:32,128;attention_mask:32,128;token_type_ids:32,128" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
@@ -232,6 +246,27 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
          - 额外参数说明：
 
            -   --op_precision_mode：算子精度模式配置输入。
+           
+         动态模型转化:
+     
+         ```
+         atc --input_format=ND --framework=5 --model=./outputs/albert_seq128_bs${bs}_unpad.onnx --output=./outputs/albert_seq128_bs${bs}_unpad --log=error --soc_version=${chip_name} --input_shape="input_ids:-1,128;attention_mask:-1,128;token_type_ids:-1,128" --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --input\_shape：输入数据的shape。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+           -   --optypelist_for_implmode：需要指定精度模式的算子。
+           -   --op_select_implmode：特定算子需要采取的精度模式。
+
+           运行成功后生成`albert_seq128_unpad_${os}_${arch}.om`模型文件。
+
 
 2. 开始推理验证。
 
@@ -240,6 +275,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。  
 
    2. 执行推理。
+   
+        静态模型推理:
 
         ```
         # 以bs32为例
@@ -256,7 +293,26 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
              -   --batchsize：推理模型对应的batchsize。
 
 
-        推理后的输出默认在当前目录outputs/seq128_bs32下。
+        推理后的输出默认在当前目录results/seq128_bs32下。
+        
+        动态模型推理:
+        
+        ```
+        # 以bs32为例
+        python3 -m ais_bench --model outputs/albert_seq128_bs32_unpad_${os}_${arch}.om --input ./preprocessed_data_seq128/input_ids,./preprocessed_data_seq128/attention_mask,./preprocessed_data_seq128/token_type_ids --output results_dynamic --output_dirname bs32 --outfmt NPY --dymShape "input_ids:32,128;attention_mask:32,128;token_type_ids:32,128" --outputSize 1000000
+        ```
+        -   参数说明：
+
+             -   --model：om文件路径。
+             -   --input：输入文件。
+             -   --output：输出目录。
+             -   --output_dirname：输出文件名。
+             -   --device：NPU设备编号。
+             -   --outfmt: 输出数据格式。
+             -   --dymShape：动态模型推理输入shape。
+             -   --outputSize: 动态模型推理输出buffer大小。
+
+        推理后的输出默认在当前目录results_dynamic/bs32下。
 
    3.  精度验证。
 
@@ -279,15 +335,14 @@ seq128对应的精度性能如下：
 
 精度:
 
-| device | ACC(seq128) |
-|--------|-------------|
-| 基准   |       92.8% |
-| 310    |       92.7% |
-| 310P   |       92.8% |
+| 模型方案  | device   | ACC(seq128)   |
+| --------- | -------- | ------------- |
+| 静态      | 基准     | 92.8%         |
+| 静态      | 310      | 92.7%         |
+| 静态      | 310P     | 92.8%         |
+| 动态      | 310P     | 92.8%         |
 
-
-性能：
-
+静态模型性能：
 
 | 模型        | 310性能   | 310P3性能 |
 | :------:    | :------:  | :------:  |
@@ -297,6 +352,16 @@ seq128对应的精度性能如下：
 | Albert bs16 | 300.83fps | 1350fps   |
 | Albert bs32 |           | 1320fps   |
 | Albert bs64 |           | 1330fps   |
+
+动态模型性能（数据集推理）：
+
+| 模型        | 310P3性能 |
+| :------:    | :------:  |
+| Albert bs4  | 535fps    |
+| Albert bs8  | 953fps    |
+| Albert bs16 | 1518fps   |
+| Albert bs32 | 2478fps   |
+
 
 其他seq精度性能结果如下(不同seq模型：展示bs1和最优bs精度/性能)：
 

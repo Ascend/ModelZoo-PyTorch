@@ -171,6 +171,8 @@
 
       2. 优化ONNX文件。
 
+         静态模型修改:
+
          ```
          # 以bs1为例
          python3 -m onnxsim outputs/roberta_base_seq70_bs1.onnx outputs/roberta_base_seq70_bs1_sim.onnx
@@ -179,6 +181,17 @@
          ```
 
          获得roberta_base_seq70_bs1_opt.onnx文件。
+         
+         动态模型修改:
+         
+         ```
+         # bs: [4, 8, 16, 32]
+         # seq: 128
+         python3 -m onnxsim outputs/roberta_base_seq128_bs${bs}.onnx outputs/roberta_base_seq128_bs${seq}_sim.onnx
+         # 输入参数: {原始模型} {修改后的模型路径} {batch_size} {seq_length}
+         python3 opt_onnx.py outputs/roberta_base_seq128_bs${bs}_sim.onnx outputs/roberta_base_seq128_bs${bs}_opt.onnx ${bs} 128
+         python3 fix_onnx2unpad.py --input_file outputs/roberta_base_seq128_bs${bs}_opt.onnx --output_file outputs/roberta_base_seq128_bs${bs}_unpad.onnx
+         ```
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -186,6 +199,8 @@
 
          ```
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+         # 使能transformer加速库：动态Unpad方案必需
+         source ${ASCENDIE_HOME}/set_env.sh
          ```
 
       2. 执行命令查看芯片名称（$\{chip\_name\}）。
@@ -208,6 +223,8 @@
 
       3. 执行ATC命令。
 
+         静态模型转化:
+
          ```
          # bs1为例
          atc --framework=5 --model=./outputs/roberta_base_seq70_bs1_opt.onnx --output=./outputs/roberta_base_seq70_bs1 --input_format=ND --input_shape="src_tokens:1,70" --log=debug --soc_version=${chip_name} --op_precision_mode=precision.ini
@@ -225,6 +242,24 @@
 
            运行成功后生成模型文件roberta_base_seq70_bs1.om。
 
+         动态模型转化:
+         
+         ```
+         # bs32为例
+         atc --framework=5 --model=./outputs/roberta_base_seq128_bs32_unpad.onnx --output=./outputs/roberta_base_seq128_bs32_unpad --input_format=ND --input_shape="src_tokens:-1,128" --log=debug --soc_version=${chip_name}
+         ```
+
+         - 参数说明：
+
+           -   --model：为ONNX模型文件。
+           -   --framework：5代表ONNX模型。
+           -   --output：输出的OM模型。
+           -   --input\_format：输入数据的格式。
+           -   --log：日志级别。
+           -   --soc\_version：处理器型号。
+
+           运行成功后生成模型文件roberta_base_seq128_bs32_unpad_${os}_${arch}.om。
+
 2. 开始推理验证。
 
    1. 使用ais-bench工具进行推理。
@@ -232,6 +267,8 @@
       请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
 
    2. 执行推理。
+
+        静态模型推理:
 
         ```
         # 以bs1为例
@@ -250,6 +287,24 @@
 
         推理后的输出默认在当前目录results/seq70_bs1下。
 
+        动态模型推理:
+
+        ```
+        # 以bs32为例
+        python3 -m ais_bench --model outputs/roberta_base_seq128_bs32_${os}_${arch}.om --input ./data/SST-2-bin/roberta_base_bin_128 --output results_dynamic/ --output_dirname seq128_bs32 --device 1 --outfmt NPY --dymShape "src_tokens:32,128" --outputSize 1000000
+        ```
+
+        -   参数说明：
+
+             -   --model：om文件路径。
+             -   --input：输入文件。
+             -   --output：输出目录。
+             -   --device：NPU设备编号。
+             -   --outfmt: 模型输出格式。
+             -   --dymShape: 模型输入shape。
+             -   --outputSize: 模型输出bufffer大小。
+
+        推理后的输出默认在当前目录results_dynamic/seq128_bs32下。
 
    3. 精度验证。
 
@@ -276,24 +331,28 @@
 
    | 芯片型号 | Batch Size | 数据集 | 精度       | 性能      |
    |----------|------------|--------|------------|-----------|
-   | 310P3    | 1          | SST-2  | Acc: 94.0% | 205 fps   |
-   | 310P3    | 4          | SST-2  | -          | 817 fps   |
-   | 310P3    | 8          | SST-2  | -          | 1244 fps  |
-   | 310P3    | 16         | SST-2  | -          | 1463 fps  |
-   | 310P3    | 32         | SST-2  | -          | 1473 fps  |
-   | 310P3    | 64         | SST-2  | -          | 1206 fps  |
-   | 310      | 1          | SST-2  | Acc: 94.4% | 12.01 fps |
-   | 310      | 16         | SST-2  | -          | 98.49 fps |
+   | 310P3    |          1 | SST-2  | Acc: 94.0% | 205 fps   |
+   | 310P3    |          4 | SST-2  | -          | 817 fps   |
+   | 310P3    |          8 | SST-2  | -          | 1244 fps  |
+   | 310P3    |         16 | SST-2  | -          | 1463 fps  |
+   | 310P3    |         32 | SST-2  | -          | 1473 fps  |
+   | 310P3    |         64 | SST-2  | -          | 1206 fps  |
+   | 310      |          1 | SST-2  | Acc: 94.4% | 12.01 fps |
+   | 310      |         16 | SST-2  | -          | 98.49 fps |
 
    其他seq_length下部分精度性能如下（仅展示bs1/最优bs）:
 
-   | seq_length | Batch Size | 数据集 | 基准精度   | 310P精度   | 310P性能 |
-   |------------|------------|--------|------------|------------|----------|
-   | 16         | 1          | SST-2  | Acc: 86.7% | Acc: 86.6% | 602fps   |
-   | 16         | 64         | SST-2  | -          | -          | 8649fps  |
-   | 32         | 1          | SST-2  | Acc: 93.8% | Acc: 93.2% | 508fps   |
-   | 32         | 64         | SST-2  | -          | -          | 4718fps  |
-   | 64         | 1          | SST-2  | Acc: 94.7% | Acc: 94.1% | 405fps   |
-   | 64         | 32         | SST-2  | -          | -          | 2413fps  |
-   | 128        | 1          | SST-2  | Acc: 94.7% | Acc: 94.1% | 418fps   |
-   | 128        | 32         | SST-2  | -          | -          | 1100fps  |
+   | 模型方案 | seq_length | Batch Size | 数据集 | 基准精度   | 310P精度   | 310P性能 |
+   |----------|------------|------------|--------|------------|------------|----------|
+   | 静态     |         16 |          1 | SST-2  | Acc: 86.7% | Acc: 86.6% | 602fps   |
+   | 静态     |         16 |         64 | SST-2  | -          | -          | 8649fps  |
+   | 静态     |         32 |          1 | SST-2  | Acc: 93.8% | Acc: 93.2% | 508fps   |
+   | 静态     |         32 |         64 | SST-2  | -          | -          | 4718fps  |
+   | 静态     |         64 |          1 | SST-2  | Acc: 94.7% | Acc: 94.1% | 405fps   |
+   | 静态     |         64 |         32 | SST-2  | -          | -          | 2413fps  |
+   | 静态     |        128 |          1 | SST-2  | Acc: 94.7% | Acc: 94.1% | 418fps   |
+   | 静态     |        128 |         32 | SST-2  | -          | -          | 1100fps  |
+   | 动态     |        128 |          4 | SST-2  | Acc: 94.7% | Acc: 94.7% | 487fps   |
+   | 动态     |        128 |          8 | SST-2  | Acc: 94.7% | Acc: 94.7% | 906fps   |
+   | 动态     |        128 |         16 | SST-2  | Acc: 94.7% | Acc: 94.7% | 1277fps  |
+   | 动态     |        128 |         32 | SST-2  | Acc: 94.7% | Acc: 94.7% | 1715fps  |

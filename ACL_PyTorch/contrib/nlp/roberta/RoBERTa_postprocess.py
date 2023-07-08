@@ -30,7 +30,12 @@ def postProcess(res_dir, label_path, batch_size=1):
     for i in range(len(labels)):
         res_path = os.path.join(
             res_dir, "src_tokens_{}_0.bin".format(i))
-        res = np.fromfile(res_path, dtype=np.float32).reshape(-1, 2)
+        if os.path.exists(res_path):
+            res = np.fromfile(res_path, dtype=np.float32).reshape(-1, 2)
+        else:
+            res_path = os.path.join(
+                res_dir, "src_tokens_{}_0.npy".format(i))
+            res = np.load(res_path)
         neg_res += sum((np.argmax(res, axis=1)) ^ labels[i])
 
     print("acc = {:.3f}".format(1 - neg_res/(i*batch_size)))
