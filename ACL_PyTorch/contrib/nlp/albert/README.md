@@ -360,7 +360,7 @@ seq128对应的精度性能如下：
 | Albert bs4  | 535fps    |
 | Albert bs8  | 953fps    |
 | Albert bs16 | 1518fps   |
-| Albert bs32 | 2478fps   |
+| Albert bs32 | 2170fps   |
 
 
 其他seq精度性能结果如下(不同seq模型：展示bs1和最优bs精度/性能)：
