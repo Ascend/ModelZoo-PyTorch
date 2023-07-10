@@ -43,10 +43,13 @@ def _cfg(url='', **kwargs):
         **kwargs
     }
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    tresnet_m = content.split('tresnet_m=')[1].split('\n')[0]
 
 default_cfgs = {
     'tresnet_m': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_m_80_8-dbc13962.pth'),
+        url=tresnet_m),
     'tresnet_l': _cfg(
         url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_l_81_5-235b486c.pth'),
     'tresnet_xl': _cfg(
