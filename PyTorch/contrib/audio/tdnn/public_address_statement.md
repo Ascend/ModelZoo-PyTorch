@@ -1,6 +1,0 @@
-| 类型     | 开源代码地址                                                       | 文件名                                          | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
-|--------|--------------------------------------------------------------|----------------------------------------------|------------------------|------|
-| 开源代码引入 | https://github.com/speechbrain/speechbrain/blob/develop/setup.py | tdnn/setup.py | speechbrain@gmail.com | 作者邮箱 |
-| 开源代码引入 | https://github.com/speechbrain/speechbrain/blob/develop/setup.py | tdnn/setup.py | https://speechbrain.github.io/ | 开源地址 |
-| 开源代码引入 | https://github.com/speechbrain/speechbrain/blob/develop/speechbrain/lobes/augment.py | tdnn/speechbrain/lobes/augment.py | http://www.openslr.org/resources/28/rirs_noises.zip | 下载数据集 |
-| 开源代码引入 | https://github.com/speechbrain/speechbrain/blob/develop/templates/speaker_id/mini_librispeech_prepare.py | tdnn/templates/speaker_id/mini_librispeech_prepare.py | http://www.openslr.org/resources/31/train-clean-5.tar.gz | 下载数据集 |

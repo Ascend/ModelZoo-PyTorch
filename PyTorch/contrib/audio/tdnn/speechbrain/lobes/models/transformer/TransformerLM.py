@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """An implementation of Transformer Language model.
 
 Authors
@@ -56,6 +41,8 @@ class TransformerLM(TransformerInterface):
         The dropout value (default=0.1).
     activation: torch class
         The activation function of encoder/decoder intermediate layer, relu or gelu (default=relu).
+    decoder_use_memory: bool
+        whether to use the hidden state in the decoder
 
     Example
     -------
@@ -82,6 +69,7 @@ class TransformerLM(TransformerInterface):
         max_length=2500,
         causal=True,
         attention_type="regularMHA",
+        decoder_use_memory=False,
     ):
         super().__init__(
             d_model=d_model,
@@ -118,6 +106,7 @@ class TransformerLM(TransformerInterface):
 
         self.num_encoder_layers = num_encoder_layers
         self.num_decoder_layers = num_decoder_layers
+        self.decoder_use_memory = decoder_use_memory
 
         # reset the params of the transformer model
         self._reset_params()
@@ -143,15 +132,22 @@ class TransformerLM(TransformerInterface):
             )
 
         if self.num_decoder_layers > 0:
-            encoder_out, _ = self.decoder(
-                src=src,
-                tgt=src,
-                tgt_mask=src_mask,
-                tgt_key_padding_mask=src_key_padding_mask,
-            )
+            if self.decoder_use_memory:
+                encoder_out, _, _ = self.decoder(
+                    tgt=src,
+                    memory=encoder_out,
+                    tgt_mask=src_mask,
+                    tgt_key_padding_mask=src_key_padding_mask,
+                )
+            else:
+                encoder_out, _ = self.decoder(
+                    src=src,
+                    tgt=src,
+                    tgt_mask=src_mask,
+                    tgt_key_padding_mask=src_key_padding_mask,
+                )
 
         pred = self.output_proj(encoder_out)
-
         return pred
 
     def _reset_params(self):

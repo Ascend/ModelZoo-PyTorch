@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """
 Generalized Eigenvalue Decomposition.
 
@@ -155,9 +140,9 @@ def svdl(a):
     >>> from speechbrain.dataio.dataio import read_audio_multichannel
 
     >>> xs_speech = read_audio_multichannel(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
-    >>> xs_noise = read_audio_multichannel('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_noise = read_audio_multichannel('tests/samples/multi-mic/noise_diffuse.flac')
     >>> xs = xs_speech + 0.05 * xs_noise
     >>> xs = xs.unsqueeze(0).float()
     >>>
@@ -393,9 +378,9 @@ def inv(x):
     >>> from speechbrain.processing.decomposition import inv
     >>>
     >>> xs_speech = read_audio(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_0.70225_-0.70225_0.11704.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_0.70225_-0.70225_0.11704.flac')
     >>> xs = xs_speech + 0.05 * xs_noise
     >>> xs = xs.unsqueeze(0).float()
     >>>

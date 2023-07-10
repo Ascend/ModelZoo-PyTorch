@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Decoders and output normalization for CTC.
 
 Authors
@@ -337,14 +322,7 @@ def filter_ctc_output(string_pred, blank_id=-1):
 
     if isinstance(string_pred, list):
         # Filter the repetitions
-        string_out = [
-            v
-            for i, v in enumerate(string_pred)
-            if i == 0 or v != string_pred[i - 1]
-        ]
-
-        # Remove duplicates
-        string_out = [i[0] for i in groupby(string_out)]
+        string_out = [i[0] for i in groupby(string_pred)]
 
         # Filter the blank symbol
         string_out = list(filter(lambda elem: elem != blank_id, string_out))

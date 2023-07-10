@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Dataset examples for loading individual data points
 
 Authors
@@ -315,6 +300,7 @@ class DynamicItemDataset(Dataset):
         """Returns a list of data ids, fulfilling the sorting and filtering."""
 
         def combined_filter(computed):
+            """Applies filter."""
             for key, limit in key_min_value.items():
                 # NOTE: docstring promises >= so using that.
                 # Mathematically could also use < for nicer syntax, but
@@ -386,6 +372,7 @@ class DynamicItemDataset(Dataset):
         """Loading a prepared huggingface dataset"""
         # define an unbound method to generate puesdo keys
         def keys(self):
+            "Returns the keys."
             return [i for i in range(dataset.__len__())]
 
         # bind this method to arrow dataset

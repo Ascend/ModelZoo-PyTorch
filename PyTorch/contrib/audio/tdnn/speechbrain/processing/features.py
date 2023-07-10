@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Low-level feature pipeline components
 
 This library gathers functions that compute popular speech  features over
@@ -25,7 +10,7 @@ Example
 -------
 >>> import torch
 >>> from speechbrain.dataio.dataio import read_audio
->>> signal =read_audio('samples/audio_samples/example1.wav')
+>>> signal =read_audio('tests/samples/single-mic/example1.wav')
 >>> signal = signal.unsqueeze(0)
 >>> compute_STFT = STFT(
 ...     sample_rate=16000, win_length=25, hop_length=10, n_fft=400
@@ -51,9 +36,6 @@ Authors
 import math
 import torch
 import logging
-import numpy as np
-from scipy import signal
-from packaging import version
 from speechbrain.utils.checkpoints import (
     mark_as_saver,
     mark_as_loader,
@@ -145,7 +127,7 @@ class STFT(torch.nn.Module):
             round((self.sample_rate / 1000.0) * self.hop_length)
         )
 
-        self.window = window_fn(self.win_length).cpu()
+        self.window = window_fn(self.win_length)
 
     def forward(self, x):
         """Returns the STFT generated from the input waveforms.
@@ -162,21 +144,21 @@ class STFT(torch.nn.Module):
             x = x.transpose(1, 2)
             x = x.reshape(or_shape[0] * or_shape[2], or_shape[1])
 
-        x = x.cpu()
-        batch_size, fids = x.shape
+        stft = torch.stft(
+            x,
+            self.n_fft,
+            self.hop_length,
+            self.win_length,
+            self.window.to(x.device),
+            self.center,
+            self.pad_mode,
+            self.normalized_stft,
+            self.onesided,
+            return_complex=True,
+        )
 
-        with torch.autograd.profiler.record_function("stft_computing"):
-            f_dim, t_dim, Zxx = signal.stft(
-                x,
-                nperseg=self.n_fft,
-                noverlap=self.win_length-self.hop_length,
-                window=self.window,
-                return_onesided='True')
-            stft = torch.zeros(batch_size, len(f_dim), len(t_dim), 2)
-            stft[:, :, :, 0] = torch.tensor(Zxx.real)
-            stft[:, :, :, 1] = torch.tensor(Zxx.imag)
+        stft = torch.view_as_real(stft)
 
-        x = x.npu()
         # Retrieving the original dimensionality (batch,time, channels)
         if len(or_shape) == 3:
             stft = stft.reshape(
@@ -195,7 +177,7 @@ class STFT(torch.nn.Module):
 
 
 class ISTFT(torch.nn.Module):
-    """ Computes the Inverse Short-Term Fourier Transform (ISTFT)
+    """Computes the Inverse Short-Term Fourier Transform (ISTFT)
 
     This class computes the Inverse Short-Term Fourier Transform of
     an audio signal. It supports multi-channel audio inputs
@@ -277,7 +259,7 @@ class ISTFT(torch.nn.Module):
         self.window = window_fn(self.win_length)
 
     def forward(self, x, sig_length=None):
-        """ Returns the ISTFT generated from the input signal.
+        """Returns the ISTFT generated from the input signal.
 
         Arguments
         ---------
@@ -330,7 +312,9 @@ class ISTFT(torch.nn.Module):
         return istft
 
 
-def spectral_magnitude(stft, power=1, log=False, eps=1e-14):
+def spectral_magnitude(
+    stft, power: int = 1, log: bool = False, eps: float = 1e-14
+):
     """Returns the magnitude of a complex spectrogram.
 
     Arguments
@@ -356,6 +340,7 @@ def spectral_magnitude(stft, power=1, log=False, eps=1e-14):
     if power < 1:
         spectr = spectr + eps
     spectr = spectr.pow(power)
+
     if log:
         return torch.log(spectr + eps)
     return spectr
@@ -536,7 +521,10 @@ class Filterbank(torch.nn.Module):
             f_central_mat = f_central_mat * rand_change[0]
             band_mat = band_mat * rand_change[1]
 
-        fbank_matrix = self._create_fbank_matrix(f_central_mat, band_mat).npu()
+        fbank_matrix = self._create_fbank_matrix(f_central_mat, band_mat).to(
+            spectrogram.device
+        )
+
         sp_shape = spectrogram.shape
 
         # Managing multi-channels case (batch, time, channels)
@@ -547,7 +535,7 @@ class Filterbank(torch.nn.Module):
             )
 
         # FBANK computation
-        fbanks = torch.matmul(spectrogram.npu(), fbank_matrix)
+        fbanks = torch.matmul(spectrogram, fbank_matrix)
         if self.log_mel:
             fbanks = self._amplitude_to_DB(fbanks)
 
@@ -705,14 +693,12 @@ class Filterbank(torch.nn.Module):
 
         # Setting up dB max. It is the max over time and frequency,
         # Hence, of a whole sequence (sequence-dependent)
-        #new_x_db_max = x_db.amax(dim=(-2, -1)) - self.top_db
-        new_x_db_max = x_db.max() - self.top_db
-        
+        new_x_db_max = x_db.amax(dim=(-2, -1)) - self.top_db
+
         # Clipping to dB max. The view is necessary as only a scalar is obtained
         # per sequence.
-        #x_db = torch.max(x_db, new_x_db_max.view(x_db.shape[0], 1, 1))
-        x_db = torch.max(x_db, new_x_db_max)
-        
+        x_db = torch.max(x_db, new_x_db_max.view(x_db.shape[0], 1, 1))
+
         return x_db
 
 
@@ -840,7 +826,9 @@ class Deltas(torch.nn.Module):
 
         # Derivative estimation (with a fixed convolutional kernel)
         delta_coeff = (
-            torch.nn.functional.conv1d(x, self.kernel, groups=x.shape[1])
+            torch.nn.functional.conv1d(
+                x, self.kernel.to(x.device), groups=x.shape[1]
+            )
             / self.denom
         )
 
@@ -1018,30 +1006,27 @@ class InputNormalization(torch.nn.Module):
 
         current_means = []
         current_stds = []
-        with torch.autograd.profiler.record_function("InputNormalization"):
-            for snt_id in range(N_batches):
 
-                # Avoiding padded time steps
-                actual_size = torch.round(lengths[snt_id] * x.shape[1]).int()
+        for snt_id in range(N_batches):
+            # Avoiding padded time steps
+            actual_size = torch.round(lengths[snt_id] * x.shape[1]).int()
 
-                # computing statistics
-                current_mean, current_std = self._compute_current_stats(
-                    x[snt_id, 0:actual_size, ...]
-                )
+            # computing statistics
+            current_mean, current_std = self._compute_current_stats(
+                x[snt_id, 0:actual_size, ...]
+            )
 
-                current_means.append(current_mean)
-                current_stds.append(current_std)
+            current_means.append(current_mean)
+            current_stds.append(current_std)
 
-                if self.norm_type == "sentence":
+            if self.norm_type == "sentence":
+                x[snt_id] = (x[snt_id] - current_mean.data) / current_std.data
 
-                    x[snt_id] = (x[snt_id] - current_mean.data) / current_std.data
+            if self.norm_type == "speaker":
+                spk_id = int(spk_ids[snt_id][0])
 
-                if self.norm_type == "speaker":
-
-                    spk_id = int(spk_ids[snt_id][0])
-
+                if self.training:
                     if spk_id not in self.spk_dict_mean:
-
                         # Initialization of the dictionary
                         self.spk_dict_mean[spk_id] = current_mean
                         self.spk_dict_std[spk_id] = current_std
@@ -1058,18 +1043,28 @@ class InputNormalization(torch.nn.Module):
                             self.weight = self.avg_factor
 
                         self.spk_dict_mean[spk_id] = (
-                            1 - self.weight
-                        ) * self.spk_dict_mean[spk_id] + self.weight * current_mean
+                            (1 - self.weight) * self.spk_dict_mean[spk_id]
+                            + self.weight * current_mean
+                        )
                         self.spk_dict_std[spk_id] = (
-                            1 - self.weight
-                        ) * self.spk_dict_std[spk_id] + self.weight * current_std
+                            (1 - self.weight) * self.spk_dict_std[spk_id]
+                            + self.weight * current_std
+                        )
 
                         self.spk_dict_mean[spk_id].detach()
                         self.spk_dict_std[spk_id].detach()
 
-                    x[snt_id] = (
-                        x[snt_id] - self.spk_dict_mean[spk_id].data
-                    ) / self.spk_dict_std[spk_id].data
+                    speaker_mean = self.spk_dict_mean[spk_id].data
+                    speaker_std = self.spk_dict_std[spk_id].data
+                else:
+                    if spk_id in self.spk_dict_mean:
+                        speaker_mean = self.spk_dict_mean[spk_id].data
+                        speaker_std = self.spk_dict_std[spk_id].data
+                    else:
+                        speaker_mean = current_mean.data
+                        speaker_std = current_std.data
+
+                x[snt_id] = (x[snt_id] - speaker_mean) / speaker_std
 
         if self.norm_type == "batch" or self.norm_type == "global":
             current_mean = torch.mean(torch.stack(current_means), dim=0)
@@ -1079,31 +1074,31 @@ class InputNormalization(torch.nn.Module):
                 x = (x - current_mean.data) / (current_std.data)
 
             if self.norm_type == "global":
+                if self.training:
+                    if self.count == 0:
+                        self.glob_mean = current_mean
+                        self.glob_std = current_std
 
-                if self.count == 0:
-                    self.glob_mean = current_mean
-                    self.glob_std = current_std
+                    elif epoch < self.update_until_epoch:
+                        if self.avg_factor is None:
+                            self.weight = 1 / (self.count + 1)
+                        else:
+                            self.weight = self.avg_factor
 
-                elif epoch < self.update_until_epoch:
-                    if self.avg_factor is None:
-                        self.weight = 1 / (self.count + 1)
-                    else:
-                        self.weight = self.avg_factor
+                        self.glob_mean = (
+                            1 - self.weight
+                        ) * self.glob_mean + self.weight * current_mean
 
-                    self.glob_mean = (
-                        1 - self.weight
-                    ) * self.glob_mean + self.weight * current_mean
+                        self.glob_std = (
+                            1 - self.weight
+                        ) * self.glob_std + self.weight * current_std
 
-                    self.glob_std = (
-                        1 - self.weight
-                    ) * self.glob_std + self.weight * current_std
+                    self.glob_mean.detach()
+                    self.glob_std.detach()
 
-                self.glob_mean.detach()
-                self.glob_std.detach()
+                    self.count = self.count + 1
 
                 x = (x - self.glob_mean.data) / (self.glob_std.data)
-
-        self.count = self.count + 1
 
         return x
 
@@ -1135,8 +1130,7 @@ class InputNormalization(torch.nn.Module):
         return current_mean, current_std
 
     def _statistics_dict(self):
-        """Fills the dictionary containing the normalization statistics.
-        """
+        """Fills the dictionary containing the normalization statistics."""
         state = {}
         state["count"] = self.count
         state["glob_mean"] = self.glob_mean
@@ -1182,8 +1176,7 @@ class InputNormalization(torch.nn.Module):
         return state
 
     def to(self, device):
-        """Puts the needed tensors in the right device.
-        """
+        """Puts the needed tensors in the right device."""
         self = super(InputNormalization, self).to(device)
         self.glob_mean = self.glob_mean.to(device)
         self.glob_std = self.glob_std.to(device)

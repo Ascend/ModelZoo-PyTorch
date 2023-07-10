@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Library for implementing cascade (sequences) of different neural modules.
 
 Authors
@@ -84,7 +69,7 @@ class Sequential(torch.nn.ModuleDict):
 
                 # Use 64 as nice round arbitrary value, big enough that
                 # halving this dimension a few times doesn't reach 1
-                self.input_shape[i] = dim or 64
+                self.input_shape[i] = dim or 256
 
         # Append non-named layers
         for layer in layers:
@@ -175,11 +160,12 @@ class LengthsCapableSequential(Sequential):
     """
 
     def __init__(self, *args, **kwargs):
-        # Add takes_lengths list here.
         self.takes_lengths = []
         super().__init__(*args, **kwargs)
 
     def append(self, *args, **kwargs):
+        """Add a layer to the list of layers, inferring shape if necessary.
+        """
         # Add lengths arg inference here.
         super().append(*args, **kwargs)
         latest_forward_method = list(self.values())[-1].forward
@@ -225,6 +211,7 @@ class ModuleList(torch.nn.Module):
         self.layers = torch.nn.ModuleList(layers)
 
     def forward(self, x):
+        """Applies the computation pipeline."""
         for layer in self.layers:
             x = layer(x)
             if isinstance(x, tuple):
@@ -232,12 +219,15 @@ class ModuleList(torch.nn.Module):
         return x
 
     def append(self, module):
+        """Appends module to the layers list."""
         self.layers.append(module)
 
     def extend(self, modules):
+        """Appends module to the layers list."""
         self.layers.extend(modules)
 
     def insert(self, index, module):
+        """Inserts module to the layers list."""
         self.layers.insert(module)
 
 

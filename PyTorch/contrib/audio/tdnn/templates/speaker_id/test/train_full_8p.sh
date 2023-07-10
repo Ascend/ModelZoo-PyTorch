@@ -15,7 +15,7 @@ Network="Tdnn"
 batch_size=64
 
 #训练epoch
-train_epochs=15
+train_epochs=35
 # 指定训练所使用的npu device卡id
 device_id=0
 

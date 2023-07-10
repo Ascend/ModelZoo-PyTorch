@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Multi-microphone components.
 
 This library contains functions for multi-microphone signal processing.
@@ -28,12 +13,12 @@ Example
 >>> from speechbrain.processing.multi_mic import DelaySum, Mvdr, Gev
 >>>
 >>> xs_speech = read_audio(
-...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
 ... )
 >>> xs_speech = xs_speech.unsqueeze(0) # [batch, time, channels]
->>> xs_noise_diff = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+>>> xs_noise_diff = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
 >>> xs_noise_diff = xs_noise_diff.unsqueeze(0)
->>> xs_noise_loc = read_audio('samples/audio_samples/multi_mic/noise_0.70225_-0.70225_0.11704.flac')
+>>> xs_noise_loc = read_audio('tests/samples/multi-mic/noise_0.70225_-0.70225_0.11704.flac')
 >>> xs_noise_loc =  xs_noise_loc.unsqueeze(0)
 >>> fs = 16000 # sampling rate
 
@@ -51,7 +36,9 @@ Example
 >>> istft = ISTFT(sample_rate=fs)
 
 >>> Xs = stft(xs_diffused_noise)
+>>> Ns = stft(nn_diff)
 >>> XXs = cov(Xs)
+>>> NNs = cov(Ns)
 >>> tdoas = gccphat(XXs)
 >>> Ys_ds = delaysum(Xs, tdoas)
 >>> ys_ds = istft(Ys_ds)
@@ -65,22 +52,22 @@ Example
 >>> mics[3,:] = torch.FloatTensor([+0.05, +0.05, +0.00])
 >>> srpphat = SrpPhat(mics=mics)
 >>> doas = srpphat(XXs)
->>> Ys_mvdr = mvdr(Xs, XXs, doas, doa_mode=True, mics=mics, fs=fs)
+>>> Ys_mvdr = mvdr(Xs, NNs, doas, doa_mode=True, mics=mics, fs=fs)
 >>> ys_mvdr = istft(Ys_mvdr)
 
 >>> # Mvdr Beamforming with MUSIC localization
 >>> music = Music(mics=mics)
 >>> doas = music(XXs)
->>> Ys_mvdr2 = mvdr(Xs, XXs, doas, doa_mode=True, mics=mics, fs=fs)
+>>> Ys_mvdr2 = mvdr(Xs, NNs, doas, doa_mode=True, mics=mics, fs=fs)
 >>> ys_mvdr2 = istft(Ys_mvdr2)
 
 >>> # GeV Beamforming
 >>> gev = Gev()
 >>> Xs = stft(xs_localized_noise)
 >>> Ss = stft(ss)
->>> Nn = stft(nn_loc)
+>>> Ns = stft(nn_loc)
 >>> SSs = cov(Ss)
->>> NNs = cov(Nn)
+>>> NNs = cov(Ns)
 >>> Ys_gev = gev(Xs, SSs, NNs)
 >>> ys_gev = istft(Ys_gev)
 
@@ -113,10 +100,10 @@ class Covariance(torch.nn.Module):
     >>> from speechbrain.processing.multi_mic import Covariance
     >>>
     >>> xs_speech = read_audio(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
     >>> xs_speech = xs_speech.unsqueeze(0) # [batch, time, channels]
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
     >>> xs_noise = xs_noise.unsqueeze(0)
     >>> xs = xs_speech + 0.05 * xs_noise
     >>> fs = 16000
@@ -222,10 +209,10 @@ class DelaySum(torch.nn.Module):
         >>> from speechbrain.processing.multi_mic import GccPhat, DelaySum
         >>>
         >>> xs_speech = read_audio(
-        ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+        ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
         ... )
         >>> xs_speech = xs_speech. unsqueeze(0) # [batch, time, channel]
-        >>> xs_noise  = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+        >>> xs_noise  = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
         >>> xs_noise = xs_noise.unsqueeze(0) #[batch, time, channels]
         >>> fs = 16000
         >>> xs = xs_speech + 0.05 * xs_noise
@@ -292,7 +279,7 @@ class DelaySum(torch.nn.Module):
 
         # Get useful dimensions
         n_fft = Xs.shape[2]
-
+        localization_tensor = localization_tensor.to(Xs.device)
         # Convert the tdoas to taus
         if doa_mode:
             taus = doas2taus(doas=localization_tensor, mics=mics, fs=fs, c=c)
@@ -361,10 +348,10 @@ class Mvdr(torch.nn.Module):
         >>> from speechbrain.processing.multi_mic import GccPhat, DelaySum
         >>>
         >>> xs_speech = read_audio(
-        ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+        ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
         ... )
         >>> xs_speech = xs_speech.unsqueeze(0) # [batch, time, channel]
-        >>> xs_noise  = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+        >>> xs_noise  = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
         >>> xs_noise = xs_noise.unsqueeze(0) #[batch, time, channels]
         >>> fs = 16000
         >>> xs = xs_speech + 0.05 * xs_noise
@@ -376,9 +363,11 @@ class Mvdr(torch.nn.Module):
         >>> istft = ISTFT(sample_rate=fs)
         >>>
         >>> Xs = stft(xs)
+        >>> Ns = stft(xs_noise)
         >>> XXs = cov(Xs)
+        >>> NNs = cov(Ns)
         >>> tdoas = gccphat(XXs)
-        >>> Ys = mvdr(Xs, XXs, tdoas)
+        >>> Ys = mvdr(Xs, NNs, tdoas)
         >>> ys = istft(Ys)
     """
 
@@ -391,7 +380,7 @@ class Mvdr(torch.nn.Module):
     def forward(
         self,
         Xs,
-        XXs,
+        NNs,
         localization_tensor,
         doa_mode=False,
         mics=None,
@@ -408,8 +397,8 @@ class Mvdr(torch.nn.Module):
             A batch of audio signals in the frequency domain.
             The tensor must have the following format:
             (batch, time_step, n_fft/2 + 1, 2, n_mics)
-        XXs : tensor
-            The covariance matrices of the input signal. The tensor must
+        NNs : tensor
+            The covariance matrices of the noise signal. The tensor must
             have the format (batch, time_steps, n_fft/2 + 1, 2, n_mics + n_pairs)
         localization_tensor : tensor
             A tensor containing either time differences of arrival (TDOAs)
@@ -436,6 +425,10 @@ class Mvdr(torch.nn.Module):
         """
         # Get useful dimensions
         n_fft = Xs.shape[2]
+        localization_tensor = localization_tensor.to(Xs.device)
+        NNs = NNs.to(Xs.device)
+        if mics is not None:
+            mics = mics.to(Xs.device)
 
         # Convert the tdoas to taus
         if doa_mode:
@@ -448,12 +441,12 @@ class Mvdr(torch.nn.Module):
         As = steering(taus=taus, n_fft=n_fft)
 
         # Perform mvdr
-        Ys = Mvdr._mvdr(Xs=Xs, XXs=XXs, As=As)
+        Ys = Mvdr._mvdr(Xs=Xs, NNs=NNs, As=As)
 
         return Ys
 
     @staticmethod
-    def _mvdr(Xs, XXs, As, eps=1e-20):
+    def _mvdr(Xs, NNs, As, eps=1e-20):
         """Perform minimum variance distortionless response beamforming.
 
         Arguments
@@ -462,8 +455,8 @@ class Mvdr(torch.nn.Module):
             A batch of audio signals in the frequency domain.
             The tensor must have the following format:
             (batch, time_step, n_fft/2 + 1, 2, n_mics).
-        XXs : tensor
-            The covariance matrices of the input signal. The tensor must
+        NNs : tensor
+            The covariance matrices of the noise signal. The tensor must
             have the format (batch, time_steps, n_fft/2 + 1, 2, n_mics + n_pairs).
         As : tensor
             The steering vector to point in the direction of
@@ -472,14 +465,14 @@ class Mvdr(torch.nn.Module):
         """
 
         # Get unique covariance values to reduce the number of computations
-        XXs_val, XXs_idx = torch.unique(XXs, return_inverse=True, dim=1)
+        NNs_val, NNs_idx = torch.unique(NNs, return_inverse=True, dim=1)
 
         # Inverse covariance matrices
-        XXs_inv = eig.inv(XXs_val)
+        NNs_inv = eig.inv(NNs_val)
 
         # Capture real and imaginary parts, and restore time steps
-        XXs_inv_re = XXs_inv[..., 0][:, XXs_idx]
-        XXs_inv_im = XXs_inv[..., 1][:, XXs_idx]
+        NNs_inv_re = NNs_inv[..., 0][:, NNs_idx]
+        NNs_inv_im = NNs_inv[..., 1][:, NNs_idx]
 
         # Decompose steering vector
         AsC_re = As[..., 0, :].unsqueeze(4)
@@ -488,22 +481,22 @@ class Mvdr(torch.nn.Module):
         AsT_im = -1.0 * AsC_im.transpose(3, 4)
 
         # Project
-        XXs_inv_AsC_re = torch.matmul(XXs_inv_re, AsC_re) - torch.matmul(
-            XXs_inv_im, AsC_im
+        NNs_inv_AsC_re = torch.matmul(NNs_inv_re, AsC_re) - torch.matmul(
+            NNs_inv_im, AsC_im
         )
-        XXs_inv_AsC_im = torch.matmul(XXs_inv_re, AsC_im) + torch.matmul(
-            XXs_inv_im, AsC_re
+        NNs_inv_AsC_im = torch.matmul(NNs_inv_re, AsC_im) + torch.matmul(
+            NNs_inv_im, AsC_re
         )
 
         # Compute the gain
         alpha = 1.0 / (
-            torch.matmul(AsT_re, XXs_inv_AsC_re)
-            - torch.matmul(AsT_im, XXs_inv_AsC_im)
+            torch.matmul(AsT_re, NNs_inv_AsC_re)
+            - torch.matmul(AsT_im, NNs_inv_AsC_im)
         )
 
         # Get the unmixing coefficients
-        Ws_re = torch.matmul(XXs_inv_AsC_re, alpha).squeeze(4)
-        Ws_im = -torch.matmul(XXs_inv_AsC_im, alpha).squeeze(4)
+        Ws_re = torch.matmul(NNs_inv_AsC_re, alpha).squeeze(4)
+        Ws_im = -torch.matmul(NNs_inv_AsC_im, alpha).squeeze(4)
 
         # Applying MVDR
         Xs_re = Xs[..., 0, :]
@@ -530,10 +523,10 @@ class Gev(torch.nn.Module):
     >>> from speechbrain.processing.multi_mic import Gev
     >>>
     >>> xs_speech = read_audio(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
     >>> xs_speech  = xs_speech.unsqueeze(0) # [batch, time, channels]
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_0.70225_-0.70225_0.11704.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_0.70225_-0.70225_0.11704.flac')
     >>> xs_noise = xs_noise.unsqueeze(0)
     >>> fs = 16000
     >>> ss = xs_speech
@@ -602,6 +595,10 @@ class Gev(torch.nn.Module):
             have the format (batch, time_steps, n_fft/2 + 1, 2, n_mics + n_pairs).
         """
 
+        # Putting on the right device
+        SSs = SSs.to(Xs.device)
+        NNs = NNs.to(Xs.device)
+
         # Get useful dimensions
         n_mics = Xs.shape[4]
         n_mics_pairs = SSs.shape[4]
@@ -668,10 +665,10 @@ class GccPhat(torch.nn.Module):
     >>> from speechbrain.processing.multi_mic import GccPhat, DelaySum
     >>>
     >>> xs_speech = read_audio(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
     >>> xs_speech = xs_speech.unsqueeze(0) # [batch, time, channel]
-    >>> xs_noise  = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_noise  = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
     >>> xs_noise = xs_noise.unsqueeze(0) #[batch, time, channels]
     >>> fs = 16000
     >>> xs = xs_speech + 0.05 * xs_noise
@@ -871,8 +868,8 @@ class SrpPhat(torch.nn.Module):
     >>> from speechbrain.processing.multi_mic import Covariance
     >>> from speechbrain.processing.multi_mic import SrpPhat
 
-    >>> xs_speech = read_audio('samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac')
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_speech = read_audio('tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
     >>> fs = 16000
 
     >>> xs_speech = xs_speech.unsqueeze(0) # [batch, time, channels]
@@ -951,7 +948,7 @@ class SrpPhat(torch.nn.Module):
         n_fft = XXs.shape[2]
 
         # Generate the steering vector
-        As = steering(self.taus, n_fft)
+        As = steering(self.taus.to(XXs.device), n_fft)
 
         # Perform srp-phat
         doas = SrpPhat._srp_phat(XXs=XXs, As=As, doas=self.doas, eps=self.eps)
@@ -978,6 +975,10 @@ class SrpPhat(torch.nn.Module):
             All the possible directions of arrival that will be scanned. The
             tensor must have the format (n_doas, 3).
         """
+
+        # Putting on the right device
+        As = As.to(XXs.device)
+        doas = doas.to(XXs.device)
 
         # Get useful dimensions
         n_mics = As.shape[3]
@@ -1057,8 +1058,8 @@ class Music(torch.nn.Module):
     >>> from speechbrain.processing.multi_mic import Covariance
     >>> from speechbrain.processing.multi_mic import SrpPhat
 
-    >>> xs_speech = read_audio('samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac')
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_speech = read_audio('tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
     >>> fs = 16000
 
     >>> xs_speech = xs_speech.unsqueeze(0) # [batch, time, channels]
@@ -1139,7 +1140,7 @@ class Music(torch.nn.Module):
         n_fft = XXs.shape[2]
 
         # Generate the steering vector
-        As = steering(self.taus, n_fft)
+        As = steering(self.taus.to(XXs.device), n_fft)
 
         # Perform music
         doas = Music._music(
@@ -1169,6 +1170,10 @@ class Music(torch.nn.Module):
         n_sig : int
             The number of signals in the signal + noise subspace (default is 1).
         """
+
+        # Putting on the right device
+        As = As.to(XXs.device)
+        doas = doas.to(XXs.device)
 
         # Collecting data
         n_mics = As.shape[3]
@@ -1246,7 +1251,7 @@ def doas2taus(doas, mics, fs, c=343.0):
     >>> from speechbrain.dataio.dataio import read_audio
     >>> from speechbrain.processing.multi_mic import sphere, doas2taus
 
-    >>> xs = read_audio('samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac')
+    >>> xs = read_audio('tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac')
     >>> xs = xs.unsqueeze(0) # [batch, time, channels]
     >>> fs = 16000
     >>> mics = torch.zeros((4,3), dtype=torch.float)
@@ -1259,7 +1264,7 @@ def doas2taus(doas, mics, fs, c=343.0):
     >>> taus = doas2taus(doas, mics, fs)
     """
 
-    taus = (fs / c) * torch.matmul(doas, mics.transpose(0, 1))
+    taus = (fs / c) * torch.matmul(doas.to(mics.device), mics.transpose(0, 1))
 
     return taus
 
@@ -1285,9 +1290,9 @@ def tdoas2taus(tdoas):
     >>> from speechbrain.processing.multi_mic import GccPhat, tdoas2taus
     >>>
     >>> xs_speech = read_audio(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
     >>> xs = xs_speech + 0.05 * xs_noise
     >>> xs = xs.unsqueeze(0)
     >>> fs = 16000
@@ -1333,9 +1338,9 @@ def steering(taus, n_fft):
     >>> from speechbrain.processing.multi_mic import GccPhat, tdoas2taus, steering
     >>>
     >>> xs_speech = read_audio(
-    ...    'samples/audio_samples/multi_mic/speech_-0.82918_0.55279_-0.082918.flac'
+    ...    'tests/samples/multi-mic/speech_-0.82918_0.55279_-0.082918.flac'
     ... )
-    >>> xs_noise = read_audio('samples/audio_samples/multi_mic/noise_diffuse.flac')
+    >>> xs_noise = read_audio('tests/samples/multi-mic/noise_diffuse.flac')
     >>> xs = xs_speech + 0.05 * xs_noise
     >>> xs = xs.unsqueeze(0) # [batch, time, channels]
     >>> fs = 16000

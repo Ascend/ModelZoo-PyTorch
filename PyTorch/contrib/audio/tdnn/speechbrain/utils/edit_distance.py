@@ -1,23 +1,10 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Edit distance and WER computation.
 
 Authors
  * Aku Rouhe 2020
+ * Salima Mdhaffar 2021
 """
+
 import collections
 
 EDIT_SYMBOLS = {
@@ -492,6 +479,11 @@ def wer_details_by_utterance(
         # Compute edits for this utterance
         table = op_table(ref_tokens, hyp_tokens)
         ops = count_ops(table)
+        # Take into account "" outputs as empty
+        if ref_tokens[0] == "" and hyp_tokens[0] == "":
+            num_ref_tokens = 0
+        else:
+            num_ref_tokens = len(ref_tokens)
         # Update the utterance-level details if we got this far:
         utterance_details.update(
             {
@@ -500,7 +492,7 @@ def wer_details_by_utterance(
                 if len(hyp_tokens) == 0
                 else False,  # This also works for e.g. torch tensors
                 "num_edits": sum(ops.values()),
-                "num_ref_tokens": len(ref_tokens),
+                "num_ref_tokens": num_ref_tokens,
                 "WER": 100.0 * sum(ops.values()) / len(ref_tokens),
                 "insertions": ops["insertions"],
                 "deletions": ops["deletions"],
@@ -569,8 +561,12 @@ def wer_summary(details_by_utterance):
                 num_erraneous_sents += 1
         if dets["hyp_absent"]:
             num_absent_sents += 1
+    if num_scored_tokens != 0:
+        WER = 100.0 * num_edits / num_scored_tokens
+    else:
+        WER = 0.0
     wer_details = {
-        "WER": 100.0 * num_edits / num_scored_tokens,
+        "WER": WER,
         "SER": 100.0 * num_erraneous_sents / num_scored_sents,
         "num_edits": num_edits,
         "num_scored_tokens": num_scored_tokens,

@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Library implementing complex-valued recurrent neural networks.
 
 Authors
@@ -268,7 +253,7 @@ class CLSTM_Layer(torch.nn.Module):
             self.batch_size = self.batch_size * 2
 
         # Initial state
-        self.h_init = torch.zeros(1, self.hidden_size * 2, requires_grad=False)
+        self.register_buffer("h_init", torch.zeros(1, self.hidden_size * 2))
 
         # Preloading dropout masks (gives some speed improvement)
         self._init_drop(self.batch_size)
@@ -325,7 +310,7 @@ class CLSTM_Layer(torch.nn.Module):
         ct = self.h_init
 
         # Sampling dropout mask
-        drop_mask = self._sample_drop_mask()
+        drop_mask = self._sample_drop_mask(w)
 
         # Loop over time axis
         for k in range(w.shape[1]):
@@ -358,11 +343,12 @@ class CLSTM_Layer(torch.nn.Module):
         self.N_drop_masks = 16000
         self.drop_mask_cnt = 0
 
-        self.drop_masks = self.drop(
-            torch.ones(self.N_drop_masks, self.hidden_size * 2)
-        ).data
+        self.register_buffer(
+            "drop_masks",
+            self.drop(torch.ones(self.N_drop_masks, self.hidden_size * 2)).data,
+        )
 
-    def _sample_drop_mask(self,):
+    def _sample_drop_mask(self, w):
         """Selects one of the pre-defined dropout masks
         """
 
@@ -372,7 +358,9 @@ class CLSTM_Layer(torch.nn.Module):
             if self.drop_mask_cnt + self.batch_size > self.N_drop_masks:
                 self.drop_mask_cnt = 0
                 self.drop_masks = self.drop(
-                    torch.ones(self.N_drop_masks, self.hidden_size * 2,)
+                    torch.ones(
+                        self.N_drop_masks, self.hidden_size * 2, device=w.device
+                    )
                 ).data
 
             # Sampling the mask
@@ -382,6 +370,7 @@ class CLSTM_Layer(torch.nn.Module):
             self.drop_mask_cnt = self.drop_mask_cnt + self.batch_size
 
         else:
+            self.drop_mask_te = self.drop_mask_te.to(w.device)
             drop_mask = self.drop_mask_te
 
         return drop_mask
@@ -398,7 +387,7 @@ class CLSTM_Layer(torch.nn.Module):
 
             if self.training:
                 self.drop_masks = self.drop(
-                    torch.ones(self.N_drop_masks, self.hidden_size * 2,)
+                    torch.ones(self.N_drop_masks, self.hidden_size * 2)
                 ).data
 
 
@@ -646,7 +635,7 @@ class CRNN_Layer(torch.nn.Module):
             self.batch_size = self.batch_size * 2
 
         # Initial state
-        self.h_init = torch.zeros(1, self.hidden_size * 2, requires_grad=False)
+        self.register_buffer("h_init", torch.zeros(1, self.hidden_size * 2))
 
         # Preloading dropout masks (gives some speed improvement)
         self._init_drop(self.batch_size)
@@ -707,7 +696,7 @@ class CRNN_Layer(torch.nn.Module):
         hiddens = []
 
         # Sampling dropout mask
-        drop_mask = self._sample_drop_mask()
+        drop_mask = self._sample_drop_mask(w)
 
         # Loop over time axis
         for k in range(w.shape[1]):
@@ -730,12 +719,13 @@ class CRNN_Layer(torch.nn.Module):
         self.N_drop_masks = 16000
         self.drop_mask_cnt = 0
 
-        self.drop_masks = self.drop(
-            torch.ones(self.N_drop_masks, self.hidden_size * 2,)
-        ).data
+        self.register_buffer(
+            "drop_masks",
+            self.drop(torch.ones(self.N_drop_masks, self.hidden_size * 2)).data,
+        )
 
-    def _sample_drop_mask(self,):
-        """Selects one of the pre-defined dropout masks.
+    def _sample_drop_mask(self, w):
+        """Selects one of the pre-defined dropout masks
         """
 
         if self.training:
@@ -744,7 +734,9 @@ class CRNN_Layer(torch.nn.Module):
             if self.drop_mask_cnt + self.batch_size > self.N_drop_masks:
                 self.drop_mask_cnt = 0
                 self.drop_masks = self.drop(
-                    torch.ones(self.N_drop_masks, self.hidden_size * 2,)
+                    torch.ones(
+                        self.N_drop_masks, self.hidden_size * 2, device=w.device
+                    )
                 ).data
 
             # Sampling the mask
@@ -754,6 +746,7 @@ class CRNN_Layer(torch.nn.Module):
             self.drop_mask_cnt = self.drop_mask_cnt + self.batch_size
 
         else:
+            self.drop_mask_te = self.drop_mask_te.to(w.device)
             drop_mask = self.drop_mask_te
 
         return drop_mask
@@ -770,7 +763,7 @@ class CRNN_Layer(torch.nn.Module):
 
             if self.training:
                 self.drop_masks = self.drop(
-                    torch.ones(self.N_drop_masks, self.hidden_size * 2,)
+                    torch.ones(self.N_drop_masks, self.hidden_size * 2)
                 ).data
 
 
@@ -1046,7 +1039,7 @@ class CLiGRU_Layer(torch.nn.Module):
 
         if self.normalization == "batchnorm":
             self.norm = CBatchNorm(
-                input_size=hidden_size * 2, dim=-1, momentum=0.05,
+                input_size=hidden_size * 2, dim=-1, momentum=0.05
             )
             self.normalize = True
 
@@ -1060,7 +1053,7 @@ class CLiGRU_Layer(torch.nn.Module):
             self.normalize = True
 
         # Initial state
-        self.h_init = torch.zeros(1, self.hidden_size * 2, requires_grad=False)
+        self.register_buffer("h_init", torch.zeros(1, self.hidden_size * 2))
 
         # Preloading dropout masks (gives some speed improvement)
         self._init_drop(self.batch_size)
@@ -1126,7 +1119,7 @@ class CLiGRU_Layer(torch.nn.Module):
         hiddens = []
 
         # Sampling dropout mask
-        drop_mask = self._sample_drop_mask()
+        drop_mask = self._sample_drop_mask(w)
 
         # Loop over time axis
         for k in range(w.shape[1]):
@@ -1154,20 +1147,24 @@ class CLiGRU_Layer(torch.nn.Module):
         self.N_drop_masks = 16000
         self.drop_mask_cnt = 0
 
-        self.drop_masks = self.drop(
-            torch.ones(self.N_drop_masks, self.hidden_size * 2)
-        ).data
+        self.register_buffer(
+            "drop_masks",
+            self.drop(torch.ones(self.N_drop_masks, self.hidden_size * 2)).data,
+        )
 
-    def _sample_drop_mask(self,):
-        """Selects one of the pre-defined dropout masks.
+    def _sample_drop_mask(self, w):
+        """Selects one of the pre-defined dropout masks
         """
+
         if self.training:
 
             # Sample new masks when needed
             if self.drop_mask_cnt + self.batch_size > self.N_drop_masks:
                 self.drop_mask_cnt = 0
                 self.drop_masks = self.drop(
-                    torch.ones(self.N_drop_masks, self.hidden_size * 2,)
+                    torch.ones(
+                        self.N_drop_masks, self.hidden_size * 2, device=w.device
+                    )
                 ).data
 
             # Sampling the mask
@@ -1177,6 +1174,7 @@ class CLiGRU_Layer(torch.nn.Module):
             self.drop_mask_cnt = self.drop_mask_cnt + self.batch_size
 
         else:
+            self.drop_mask_te = self.drop_mask_te.to(w.device)
             drop_mask = self.drop_mask_te
 
         return drop_mask

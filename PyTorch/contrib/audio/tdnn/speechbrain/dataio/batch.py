@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Batch collation
 
 Authors
@@ -193,12 +178,13 @@ class PaddedBatch:
         return self
 
     def at_position(self, pos):
-        """Fetch an item by its position in the batch."""
+        """Gets the position."""
         key = self.__keys[pos]
         return getattr(self, key)
 
     @property
     def batchsize(self):
+        """Returns the bach size"""
         return self.__length
 
 
@@ -265,16 +251,21 @@ class BatchsizeGuesser:
         return bs
 
     def attr_based(self, batch):
+        """Implementation of attr_based."""
         return batch.batchsize
 
     def torch_tensor_bs(self, batch):
+        """Implementation of torch_tensor_bs."""
         return batch.shape[0]
 
     def len_of_first(self, batch):
+        """Implementation of len_of_first."""
         return len(batch[0])
 
     def len_of_iter_first(self, batch):
+        """Implementation of len_of_iter_first."""
         return len(next(iter(batch)))
 
     def fallback(self, batch):
+        """Implementation of fallback."""
         return 1

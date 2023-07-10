@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """
 Combinations of processing algorithms to implement common augmentations.
 
@@ -37,16 +22,15 @@ from speechbrain.processing.speech_augmentation import (
     AddNoise,
     AddReverb,
 )
-from speechbrain.utils.torch_audio_backend import get_torchaudio_backend
+from speechbrain.utils.torch_audio_backend import check_torchaudio_backend
 
-torchaudio_backend = get_torchaudio_backend()
-torchaudio.set_audio_backend(torchaudio_backend)
+check_torchaudio_backend()
 
 OPENRIR_URL = "http://www.openslr.org/resources/28/rirs_noises.zip"
 
 
 class SpecAugment(torch.nn.Module):
-    """An implementation of SpecAugment algorithm.
+    """An implementation of the SpecAugment algorithm.
 
     Reference:
         https://arxiv.org/abs/1904.08779
@@ -59,13 +43,13 @@ class SpecAugment(torch.nn.Module):
         Time warp window.
     time_warp_mode : str
         Interpolation mode for time warping (default "bicubic").
-    freq_mask : bool1
+    freq_mask : bool
         Whether applying freq mask.
     freq_mask_width : int or tuple
         Freq mask width range.
     n_freq_mask : int
         Number of freq mask.
-    time_mask : int
+    time_mask : bool
         Whether applying time mask.
     time_mask_width : int or tuple
         Time mask width range.
@@ -120,6 +104,7 @@ class SpecAugment(torch.nn.Module):
         self.replace_with_zero = replace_with_zero
 
     def forward(self, x):
+        """Takes in input a tensors and returns an augmented one."""
         if self.apply_time_warp:
             x = self.time_warp(x)
         if self.freq_mask:
@@ -175,7 +160,7 @@ class SpecAugment(torch.nn.Module):
             Corresponding dimension to mask.
         """
         original_size = x.shape
-        if x.shape == 4:
+        if x.dim() == 4:
             x = x.view(-1, x.shape[2], x.shape[3])
 
         batch, time, fea = x.shape
@@ -210,7 +195,8 @@ class SpecAugment(torch.nn.Module):
         if self.replace_with_zero:
             val = 0.0
         else:
-            val = x.mean()
+            with torch.no_grad():
+                val = x.mean()
 
         x = x.masked_fill_(mask, val)
         return x.view(*original_size)
@@ -281,7 +267,7 @@ class TimeDomainSpecAugment(torch.nn.Module):
     ):
         super().__init__()
         self.speed_perturb = SpeedPerturb(
-            perturb_prob=perturb_prob, orig_freq=sample_rate, speeds=speeds,
+            perturb_prob=perturb_prob, orig_freq=sample_rate, speeds=speeds
         )
         self.drop_freq = DropFreq(
             drop_prob=drop_freq_prob,
@@ -306,14 +292,10 @@ class TimeDomainSpecAugment(torch.nn.Module):
             The waveforms to distort
         """
         # Augmentation
-
         with torch.no_grad():
-            with torch.autograd.profiler.record_function("speed_perturb"):
-                waveforms = self.speed_perturb(waveforms)
-            with torch.autograd.profiler.record_function("drop_freq"):
-                waveforms = self.drop_freq(waveforms)
-            with torch.autograd.profiler.record_function("drop_chunk"):
-                waveforms = self.drop_chunk(waveforms, lengths)
+            waveforms = self.speed_perturb(waveforms)
+            waveforms = self.drop_freq(waveforms)
+            waveforms = self.drop_chunk(waveforms, lengths)
 
         return waveforms
 
@@ -358,6 +340,12 @@ class EnvCorrupt(torch.nn.Module):
         If ``0 < rir_scale_factor < 1``, the impulse response is compressed
         (less reverb), while if ``rir_scale_factor > 1`` it is dilated
         (more reverb).
+    reverb_sample_rate : int
+        Sample rate of input audio signals (rirs) used for reverberation.
+    noise_sample_rate: int
+        Sample rate of input audio signals used for adding noise.
+    clean_sample_rate: int
+        Sample rate of original (clean) audio signals.
 
     Example
     -------
@@ -382,11 +370,15 @@ class EnvCorrupt(torch.nn.Module):
         noise_snr_low=0,
         noise_snr_high=0,
         rir_scale_factor=1.0,
+        reverb_sample_rate=16000,
+        noise_sample_rate=16000,
+        clean_sample_rate=16000,
     ):
         super().__init__()
 
         # Download and prepare openrir
         if openrir_folder and (not reverb_csv or not noise_csv):
+
             open_reverb_csv = os.path.join(openrir_folder, "reverb.csv")
             open_noise_csv = os.path.join(openrir_folder, "noise.csv")
             _prepare_openrir(
@@ -396,16 +388,24 @@ class EnvCorrupt(torch.nn.Module):
                 openrir_max_noise_len,
             )
 
-            # Override if they aren't specified
-            reverb_csv = reverb_csv or open_reverb_csv
-            noise_csv = noise_csv or open_noise_csv
+            # Specify filepath and sample rate if not specified already
+            if not reverb_csv:
+                reverb_csv = open_reverb_csv
+                reverb_sample_rate = 16000
+
+            if not noise_csv:
+                noise_csv = open_noise_csv
+                noise_sample_rate = 16000
 
         # Initialize corrupters
         if reverb_csv is not None and reverb_prob > 0.0:
             self.add_reverb = AddReverb(
                 reverb_prob=reverb_prob,
                 csv_file=reverb_csv,
+                replacements={"rir_root": openrir_folder},
                 rir_scale_factor=rir_scale_factor,
+                reverb_sample_rate=reverb_sample_rate,
+                clean_sample_rate=clean_sample_rate,
             )
 
         if babble_speaker_count > 0 and babble_prob > 0.0:
@@ -420,9 +420,12 @@ class EnvCorrupt(torch.nn.Module):
             self.add_noise = AddNoise(
                 mix_prob=noise_prob,
                 csv_file=noise_csv,
+                replacements={"rir_root": openrir_folder},
                 num_workers=noise_num_workers,
                 snr_low=noise_snr_low,
                 snr_high=noise_snr_high,
+                noise_sample_rate=noise_sample_rate,
+                clean_sample_rate=clean_sample_rate,
             )
 
     def forward(self, waveforms, lengths):
@@ -443,8 +446,7 @@ class EnvCorrupt(torch.nn.Module):
             if hasattr(self, "add_babble"):
                 waveforms = self.add_babble(waveforms, lengths)
             if hasattr(self, "add_noise"):
-                with torch.autograd.profiler.record_function("add_noise"):
-                    waveforms = self.add_noise(waveforms, lengths)
+                waveforms = self.add_noise(waveforms, lengths)
 
         return waveforms
 
@@ -467,6 +469,7 @@ def _prepare_openrir(folder, reverb_csv, noise_csv, max_noise_len):
 
     # Download and unpack if necessary
     filepath = os.path.join(folder, "rirs_noises.zip")
+
     if not os.path.isdir(os.path.join(folder, "RIRS_NOISES")):
         download_file(OPENRIR_URL, filepath, unpack=True)
     else:
@@ -503,6 +506,8 @@ def _prepare_csv(folder, filelist, csv_file, max_length=None):
         than this will be cut into pieces.
     """
     try:
+        # make sure all processing reached here before main preocess create csv_file
+        sb.utils.distributed.ddp_barrier()
         if sb.utils.distributed.if_main_process():
             with open(csv_file, "w") as w:
                 w.write("ID,duration,wav,wav_format,wav_opts\n\n")
@@ -538,14 +543,22 @@ def _prepare_csv(folder, filelist, csv_file, max_length=None):
                             csv_row = (
                                 f"{ID}_{i}",
                                 str((stop - start) / rate),
-                                new_filename,
+                                "$rir_root" + new_filename[len(folder) :],
                                 ext,
                                 "\n",
                             )
                             w.write(",".join(csv_row))
                     else:
                         w.write(
-                            ",".join((ID, str(duration), filename, ext, "\n"))
+                            ",".join(
+                                (
+                                    ID,
+                                    str(duration),
+                                    "$rir_root" + filename[len(folder) :],
+                                    ext,
+                                    "\n",
+                                )
+                            )
                         )
     finally:
         sb.utils.distributed.ddp_barrier()

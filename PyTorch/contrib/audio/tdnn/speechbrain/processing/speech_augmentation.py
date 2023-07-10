@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Classes for mutating speech data for data augmentation.
 
 This module provides classes that produce realistic distortions of speech
@@ -79,14 +64,21 @@ class AddNoise(torch.nn.Module):
         A set of string replacements to carry out in the
         csv file. Each time a key is found in the text, it will be replaced
         with the corresponding value.
+    noise_sample_rate : int
+        The sample rate of the noise audio signals, so noise can be resampled
+        to the clean sample rate if necessary.
+    clean_sample_rate : int
+        The sample rate of the clean audio signals, so noise can be resampled
+        to the clean sample rate if necessary.
 
     Example
     -------
     >>> import pytest
     >>> from speechbrain.dataio.dataio import read_audio
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> clean = signal.unsqueeze(0) # [batch, time, channels]
-    >>> noisifier = AddNoise('samples/noise_samples/noise.csv')
+    >>> noisifier = AddNoise('tests/samples/annotation/noise.csv',
+    ...                     replacements={'noise_folder': 'tests/samples/noise'})
     >>> noisy = noisifier(clean, torch.ones(1))
     """
 
@@ -103,6 +95,8 @@ class AddNoise(torch.nn.Module):
         start_index=None,
         normalize=False,
         replacements={},
+        noise_sample_rate=16000,
+        clean_sample_rate=16000,
     ):
         super().__init__()
 
@@ -117,6 +111,9 @@ class AddNoise(torch.nn.Module):
         self.start_index = start_index
         self.normalize = normalize
         self.replacements = replacements
+
+        if noise_sample_rate != clean_sample_rate:
+            self.resampler = Resample(noise_sample_rate, clean_sample_rate)
 
     def forward(self, waveforms, lengths):
         """
@@ -208,6 +205,10 @@ class AddNoise(torch.nn.Module):
         noise_batch, noise_len = self._load_noise_batch_of_size(batch_size)
         noise_batch = noise_batch.to(lengths.device)
         noise_len = noise_len.to(lengths.device)
+
+        # Resample noise if necessary
+        if hasattr(self, "resampler"):
+            noise_batch = self.resampler(noise_batch)
 
         # Convert relative length to an index
         noise_len = (noise_len * noise_batch.shape[1]).long()
@@ -314,14 +315,21 @@ class AddReverb(torch.nn.Module):
         A set of string replacements to carry out in the
         csv file. Each time a key is found in the text, it will be replaced
         with the corresponding value.
+    reverb_sample_rate : int
+        The sample rate of the corruption signals (rirs), so that they
+        can be resampled to clean sample rate if necessary.
+    clean_sample_rate : int
+        The sample rate of the clean signals, so that the corruption
+        signals can be resampled to the clean sample rate before convolution.
 
     Example
     -------
     >>> import pytest
     >>> from speechbrain.dataio.dataio import read_audio
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> clean = signal.unsqueeze(0) # [batch, time, channels]
-    >>> reverb = AddReverb('samples/rir_samples/rirs.csv')
+    >>> reverb = AddReverb('tests/samples/annotation/RIRs.csv',
+    ...                     replacements={'rir_folder': 'tests/samples/RIRs'})
     >>> reverbed = reverb(clean, torch.ones(1))
     """
 
@@ -332,6 +340,8 @@ class AddReverb(torch.nn.Module):
         reverb_prob=1.0,
         rir_scale_factor=1.0,
         replacements={},
+        reverb_sample_rate=16000,
+        clean_sample_rate=16000,
     ):
         super().__init__()
         self.csv_file = csv_file
@@ -350,6 +360,9 @@ class AddReverb(torch.nn.Module):
             dataset, shuffle=(self.sorting == "random")
         )
         self.rir_data = iter(self.data_loader)
+
+        if reverb_sample_rate != clean_sample_rate:
+            self.resampler = Resample(reverb_sample_rate, clean_sample_rate)
 
     def forward(self, waveforms, lengths):
         """
@@ -380,6 +393,10 @@ class AddReverb(torch.nn.Module):
 
         # Load and prepare RIR
         rir_waveform = self._load_rir(waveforms)
+
+        # Resample to correct rate
+        if hasattr(self, "resampler"):
+            rir_waveform = self.resampler(rir_waveform)
 
         # Compress or dilate RIR
         if self.rir_scale_factor != 1:
@@ -436,7 +453,7 @@ class SpeedPerturb(torch.nn.Module):
     Example
     -------
     >>> from speechbrain.dataio.dataio import read_audio
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> perturbator = SpeedPerturb(orig_freq=16000, speeds=[90])
     >>> clean = signal.unsqueeze(0)
     >>> perturbed = perturbator(clean)
@@ -495,7 +512,7 @@ class Resample(torch.nn.Module):
     """This class resamples an audio signal using sinc-based interpolation.
 
     It is a modification of the `resample` function from torchaudio
-    (https://pytorch.org/audio/transforms.html#resample)
+    (https://pytorch.org/audio/stable/tutorials/audio_resampling_tutorial.html)
 
     Arguments
     ---------
@@ -511,7 +528,7 @@ class Resample(torch.nn.Module):
     Example
     -------
     >>> from speechbrain.dataio.dataio import read_audio
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> signal = signal.unsqueeze(0) # [batch, time, channels]
     >>> resampler = Resample(orig_freq=16000, new_freq=8000)
     >>> resampled = resampler(signal)
@@ -662,7 +679,6 @@ class Resample(torch.nn.Module):
 
             # we want conv_wave[:, i] to be at
             # output[:, i + n*conv_transpose_stride]
-
             dilated_conv_wave = torch.nn.functional.conv_transpose1d(
                 conv_wave, eye, stride=self.conv_transpose_stride
             )
@@ -774,21 +790,9 @@ class Resample(torch.nn.Module):
 
         weights = torch.zeros_like(delta_t)
         inside_window_indices = delta_t.abs().lt(window_width)
-       
-      
-        #print(delta_t.shape)
-        #print(weights.shape)
-        #print(inside_window_indices.shape)
-        
-        # print(torch.npu.synchronize(),"打点")
-        #stream = torch.npu.current_stream()
-        #stream.synchronize()
-        # rised-cosine (Hanning) window with width `window_width`
-        #print(delta_t[inside_window_indices])
-        #print(torch.npu.synchronize(),"打点")
 
-
-        weights[inside_window_indices] = 0.5 * (   # 出错位置
+        # raised-cosine (Hanning) window with width `window_width`
+        weights[inside_window_indices] = 0.5 * (
             1
             + torch.cos(
                 2
@@ -799,12 +803,10 @@ class Resample(torch.nn.Module):
             )
         )
 
-        #print(stream.synchronize(),"打点")
         t_eq_zero_indices = delta_t.eq(0.0)
         t_not_eq_zero_indices = ~t_eq_zero_indices
-        
+
         # sinc filter function
-        #print(torch.npu.synchronize(),"打点")
         weights[t_not_eq_zero_indices] *= torch.sin(
             2 * math.pi * lowpass_cutoff * delta_t[t_not_eq_zero_indices]
         ) / (math.pi * delta_t[t_not_eq_zero_indices])
@@ -839,7 +841,8 @@ class AddBabble(torch.nn.Module):
     >>> import pytest
     >>> babbler = AddBabble()
     >>> dataset = ExtendedCSVDataset(
-    ...     csvpath='samples/audio_samples/csv_example3.csv',
+    ...     csvpath='tests/samples/annotation/speech.csv',
+    ...     replacements={"data_folder": "tests/samples/single-mic"}
     ... )
     >>> loader = make_dataloader(dataset, batch_size=5)
     >>> speech, lengths = next(iter(loader)).at_position(0)
@@ -932,7 +935,7 @@ class DropFreq(torch.nn.Module):
     -------
     >>> from speechbrain.dataio.dataio import read_audio
     >>> dropper = DropFreq()
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> dropped_signal = dropper(signal.unsqueeze(0))
     """
 
@@ -1045,7 +1048,7 @@ class DropChunk(torch.nn.Module):
     -------
     >>> from speechbrain.dataio.dataio import read_audio
     >>> dropper = DropChunk(drop_start=100, drop_end=200, noise_factor=0.)
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> signal = signal.unsqueeze(0) # [batch, time, channels]
     >>> length = torch.ones(1)
     >>> dropped_signal = dropper(signal, length)
@@ -1105,7 +1108,6 @@ class DropChunk(torch.nn.Module):
         """
 
         # Reading input list
-
         lengths = (lengths * waveforms.size(1)).long()
         batch_size = waveforms.size(0)
         dropped_waveform = waveforms.clone()
@@ -1145,9 +1147,7 @@ class DropChunk(torch.nn.Module):
                 start_max = lengths[i]
             if start_max < 0:
                 start_max += lengths[i]
-
-            start_max = max(0, start_max.cpu() - length.max()).npu()
-            # start_max = max(0, start_max - length.max())
+            start_max = max(0, start_max - length.max())
 
             # Pick starting locations
             start = torch.randint(
@@ -1190,7 +1190,7 @@ class DoClip(torch.nn.Module):
     -------
     >>> from speechbrain.dataio.dataio import read_audio
     >>> clipper = DoClip(clip_low=0.01, clip_high=0.01)
-    >>> signal = read_audio('samples/audio_samples/example1.wav')
+    >>> signal = read_audio('tests/samples/single-mic/example1.wav')
     >>> clipped_signal = clipper(signal.unsqueeze(0))
     >>> "%.2f" % clipped_signal.max()
     '0.01'
@@ -1224,3 +1224,7 @@ class DoClip(torch.nn.Module):
         clipping_range = self.clip_high - self.clip_low
         clip_value = torch.rand(1,)[0] * clipping_range + self.clip_low
 
+        # Apply clipping
+        clipped_waveform = waveforms.clamp(-clip_value, clip_value)
+
+        return clipped_waveform

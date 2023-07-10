@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Transformer implementaion in the SpeechBrain style.
 
 Authors
@@ -24,9 +9,11 @@ import torch
 import torch.nn as nn
 import speechbrain as sb
 from typing import Optional
+import numpy as np
 
 
 from .Conformer import ConformerEncoder
+from .Branchformer import BranchformerEncoder
 from speechbrain.nnet.activations import Swish
 from speechbrain.nnet.attention import RelPosEncXL
 
@@ -55,7 +42,7 @@ class TransformerInterface(nn.Module):
     dropout: int, optional
         The dropout value.
     activation: torch.nn.Module, optional
-        The activation function for Feed-Forward Netowrk layer,
+        The activation function for Feed-Forward Network layer,
         e.g., relu or gelu or swish.
     custom_src_module: torch.nn.Module, optional
         Module that processes the src features to expected feature dim.
@@ -71,9 +58,11 @@ class TransformerInterface(nn.Module):
     bias: bool, optional
         Whether to use bias in Conformer convolutional layers.
     encoder_module: str, optional
-        Choose between Conformer and Transformer for the encoder. The decoder is fixed to be a Transformer.
+        Choose between Branchformer, Conformer and Transformer for the encoder. The decoder is fixed to be a Transformer.
     conformer_activation: torch.nn.Module, optional
         Activation module used after Conformer convolutional layers. E.g. Swish, ReLU etc. it has to be a torch Module.
+    branchformer_activation: torch.nn.Module, optional
+        Activation module used within the Branchformer Encoder. E.g. Swish, ReLU etc. it has to be a torch Module.
     attention_type: str, optional
         Type of attention layer used in all Transformer or Conformer layers.
         e.g. regularMHA or RelPosMHA.
@@ -83,6 +72,23 @@ class TransformerInterface(nn.Module):
     causal: bool, optional
         Whether the encoder should be causal or not (the decoder is always causal).
         If causal the Conformer convolutional layer is causal.
+    encoder_kdim: int, optional
+        Dimension of the key for the encoder.
+    encoder_vdim: int, optional
+        Dimension of the value for the encoder.
+    decoder_kdim: int, optional
+        Dimension of the key for the decoder.
+    decoder_vdim: int, optional
+        Dimension of the value for the decoder.
+    csgu_linear_units: int, optional
+        Number of neurons in the hidden linear units of the CSGU Module.
+        -> Branchformer
+    gate_activation: torch.nn.Module, optional
+        Activation function used at the gate of the CSGU module.
+        -> Branchformer
+    use_linear_after_conv: bool, optional
+        If True, will apply a linear transformation of size input_size//2.
+        -> Branchformer
     """
 
     def __init__(
@@ -102,14 +108,26 @@ class TransformerInterface(nn.Module):
         bias: Optional[bool] = True,
         encoder_module: Optional[str] = "transformer",
         conformer_activation: Optional[nn.Module] = Swish,
+        branchformer_activation: Optional[nn.Module] = nn.GELU,
         attention_type: Optional[str] = "regularMHA",
         max_length: Optional[int] = 2500,
         causal: Optional[bool] = False,
+        encoder_kdim: Optional[int] = None,
+        encoder_vdim: Optional[int] = None,
+        decoder_kdim: Optional[int] = None,
+        decoder_vdim: Optional[int] = None,
+        csgu_linear_units: Optional[int] = 3072,
+        gate_activation: Optional[nn.Module] = nn.Identity,
+        use_linear_after_conv: Optional[bool] = False,
     ):
         super().__init__()
         self.causal = causal
         self.attention_type = attention_type
         self.positional_encoding_type = positional_encoding
+        self.encoder_kdim = encoder_kdim
+        self.encoder_vdim = encoder_vdim
+        self.decoder_kdim = decoder_kdim
+        self.decoder_vdim = decoder_vdim
 
         assert attention_type in ["regularMHA", "RelPosMHAXL"]
         assert positional_encoding in ["fixed_abs_sine", None]
@@ -146,6 +164,8 @@ class TransformerInterface(nn.Module):
                     normalize_before=normalize_before,
                     causal=self.causal,
                     attention_type=self.attention_type,
+                    kdim=self.encoder_kdim,
+                    vdim=self.encoder_vdim,
                 )
             elif encoder_module == "conformer":
                 self.encoder = ConformerEncoder(
@@ -167,6 +187,19 @@ class TransformerInterface(nn.Module):
                 assert (
                     conformer_activation is not None
                 ), "conformer_activation must not be None"
+            elif encoder_module == "branchformer":
+                self.encoder = BranchformerEncoder(
+                    nhead=nhead,
+                    num_layers=num_encoder_layers,
+                    d_model=d_model,
+                    dropout=dropout,
+                    activation=branchformer_activation,
+                    kernel_size=kernel_size,
+                    attention_type=self.attention_type,
+                    csgu_linear_units=csgu_linear_units,
+                    gate_activation=gate_activation,
+                    use_linear_after_conv=use_linear_after_conv,
+                )
 
         # initialize the decoder
         if num_decoder_layers > 0:
@@ -182,11 +215,12 @@ class TransformerInterface(nn.Module):
                 normalize_before=normalize_before,
                 causal=True,
                 attention_type="regularMHA",  # always use regular attention in decoder
+                kdim=self.decoder_kdim,
+                vdim=self.decoder_vdim,
             )
 
     def forward(self, **kwags):
-        """Users should modify this function according to their own tasks.
-        """
+        """Users should modify this function according to their own tasks."""
         raise NotImplementedError
 
 
@@ -217,7 +251,6 @@ class PositionalEncoding(nn.Module):
         self.max_len = max_len
         pe = torch.zeros(self.max_len, input_size, requires_grad=False)
         positions = torch.arange(0, self.max_len).unsqueeze(1).float()
-        print("log in transformer.py")
         denominator = torch.exp(
             torch.arange(0, input_size, 2).float()
             * -(math.log(10000.0) / input_size)
@@ -335,6 +368,7 @@ class TransformerEncoderLayer(nn.Module):
         src_key_padding_mask : torch.Tensor, optional
             The mask for the src keys for each example in the batch.
         """
+
         if self.normalize_before:
             src1 = self.norm1(src)
         else:
@@ -364,7 +398,6 @@ class TransformerEncoderLayer(nn.Module):
         output = src + self.dropout2(output)
         if not self.normalize_before:
             output = self.norm2(output)
-
         return output, self_attn
 
 
@@ -414,6 +447,7 @@ class TransformerEncoder(nn.Module):
         activation=nn.ReLU,
         normalize_before=False,
         causal=False,
+        layerdrop_prob=0.0,
         attention_type="regularMHA",
     ):
         super().__init__()
@@ -436,6 +470,8 @@ class TransformerEncoder(nn.Module):
             ]
         )
         self.norm = sb.nnet.normalization.LayerNorm(d_model, eps=1e-6)
+        self.layerdrop_prob = layerdrop_prob
+        self.rng = np.random.default_rng()
 
     def forward(
         self,
@@ -455,17 +491,26 @@ class TransformerEncoder(nn.Module):
             The mask for the src keys per batch (optional).
         """
         output = src
+        if self.layerdrop_prob > 0.0:
+            keep_probs = self.rng.random(len(self.layers))
+        else:
+            keep_probs = None
         attention_lst = []
-        for enc_layer in self.layers:
-            output, attention = enc_layer(
-                output,
-                src_mask=src_mask,
-                src_key_padding_mask=src_key_padding_mask,
-                pos_embs=pos_embs,
-            )
-            attention_lst.append(attention)
-        output = self.norm(output)
+        for i, enc_layer in enumerate(self.layers):
+            if (
+                not self.training
+                or self.layerdrop_prob == 0.0
+                or keep_probs[i] > self.layerdrop_prob
+            ):
+                output, attention = enc_layer(
+                    output,
+                    src_mask=src_mask,
+                    src_key_padding_mask=src_key_padding_mask,
+                    pos_embs=pos_embs,
+                )
 
+                attention_lst.append(attention)
+        output = self.norm(output)
         return output, attention_lst
 
 
@@ -775,6 +820,7 @@ class NormalizedEmbedding(nn.Module):
         self.d_model = d_model
 
     def forward(self, x):
+        """ Processes the input tensor x and returns an output tensor."""
         return self.emb(x) * math.sqrt(self.d_model)
 
 

@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """A popular speaker recognition/diarization model (LDA and PLDA).
 
 Authors
@@ -104,6 +89,13 @@ class StatObject_SB:
         return ch
 
     def save_stat_object(self, filename):
+        """Saves stats in picke format.
+
+        Arguments
+        ---------
+        filename : path
+            Path where the pickle file will be stored.
+        """
         with open(filename, "wb") as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
@@ -395,12 +387,14 @@ class StatObject_SB:
 
 
 def diff(list1, list2):
+    """Difference beteween lists."""
     c = [item for item in list1 if item not in list2]
     c.sort()
     return c
 
 
 def ismember(list1, list2):
+    """Cheks if the elements if list1 are contained in list2."""
     c = [item in list2 for item in list1]
     return c
 
@@ -475,6 +469,7 @@ class Ndx:
             self.trialmask = ndx.trialmask
 
     def save_ndx_object(self, output_file_name):
+        """Saves the object in pickle format"""
         with open(output_file_name, "wb") as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 

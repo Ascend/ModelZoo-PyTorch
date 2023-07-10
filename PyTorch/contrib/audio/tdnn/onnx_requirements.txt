@@ -1,8 +1,0 @@
-onnx==1.10.2
-torch==1.10.0
-torchaudio==0.10.2
-tqdm==4.63.0
-HyperPyYAML==1.0.0
-huggingface-hub==0.4.0
-joblib==1.2.0
-

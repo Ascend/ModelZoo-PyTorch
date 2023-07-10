@@ -1,31 +1,17 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
+"""Library for computing STOI computation.
+Reference: "End-to-End Waveform Utterance Enhancement for Direct Evaluation
+Metrics Optimization by Fully Convolutional Neural Networks", TASLP, 2018
 
-# ################################
-# From paper: "End-to-End Waveform Utterance Enhancement for Direct Evaluation
-# Metrics Optimization by Fully Convolutional Neural Networks", TASLP, 2018
-# Authors: Szu-Wei, Fu 2020
-# ################################
+Authors:
+    Szu-Wei, Fu 2020
+"""
 
 import torch
 import torchaudio
 import numpy as np
-from speechbrain.utils.torch_audio_backend import get_torchaudio_backend
+from speechbrain.utils.torch_audio_backend import check_torchaudio_backend
 
-torchaudio_backend = get_torchaudio_backend()
-torchaudio.set_audio_backend(torchaudio_backend)
+check_torchaudio_backend()
 smallVal = np.finfo("float").eps  # To avoid divide by zero
 
 
@@ -71,12 +57,30 @@ def thirdoct(fs, nfft, num_bands, min_freq):
 
 
 def removeSilentFrames(x, y, dyn_range=40, N=256, K=128):
-    w = torch.unsqueeze(torch.from_numpy(np.hanning(256)), 0).to(torch.float)
+    """Removes silent frames from the STOI computation.
+
+    This function can be used as a loss function for training
+    with SGD-based updates.
+
+    Arguments
+    ---------
+    x: torch.Tensor
+        The clean (reference) waveforms.
+    y: torch.Tensor
+        The degraded (enhanced) waveforms.
+    dyn_range: int
+        Dynamic range used for mask computation.
+    N: int
+        Window length.
+    K: int
+        Step size.
+    """
+    w = torch.unsqueeze(torch.from_numpy(np.hanning(N)), 0).to(torch.float)
 
     X1 = x[0 : int(x.shape[0]) // N * N].reshape(int(x.shape[0]) // N, N).T
     X2 = (
-        x[128 : (int(x.shape[0]) - 128) // N * N + 128]
-        .reshape((int(x.shape[0]) - 128) // N, N)
+        x[K : (int(x.shape[0]) - K) // N * N + K]
+        .reshape((int(x.shape[0]) - K) // N, N)
         .T
     )
     X = torch.zeros(N, X1.shape[1] + X2.shape[1])
@@ -92,8 +96,8 @@ def removeSilentFrames(x, y, dyn_range=40, N=256, K=128):
 
     Y1 = y[0 : int(y.shape[0]) // N * N].reshape(int(y.shape[0]) // N, N).T
     Y2 = (
-        y[128 : (int(y.shape[0]) - 128) // N * N + 128]
-        .reshape((int(y.shape[0]) - 128) // N, N)
+        y[K : (int(y.shape[0]) - K) // N * N + K]
+        .reshape((int(y.shape[0]) - K) // N, N)
         .T
     )
     Y = torch.zeros(N, Y1.shape[1] + Y2.shape[1])
@@ -105,17 +109,17 @@ def removeSilentFrames(x, y, dyn_range=40, N=256, K=128):
 
     x_sil = torch.cat(
         (
-            x_sil[0:128, 0],
-            (x_sil[0:128, 1:] + x_sil[128:, 0:-1]).T.flatten(),
-            x_sil[128:256, -1],
+            x_sil[0:K, 0],
+            (x_sil[0:K, 1:] + x_sil[K:, 0:-1]).T.flatten(),
+            x_sil[K:N, -1],
         ),
         axis=0,
     )
     y_sil = torch.cat(
         (
-            y_sil[0:128, 0],
-            (y_sil[0:128, 1:] + y_sil[128:, 0:-1]).T.flatten(),
-            y_sil[128:256, -1],
+            y_sil[0:K, 0],
+            (y_sil[0:K, 1:] + y_sil[K:, 0:-1]).T.flatten(),
+            y_sil[K:N, -1],
         ),
         axis=0,
     )
@@ -160,7 +164,10 @@ def stoi_loss(y_pred_batch, y_true_batch, lens, reduction="mean"):
     octave_band = thirdoct(fs=10000, nfft=512, num_bands=15, min_freq=150)
     c = 5.62341325  # 10^(-Beta/20) with Beta = -15
     D = torch.zeros(batch_size)
-    resampler = torchaudio.transforms.Resample(fs, 10000)
+    resampler = torchaudio.transforms.Resample(fs, 10000).to(
+        y_pred_batch.device
+    )
+
     for i in range(0, batch_size):  # Run over mini-batches
         y_true = y_true_batch[i, 0 : int(lens[i] * y_pred_batch.shape[1])]
         y_pred = y_pred_batch[i, 0 : int(lens[i] * y_pred_batch.shape[1])]

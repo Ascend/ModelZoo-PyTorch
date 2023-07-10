@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Library implementing complex-valued normalization.
 
 Authors
@@ -145,7 +130,7 @@ class CBatchNorm(torch.nn.Module):
         self.reset_parameters()
 
     def reset_running_stats(self):
-        # Simply reset the running statistics to the initial values
+        """Simply reset the running statistics to the initial values."""
         # "Deep Complex Networks" Trabelsi C. et al.
         if self.track_running_stats:
             if self.center:
@@ -157,7 +142,7 @@ class CBatchNorm(torch.nn.Module):
             self.num_batches_tracked.zero_()
 
     def reset_parameters(self):
-        # Simply reset all the parameters.
+        """Simply reset all the parameters."""
         # "Deep Complex Networks" Trabelsi C. et al.
         self.reset_running_stats()
         if self.scale:
@@ -413,7 +398,7 @@ class CLayerNorm(torch.nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        # Simply reset all the parameters.
+        """Simply reset all the parameters."""
         # "Deep Complex Networks" Trabelsi C. et al.
         if self.scale:
             self.gamma_rr.data.fill_(1 / np.sqrt(2))
@@ -423,7 +408,7 @@ class CLayerNorm(torch.nn.Module):
             self.beta.data.zero_()
 
     def forward(self, input):
-
+        """Computes the complex normalization."""
         input_shape = input.size()
         ndim = input.dim()
         reduction_axes = list(range(ndim))

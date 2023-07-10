@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Webdataset compatible iterators
 
 Authors:
@@ -24,27 +9,29 @@ from dataclasses import dataclass, field
 from functools import partial
 from typing import Any
 from speechbrain.dataio.batch import PaddedBatch
-import torch
 
 
 @dataclass(order=True)
 class LengthItem:
+    """ Data class for lenghts"""
+
     length: int
     data: Any = field(compare=False)
 
 
 def total_length_with_padding(lengths):
-    # How long would batch be (with padding)
+    """ Determines how long would batch be (with padding)"""
     return len(lengths) * max(lengths)
 
 
 def padding_ratio(lengths):
-    # How much of batch is padding:
+    """ Determines how much of batch is padding."""
     return 1.0 - sum(lengths) / total_length_with_padding(lengths)
 
 
 @dataclass(order=True)
 class RatioIndex:
+    "Data class for Ratio."
     ratio: float
     index: int
 
@@ -95,8 +82,8 @@ def indices_around_random_pivot(
 
     # Define index filtering function:
     def possibly_consider(index, to_consider):
-        # Adds an index to the to_consider list,
-        # if the index passes all requirements.
+        """Adds an index to the to_consider list, f the index passes all
+        requirements."""
         if index < 0 or index >= len(databuffer):
             return
         consideree = databuffer[index]
@@ -111,25 +98,24 @@ def indices_around_random_pivot(
         to_consider.append(RatioIndex(updated_ratio, index))
 
     # Loop till the target length is exceeded or max batch size is hit:
-    with torch.autograd.profiler.record_function("loop 0 in iterator"):
-        while (
-            max_index + 1 - min_index < max_batch_size
-            and total_length_with_padding(lengths) < target_batch_numel
-        ):
-            # Consider indices to the left and to the right, if they
-            # pass the requirements:
-            to_consider = []
-            possibly_consider(min_index - 1, to_consider)
-            possibly_consider(max_index + 1, to_consider)
-            # If neither pass the requirements, then we must return the batch
-            # as it is now (there can be no better addition):
-            if not to_consider:
-                break
-            # Pick the index that minimizes the padding ratio increase:
-            to_add = min(to_consider)
-            min_index = min(min_index, to_add.index)
-            max_index = max(max_index, to_add.index)
-            lengths.append(databuffer[to_add.index].length)
+    while (
+        max_index + 1 - min_index < max_batch_size
+        and total_length_with_padding(lengths) < target_batch_numel
+    ):
+        # Consider indices to the left and to the right, if they
+        # pass the requirements:
+        to_consider = []
+        possibly_consider(min_index - 1, to_consider)
+        possibly_consider(max_index + 1, to_consider)
+        # If neither pass the requirements, then we must return the batch
+        # as it is now (there can be no better addition):
+        if not to_consider:
+            break
+        # Pick the index that minimizes the padding ratio increase:
+        to_add = min(to_consider)
+        min_index = min(min_index, to_add.index)
+        max_index = max(max_index, to_add.index)
+        lengths.append(databuffer[to_add.index].length)
     return list(range(min_index, max_index + 1))
 
 

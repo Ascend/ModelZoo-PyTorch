@@ -1,30 +1,16 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """
 Data reading and writing.
 
 Authors
  * Mirco Ravanelli 2020
  * Aku Rouhe 2020
- :q
  * Ju-Chieh Chou 2020
  * Samuele Cornell 2020
  * Abdel HEBA 2020
+ * Gaelle Laperriere 2021
+ * Sahar Ghannay 2021
+ * Sylvain de Langen 2022
 """
-
 import os
 import torch
 import logging
@@ -36,13 +22,9 @@ import time
 import torchaudio
 import json
 import re
-from speechbrain.utils.torch_audio_backend import get_torchaudio_backend
-import soundfile as sf
+from speechbrain.utils.torch_audio_backend import check_torchaudio_backend
 
-import torch.nn.functional as nn
-
-torchaudio_backend = get_torchaudio_backend()
-torchaudio.set_audio_backend(torchaudio_backend)
+check_torchaudio_backend()
 logger = logging.getLogger(__name__)
 
 
@@ -92,7 +74,6 @@ def _recursive_format(data, replacements):
     # Works in-place.
     if isinstance(data, dict):
         for key, item in data.items():
-
             if isinstance(item, dict) or isinstance(item, list):
                 _recursive_format(item, replacements)
             elif isinstance(item, str):
@@ -100,7 +81,6 @@ def _recursive_format(data, replacements):
             # If not dict, list or str, do nothing
     if isinstance(data, list):
         for i, item in enumerate(data):
-            
             if isinstance(item, dict) or isinstance(item, list):
                 _recursive_format(item, replacements)
             elif isinstance(item, str):
@@ -180,38 +160,111 @@ def load_data_csv(csv_path, replacements={}):
     return result
 
 
+def read_audio_info(path) -> "torchaudio.backend.common.AudioMetaData":
+    """Retrieves audio metadata from a file path. Behaves identically to
+    torchaudio.info, but attempts to fix metadata (such as frame count) that is
+    otherwise broken with certain torchaudio version and codec combinations.
+
+    Note that this may cause full file traversal in certain cases!
+
+    Arguments
+    ----------
+    path : str
+        Path to the audio file to examine.
+
+    Returns
+    -------
+    torchaudio.backend.common.AudioMetaData
+        Same value as returned by `torchaudio.info`, but may eventually have
+        `num_frames` corrected if it otherwise would have been `== 0`.
+
+    NOTE
+    ----
+    Some codecs, such as MP3, require full file traversal for accurate length
+    information to be retrieved.
+    In these cases, you may as well read the entire audio file to avoid doubling
+    the processing time.
+    """
+
+    _path_no_ext, path_ext = os.path.splitext(path)
+
+    if path_ext == ".mp3":
+        # Additionally, certain affected versions of torchaudio fail to
+        # autodetect mp3.
+        # HACK: here, we check for the file extension to force mp3 detection,
+        # which prevents an error from occuring in torchaudio.
+        info = torchaudio.info(path, format="mp3")
+    else:
+        info = torchaudio.info(path)
+
+    # Certain file formats, such as MP3, do not provide a reliable way to
+    # query file duration from metadata (when there is any).
+    # For MP3, certain versions of torchaudio began returning num_frames == 0.
+    #
+    # https://github.com/speechbrain/speechbrain/issues/1925
+    # https://github.com/pytorch/audio/issues/2524
+    #
+    # Accomodate for these cases here: if `num_frames == 0` then maybe something
+    # has gone wrong.
+    # If some file really had `num_frames == 0` then we are not doing harm
+    # double-checking anyway. If I am wrong and you are reading this comment
+    # because of it: sorry
+    if info.num_frames == 0:
+        channels_data, sample_rate = torchaudio.load(path, normalize=False)
+
+        info.num_frames = channels_data.size(1)
+        info.sample_rate = sample_rate  # because we might as well
+
+    return info
+
+
 def read_audio(waveforms_obj):
     """General audio loading, based on a custom notation.
 
     Expected use case is in conjunction with Datasets
     specified by JSON.
 
-    The custom notation:
+    The parameter may just be a path to a file:
+    `read_audio("/path/to/wav1.wav")`
 
-    The annotation can be just a path to a file:
-    "/path/to/wav1.wav"
+    Alternatively, you can specify more options in a dict, e.g.:
+    ```
+    # load a file from sample 8000 through 15999
+    read_audio({
+        "file": "/path/to/wav2.wav",
+        "start": 8000,
+        "stop": 16000
+    })
+    ```
 
-    Or can specify more options in a dict:
-    {"file": "/path/to/wav2.wav",
-    "start": 8000,
-    "stop": 16000
-    }
+    Which codecs are supported depends on your torchaudio backend.
+    Refer to `torchaudio.load` documentation for further details.
 
     Arguments
     ----------
     waveforms_obj : str, dict
-        Audio reading annotation, see above for format.
+        Path to audio or dict with the desired configuration.
+
+        Keys for the dict variant:
+        - `"file"` (str): Path to the audio file.
+        - `"start"` (int, optional): The first sample to load.
+        If unspecified, load from the very first frame.
+        - `"stop"` (int, optional): The last sample to load (exclusive).
+        If unspecified or equal to start, load from `start` to the end.
+        Will not fail if `stop` is past the sample count of the file and will
+        return less frames.
 
     Returns
     -------
     torch.Tensor
-        Audio tensor with shape: (samples, ).
+        1-channel: audio tensor with shape: `(samples, )`.
+        >=2-channels: audio tensor with shape: `(samples, channels)`.
 
     Example
     -------
     >>> dummywav = torch.rand(16000)
     >>> import os
-    >>> tmpfile = os.path.join(str(getfixture('tmpdir')),  "wave.wav")
+    >>> tmpfile = str(getfixture('tmpdir') / "wave.wav")
     >>> write_audio(tmpfile, dummywav, 16000)
     >>> asr_example = { "wav": tmpfile, "spk_id": "foo", "words": "foo bar"}
     >>> loaded = read_audio(asr_example["wav"])
@@ -219,50 +272,40 @@ def read_audio(waveforms_obj):
     True
     """
     if isinstance(waveforms_obj, str):
-        '''
-        原始代码code
         audio, _ = torchaudio.load(waveforms_obj)
-        return audio.transpose(0, 1).squeeze(1)
-        '''
-        
-        path = waveforms_obj
-        audio = sf.read(path)[0]
-        audio = torch.tensor(audio)
-        
-        # padding operation begin
-        p1d = (0,288000-len(audio))
-        audio_pad = nn.pad(audio,p1d,'constant',0)
-        #padding operation end
+    else:
+        path = waveforms_obj["file"]
+        start = waveforms_obj.get("start", 0)
+        # To match past SB behavior, `start == stop` or omitted `stop` means to
+        # load all frames from `start` to the file end.
+        stop = waveforms_obj.get("stop", start)
 
-        return audio_pad.float()
-    
-    '''
-    原code:
-    path = waveforms_obj["file"]
-    start =waveforms_obj.get("start", 0)
-    # Default stop to start -> if not specified, num_frames becomes 0,
-    # which is the torchaudio default
-    stop = waveforms_obj.get("stop", start)
-    num_frames = stop - start
-    audio, fs = torchaudio.load(path, num_frames=num_frames, frame_offset=start)
+        if start < 0:
+            raise ValueError(
+                f"Invalid sample range (start < 0): {start}..{stop}!"
+            )
+
+        if stop < start:
+            # Could occur if the user tried one of two things:
+            # - specify a negative value as an attempt to index from the end;
+            # - specify -1 as an attempt to load up to the last sample.
+            raise ValueError(
+                f"Invalid sample range (stop < start): {start}..{stop}!\n"
+                'Hint: Omit "stop" if you want to read to the end of file.'
+            )
+
+        # Requested to load until a specific frame?
+        if start != stop:
+            num_frames = stop - start
+            audio, fs = torchaudio.load(
+                path, num_frames=num_frames, frame_offset=start
+            )
+        else:
+            # Load to the end.
+            audio, fs = torchaudio.load(path, frame_offset=start)
+
     audio = audio.transpose(0, 1)
     return audio.squeeze(1)
-    '''
-    #print("2********************************************")
-    path = waveforms_obj["file"]
-    start = waveforms_obj.get("start",0)
-    stop = waveforms_obj.get("start",start)
-    num_frames = stop - start
-    audio, fs = torchaudio.backend.soundfile_backend.load(path, num_frames=num_frames,  frame_offset=start)
-    audio = torch.tensor(audio)
-    # padding operation begin
-    p1d = (0,288000-len(audio))
-    # print("audio.shape = ", audio.shape)
-    audio_pad = nn.pad(audio,p1d,'constant',0)
-    #padding operation end
-    return audio_pad.float()
-    
-
 
 
 def read_audio_multichannel(waveforms_obj):
@@ -311,7 +354,7 @@ def read_audio_multichannel(waveforms_obj):
     -------
     >>> dummywav = torch.rand(16000, 2)
     >>> import os
-    >>> tmpfile = os.path.join(str(getfixture('tmpdir')),  "wave.wav")
+    >>> tmpfile = str(getfixture('tmpdir') / "wave.wav")
     >>> write_audio(tmpfile, dummywav, 16000)
     >>> asr_example = { "wav": tmpfile, "spk_id": "foo", "words": "foo bar"}
     >>> loaded = read_audio(asr_example["wav"])
@@ -319,17 +362,8 @@ def read_audio_multichannel(waveforms_obj):
     True
     """
     if isinstance(waveforms_obj, str):
-        """
-        原code:
         audio, _ = torchaudio.load(waveforms_obj)
         return audio.transpose(0, 1)
-        """
-        path = waveforms_obj
-        audio = sf.read(path)[0]
-        audio = torch.tensor(audio)
-        return audio.float()
-        
-        
 
     files = waveforms_obj["files"]
     if not isinstance(files, list):
@@ -341,24 +375,12 @@ def read_audio_multichannel(waveforms_obj):
     # which is the torchaudio default
     stop = waveforms_obj.get("stop", start - 1)
     num_frames = stop - start
-    '''
-    原code:
     for f in files:
         audio, fs = torchaudio.load(
             f, num_frames=num_frames, frame_offset=start
         )
         waveforms.append(audio)
 
-    out = torch.cat(waveforms, 0)
-    return out.transpose(0, 1)
-    '''
-    for f in files:
-        audio, fs = torchaudio.backend.soundfile_backend.load(
-            f, num_frames=num_frames, frame_offset=start
-        )
-        audio = torch.tensor(audio)
-        waveforms.append(audio.float())
-    
     out = torch.cat(waveforms, 0)
     return out.transpose(0, 1)
 
@@ -380,7 +402,7 @@ def write_audio(filepath, audio, samplerate):
     Example
     -------
     >>> import os
-    >>> tmpfile = os.path.join(str(getfixture('tmpdir')),  "wave.wav")
+    >>> tmpfile = str(getfixture('tmpdir') / "wave.wav")
     >>> dummywav = torch.rand(16000, 2)
     >>> write_audio(tmpfile, dummywav, 16000)
     >>> loaded = read_audio(tmpfile)
@@ -680,7 +702,7 @@ def write_txt_file(data, filename, sampling_rate=None):
     -------
     >>> tmpdir = getfixture('tmpdir')
     >>> signal=torch.tensor([1,2,3,4])
-    >>> write_txt_file(signal, os.path.join(tmpdir, 'example.txt'))
+    >>> write_txt_file(signal, tmpdir / 'example.txt')
     """
     del sampling_rate  # Not used.
     # Check if the path of filename exists
@@ -717,7 +739,7 @@ def write_stdout(data, filename=None, sampling_rate=None):
     -------
     >>> tmpdir = getfixture('tmpdir')
     >>> signal = torch.tensor([[1,2,3,4]])
-    >>> write_stdout(signal, tmpdir + '/example.txt')
+    >>> write_stdout(signal, tmpdir / 'example.txt')
     [1, 2, 3, 4]
     """
     # Managing Torch.Tensor
@@ -767,19 +789,9 @@ def length_to_mask(length, max_len=None, dtype=None, device=None):
 
     if max_len is None:
         max_len = length.max().long().item()  # using arange to generate mask
-
-    # mask = torch.arange(
-        # max_len, device=length.device, dtype=length.dtype
-    # ).expand(len(length), max_len) < length.unsqueeze(1)
-
-
-    arange_val = torch.arange(
+    mask = torch.arange(
         max_len, device=length.device, dtype=length.dtype
-    )
-
-    expand_val = arange_val.expand(len(length), max_len)
-    mask = expand_val < length.unsqueeze(1)
-
+    ).expand(len(length), max_len) < length.unsqueeze(1)
 
     if dtype is None:
         dtype = length.dtype
@@ -836,7 +848,7 @@ def read_kaldi_lab(kaldi_ali, kaldi_lab_opts):
             + kaldi_lab_opts
             + " "
             + kaldi_ali
-            + "/final.mdl ark:- ark:-|",
+            + "/final.mdl ark:- ark:-|"
         )
     }
     return lab
@@ -857,7 +869,7 @@ def get_md5(file):
 
     Example
     -------
-    >>> get_md5('samples/audio_samples/example1.wav')
+    >>> get_md5('tests/samples/single-mic/example1.wav')
     'c482d0081ca35302d30d12f1136c34e5'
     """
     # Lets read stuff in 64kb chunks!
@@ -888,9 +900,9 @@ def save_md5(files, out_file):
     None
 
     Example:
-    >>> files = ['samples/audio_samples/example1.wav']
+    >>> files = ['tests/samples/single-mic/example1.wav']
     >>> tmpdir = getfixture('tmpdir')
-    >>> save_md5(files, os.path.join(tmpdir, "md5.pkl"))
+    >>> save_md5(files, tmpdir / "md5.pkl")
     """
     # Initialization of the dictionary
     md5_dict = {}
@@ -915,7 +927,7 @@ def save_pkl(obj, file):
 
     Example
     -------
-    >>> tmpfile = os.path.join(getfixture('tmpdir'), "example.pkl")
+    >>> tmpfile = getfixture('tmpdir') / "example.pkl"
     >>> save_pkl([1, 2, 3, 4, 5], tmpfile)
     >>> load_pkl(tmpfile)
     [1, 2, 3, 4, 5]
@@ -1068,8 +1080,10 @@ def merge_csvs(data_folder, csv_lst, merged_csv):
 
     Example
     -------
-    >>> merge_csvs("samples/audio_samples/",
-    ... ["csv_example.csv", "csv_example2.csv"],
+    >>> tmpdir = getfixture('tmpdir')
+    >>> os.symlink(os.path.realpath("tests/samples/annotation/speech.csv"), tmpdir / "speech.csv")
+    >>> merge_csvs(tmpdir,
+    ... ["speech.csv", "speech.csv"],
     ... "test_csv_merge.csv")
     """
     write_path = os.path.join(data_folder, merged_csv)
@@ -1101,9 +1115,9 @@ def split_word(sequences, space="_"):
 
     Arguments
     ---------
-    sequences : list
+    sequences: list
         Each item contains a list, and this list contains a words sequence.
-    space : string
+    space: string
         The token represents space. Default: _
 
     Returns
@@ -1121,4 +1135,80 @@ def split_word(sequences, space="_"):
     for seq in sequences:
         chars = list(space.join(seq))
         results.append(chars)
+    return results
+
+
+def extract_concepts_values(sequences, keep_values, tag_in, tag_out, space):
+    """keep the semantic concepts and values for evaluation.
+
+    Arguments
+    ---------
+    sequences: list
+        Each item contains a list, and this list contains a character sequence.
+    keep_values: bool
+        If True, keep the values. If not don't.
+    tag_in: char
+        Indicates the start of the concept.
+    tag_out: char
+        Indicates the end of the concept.
+    space: string
+        The token represents space. Default: _
+
+    Returns
+    -------
+    The list contains concept and value sequences for each sentence.
+
+    Example
+    -------
+    >>> sequences = [['<reponse>','_','n','o','_','>','_','<localisation-ville>','_','L','e','_','M','a','n','s','_','>'], ['<reponse>','_','s','i','_','>'],['v','a','_','b','e','n','e']]
+    >>> results = extract_concepts_values(sequences, True, '<', '>', '_')
+    >>> results
+    [['<reponse> no', '<localisation-ville> Le Mans'], ['<reponse> si'], ['']]
+    """
+    results = []
+    for sequence in sequences:
+        # ['<reponse>_no_>_<localisation-ville>_Le_Mans_>']
+        sequence = "".join(sequence)
+        # ['<reponse>','no','>','<localisation-ville>','Le','Mans,'>']
+        sequence = sequence.split(space)
+        processed_sequence = []
+        value = (
+            []
+        )  # If previous sequence value never used because never had a tag_out
+        kept = ""  # If previous sequence kept never used because never had a tag_out
+        concept_open = False
+        for word in sequence:
+            if re.match(tag_in, word):
+                # If not close tag but new tag open
+                if concept_open and keep_values:
+                    if len(value) != 0:
+                        kept += " " + " ".join(value)
+                    concept_open = False
+                    processed_sequence.append(kept)
+                kept = word  # 1st loop: '<reponse>'
+                value = []  # Concept's value
+                concept_open = True  # Trying to catch the concept's value
+                # If we want the CER
+                if not keep_values:
+                    processed_sequence.append(kept)  # Add the kept concept
+            # If we have a tag_out, had a concept, and want the values for CVER
+            elif re.match(tag_out, word) and concept_open and keep_values:
+                # If we have a value
+                if len(value) != 0:
+                    kept += " " + " ".join(
+                        value
+                    )  # 1st loop: '<response>' + ' ' + 'no'
+                concept_open = False  # Wait for a new tag_in to pursue
+                processed_sequence.append(kept)  # Add the kept concept + value
+            elif concept_open:
+                value.append(word)  # 1st loop: 'no'
+        # If not close tag but end sequence
+        if concept_open and keep_values:
+            if len(value) != 0:
+                kept += " " + " ".join(value)
+            concept_open = False
+            processed_sequence.append(kept)
+        if len(processed_sequence) == 0:
+            processed_sequence.append("")
+        results.append(processed_sequence)
     return results

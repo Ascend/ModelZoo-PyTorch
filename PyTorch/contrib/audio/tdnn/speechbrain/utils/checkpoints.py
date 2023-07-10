@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """This module implements a checkpoint saver and loader.
 
 A checkpoint in an experiment usually needs to save the state of many different
@@ -73,6 +58,8 @@ import inspect
 import shutil
 import logging
 import warnings
+from packaging import version
+import speechbrain.utils._workarounds as __wa
 
 logger = logging.getLogger(__name__)
 
@@ -172,14 +159,37 @@ def torch_parameter_transfer(obj, path, device):
 
 
 # These dicts are indexed by class and hold the default checkpoints methods
-DEFAULT_LOAD_HOOKS = {
-    torch.nn.Module: torch_recovery,
-    torch.optim.Optimizer: torch_recovery,
-}
-DEFAULT_SAVE_HOOKS = {
-    torch.nn.Module: torch_save,
-    torch.optim.Optimizer: torch_save,
-}
+if version.parse(torch.__version__) < version.parse("2.0.0"):
+    DEFAULT_LOAD_HOOKS = {
+        torch.nn.Module: torch_recovery,
+        torch.optim.Optimizer: torch_recovery,
+        torch.optim.lr_scheduler._LRScheduler: torch_recovery,
+        torch.optim.lr_scheduler.ReduceLROnPlateau: torch_recovery,
+        torch.cuda.amp.grad_scaler.GradScaler: torch_recovery,
+    }
+    DEFAULT_SAVE_HOOKS = {
+        torch.nn.Module: torch_save,
+        torch.optim.Optimizer: torch_save,
+        torch.optim.lr_scheduler._LRScheduler: torch_save,
+        torch.optim.lr_scheduler.ReduceLROnPlateau: torch_save,
+        torch.cuda.amp.grad_scaler.GradScaler: torch_save,
+    }
+else:
+    DEFAULT_LOAD_HOOKS = {
+        torch.nn.Module: torch_recovery,
+        torch.optim.Optimizer: torch_recovery,
+        torch.optim.lr_scheduler.LRScheduler: torch_recovery,
+        torch.optim.lr_scheduler.ReduceLROnPlateau: torch_recovery,
+        torch.cuda.amp.grad_scaler.GradScaler: torch_recovery,
+    }
+    DEFAULT_SAVE_HOOKS = {
+        torch.nn.Module: torch_save,
+        torch.optim.Optimizer: torch_save,
+        torch.optim.lr_scheduler.LRScheduler: torch_save,
+        torch.optim.lr_scheduler.ReduceLROnPlateau: torch_save,
+        torch.cuda.amp.grad_scaler.GradScaler: torch_save,
+    }
+
 DEFAULT_TRANSFER_HOOKS = {
     torch.nn.Module: torch_parameter_transfer,
 }
@@ -196,6 +206,10 @@ try:
 except ImportError:
     # SentencePiece not loaded, fine!
     pass
+
+# Add workarounds:
+DEFAULT_SAVE_HOOKS[torch.optim.lr_scheduler.CyclicLR] = __wa._cycliclrsaver
+DEFAULT_LOAD_HOOKS[torch.optim.lr_scheduler.CyclicLR] = __wa._cycliclrloader
 
 
 def mark_as_saver(method):
@@ -509,7 +523,7 @@ class Checkpointer:
             self.recoverables.update(recoverables)
         else:
             rec = repr(recoverables)  # noqa: F841, rec is used in MSG
-            MSG = "Checkpointer needs a mapping (e.g. dict), \
+            MSG = f"Checkpointer needs a mapping (e.g. dict), \
                     got {rec} instead."
             raise AttributeError(MSG)
 
@@ -753,9 +767,11 @@ class Checkpointer:
         if max_key and not importance_key:
 
             def importance_key(ckpt):
+                "Defines the importance key."
                 return ckpt.meta[max_key]
 
             def ckpt_predicate(ckpt, old_predicate=ckpt_predicate):
+                "Checkpoints predicate."
                 if old_predicate is not None:
                     return max_key in ckpt.meta and old_predicate(ckpt)
                 else:
@@ -764,9 +780,11 @@ class Checkpointer:
         elif min_key and not importance_key:
 
             def importance_key(ckpt):
+                "Defines the importance key."
                 return -ckpt.meta[min_key]
 
             def ckpt_predicate(ckpt, old_predicate=ckpt_predicate):
+                "Checkpoints predicate."
                 if old_predicate is not None:
                     return min_key in ckpt.meta and old_predicate(ckpt)
                 else:
@@ -955,9 +973,7 @@ class Checkpointer:
     @staticmethod
     def _delete_checkpoint(checkpoint, verbosity=logging.INFO):
         if not Checkpointer._is_checkpoint_dir(checkpoint.path):
-            # raise RuntimeError("Checkpoint does not appear valid for deletion.")
-            print("Checkpoint does not appear valid for deletion.")
-            return
+            raise RuntimeError("Checkpoint does not appear valid for deletion.")
         shutil.rmtree(checkpoint.path)
         logger.log(verbosity, f"Deleted checkpoint in {checkpoint.path}")
 

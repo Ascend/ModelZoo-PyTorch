@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Generator and discriminator used in MetricGAN
 
 Authors:
@@ -43,10 +28,19 @@ def xavier_init_layer(
 
 
 def shifted_sigmoid(x):
+    "Computes the shifted sigmoid."
     return 1.2 / (1 + torch.exp(-(1 / 1.6) * x))
 
 
 class Learnable_sigmoid(nn.Module):
+    """Implementation of a leanable sigmoid.
+
+    Arguments
+    ---------
+    in_features : int
+        Input dimensionality
+    """
+
     def __init__(self, in_features=257):
         super().__init__()
         self.slope = nn.Parameter(torch.ones(in_features))
@@ -56,7 +50,8 @@ class Learnable_sigmoid(nn.Module):
         # self.scale.requiresGrad = True # set requiresGrad to true!
 
     def forward(self, x):
-        return 1.2 / (1 + torch.exp(-(self.slope) * x))
+        """ Processes the input tensor x and returns an output tensor."""
+        return 1.2 * torch.sigmoid(self.slope * x)
 
 
 class EnhancementGenerator(nn.Module):
@@ -106,6 +101,7 @@ class EnhancementGenerator(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, lengths):
+        """ Processes the input tensor x and returns an output tensor."""
         out, _ = self.blstm(x, lengths=lengths)
 
         out = self.linear1(out)
@@ -160,6 +156,7 @@ class MetricDiscriminator(nn.Module):
         self.Linear3 = xavier_init_layer(in_size=10, out_size=1)
 
     def forward(self, x):
+        """ Processes the input tensor x and returns an output tensor."""
         out = self.BN(x)
 
         out = self.conv1(out)

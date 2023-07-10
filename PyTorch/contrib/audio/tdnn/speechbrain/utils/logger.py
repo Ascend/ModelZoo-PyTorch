@@ -83,6 +83,7 @@ class TqdmCompatibleStreamHandler(logging.StreamHandler):
     """
 
     def emit(self, record):
+        """TQDM compatible StreamHandler."""
         try:
             msg = self.format(record)
             stream = self.stream
@@ -183,18 +184,15 @@ def get_environment_description():
     try:
         freezed, _, _ = run_shell("pip freeze")
         python_packages_str = "Installed Python packages:\n"
-        python_packages_str += freezed.decode()
+        python_packages_str += freezed.decode(errors="replace")
     except OSError:
         python_packages_str = "Could not list python packages with pip freeze"
     try:
         git_hash, _, _ = run_shell("git rev-parse --short HEAD")
-        git_str = "Git revision:\n" + git_hash.decode()
+        git_str = "Git revision:\n" + git_hash.decode(errors="replace")
     except OSError:
         git_str = "Could not get git revision"
-    if torch.cuda.is_available():
-        cuda_str = "Cuda version:\n" + torch.version.cuda
-    else:
-        cuda_str = "CUDA not available"
+
     result = "SpeechBrain system description\n"
     result += "==============================\n"
     result += python_version_str
@@ -202,6 +200,4 @@ def get_environment_description():
     result += python_packages_str
     result += "==============================\n"
     result += git_str
-    result += "==============================\n"
-    result += cuda_str
     return result

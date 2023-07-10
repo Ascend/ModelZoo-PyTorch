@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """The SpeechBrain implementation of ContextNet by
 https://arxiv.org/pdf/2005.03191.pdf
 
@@ -199,7 +184,7 @@ class SEmodule(torch.nn.Module):
         )
 
     def forward(self, x):
-
+        """ Processes the input tensor x and returns an output tensor."""
         bz, t, chn = x.shape
 
         x = self.conv(x)
@@ -297,6 +282,7 @@ class ContextNetBlock(torch.nn.Module):
         self._reset_params()
 
     def forward(self, x):
+        """ Processes the input tensor x and returns an output tensor."""
         out = self.Convs(x)
         out = self.SE(out)
         if self.reduced_cov:

@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """WER print functions.
 
 The functions here are used to print the computed statistics
@@ -69,7 +54,12 @@ def print_wer_summary(wer_details, file=sys.stdout):
 
 
 def print_alignments(
-    details_by_utterance, file=sys.stdout, empty_symbol="<eps>", separator=" ; "
+    details_by_utterance,
+    file=sys.stdout,
+    empty_symbol="<eps>",
+    separator=" ; ",
+    print_header=True,
+    sample_separator=None,
 ):
     """Print WER summary and alignments.
 
@@ -86,13 +76,19 @@ def print_alignments(
     separator : str
         String that separates each token in the output. Note the spaces in the
         default.
+    print_header: bool
+        Whether to print headers
+    sample_separator: str
+        A separator to put between samples (optional)
     """
-    _print_alignments_global_header(
-        file=file, empty_symbol=empty_symbol, separator=separator
-    )
+    if print_header:
+        _print_alignments_global_header(
+            file=file, empty_symbol=empty_symbol, separator=separator
+        )
     for dets in details_by_utterance:
         if dets["scored"]:
-            _print_alignment_header(dets, file=file)
+            if print_header:
+                _print_alignment_header(dets, file=file)
             _print_alignment(
                 dets["alignment"],
                 dets["ref_tokens"],
@@ -101,6 +97,8 @@ def print_alignments(
                 empty_symbol=empty_symbol,
                 separator=separator,
             )
+            if sample_separator:
+                print(sample_separator, file=file)
 
 
 # The following internal functions are used to

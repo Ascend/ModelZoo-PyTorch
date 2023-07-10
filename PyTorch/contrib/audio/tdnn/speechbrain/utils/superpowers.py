@@ -1,36 +1,48 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
+"""Superpowers which should be sparingly used.
 
-"""Superpowers which should be rarely used.
-
-This library contains functions for importing python classes and
+This library contains functions for importing python files and
 for running shell commands. Remember, with great power comes great
 responsibility.
 
 Authors
  * Mirco Ravanelli 2020
+ * Aku Rouhe 2021
 """
 
 import logging
 import subprocess
+import importlib
+import pathlib
 
 logger = logging.getLogger(__name__)
 
 
+def import_from_path(path):
+    """Import module from absolute path
+
+    Arguments
+    ---------
+    path : str, pathlib.Path
+        The path to the module to import
+
+    Returns
+    -------
+    module
+        The loaded module
+
+    Implementation taken from:
+    https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
+    """
+    path = pathlib.Path(path)
+    modulename = path.with_suffix("").name
+    spec = importlib.util.spec_from_file_location(modulename, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def run_shell(cmd):
-    r"""This function can be used to run a command in the bash shell.
+    """This function can be used to run a command in the bash shell.
 
     Arguments
     ---------
@@ -54,8 +66,7 @@ def run_shell(cmd):
     Example
     -------
     >>> out, err, code = run_shell("echo 'hello world'")
-    >>> out.decode("utf-8")
-    'hello world\n'
+    >>> _ = out.decode(errors="ignore")
     """
 
     # Executing the command
@@ -67,10 +78,10 @@ def run_shell(cmd):
     (output, err) = p.communicate()
 
     if p.returncode != 0:
-        raise OSError(err.decode("utf-8"))
+        raise OSError(err.decode(errors="replace"))
 
     # Adding information in the logger
-    msg = output.decode("utf-8") + "\n" + err.decode("utf-8")
+    msg = output.decode(errors="replace") + "\n" + err.decode(errors="replace")
     logger.debug(msg)
 
     return output, err, p.returncode

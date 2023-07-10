@@ -45,11 +45,13 @@ import torch
 import speechbrain as sb
 from hyperpyyaml import load_hyperpyyaml
 from mini_librispeech_prepare import prepare_mini_librispeech
-import torch.nn.functional as nn
-
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 
 # Brain class for speech enhancement training
 class SpkIdBrain(sb.Brain):
+    """Class that manages the training loop. See speechbrain.core.Brain."""
+
     def compute_forward(self, batch, stage):
         """Runs all the computation of that transforms the input into the
         output probabilities over the N classes.
@@ -101,30 +103,12 @@ class SpkIdBrain(sb.Brain):
 
             if hasattr(self.hparams, "augmentation"):
                 wavs = self.hparams.augmentation(wavs, lens)
-        '''
-        # origianal code:
+
         # Feature extraction and normalization
-
-        feats = self.modules.compute_features(wavs)
-        #print("feats.shape1 = ", feats.shape)
-        feats = self.modules.mean_var_norm(feats, lens)
-        return feats, lens
-        '''
-        # the operation of Padding begin
-        # 1920 / 16 = 1200
         feats = self.modules.compute_features(wavs)
         feats = self.modules.mean_var_norm(feats, lens)
-        # print("feats1.shape = ", feats.shape)
-        # print("lens.shape = ", lens.shape)
-        if stage == sb.Stage.TRAIN:
-            p1d = (0,0,0, 1920-feats.shape[1],self.hparams.batch_size*2-feats.shape[0],0)
-            feats = nn.pad(feats, p1d, 'constant', 0)
-            # p1d_len = (64-lens.shape[0], 0)
-            # lens = nn.pad(lens, p1d_len, 'constant', 0)
 
         return feats, lens
-        # the operation os Padding end
-        
 
     def compute_objectives(self, predictions, batch, stage):
         """Computes the loss given the predicted and targeted outputs.
@@ -146,8 +130,7 @@ class SpkIdBrain(sb.Brain):
 
         _, lens = batch.sig
         spkid, _ = batch.spk_id_encoded
-        # print("lens.shape = ", lens.shape)
-        # print("spkid.shape = ", spkid.shape)
+
         # Concatenate labels (due to data augmentation)
         if stage == sb.Stage.TRAIN and hasattr(self.modules, "env_corrupt"):
             spkid = torch.cat([spkid, spkid], dim=0)
@@ -274,6 +257,7 @@ def dataio_prep(hparams):
     @sb.utils.data_pipeline.takes("spk_id")
     @sb.utils.data_pipeline.provides("spk_id", "spk_id_encoded")
     def label_pipeline(spk_id):
+        """Defines the pipeline to process the input speaker label."""
         yield spk_id
         spk_id_encoded = label_encoder.encode_label_torch(spk_id)
         yield spk_id_encoded
@@ -281,10 +265,15 @@ def dataio_prep(hparams):
     # Define datasets. We also connect the dataset with the data processing
     # functions defined above.
     datasets = {}
+    data_info = {
+        "train": hparams["train_annotation"],
+        "valid": hparams["valid_annotation"],
+        "test": hparams["test_annotation"],
+    }
     hparams["dataloader_options"]["shuffle"] = False
-    for dataset in ["train", "valid", "test"]:
+    for dataset in data_info:
         datasets[dataset] = sb.dataio.dataset.DynamicItemDataset.from_json(
-            json_path=hparams[f"{dataset}_annotation"],
+            json_path=data_info[dataset],
             replacements={"data_root": hparams["data_folder"]},
             dynamic_items=[audio_pipeline, label_pipeline],
             output_keys=["id", "sig", "spk_id_encoded"],
@@ -306,23 +295,13 @@ def dataio_prep(hparams):
 # Recipe begins!
 if __name__ == "__main__":
 
-
     # Reading command line arguments.
     hparams_file, run_opts, overrides = sb.parse_arguments(sys.argv[1:])
-    
-    #new try
-    # overrides=None
-    # number_of_epochs = sys.argv[2]
-    #end try
 
     # Initialize ddp (useful only for multi-GPU DDP training).
-    if run_opts["distributed_launch"]:
-        sb.utils.distributed.ddp_init_group(run_opts)
+    sb.utils.distributed.ddp_init_group(run_opts)
 
     # Load hyperparameters file with command-line overrides.
-    overrides = {"data_folder": run_opts["data_folder"],
-                 "number_of_epochs":run_opts["number_of_epochs"],
-                 "batch_size":run_opts["batch_size"]}
     with open(hparams_file) as fin:
         hparams = load_hyperpyyaml(fin, overrides)
 
@@ -334,20 +313,21 @@ if __name__ == "__main__":
     )
 
     # Data preparation, to be run on only one process.
-    sb.utils.distributed.run_on_main(
-        prepare_mini_librispeech,
-        kwargs={
-            "data_folder": hparams["data_folder"],
-            "save_json_train": hparams["train_annotation"],
-            "save_json_valid": hparams["valid_annotation"],
-            "save_json_test": hparams["test_annotation"],
-            "split_ratio": [80, 10, 10],
-            "batch_size": hparams["batch_size"]
-        },
-    )
+    if not hparams["skip_prep"]:
+        sb.utils.distributed.run_on_main(
+            prepare_mini_librispeech,
+            kwargs={
+                "data_folder": hparams["data_folder"],
+                "save_json_train": hparams["train_annotation"],
+                "save_json_valid": hparams["valid_annotation"],
+                "save_json_test": hparams["test_annotation"],
+                "split_ratio": hparams["split_ratio"],
+            },
+        )
 
     # Create dataset objects "train", "valid", and "test".
     datasets = dataio_prep(hparams)
+
     # Initialize the Brain object to prepare for mask training.
     spk_id_brain = SpkIdBrain(
         modules=hparams["modules"],

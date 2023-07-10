@@ -321,7 +321,7 @@ def parse_arguments(arg_list):
     )
     parser.add_argument(
         "--auto_mix_prec",
-        default=True,
+        default=False,
         action="store_true",
         help="This flag enables training with automatic mixed-precision.",
     )

@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """
 Downloads and creates data manifest files for Mini LibriSpeech (spk-id).
 For speaker-id, different sentences of the same speaker must appear in train,
@@ -42,7 +27,6 @@ def prepare_mini_librispeech(
     save_json_valid,
     save_json_test,
     split_ratio=[80, 10, 10],
-    batch_size=32,
 ):
     """
     Prepares the json files for the Mini Librispeech dataset.
@@ -72,7 +56,6 @@ def prepare_mini_librispeech(
     """
 
     # Check if this phase is already done (if so, skip it)
-
     if skip(save_json_train, save_json_valid, save_json_test):
         logger.info("Preparation completed in previous run, skipping.")
         return
@@ -90,7 +73,7 @@ def prepare_mini_librispeech(
     wav_list = get_all_files(train_folder, match_and=extension)
 
     # Random split the signal list into train, valid, and test sets.
-    data_split = split_sets(wav_list, split_ratio, batch_size)
+    data_split = split_sets(wav_list, split_ratio)
 
     # Creating json files
     create_json(data_split["train"], save_json_train)
@@ -164,7 +147,7 @@ def check_folders(*folders):
     return True
 
 
-def split_sets(wav_list, split_ratio, batch_size):
+def split_sets(wav_list, split_ratio):
     """Randomly splits the wav list into training, validation, and test lists.
     Note that a better approach is to make sure that all the classes have the
     same proportion of samples (e.g, spk01 should have 80% of samples in
@@ -194,17 +177,12 @@ def split_sets(wav_list, split_ratio, batch_size):
     data_split = {}
     splits = ["train", "valid"]
 
-    # for i, split in enumerate(splits):
-        # n_snts = int(tot_snts * split_ratio[i] / tot_split)
-        # data_split[split] = wav_list[0:n_snts]
-        # del wav_list[0:n_snts]
-    # data_split["test"] = wav_list
-
     for i, split in enumerate(splits):
-        n_snts = int(tot_snts * split_ratio[i] / tot_split // batch_size * batch_size)
+        n_snts = int(tot_snts * split_ratio[i] / tot_split)
         data_split[split] = wav_list[0:n_snts]
         del wav_list[0:n_snts]
-    data_split["test"] = wav_list[0:n_snts]
+    data_split["test"] = wav_list
+
     return data_split
 
 

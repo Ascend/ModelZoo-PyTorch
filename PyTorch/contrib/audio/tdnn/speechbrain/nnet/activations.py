@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Library implementing activation functions.
 
 Authors
@@ -111,11 +96,16 @@ class GumbelSoftmax(torch.nn.Module):
         self.apply_log = apply_log
 
     def forward(self, x):
-        with torch.autograd.profiler.record_function("gumbel_softmax"):
-            ret_gum = F.gumbel_softmax(x, tau=self.tau, hard=self.hard)
+        """Returns the Gumbel softmax of the input tensor.
+
+        Arguments
+        ---------
+        x : torch.Tensor
+            Input tensor.
+        """
         if self.apply_log:
-            return torch.log(ret_gum)
-        return ret_gum
+            return torch.log(F.gumbel_softmax(x, tau=self.tau, hard=self.hard))
+        return F.gumbel_softmax(x, tau=self.tau, hard=self.hard)
 
 
 class Swish(torch.nn.Module):

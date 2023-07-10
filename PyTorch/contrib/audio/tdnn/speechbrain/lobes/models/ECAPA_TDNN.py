@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """A popular speaker recognition and diarization model.
 
 Authors
@@ -31,11 +16,15 @@ from speechbrain.nnet.linear import Linear
 
 # Skip transpose as much as possible for efficiency
 class Conv1d(_Conv1d):
+    """1D convolution. Skip transpose is used to improve efficiency."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(skip_transpose=True, *args, **kwargs)
 
 
 class BatchNorm1d(_BatchNorm1d):
+    """1D batch normalization. Skip transpose is used to improve efficiency."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(skip_transpose=True, *args, **kwargs)
 
@@ -52,9 +41,11 @@ class TDNNBlock(nn.Module):
     kernel_size : int
         The kernel size of the TDNN blocks.
     dilation : int
-        The dilation of the Res2Net block.
+        The dilation of the TDNN block.
     activation : torch class
         A class for constructing the activation layers.
+    groups: int
+        The groups size of the TDNN blocks.
 
     Example
     -------
@@ -72,6 +63,7 @@ class TDNNBlock(nn.Module):
         kernel_size,
         dilation,
         activation=nn.ReLU,
+        groups=1,
     ):
         super(TDNNBlock, self).__init__()
         self.conv = Conv1d(
@@ -79,11 +71,13 @@ class TDNNBlock(nn.Module):
             out_channels=out_channels,
             kernel_size=kernel_size,
             dilation=dilation,
+            groups=groups,
         )
         self.activation = activation()
         self.norm = BatchNorm1d(input_size=out_channels)
 
     def forward(self, x):
+        """ Processes the input tensor x and returns an output tensor."""
         return self.norm(self.activation(self.conv(x)))
 
 
@@ -136,6 +130,7 @@ class Res2NetBlock(torch.nn.Module):
         self.scale = scale
 
     def forward(self, x):
+        """ Processes the input tensor x and returns an output tensor."""
         y = []
         for i, x_i in enumerate(torch.chunk(x, self.scale, dim=1)):
             if i == 0:
@@ -184,6 +179,7 @@ class SEBlock(nn.Module):
         self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, x, lengths=None):
+        """ Processes the input tensor x and returns an output tensor."""
         L = x.shape[-1]
         if lengths is not None:
             mask = length_to_mask(lengths * L, max_len=L, device=x.device)
@@ -302,6 +298,8 @@ class SERes2NetBlock(nn.Module):
         The dilation of the Res2Net block.
     activation : torch class
         A class for constructing the activation layers.
+    groups: int
+    Number of blocked connections from input channels to output channels.
 
     Example
     -------
@@ -321,6 +319,7 @@ class SERes2NetBlock(nn.Module):
         kernel_size=1,
         dilation=1,
         activation=torch.nn.ReLU,
+        groups=1,
     ):
         super().__init__()
         self.out_channels = out_channels
@@ -330,6 +329,7 @@ class SERes2NetBlock(nn.Module):
             kernel_size=1,
             dilation=1,
             activation=activation,
+            groups=groups,
         )
         self.res2net_block = Res2NetBlock(
             out_channels, out_channels, res2net_scale, kernel_size, dilation
@@ -340,6 +340,7 @@ class SERes2NetBlock(nn.Module):
             kernel_size=1,
             dilation=1,
             activation=activation,
+            groups=groups,
         )
         self.se_block = SEBlock(out_channels, se_channels, out_channels)
 
@@ -352,6 +353,7 @@ class SERes2NetBlock(nn.Module):
             )
 
     def forward(self, x, lengths=None):
+        """ Processes the input tensor x and returns an output tensor."""
         residual = x
         if self.shortcut:
             residual = self.shortcut(x)
@@ -383,6 +385,8 @@ class ECAPA_TDNN(torch.nn.Module):
         List of dilations for kernels in each layer.
     lin_neurons : int
         Number of neurons in linear layers.
+    groups : list of ints
+        List of groups for kernels in each layer.
 
     Example
     -------
@@ -406,6 +410,7 @@ class ECAPA_TDNN(torch.nn.Module):
         res2net_scale=8,
         se_channels=128,
         global_context=True,
+        groups=[1, 1, 1, 1, 1],
     ):
 
         super().__init__()
@@ -422,6 +427,7 @@ class ECAPA_TDNN(torch.nn.Module):
                 kernel_sizes[0],
                 dilations[0],
                 activation,
+                groups[0],
             )
         )
 
@@ -436,6 +442,7 @@ class ECAPA_TDNN(torch.nn.Module):
                     kernel_size=kernel_sizes[i],
                     dilation=dilations[i],
                     activation=activation,
+                    groups=groups[i],
                 )
             )
 
@@ -446,6 +453,7 @@ class ECAPA_TDNN(torch.nn.Module):
             kernel_sizes[-1],
             dilations[-1],
             activation,
+            groups=groups[-1],
         )
 
         # Attentive Statistical Pooling
@@ -538,7 +546,7 @@ class Classifier(torch.nn.Module):
         for block_index in range(lin_blocks):
             self.blocks.extend(
                 [
-                    _BatchNorm1d(input_size),
+                    _BatchNorm1d(input_size=input_size),
                     Linear(input_size=input_size, n_neurons=lin_neurons),
                 ]
             )

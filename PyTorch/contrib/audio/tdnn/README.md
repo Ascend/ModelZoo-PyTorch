@@ -15,7 +15,7 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
 
   ```
   url=https://github.com/speechbrain/speechbrain/tree/develop/templates/speaker_id
-  commit_id=d333cf277706146bd622cb46f928083f9938b21a
+  commit_id=f02eafc1e8ac3f094e89a4c31941e44f4dbcab62
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -86,7 +86,6 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
    ```
 
 2. 运行训练脚本。
-
    该模型支持单机单卡训练和单机8卡训练。
 
    - 单机单卡训练
@@ -138,16 +137,16 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
 
 | NAME    | Valid Err |   FPS | Epochs | AMP_Type | Torch_Version |
 |:-------:|:---------:|:-----:|:------:|:--------:| :---: |
-| 1p-竞品V  | -         | 17.43 | 1      |        - | 1.5 |
-| 8p-竞品V  | 7.81e-03  | 83.26 | 5      |        - | 1.5 |
-| 1p-NPU  | -         |  9.548 | 1      |       O1 | 1.8 |
-| 8p-NPU  | 3.91e-02  | 73.801 | 5      |       O1 | 1.8 |
+| 1p-竞品V  | -         | - | -      |        - | - |
+| 8p-竞品V  | -  | - | -      |        - | - |
+| 1p-NPU  | -         |  - | -      |       O1 | 1.8 |
+| 8p-NPU  | 0  | - | 35      |       O1 | 1.8 |
 
 # 版本说明
 
 ## 变更
 
-2022.07.05：整改Readme，重新发布。
+2023.07.08：整改模型，重新发布。
 
 ## FAQ
 
@@ -222,14 +221,14 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
-
+可参考实现https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/TDNN_for_Pytorch
 ## 获取源码<a name="section4622531142816"></a>
 
 1. 获取源码。
 
    ```
-   git clone https://github.com/speechbrain/speechbrain.git speechbrain_onnx
-   cd speechbrain_onnx    
+   git clone https://github.com/speechbrain/speechbrain.git speechbrain
+   cd speechbrain    
    git checkout  develop    
    git reset --hard 51a2becdcf3a337578a9307a0b2fc3906bf20391
    git apply --reject --whitespace=fix ../modify.patch
@@ -363,7 +362,7 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
 
 
    2. 精度验证。
-
+      将后处理脚本中label的数值与训练结果文件中label_encoder.txt文件中的数值对齐
       调用脚本与数据集标签比对，可以获得Accuracy数据。
 
       ```
@@ -399,7 +398,3 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
 |    Ascend310P       |    16   |   1800    |   Mini Librispeech         |     99.93%       |      1066.47fps           |
 |    Ascend310P       |    32   |   1800    |   Mini Librispeech         |     99.93%       |      1080.21fps           |
 |    Ascend310P       |    64   |   1800    |   Mini Librispeech         |     99.93%       |      1682.2fps           |
-
-# 公网地址说明
-
-代码涉及公网地址参考 public_address_statement.md

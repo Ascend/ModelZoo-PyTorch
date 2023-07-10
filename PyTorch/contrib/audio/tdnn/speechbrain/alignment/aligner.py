@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """
 Alignment code
 
@@ -306,9 +291,7 @@ class HMMAligner(torch.nn.Module):
 
         return poss_phns, log_transition_matrix, start_states, final_states
 
-    def use_lexicon(
-        self, words, interword_sils=True, sample_pron=False,
-    ):
+    def use_lexicon(self, words, interword_sils=True, sample_pron=False):
         """Do processing using the lexicon to return a sequence of the possible
         phonemes, the transition/pi probabilities, and the possible final
         states.
@@ -1057,7 +1040,9 @@ class HMMAligner(torch.nn.Module):
         batch_size = len(lens_abs)
         fb_max_length = torch.max(lens_abs)
 
-        flat_start_batch = torch.zeros(batch_size, fb_max_length, device=phns.device).long()
+        flat_start_batch = torch.zeros(
+            batch_size, fb_max_length, device=phns.device
+        ).long()
         for i in range(batch_size):
             utter_phns = phns[i]
             utter_phns = utter_phns[: phn_lens_abs[i]]  # crop out zero padding
@@ -1106,7 +1091,9 @@ class HMMAligner(torch.nn.Module):
         batch_size = len(lens_abs)
         fb_max_length = torch.max(lens_abs)
 
-        viterbi_batch = torch.zeros(batch_size, fb_max_length, device=lens_abs.device).long()
+        viterbi_batch = torch.zeros(
+            batch_size, fb_max_length, device=lens_abs.device
+        ).long()
         for i in range(batch_size):
             viterbi_preds = self.align_dict[ids[i]]
             viterbi_preds = torch.nn.functional.pad(
