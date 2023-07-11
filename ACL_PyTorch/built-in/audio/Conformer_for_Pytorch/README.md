@@ -26,8 +26,8 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 
   | 配套                                                            |   版本 | 环境准备指导                                                                                          |
   | ------------------------------------------------------------    | ------ | ------------------------------------------------------------                                          |
-  | 固件与驱动                                                      | 22.0.3 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                            |  6.0.0 | -                                                                                                     |
+  | 固件与驱动                                                       | 22.0.3 | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                            |  6.3.RC2 | -                                                                                                   |
   | Python                                                          |  3.7.5 | -                                                                                                     |
   | PyTorch                                                         | 1.13.0 | -                                                                                                     |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 |      \ | \                                                                                                     |
@@ -154,7 +154,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    将xformer_encoder.sh，xformer_decoder.sh，transformer_lm.sh，ctc.sh放置到/root/.cache/espnet_onnx/asr_train_asr_qkv/full目录下，运行xformer_encoder.sh导出encoder`OM`模型，默认保存在当前文件夹下，其他模型类似。
    
    ```
-    bash xformer_encoder.sh Ascend310P3
+    bash xformer_encoder.sh Ascend310P3 4
     bash xformer_decoder.sh Ascend310P3
     bash transformer_lm.sh Ascend310P3
     bash ctc.sh Ascend310P3
@@ -188,7 +188,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 
    ```
    # 生成的om.txt可以跟标杆对比即可:
-   python3 om_val.py --dataset_path ${dataset_path}/wav/test --model_path /root/.cache/espnet_onnx/asr_train_asr_qkv
+   python3 om_val.py --dataset_path ${dataset_path}/wav/test --model_path /root/.cache/espnet_onnx/asr_train_asr_qkv --batch_encoder 4 --batch_decoder 16
 
    # text是标杆文件: 默认打印error值，最终精度取ACC值：100%-error
    python3 compute-wer.py --char=1 --v=1 text om.txt

@@ -40,6 +40,9 @@ def find_files(base):
 def dump_result(save_path, res_list,
                 flags=os.O_WRONLY | os.O_CREAT | os.O_EXCL,
                 mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR):
+    if os.path.exists(save_path):
+        print("The result file exists! Please remove it and run again.")
+        return
     with os.fdopen(os.open(save_path, flags, mode), 'w') as f:
         for res in res_list:
             f.write(res)
@@ -256,7 +259,7 @@ def process_unsplited():
     sample_num = 0
     data_list, map_names = load_data(args.dataset_path)
 
-    splited_packs = speech_preprocess(args.batch, args.num_process, args.device_ids, shuffle=True)
+    splited_packs = speech_preprocess(args.batch, args.num_process, args.device_ids, shuffle=args.shuffle)
     args.num_process = min(len(splited_packs), args.num_process)
     name_list = []
     res = []
@@ -287,7 +290,8 @@ def process_splited():
     features = []
     encoder_times = []
 
-    splited_packs = speech_preprocess(args.batch_encoder, args.num_process_encoder, args.device_ids)
+    splited_packs = speech_preprocess(args.batch_encoder, args.num_process_encoder, 
+                                      args.device_ids, shuffle=args.shuffle)
     args.num_process_encoder = min(len(splited_packs), args.num_process_encoder)
     map_names = []
     with Pool(args.num_process_encoder) as p:
@@ -305,7 +309,7 @@ def process_splited():
     infer_decoder = partial(infer_multi, mode='decoder')
     PRE_PROCESSORS['decoder'] = decoder_prerocess
     splited_packs = generate_batch_data(features, map_names, args.batch_decoder,
-                                        args.device_ids, args.num_process_decoder, shuffle=True,
+                                        args.device_ids, args.num_process_decoder, shuffle=args.shuffle,
                                         sort=True, sort_impl=sort_by_feature, preprocessor='decoder')
     res = []
     name_list = []
@@ -325,11 +329,11 @@ def process_splited():
     encoder_duration = max(_[1] for _ in encoder_times) - min(_[0] for _ in encoder_times)
     decoder_duration = max(_[1] for _ in decoder_times) - min(_[0] for _ in decoder_times)
     total_fps = sample_num / (encoder_duration + decoder_duration)
-    dump_result(args.result_path, out_list)
     print(f"sample_num:{sample_num}")
     print(f"encoder: {sample_num/encoder_duration}wav/second")
     print(f"decoder: {sample_num/decoder_duration}wav/second")
     print(f"total: {total_fps}wav/second")
+    dump_result(args.result_path, out_list)
 
 
 if __name__ == "__main__":
@@ -344,6 +348,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_process', default=35, type=int, help='num of process')
     parser.add_argument('--num_process_encoder', default=16, type=int, help='num of encode process')
     parser.add_argument('--num_process_decoder', default=17, type=int, help='num of decode process')
+    parser.add_argument('--shuffle', default=True, type=bool, help='data shuffle')
     parser.add_argument('--device_ids', default='0', type=str, help='device ids for NPU infer')
     parser.add_argument('--rank_encoder_mode', default=True, type=bool, help='enable rank mode for encoder model')
     parser.add_argument('--bink_cpu', action='store_true', help='enable bink cpu in multiprocessing mode')
