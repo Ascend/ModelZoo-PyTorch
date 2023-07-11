@@ -540,9 +540,9 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 精度：
 
-|       模型        |  Pth精度   | NPU离线推理精度 |
-| :---------------: | :--------: | :-------------: |
-| Bert-Base-Chinese | Acc:77.96% |   Acc: 59.07%   |
+|       模型        | NPU离线推理精度 |
+| :---------------: | :-------------: |
+| Bert-Base-Chinese |   Acc: 59.07%   |
 
 
 ## 其他下游任务<a name="ZH-CN_TOPIC_0000001126121892"></a>
