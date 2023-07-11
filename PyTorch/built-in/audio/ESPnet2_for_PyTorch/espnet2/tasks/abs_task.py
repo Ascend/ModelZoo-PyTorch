@@ -1049,11 +1049,14 @@ class AbsTask(ABC):
 
     @classmethod
     def main(cls, args: argparse.Namespace = None, cmd: Sequence[str] = None):
-        if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
-            torch.npu.config.allow_internal_format = False
-            if os.getenv('ALLOW_FP32'):
-                torch.npu.conv.allow_hf32 = False
-                torch.npu.matmul.allow_hf32 = False
+        if os.getenv('ALLOW_FP32', False) and os.getenv('ALLOW_HF32', False):
+            raise RuntimeError('ALLOW_FP32 and ALLOW_HF32 cannot be set at the same time!')
+        elif os.getenv('ALLOW_HF32', False):
+            torch.npu.conv.allow_hf32 = True
+            torch.npu.matmul.allow_hf32 = True
+        elif os.getenv('ALLOW_FP32', False):
+            torch.npu.conv.allow_hf32 = False
+            torch.npu.matmul.allow_hf32 = False
         assert check_argument_types()
         print(get_commandline_args(), file=sys.stderr)
         if args is None:

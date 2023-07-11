@@ -115,8 +115,10 @@ Wav2vec2.0是Meta在2020年发表的无监督语音预训练模型。它的核�
      bash ./test/train_performance_8p.sh --data_path=$data_path # 8卡性能
      ```
    --data_path参数填写数据集路径，需写到数据集的一级目录。
-   --fp32开启FP32模式
-   --hf32开启HF32模式
+
+   --fp32开启FP32模式，不与HF32模式同时开启
+
+   --hf32开启HF32模式，不与FP32模式同时开启
 
    模型训练脚本参数说明如下。
 

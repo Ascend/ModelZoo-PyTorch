@@ -75,11 +75,14 @@ check_min_version("4.5.0")
 
 logger = logging.getLogger(__name__)
 
-if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
-    torch.npu.config.allow_internal_format = False
-    if os.getenv('ALLOW_FP32'):
-        torch.npu.conv.allow_hf32 = False
-        torch.npu.matmul.allow_hf32 = False
+if os.getenv('ALLOW_FP32', False) and os.getenv('ALLOW_HF32', False):
+    raise RuntimeError('ALLOW_FP32 and ALLOW_HF32 cannot be set at the same time!')
+elif os.getenv('ALLOW_HF32', False):
+    torch.npu.conv.allow_hf32 = True
+    torch.npu.matmul.allow_hf32 = True
+elif os.getenv('ALLOW_FP32', False):
+    torch.npu.conv.allow_hf32 = False
+    torch.npu.matmul.allow_hf32 = False
 torch.npu.set_compile_mode(jit_compile=False)
 option = {}
 option["NPU_FUZZY_COMPILE_BLACKLIST"] = "Conv2DBackpropFilter,Conv2DBackpropInput,Conv2D"

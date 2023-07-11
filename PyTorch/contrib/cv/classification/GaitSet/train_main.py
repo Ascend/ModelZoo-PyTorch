@@ -70,11 +70,14 @@ def main():
     os.environ['MASTER_PORT'] = '46888'
     if args.rt2:
         torch.npu.set_compile_mode(jit_compile=False)
-    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
-        torch.npu.config.allow_internal_format = False
-        if os.getenv('ALLOW_FP32'):
-            torch.npu.conv.allow_hf32 = False
-            torch.npu.matmul.allow_hf32 = False
+    if os.getenv('ALLOW_FP32', False) and os.getenv('ALLOW_HF32', False):
+        raise RuntimeError('ALLOW_FP32 and ALLOW_HF32 cannot be set at the same time!')
+    elif os.getenv('ALLOW_HF32', False):
+        torch.npu.conv.allow_hf32 = True
+        torch.npu.matmul.allow_hf32 = True
+    elif os.getenv('ALLOW_FP32', False):
+        torch.npu.conv.allow_hf32 = False
+        torch.npu.matmul.allow_hf32 = False
     if args.device_num > 1:
         from config import conf_8p as conf
         dist.init_process_group(backend=args.dist_backend, # init_method=args.dist_url,

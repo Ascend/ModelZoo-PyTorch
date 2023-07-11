@@ -188,11 +188,14 @@ def main(args):
 if __name__ == "__main__":
     args = default_argument_parser().parse_args()
     print("Command Line Args:", args)
-    if os.getenv('ALLOW_FP32') or os.getenv('ALLOW_HF32'):
-        torch.npu.config.allow_internal_format = False
-        if os.getenv('ALLOW_FP32'):
-            torch.npu.conv.allow_hf32 = False
-            torch.npu.matmul.allow_hf32 = False
+    if os.getenv('ALLOW_FP32', False) and os.getenv('ALLOW_HF32', False):
+        raise RuntimeError('ALLOW_FP32 and ALLOW_HF32 cannot be set at the same time!')
+    elif os.getenv('ALLOW_HF32', False):
+        torch.npu.conv.allow_hf32 = True
+        torch.npu.matmul.allow_hf32 = True
+    elif os.getenv('ALLOW_FP32', False):
+        torch.npu.conv.allow_hf32 = False
+        torch.npu.matmul.allow_hf32 = False
     # FP32模式下BoundingBoxDecode和NMSwithMask有功能问题，添加变量允许走fp16
     option = {'ACL_PRECISION_MODE': 'allow_fp32_to_fp16'}
     # LogSoftmaxV2算子在二进制下有精度问题，添加至黑名单规避
