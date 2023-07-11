@@ -33,13 +33,16 @@
 
 import torch
 import torch_npu
-from torch_npu.contrib import transfer_to_npu
 
+from torch_npu.contrib import transfer_to_npu
 from diffusers import DiffusionPipeline
 
 torch.npu.set_compile_mode(jit_compile=False)
 
-generator = DiffusionPipeline.from_pretrained("CompVis/ldm-text2im-large-256")
-generator.to("npu")
+generator = DiffusionPipeline.from_pretrained(
+    "CompVis/ldm-text2im-large-256",
+    torch_dtype=torch.float16
+)
+generator.to("npu",torch_dtype=torch.float16)
 image = generator("An image of a squirrel in Picasso style").images[0]
-image.save("image_of_squirrel_painting.png")
+image.save("./image_of_squirrel_painting.png")

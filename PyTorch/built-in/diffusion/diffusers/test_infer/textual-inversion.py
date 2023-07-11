@@ -56,8 +56,8 @@ def image_grid(imgs, rows, cols):
         image_grid_size.paste(img,box=(i % cols * w, i // cols * h))
     return image_grid_size
 
-pretrained_model_name = "/stable-diffusion-v1-5"
-repo_id = "/cat-toy"
+pretrained_model_name = "runwayml/stable-diffusion-v1-5"
+repo_id = "sd-concepts-library/cat-toy"
 
 prompt = "a grafitti in a favela wall with a <cat-toy> on it"
 

@@ -41,7 +41,7 @@ from diffusers import StableDiffusionDepth2ImgPipeline
 torch.npu.set_compile_mode(jit_compile=False)
 
 pipe = StableDiffusionDepth2ImgPipeline.from_pretrained(
-    "stabilityai/stable-diffusion-2-depth",
+    "stabilityai/stable-diffusion-2-depth"
 ).to("npu")
 
 url = "img_path.jpg"
