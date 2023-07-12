@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
+import os
 
 import torch
 import torch.nn as nn
@@ -20,18 +22,12 @@ try:
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
+from url_utils import get_url
+
 __all__ = [
     'ShuffleNetV2', 'shufflenet_v2_x0_5', 'shufflenet_v2_x1_0',
     'shufflenet_v2_x1_5', 'shufflenet_v2_x2_0'
 ]
-
-model_urls = {
-    'shufflenetv2_x0.5': 'https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth',
-    'shufflenetv2_x1.0': 'https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth',
-    'shufflenetv2_x1.5': None,
-    'shufflenetv2_x2.0': None,
-}
-
 
 def channel_shuffle(x, groups):
     # type: (torch.Tensor, int) -> torch.Tensor
@@ -159,7 +155,7 @@ def _shufflenetv2(arch, pretrained, progress, *args, **kwargs):
     model = ShuffleNetV2(*args, **kwargs)
 
     if pretrained:
-        model_url = model_urls[arch]
+        model_url = get_url(arch)
         if model_url is None:
             raise NotImplementedError('pretrained {} is not supported as of now'.format(arch))
         else:

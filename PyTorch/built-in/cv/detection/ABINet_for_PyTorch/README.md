@@ -188,3 +188,7 @@ python tools/data/utils/lmdb_converter.py data/mixture/Syn90k/label.txt data/mix
 2023.03.17：首次发布。
 ## FAQ
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -178,3 +178,7 @@ shuffleNetV2是一个改进shuffleNetV1的轻量级的网络，为了解决在�
 1.某些版本的numpy会引发错误，请避免使用该版本：1.19.2。
 
 2.截至目前，Ascend Pytorch使用连续操作仍然效率低下，因此ShufflenetV2使用自定义方法实现，更多细节参阅models/shufflenetv2_wock_op_woct.py。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
