@@ -223,3 +223,7 @@ python3 demo.py --config ./mmpose-master/configs/top_down/hourglass/mpii/hourgla
 | 89.0189 | 286.41 |    8P GPU    |    210     |    O2     |  dynamic   |
 |    -    | 20.16  |    1P NPU    |     1      |    O2     |  32768.0   |
 | 88.9383 | 57.344 |    8P NPU    |    210     |    O2     |  32768.0   |
+
+
+# Statement
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

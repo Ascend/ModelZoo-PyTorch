@@ -1,0 +1,7 @@
+| 类型     | 开源代码地址                                         | 文件名                                           | 公网IP地址/公网URL地址/域名/邮箱地址                                                                       | 用途说明  |
+|--------|------------------------------------------------|-----------------------------------------------|----------------------------------------------------------------------------------------------|-------|
+| 开源代码引入 | https://github.com/black0017/MedicalZooPytorch | 3DUNet/docker/Dockerfile                      | black.adaloglou@gmail.com                                                                    | 邮箱    |
+| 开源代码引入 | https://github.com/black0017/MedicalZooPytorch | 3DUNet/tests/test_medical_3D_augemt.py        | https://nipy.org/nibabel/_downloads/c16214e490de2a223655d30f4ba78f15/someones_anatomy.nii.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/black0017/MedicalZooPytorch | 3DUNet/tests/test_medical_3D_augemt.py        | https://nipy.org/nibabel/_downloads/f76cc5a46e5368e2c779868abc49e497/someones_epi.nii.gz     | 下载数据集 |
+| 开源代码引入 | https://github.com/black0017/MedicalZooPytorch | 3DUNet/tests/test_medical_3D_preprocessing.py | https://nipy.org/nibabel/_downloads/c16214e490de2a223655d30f4ba78f15/someones_anatomy.nii.gz | 下载数据集 |
+| 开源代码引入 | https://github.com/black0017/MedicalZooPytorch | 3DUNet/tests/test_medical_3D_preprocessing.py | https://nipy.org/nibabel/_downloads/f76cc5a46e5368e2c779868abc49e497/someones_epi.nii.gz     | 下载数据集 |
