@@ -39,6 +39,7 @@ MT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
+  | PyTorch 2.1 | scikit-learn==1.2.2 |
   
 - 环境准备指导。
 
@@ -187,13 +188,3 @@ MT5，即 Multilingual T5，是 T5 的多国语言版。 T5 模型是 Transfer T
 # 公网地址说明
 
 代码涉及公网地址参考 public_address_statement.md
-
-
-
-
-
-
-
-
-
-
