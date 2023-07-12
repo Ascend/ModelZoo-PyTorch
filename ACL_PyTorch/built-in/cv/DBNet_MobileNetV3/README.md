@@ -141,7 +141,7 @@ DBNet([Real-Time Scene Text Detection with Differentiable Binarization and Adapt
       1. 使用paddle2onnx工具导出onnx文件。
 
          在DBNet_MobileNetV3工作目录下通过运行以下命令获取onnx模型。
-
+         ```
          paddle2onnx \
             --model_dir ./inference/det_db \
             --model_filename inference.pdmodel \
@@ -150,7 +150,7 @@ DBNet([Real-Time Scene Text Detection with Differentiable Binarization and Adapt
             --opset_version 10 \
             --input_shape_dict="{'x':[${batchsize},3,-1,-1]}" \
             --enable_onnx_checker True
-
+         ```
          参数说明请通过paddle2onnx -h命令查看。 运行后在DBNet_MobileNetV3/inference/det_db_onnx目录下获得DBNet_MobileNetV3_bs${batchsize}.onnx文件。
          `${batchsize}`表示onnx模型可支持不同batch推理，可取值为：1，4，8，16，32，64。
 
