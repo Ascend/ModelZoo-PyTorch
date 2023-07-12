@@ -9,6 +9,18 @@
 
 参考使用样例。
 
+# 推理引擎算子
+在CANN原生算子的基础上，推理引擎还针对特定模型，使用引擎自定义算子进行推理加速。
+
+当前算子已支持Transformer类模型加速。这类模型通过减少推理过程中冗余计算进行加速，适用于长序列，且序列长度分布广的场景。
+
+由于引擎暂未提供改图功能，Transformer类模型加速通过onnx改图和atc直接编译自定义算子的方式实现，请参考[bert动态模型优化](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Bert_Uncased_Huggingface), [albert动态模型转化](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/albert), [roberta动态模型推理](https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/roberta)社区样例。
+
+请注意当前Transformer类模型加速存在以下约束：
+1. 推理批处理数量（batch size）不超过64
+2. 序列长度（sequence length）为64的整数倍，且不超过1536
+3. 注意力机制单头特征长度（embed size）为64
+
 # 框架推理插件
 提供C++/Python接口，少量代码完成Pytorch训练模型的迁移，实现高性能推理。
 
