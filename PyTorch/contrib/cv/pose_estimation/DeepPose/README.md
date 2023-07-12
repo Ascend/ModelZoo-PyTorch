@@ -56,3 +56,5 @@ python3 pthtar2onnx.py
 | NPU-1p | -     | 117     | O2       |
 | NPU-8p | 52.65 | 650-830 | O2       |
 
+# Statement
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
