@@ -97,14 +97,15 @@ python scripts/demo.py --cfg configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml --
 
 # To ONNX
 python scripts/pthtar2onnx.py --cfg configs/coco/resnet/256x192_res50_lr1e-3_1x.yaml
-```
 
 ## AlphaPose training result
 
 |        | gt mAP | Epochs | AMP_Type |
-| :------: | :------: | :------: | :--------: |
-| 1p-GPU | -     | 200    | O2       |
-| 1p-NPU | -      | 200    | O2       |
-| 8p-GPU | 72.24  | 200    | O2       |
-| 8P-NPU | 71.61  | 200    | O2       |
+|:------:|:------:|:------:|:--------:|
+| 1p-GPU |   -    |  200   |    O2    |
+| 1p-NPU |   -    |  200   |    O2    |
+| 8p-GPU | 72.24  |  200   |    O2    |
+| 8P-NPU | 71.61  |  200   |    O2    |
 
+# Statement
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

@@ -1,0 +1,24 @@
+| 类型     | 开源代码地址                                     | 文件名                                        | 公网IP地址/公网URL地址/域名/邮箱地址                                             | 用途说明    |
+|--------|--------------------------------------------|--------------------------------------------|--------------------------------------------------------------------|---------|
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/setup.cfg                        | https://pypi.tuna.tsinghua.edu.cn/simple                           | 配置下载源   |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/setup.py                         | https://github.com/MVIG-SJTU/AlphaPose                             | 源码地址    |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/setup.py                         | https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI | 下载第三方库  |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/setup.py                         | https://github.com/yanfengliu/cython_bbox.git                      | 下载第三方库  |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/osnet.py     | https://drive.google.com/uc?id=1LaG1EJpHrxdAxKnSCJ_i0u-nbxSAeiFY   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/osnet.py     | https://drive.google.com/uc?id=1uwA9fElHOk3ZogwbeY5GkLI6QPTX70Hq   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/osnet.py     | https://drive.google.com/uc?id=16DGLbZukvVYgINws8u8deSaOqjybZ83i   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/osnet.py     | https://drive.google.com/uc?id=1rb8UN5ZzPKRc_xvtHlyDh-cSz88YX9hs   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/osnet.py     | https://drive.google.com/uc?id=1sr90V6irlYYDd4_4ISU2iruoRG8J__6l   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/osnet_ain.py | https://drive.google.com/uc?id=1-CaioD9NaqbHK_kzSMW8VE4_3KcsRjEo   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/ResNet.py    | https://download.pytorch.org/models/resnet18-5c106cde.pth          | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/ResNet.py    | https://download.pytorch.org/models/resnet34-333f7ec4.pth          | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/ResNet.py    | https://download.pytorch.org/models/resnet50-19c8e357.pth          | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/ResNet.py    | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth         | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/ResNet.py    | https://download.pytorch.org/models/resnet152-b121ed2d.pth         | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnet18-5c106cde.pth          | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnet34-333f7ec4.pth          | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnet50-19c8e357.pth          | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth         | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth         | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth   | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth  | 下载预训练模型 |
