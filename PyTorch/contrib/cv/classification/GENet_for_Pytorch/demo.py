@@ -34,7 +34,10 @@ def proc_node_module(checkpoint, attr_name):
 def get_raw_data():
     from PIL import Image
     from urllib.request import urlretrieve
-    IMAGE_URL = 'https://i.loli.net/2021/09/01/aOH5YWoq1A4829D.png'
+    with open('url.ini', 'r') as f:
+        content = f.read()
+        img_url = content.split('img_url=')[1].split('\n')[0]
+    IMAGE_URL = img_url
     urlretrieve(IMAGE_URL, 'tmp.jpg')
     img = Image.open("tmp.jpg")
     img = img.convert('RGB')

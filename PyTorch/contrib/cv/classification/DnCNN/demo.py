@@ -78,7 +78,10 @@ def main():
     print("model get")
     
     #下载一张在线图片
-    IMAGE_URL =  "https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png"
+    with open('url.ini', 'r') as f:
+        content = f.read()
+        img_url = content.split('img_url=')[1].split('\n')[0]
+    IMAGE_URL =  img_url
     urlretrieve(IMAGE_URL,"tem.png")
     
     model.eval()
