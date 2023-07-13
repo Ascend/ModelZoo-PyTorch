@@ -16,11 +16,10 @@
 import torch
 import argparse
 import os
-import sys
-sys.path.append('./')
 
-from common.utils import ParseFromConfigFile
+from tacotron2_common.utils import ParseFromConfigFile
 from inference import load_and_setup_model
+
 
 def parse_args(parser):
     """
@@ -87,6 +86,7 @@ def main():
     args, _ = parser.parse_known_args()
 
     export_onnx(parser, args)
+
 
 if __name__ == '__main__':
     main()

@@ -1,25 +1,27 @@
-# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
-#
-# Licensed under the BSD 3-Clause License  (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://opensource.org/licenses/BSD-3-Clause
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+Copyright 2023 Huawei Technologies Co., Ltd
+
+Licensed under the BSD 3-Clause License  (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+https://opensource.org/licenses/BSD-3-Clause
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 import math
+
 import torch
-if torch.__version__ >= '1.8':
-    import torch_npu
+import torch_npu
 from librosa.filters import mel as librosa_mel_fn
-from common.audio_processing import dynamic_range_compression, dynamic_range_decompression
-from common.stft import STFT
+from tacotron2_common.audio_processing import dynamic_range_compression, dynamic_range_decompression
+from tacotron2_common.stft import STFT
 
 
 class NpuLSTMCell(torch.nn.Module):
@@ -28,8 +30,8 @@ class NpuLSTMCell(torch.nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
 
-        self.weight = torch.nn.Parameter(torch.Tensor(input_size + hidden_size, 4*self.hidden_size))
-        self.bias = torch.nn.Parameter(torch.Tensor(4*self.hidden_size))
+        self.weight = torch.nn.Parameter(torch.Tensor(input_size + hidden_size, 4 * self.hidden_size))
+        self.bias = torch.nn.Parameter(torch.Tensor(4 * self.hidden_size))
 
         stdv = 1.0 / math.sqrt(self.hidden_size)
         torch.nn.init.uniform_(self.weight, -stdv, stdv)
@@ -41,7 +43,7 @@ class NpuLSTMCell(torch.nn.Module):
             zeros2 = torch.zeros(input.size(0), self.hidden_size, dtype=input.dtype, device=input.device)
             hx = (zeros1, zeros2)
         y, h, c, _, _, _, _, _ = torch_npu.npu_lstm(input, self.weight, self.bias, torch.zeros(1).npu(),
-                                                hx[0], hx[1], True, 1, 0, True, False, False, False, False)
+                                                    hx[0], hx[1], True, 1, 0, True, False, False, False, False)
         return h, c
 
 
@@ -75,12 +77,7 @@ class ConvNorm(torch.nn.Module):
             gain=torch.nn.init.calculate_gain(w_init_gain))
 
     def forward(self, signal):
-        #myconv1d = torch.nn.Conv1d(512, 512, kernel_size=5, stride=1, padding=2).to("cpu")
         return self.conv(signal)
-        #signal=signal.float().to("cpu")
-        #res=self.myconv1d(signal)
-        #res=res.half().to("npu")
-        #return res
 
 
 class TacotronSTFT(torch.nn.Module):
@@ -90,9 +87,9 @@ class TacotronSTFT(torch.nn.Module):
         super(TacotronSTFT, self).__init__()
         self.n_mel_channels = n_mel_channels
         self.sampling_rate = sampling_rate
-        self.stft_fn = STFT(filter_length, hop_length, win_length)
+        self.stft_fn = STFT(filter_length=filter_length, hop_length=hop_length, win_length=win_length)
         mel_basis = librosa_mel_fn(
-            sampling_rate, filter_length, n_mel_channels, mel_fmin, mel_fmax)
+            sr=sampling_rate, n_fft=filter_length, n_mels=n_mel_channels, fmin=mel_fmin, fmax=mel_fmax)
         mel_basis = torch.from_numpy(mel_basis).float()
         self.register_buffer('mel_basis', mel_basis)
 

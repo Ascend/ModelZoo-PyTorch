@@ -13,17 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-from torch import nn
-from torch.nn import functional as F
 import argparse
 
-import sys
-sys.path.append('./')
+import torch
+from inference import load_and_setup_model, prepare_input_sequence
+from tacotron2_common.utils import get_mask_from_lengths
+from torch import nn
+from torch.nn import functional as F
 
-import models
-from inference import checkpoint_from_distributed, unwrap_distributed, load_and_setup_model, prepare_input_sequence
-from common.utils import to_gpu, get_mask_from_lengths
 
 def parse_args(parser):
     """
@@ -54,7 +51,7 @@ def encoder_infer(self, x, input_lengths):
     outputs, _ = nn.utils.rnn.pad_packed_sequence(
         outputs, batch_first=True)
 
-    lens = input_lengths*2
+    lens = input_lengths * 2
 
     return outputs, lens
 
@@ -72,6 +69,7 @@ class Encoder(torch.nn.Module):
         processed_memory = self.tacotron2.decoder.attention_layer.memory_layer(memory)
         return memory, processed_memory, lens
 
+
 class Postnet(torch.nn.Module):
     def __init__(self, tacotron2):
         super(Postnet, self).__init__()
@@ -80,6 +78,7 @@ class Postnet(torch.nn.Module):
     def forward(self, mel_outputs):
         mel_outputs_postnet = self.tacotron2.postnet(mel_outputs)
         return mel_outputs + mel_outputs_postnet
+
 
 def lstmcell2lstm_params(lstm_mod, lstmcell_mod):
     lstm_mod.weight_ih_l0 = torch.nn.Parameter(lstmcell_mod.weight_ih)
@@ -95,9 +94,10 @@ def prenet_infer(self, x):
         x0 = x1[0].unsqueeze(0)
         mask = torch.le(torch.rand(256, device='cuda').to(x.dtype), 0.5).to(x.dtype)
         mask = mask.expand(x1.size(0), x1.size(1))
-        x1 = x1*mask*2.0
+        x1 = x1 * mask * 2.0
 
     return x1
+
 
 class DecoderIter(torch.nn.Module):
     def __init__(self, tacotron2):
@@ -127,12 +127,10 @@ class DecoderIter(torch.nn.Module):
         self.linear_projection = dec.linear_projection
         self.gate_layer = dec.gate_layer
 
-
     def decode(self, decoder_input, in_attention_hidden, in_attention_cell,
                in_decoder_hidden, in_decoder_cell, in_attention_weights,
                in_attention_weights_cum, in_attention_context, memory,
                processed_memory, mask):
-
         cell_input = torch.cat((decoder_input, in_attention_context), -1)
 
         _, (out_attention_hidden, out_attention_cell) = self.attention_rnn(
@@ -205,7 +203,6 @@ class DecoderIter(torch.nn.Module):
 
 
 def test_inference(encoder, decoder_iter, postnet):
-
     encoder.eval()
     decoder_iter.eval()
     postnet.eval()
@@ -225,8 +222,8 @@ def test_inference(encoder, decoder_iter, postnet):
     print("Running Tacotron2 Decoder")
     device = memory.device
     dtype = memory.dtype
-    mel_lengths = torch.zeros([memory.size(0)], dtype=torch.int32, device = device)
-    not_finished = torch.ones([memory.size(0)], dtype=torch.int32, device = device)
+    mel_lengths = torch.zeros([memory.size(0)], dtype=torch.int32, device=device)
+    not_finished = torch.ones([memory.size(0)], dtype=torch.int32, device=device)
     mel_outputs, gate_outputs, alignments = (torch.zeros(1), torch.zeros(1), torch.zeros(1))
     gate_threshold = 0.6
     max_decoder_steps = 1000
@@ -258,11 +255,11 @@ def test_inference(encoder, decoder_iter, postnet):
             alignments = torch.cat((alignments, torch.unsqueeze(attention_weights, 2)), 2)
 
         dec = torch.le(torch.sigmoid(gate_output), gate_threshold).to(torch.int32).squeeze(1)
-        not_finished = not_finished*dec
+        not_finished = not_finished * dec
         mel_lengths += not_finished
 
         if torch.sum(not_finished) == 0:
-            print("Stopping after ",mel_outputs.size(2)," decoder steps")
+            print("Stopping after ", mel_outputs.size(2), " decoder steps")
             break
         if mel_outputs.size(2) == max_decoder_steps:
             print("Warning! Reached max decoder steps")
@@ -270,15 +267,14 @@ def test_inference(encoder, decoder_iter, postnet):
 
         decoder_input = mel_output
 
-
     print("Running Tacotron2 PostNet")
     with torch.no_grad():
         mel_outputs_postnet = postnet(mel_outputs)
 
     return mel_outputs_postnet
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(
         description='PyTorch Tacotron 2 export to TRT')
     parser = parse_args(parser)
@@ -289,8 +285,8 @@ def main():
 
     opset_version = 10
 
-    sequences = torch.randint(low=0, high=148, size=(1,50),
-                             dtype=torch.long).cuda()
+    sequences = torch.randint(low=0, high=148, size=(1, 50),
+                              dtype=torch.long).cuda()
     sequence_lengths = torch.IntTensor([sequences.size(1)]).cuda().long()
     dummy_input = (sequences, sequence_lengths)
 
@@ -299,7 +295,7 @@ def main():
     with torch.no_grad():
         encoder(*dummy_input)
 
-    torch.onnx.export(encoder, dummy_input, args.output+"/"+"encoder.onnx",
+    torch.onnx.export(encoder, dummy_input, args.output + "/" + "encoder.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
                       input_names=["sequences", "sequence_lengths"],
@@ -307,10 +303,10 @@ def main():
                       dynamic_axes={"sequences": {1: "text_seq"},
                                     "memory": {1: "mem_seq"},
                                     "processed_memory": {1: "mem_seq"}
-                      })
+                                    })
 
     decoder_iter = DecoderIter(tacotron2)
-    memory = torch.randn((1,sequence_lengths[0],512)).cuda() #encoder_outputs
+    memory = torch.randn((1, sequence_lengths[0], 512)).cuda()  # encoder_outputs
     if args.fp16:
         memory = memory.half()
     memory_lengths = sequence_lengths
@@ -342,7 +338,7 @@ def main():
     with torch.no_grad():
         decoder_iter(*dummy_input)
 
-    torch.onnx.export(decoder_iter, dummy_input, args.output+"/"+"decoder_iter.onnx",
+    torch.onnx.export(decoder_iter, dummy_input, args.output + "/" + "decoder_iter.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
                       input_names=["decoder_input",
@@ -365,20 +361,20 @@ def main():
                                     "out_attention_weights",
                                     "out_attention_weights_cum",
                                     "out_attention_context"],
-                      dynamic_axes={"attention_weights" : {1: "seq_len"},
-                                    "attention_weights_cum" : {1: "seq_len"},
-                                    "memory" : {1: "seq_len"},
-                                    "processed_memory" : {1: "seq_len"},
-                                    "mask" : {1: "seq_len"},
-                                    "out_attention_weights" : {1: "seq_len"},
-                                    "out_attention_weights_cum" : {1: "seq_len"}
-                      })
+                      dynamic_axes={"attention_weights": {1: "seq_len"},
+                                    "attention_weights_cum": {1: "seq_len"},
+                                    "memory": {1: "seq_len"},
+                                    "processed_memory": {1: "seq_len"},
+                                    "mask": {1: "seq_len"},
+                                    "out_attention_weights": {1: "seq_len"},
+                                    "out_attention_weights_cum": {1: "seq_len"}
+                                    })
 
     postnet = Postnet(tacotron2)
-    dummy_input = torch.randn((1,80,620)).cuda()
+    dummy_input = torch.randn((1, 80, 620)).cuda()
     if args.fp16:
         dummy_input = dummy_input.half()
-    torch.onnx.export(postnet, dummy_input, args.output+"/"+"postnet.onnx",
+    torch.onnx.export(postnet, dummy_input, args.output + "/" + "postnet.onnx",
                       opset_version=opset_version,
                       do_constant_folding=True,
                       input_names=["mel_outputs"],
@@ -388,6 +384,7 @@ def main():
 
     mel = test_inference(encoder, decoder_iter, postnet)
     torch.save(mel, "mel.pt")
+
 
 if __name__ == '__main__':
     main()

@@ -1,17 +1,18 @@
-# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
-#
-# Licensed under the BSD 3-Clause License  (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://opensource.org/licenses/BSD-3-Clause
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Copyright 2023 Huawei Technologies Co., Ltd
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 import os
 import time
@@ -20,44 +21,38 @@ import numpy as np
 from contextlib import contextmanager
 
 import torch
+import torch_npu
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.nn.parameter import Parameter
-
+from torch.utils.tensorboard import SummaryWriter
 import torch.distributed as dist
 from torch.utils.data.distributed import DistributedSampler
-
-# from apex.parallel import DistributedDataParallel as DDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 import models
 import loss_functions
 import data_functions
-from common.utils import ParseFromConfigFile
+from tacotron2_common.utils import ParseFromConfigFile
 
 import dllogger as DLLogger
 from dllogger import StdOutBackend, JSONStreamBackend, Verbosity
 
 from scipy.io.wavfile import write as write_wav
-
 from apex import amp
+
 amp.lists.functional_overrides.FP32_FUNCS.remove('softmax')
 amp.lists.functional_overrides.FP16_FUNCS.append('softmax')
-
-from torch.utils.tensorboard import SummaryWriter
-import torch.npu
 
 CALCULATE_DEVICE = 'npu:0'
 
 
 def seed_everything(seed):
-    # random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    # cudnn.deterministic = True
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -81,9 +76,10 @@ def parse_args(parser):
                         help='Factor for annealing learning rate')
 
     parser.add_argument('--config-file', action=ParseFromConfigFile,
-                         type=str, help='Path to configuration file')
+                        config_type=str, config_help='Path to configuration file')
 
     parser.add_argument('--seed', type=int, help='set a seed of all randoms')
+    parser.add_argument('--target_train_loss', type=float, default=0.57, help='set a target train loss')
 
     # training
     training = parser.add_argument_group('training setup')
@@ -151,9 +147,12 @@ def parse_args(parser):
     audio.add_argument('--mel-fmax', default=8000.0, type=float,
                        help='Maximum mel frequency')
 
+    audio.add_argument('--mse_weight', default=1.0, type=float,
+                       help='mes loss weight')
+    audio.add_argument('--logits_weight', default=1.0, type=float,
+                       help='logits loss weight')
+
     distributed = parser.add_argument_group('distributed setup')
-    # distributed.add_argument('--distributed-run', default=True, type=bool,
-    #                          help='enable distributed run')
     distributed.add_argument('--rank', default=0, type=int,
                              help='Rank of the process, do not set! Done by multiproc module')
     distributed.add_argument('--world-size', default=1, type=int,
@@ -175,9 +174,9 @@ def reduce_tensor(tensor, num_gpus):
     rt = tensor.clone()
     dist.all_reduce(rt, op=dist.reduce_op.SUM)
     if rt.is_floating_point():
-        rt = rt/num_gpus
+        rt = rt / num_gpus
     else:
-        rt = rt//num_gpus
+        rt = rt // num_gpus
     return rt
 
 
@@ -198,27 +197,8 @@ def init_distributed(args, world_size, rank, group_name):
 
 def save_checkpoint(model, optimizer, epoch, config, amp_run, output_dir, model_name,
                     local_rank, world_size):
-
-    # random_rng_state = torch.random.get_rng_state().cuda()
-    # cuda_rng_state = torch.cuda.get_rng_state(local_rank).cuda()
-    #
-    # random_rng_states_all = [torch.empty_like(random_rng_state) for _ in range(world_size)]
-    # cuda_rng_states_all = [torch.empty_like(cuda_rng_state) for _ in range(world_size)]
-    #
-    # if world_size > 1:
-    #     dist.all_gather(random_rng_states_all, random_rng_state)
-    #     dist.all_gather(cuda_rng_states_all, cuda_rng_state)
-    # else:
-    #     random_rng_states_all = [random_rng_state]
-    #     cuda_rng_states_all = [cuda_rng_state]
-    #
-    # random_rng_states_all = torch.stack(random_rng_states_all).cpu()
-    # cuda_rng_states_all = torch.stack(cuda_rng_states_all).cpu()
-
     if local_rank == 0:
         checkpoint = {'epoch': epoch,
-                      # 'cuda_rng_state_all': cuda_rng_states_all,
-                      # 'random_rng_states_all': random_rng_states_all,
                       'config': config,
                       'state_dict': model.state_dict(),
                       'optimizer': optimizer.state_dict()}
@@ -252,10 +232,9 @@ def get_last_checkpoint_filename(output_dir, model_name):
 
 
 def load_checkpoint(model, optimizer, epoch, config, amp_run, filepath, local_rank):
-
     checkpoint = torch.load(filepath, map_location='cpu')
 
-    epoch[0] = checkpoint['epoch']+1
+    epoch[0] = checkpoint['epoch'] + 1
     device_id = local_rank % torch.npu.device_count()
     torch.npu.set_rng_state(checkpoint['cuda_rng_state_all'][device_id])
     if 'random_rng_states_all' in checkpoint:
@@ -271,9 +250,6 @@ def load_checkpoint(model, optimizer, epoch, config, amp_run, filepath, local_ra
     if amp_run:
         amp.load_state_dict(checkpoint['amp'])
 
-
-# adapted from: https://discuss.pytorch.org/t/opinion-eval-should-be-a-context-manager/18998/3
-# Following snippet is licensed under MIT license
 
 @contextmanager
 def evaluating(model):
@@ -309,7 +285,7 @@ def validate(model, criterion, valset, epoch, batch_iter, batch_size,
             if distributed_run:
                 reduced_val_loss = reduce_tensor(loss.data, world_size).item()
                 reduced_num_items = reduce_tensor(num_items.data, 1).item()
-            else:               #
+            else:  #
                 reduced_val_loss = loss.item()
                 reduced_num_items = num_items.item()
             val_loss += reduced_val_loss
@@ -317,59 +293,58 @@ def validate(model, criterion, valset, epoch, batch_iter, batch_size,
             iter_stop_time = time.perf_counter()
             iter_time = iter_stop_time - iter_start_time
 
-            items_per_sec = reduced_num_items/iter_time
+            items_per_sec = reduced_num_items / iter_time
             DLLogger.log(step=(epoch, batch_iter, i), data={'val_items_per_sec': items_per_sec})
             val_items_per_sec += items_per_sec
             num_iters += 1
 
-        val_loss = val_loss/(i + 1)
+        val_loss = val_loss / (i + 1)
 
         DLLogger.log(step=(epoch,), data={'val_loss': val_loss})
         DLLogger.log(step=(epoch,), data={'val_items_per_sec':
-                                         (val_items_per_sec/num_iters if num_iters > 0 else 0.0)})
+                                              (val_items_per_sec / num_iters if num_iters > 0 else 0.0)})
         summ_writter.add_scalar('val_loss/loss', val_loss, epoch)
 
         return val_loss, val_items_per_sec
 
+
 def adjust_learning_rate(iteration, epoch, optimizer, learning_rate,
                          anneal_steps, anneal_factor, rank):
-
     p = 0
     if anneal_steps is not None:
         for i, a_step in enumerate(anneal_steps):
             if epoch >= int(a_step):
-                p = p+1
+                p = p + 1
 
     if anneal_factor == 0.3:
-        lr = learning_rate*((0.1 ** (p//2))*(1.0 if p % 2 == 0 else 0.3))
+        lr = learning_rate * ((0.1 ** (p // 2)) * (1.0 if p % 2 == 0 else 0.3))
     else:
-        lr = learning_rate*(anneal_factor ** p)
+        lr = learning_rate * (anneal_factor ** p)
 
     if optimizer.param_groups[0]['lr'] != lr:
-        DLLogger.log(step=(epoch, iteration), data={'learning_rate changed': str(optimizer.param_groups[0]['lr'])+" -> "+str(lr)})
+        DLLogger.log(step=(epoch, iteration),
+                     data={'learning_rate changed': str(optimizer.param_groups[0]['lr']) + " -> " + str(lr)})
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
 
 def main():
-
     parser = argparse.ArgumentParser(description='PyTorch Tacotron 2 Training')
     parser = parse_args(parser)
     args, _ = parser.parse_known_args()
 
     if args.seed is not None:
         seed_everything(args.seed)
-    
-    ngpus_per_node = int(os.environ["RANK_SIZE"])
-    world_size = ngpus_per_node * args.world_size
 
     summ_writer = SummaryWriter('./tb')
 
     if 'LOCAL_RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         local_rank = int(os.environ['LOCAL_RANK'])
+        world_size = int(os.environ["RANK_SIZE"])
     else:
         local_rank = args.rank
+        world_size = args.world_size
 
     distributed_run = world_size > 1
 
@@ -380,9 +355,9 @@ def main():
     else:
         DLLogger.init(backends=[])
 
-    for k,v in vars(args).items():
-        DLLogger.log(step="PARAMETER", data={k:v})
-    DLLogger.log(step="PARAMETER", data={'model_name':'Tacotron2_PyT'})
+    for k, v in vars(args).items():
+        DLLogger.log(step="PARAMETER", data={k: v})
+    DLLogger.log(step="PARAMETER", data={'model_name': 'Tacotron2_PyT'})
 
     model_name = args.model_name
     parser = models.model_parser(model_name, parser)
@@ -394,7 +369,7 @@ def main():
     if distributed_run:
         init_distributed(args, world_size, local_rank, args.group_name)
     else:
-        torch.npu.set_device(torch.device(CALCULATE_DEVICE))
+        torch.npu.set_device(CALCULATE_DEVICE)
 
     run_start_time = time.perf_counter()
 
@@ -430,7 +405,7 @@ def main():
 
     start_epoch = start_epoch[0]
 
-    criterion = loss_functions.get_loss_function(model_name, sigma)
+    criterion = loss_functions.get_loss_function(model_name, args, sigma)
 
     try:
         n_frames_per_step = args.n_frames_per_step
@@ -488,7 +463,7 @@ def main():
             DLLogger.log(step=(epoch, i),
                          data={'data time': str(iter_start_time - iter_stop_time)})
             DLLogger.log(step=(epoch, i),
-                         data={'glob_iter/iters_per_epoch': str(iteration)+"/"+str(len(train_loader))})
+                         data={'glob_iter/iters_per_epoch': str(iteration) + "/" + str(len(train_loader))})
 
             adjust_learning_rate(iteration, epoch, optimizer, args.learning_rate,
                                  args.anneal_steps, args.anneal_factor, local_rank)
@@ -530,22 +505,20 @@ def main():
 
             iter_stop_time = time.perf_counter()
             iter_time = iter_stop_time - iter_start_time
-            items_per_sec = reduced_num_items/iter_time
+            items_per_sec = reduced_num_items / iter_time
             train_epoch_items_per_sec += items_per_sec
 
-            DLLogger.log(step=(epoch,i), data={'train_loss': reduced_loss})
+            DLLogger.log(step=(epoch, i), data={'train_loss': reduced_loss})
             summ_writer.add_scalar('train_loss/loss', reduced_loss, iteration)
             DLLogger.log(step=(epoch, i), data={'train_items_per_sec': items_per_sec})
             DLLogger.log(step=(epoch, i), data={'train_iter_time': iter_time})
-            # DLLogger.log(step=(epoch, i), data={'t1': tmp_time2- tmp_time1, 't2':tmp_time3 - tmp_time2, 't3':tmp_time4 - tmp_time3, 't4':tmp_time5 - tmp_time4, 't5':iter_stop_time - tmp_time5})
             iteration += 1
 
         epoch_stop_time = time.perf_counter()
         epoch_time = epoch_stop_time - epoch_start_time
 
-        # print(f"=================EPOCH END 1  epoch:{epoch} step:{i}, rank_id:{local_rank}======================================")
         DLLogger.log(step=(epoch,), data={'train_items_per_sec':
-                                          (train_epoch_items_per_sec/num_iters if num_iters > 0 else 0.0)})
+                                              (train_epoch_items_per_sec / num_iters if num_iters > 0 else 0.0)})
         DLLogger.log(step=(epoch,), data={'train_loss': reduced_loss})
         DLLogger.log(step=(epoch,), data={'train_epoch_time': epoch_time})
 
@@ -557,23 +530,24 @@ def main():
 
         if (epoch % args.epochs_per_checkpoint == 0) and args.bench_class == "":
             save_checkpoint(model, optimizer, epoch, model_config,
-                             args.amp, args.output, args.model_name,
-                             local_rank, world_size)
-        # print(f"=================EPOCH END 2  epoch:{epoch} step:{i}, rank_id:{local_rank}======================================")
+                            args.amp, args.output, args.model_name,
+                            local_rank, world_size)
         if local_rank == 0:
             DLLogger.flush()
-        # print(f"=================EPOCH END 3  epoch:{epoch} step:{i}, rank_id:{local_rank}======================================")
+        if reduced_loss < args.target_train_loss:
+            exit('train end')
 
     run_stop_time = time.perf_counter()
     run_time = run_stop_time - run_start_time
     DLLogger.log(step=tuple(), data={'run_time': run_time})
     DLLogger.log(step=tuple(), data={'val_loss': val_loss})
     DLLogger.log(step=tuple(), data={'train_items_per_sec':
-                                     (train_epoch_items_per_sec/num_iters if num_iters > 0 else 0.0)})
+                                         (train_epoch_items_per_sec / num_iters if num_iters > 0 else 0.0)})
     DLLogger.log(step=tuple(), data={'val_items_per_sec': val_items_per_sec})
 
     if local_rank == 0:
         DLLogger.flush()
+
 
 # define hook
 def hook_func(name, save_dict, module):
@@ -594,6 +568,7 @@ def hook_func(name, save_dict, module):
 
     return hook_function
 
+
 def set_device(obj, device='cpu'):
     if isinstance(obj, (tuple, list)):
         dump = []
@@ -610,16 +585,23 @@ def set_device(obj, device='cpu'):
     else:
         return obj
 
+
 def dump_tensor(output, name):
     dump = set_device(output, 'cpu')
     torch.save(dump, name)
     print('%s dump success!' % (name))
 
+
 def load_tensor(name, device):
     output = torch.load(name)
     dump = set_device(output, device)
-    print('%s load success!'%(name))
+    print('%s load success!' % (name))
     return dump
 
+
 if __name__ == '__main__':
+    torch.npu.set_compile_mode(jit_compile=False)
+    option = {}
+    option['NPU_FUZZY_COMPILE_BLACKLIST'] = 'DynamicRNN,DynamicRNNV2'
+    torch.npu.set_option(option)
     main()

@@ -15,6 +15,7 @@
 
 import torch
 
+
 class WaveGlowLoss(torch.nn.Module):
     def __init__(self, sigma=1.0):
         super(WaveGlowLoss, self).__init__()

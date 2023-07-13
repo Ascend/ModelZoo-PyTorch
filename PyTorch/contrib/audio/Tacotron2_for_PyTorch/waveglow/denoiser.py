@@ -13,10 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append('tacotron2')
 import torch
-from common.layers import STFT
+from tacotron2_common.layers import STFT
 
 
 class Denoiser(torch.nn.Module):
@@ -28,7 +26,7 @@ class Denoiser(torch.nn.Module):
         device = waveglow.upsample.weight.device
         dtype = waveglow.upsample.weight.dtype
         self.stft = STFT(filter_length=filter_length,
-                         hop_length=int(filter_length/n_overlap),
+                         hop_length=int(filter_length / n_overlap),
                          win_length=win_length).to(device)
         if mode == 'zeros':
             mel_input = torch.zeros((1, 80, 88), dtype=dtype, device=device)

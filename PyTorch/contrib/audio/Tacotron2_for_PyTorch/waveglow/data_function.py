@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
 import random
-import common.layers as layers
-from common.utils import load_wav_to_torch, load_filepaths_and_text, to_gpu
+
+import torch
+import tacotron2_common.layers as layers
+from tacotron2_common.utils import load_wav_to_torch, load_filepaths_and_text
 
 
 class MelAudioLoader(torch.utils.data.Dataset):
@@ -48,7 +49,7 @@ class MelAudioLoader(torch.utils.data.Dataset):
         if audio.size(0) >= self.segment_length:
             max_audio_start = audio.size(0) - self.segment_length
             audio_start = random.randint(0, max_audio_start)
-            audio = audio[audio_start:audio_start+self.segment_length]
+            audio = audio[audio_start:audio_start + self.segment_length]
         else:
             audio = torch.nn.functional.pad(
                 audio, (0, self.segment_length - audio.size(0)), 'constant').data
