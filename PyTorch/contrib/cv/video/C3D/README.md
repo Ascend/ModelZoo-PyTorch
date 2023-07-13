@@ -181,3 +181,7 @@ C3D模型使用经过大规模视频数据集预训练的3D ConvNets来学习视
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
