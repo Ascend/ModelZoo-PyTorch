@@ -195,3 +195,6 @@ DeepLabV3是一个经典的语义分割网络，采用空洞卷积来代替池�
 ## FAQ
 
 无。
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
