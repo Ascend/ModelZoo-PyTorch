@@ -2,6 +2,7 @@
 
 - [概述](#ABSTRACT)
 - [环境准备](#ENV_PREPARE)
+- [准备数据集](#DATASET_PREPARE)
 - [快速上手](#QUICK_START)
 - [模型推理性能&精度](#INFER_PERFORM)
   
@@ -72,13 +73,48 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
 ### 准备脚本与必要文件
 在本地的mmdeploy地址下载本代码仓中dbnet_compile_run.py和env.sh脚本和模型权重文件。
 
+## 准备数据集 <a name="DATASET_PREPARE"></a>>
+- 数据集下载地址
+  ```
+    url=https://rrc.cvc.uab.es/?ch=4&com=downloads
+  ```
+  这里我们使用的 ICDAR2015 的500张图片的测试数据集。从链接中下载 Test Set Images 数据集并根据下方排布对数据集进行处理。
+- 数据集格式
+  ```
+  ├── test_icdar2015_images
+   |   ├── ch4_test_images
+   |   |    ├── img_1.JPEG
+   │   |    
+   │   |    ├── ......
+   |   ├── data_list.txt （必要）
+  ```
+  数据集路径内排布必须有 data_list.txt 文件（可以自己生成）。data_list.txt 文件中每一行是一个图片的相对路径，比如 “ch4_test_images/img_1.JPEG”。
+
 ## 快速上手 <a name="QUICK_START"></a>
-在mmdeploy路径下运行：
-```
-source env.sh
-python dbnet_compile_run.py
-```
+一下所有命令均在mmdeploy路径下运行。
+- 脚本命令
+  | 命令                  | 必要 | 数据类型 | 默认值          | 描述 | 
+  |-----------------------|------|---------|----------------|------| 
+  | --dataset_root        | T    | str     |                | 含有data_list.txt文件的数据集路径 |
+  | --trace_compile       | F    | bool    | False          | 是否需要trace并compile AIE模型 |
+  | --aie_model_name      | F    | str     | "aie_model.pt" | 要保存或加载的AIE模型文件 |
+  | --aie_model_save_path | F    | str     | "./"           | 要保存或加载的AIE模型文件路径 |
+  | --batch_size          | F    | int     | 1              | batch size |
+
+- trace并compile 并运行 AIE模型
+  ```
+    source env.sh
+    python dbnet_compile_run.py --dataset_root 数据集路径 --trace_compile
+  ```
+
+- load 并运行 AIE模型
+  ```
+    source env.sh
+    python dbnet_compile_run.py --dataset_root 数据集路径
+  ```
 
 ## 模型推理性能&精度 <a name="INFER_PERFORM"></a>
-输出数据直接比对，输出一致。
-暂时没有准确性能数据，模型还在持续优化当中，不日将公布最新性能数据。
+| 芯片型号 | Batch Size | 数据集    | 性能 | 精度 |
+|---------|------------|-----------|------|------|
+| 310P3   | 1          | ICDAR2015 | 5.88qps | 与pytorch直接推理结果一致 |
+| 310P3   | 8          | ICDAR2015 | 5qps | 与pytorch直接推理结果一致 |
