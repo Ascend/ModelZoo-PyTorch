@@ -18,7 +18,7 @@
 def get_url(name):
     if not name:
         return ""
-    with open('../url.ini', 'r') as f:
+    with open('./url.ini', 'r') as f:
         content = f.read()
         if name not in content:
             return ""
