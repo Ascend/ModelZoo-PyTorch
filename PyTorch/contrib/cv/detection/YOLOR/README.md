@@ -178,3 +178,7 @@ YOLOR提出了一个统一的网络来同时编码显式知识和隐式知识，
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
