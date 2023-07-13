@@ -124,3 +124,7 @@ python3 demo.py --checkpoint xxx(可选，gfocal模型的权重文件，默认./
 | 41.0     | 71.3     | 8p Gpu       | 12       | O1       | 128.0    |
 | 23.5     | 3.46       | 1p Npu       | 1        | O1       | 128.0       |
 | 40.9     | 27.15      | 8p Npu       | 12       | O1       | 128.0       |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

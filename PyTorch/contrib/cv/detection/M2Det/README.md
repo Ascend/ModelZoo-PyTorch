@@ -111,3 +111,8 @@ bash test/train_finetune_1p.sh --device_id=0 --pth_path=weights/M2Det_COCO_size5
 
 M2Det 的 batch_size 为 16。
 
+```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
