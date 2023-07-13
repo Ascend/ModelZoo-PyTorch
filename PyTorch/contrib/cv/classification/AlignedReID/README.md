@@ -152,6 +152,8 @@ AlignedReID提取了图像中的全局特征并与局部特征联合学习，局
 
 无。
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 

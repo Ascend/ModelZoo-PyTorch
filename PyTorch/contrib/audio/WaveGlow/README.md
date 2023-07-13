@@ -175,3 +175,7 @@ WaveGlow是一种基于流的网络，能够从梅尔谱图生成高质量的语
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

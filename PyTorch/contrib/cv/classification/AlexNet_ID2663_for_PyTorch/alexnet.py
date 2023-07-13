@@ -20,9 +20,12 @@ import torch.nn.functional as F
 
 __all__ = ['AlexNet', 'alexnet']
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    alexnet = content.split('alexnet=')[1].split('\n')[0]
 
 model_urls = {
-    'alexnet': 'https://download.pytorch.org/models/alexnet-owt-4df8aa71.pth',
+    'alexnet': alexnet,
 }
 
 class Dropout(nn.Module):

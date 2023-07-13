@@ -4,13 +4,18 @@ import logging as python_logging
 import os
 import time
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    author_email = content.split('author_email=')[1].split('\n')[0]
+    github_pytorch_lightning = content.split('github_pytorch_lightning=')[1].split('\n')[0]
+
 _this_year = time.strftime("%Y")
 __version__ = '1.1.4'
 __author__ = 'William Falcon et al.'
-__author_email__ = 'waf2107@columbia.edu'
+__author_email__ = author_email
 __license__ = 'Apache-2.0'
 __copyright__ = f'Copyright (c) 2018-{_this_year}, {__author__}.'
-__homepage__ = 'https://github.com/PyTorchLightning/pytorch-lightning'
+__homepage__ = github_pytorch_lightning
 # this has to be simple string, see: https://github.com/pypa/twine/issues/522
 __docs__ = (
     "PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers."

@@ -172,3 +172,7 @@ CSWin-Transformer提出的 CSWin 是使用了条状区域来计算 attention ，
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

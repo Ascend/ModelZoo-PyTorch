@@ -62,52 +62,75 @@ def _cfg(url='', **kwargs):
         **kwargs
     }
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    vit_small_p16_224 = content.split('vit_small_p16_224=')[1].split('\n')[0]
+    jx_vit_base_p16_224 = content.split('jx_vit_base_p16_224=')[1].split('\n')[0]
+    jx_vit_base_p16_384 = content.split('jx_vit_base_p16_384=')[1].split('\n')[0]
+    jx_vit_base_p32_384 = content.split('jx_vit_base_p32_384=')[1].split('\n')[0]
+    jx_vit_large_p16_224 = content.split('jx_vit_large_p16_224=')[1].split('\n')[0]
+    jx_vit_large_p16_384 = content.split('jx_vit_large_p16_384=')[1].split('\n')[0]
+    jx_vit_large_p32_384 = content.split('jx_vit_large_p32_384=')[1].split('\n')[0]
+    jx_vit_base_patch16_224 = content.split('jx_vit_base_patch16_224=')[1].split('\n')[0]
+    jx_vit_base_patch32_224 = content.split('jx_vit_base_patch32_224=')[1].split('\n')[0]
+    jx_vit_large_patch16_224 = content.split('jx_vit_large_patch16_224=')[1].split('\n')[0]
+    jx_vit_large_patch32_224 = content.split('jx_vit_large_patch32_224=')[1].split('\n')[0]
+    deit_tiny_patch16_224 = content.split('deit_tiny_patch16_224=')[1].split('\n')[0]
+    deit_small_patch16_224 = content.split('deit_small_patch16_224=')[1].split('\n')[0]
+    deit_base_patch16_224 = content.split('deit_base_patch16_224=')[1].split('\n')[0]
+    deit_base_patch16_384 = content.split('deit_base_patch16_384=')[1].split('\n')[0]
+    deit_tiny_distilled_patch16_224 = content.split('deit_tiny_distilled_patch16_224=')[1].split('\n')[0]
+    deit_small_distilled_patch16_224 = content.split('deit_small_distilled_patch16_224=')[1].split('\n')[0]
+    deit_base_distilled_patch16_224 = content.split('deit_base_distilled_patch16_224=')[1].split('\n')[0]
+    deit_base_distilled_patch16_384 = content.split('deit_base_distilled_patch16_384=')[1].split('\n')[0]
+    vit_base_patch16_224_in21k_miil = content.split('vit_base_patch16_224_in21k_miil=')[1].split('\n')[0]
+    vit_base_patch16_224_1k_miil_84_4 = content.split('vit_base_patch16_224_1k_miil_84_4=')[1].split('\n')[0]
 
 default_cfgs = {
     # patch models (my experiments)
     'vit_small_patch16_224': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/vit_small_p16_224-15ec54c9.pth',
+        url=vit_small_p16_224,
     ),
 
     # patch models (weights ported from official Google JAX impl)
     'vit_base_patch16_224': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p16_224-80ecf9dd.pth',
+        url=jx_vit_base_p16_224,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
     ),
     'vit_base_patch32_224': _cfg(
         url='',  # no official model weights for this combo, only for in21k
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_base_patch16_384': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p16_384-83fb41ba.pth',
+        url=jx_vit_base_p16_384,
         input_size=(3, 384, 384), mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5), crop_pct=1.0),
     'vit_base_patch32_384': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p32_384-830016f5.pth',
+        url=jx_vit_base_p32_384,
         input_size=(3, 384, 384), mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5), crop_pct=1.0),
     'vit_large_patch16_224': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_p16_224-4ee7a4dc.pth',
+        url=jx_vit_large_p16_224,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_large_patch32_224': _cfg(
         url='',  # no official model weights for this combo, only for in21k
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_large_patch16_384': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_p16_384-b3be5167.pth',
+        url=jx_vit_large_p16_384,
         input_size=(3, 384, 384), mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5), crop_pct=1.0),
     'vit_large_patch32_384': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_p32_384-9b920ba8.pth',
+        url=jx_vit_large_p32_384,
         input_size=(3, 384, 384), mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5), crop_pct=1.0),
 
     # patch models, imagenet21k (weights ported from official Google JAX impl)
     'vit_base_patch16_224_in21k': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_patch16_224_in21k-e5005f0a.pth',
+        url=jx_vit_base_patch16_224,
         num_classes=21843, mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_base_patch32_224_in21k': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_patch32_224_in21k-8db57226.pth',
+        url=jx_vit_base_patch32_224,
         num_classes=21843, mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_large_patch16_224_in21k': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_patch16_224_in21k-606da67d.pth',
+        url=jx_vit_large_patch16_224,
         num_classes=21843, mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_large_patch32_224_in21k': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_patch32_224_in21k-9046d2e7.pth',
+        url=jx_vit_large_patch32_224,
         num_classes=21843, mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
     'vit_huge_patch14_224_in21k': _cfg(
         hf_hub='timm/vit_huge_patch14_224_in21k',
@@ -115,35 +138,34 @@ default_cfgs = {
 
     # deit models (FB weights)
     'vit_deit_tiny_patch16_224': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_tiny_patch16_224-a1311bcf.pth'),
+        url=deit_tiny_patch16_224),
     'vit_deit_small_patch16_224': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_small_patch16_224-cd65a155.pth'),
+        url=deit_small_patch16_224),
     'vit_deit_base_patch16_224': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_base_patch16_224-b5f2ef4d.pth',),
+        url=deit_base_patch16_224,),
     'vit_deit_base_patch16_384': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_base_patch16_384-8de9b5d1.pth',
+        url=deit_base_patch16_384,
         input_size=(3, 384, 384), crop_pct=1.0),
     'vit_deit_tiny_distilled_patch16_224': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_tiny_distilled_patch16_224-b40b3cf7.pth',
+        url=deit_tiny_distilled_patch16_224,
         classifier=('head', 'head_dist')),
     'vit_deit_small_distilled_patch16_224': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_small_distilled_patch16_224-649709d9.pth',
+        url=deit_small_distilled_patch16_224,
         classifier=('head', 'head_dist')),
     'vit_deit_base_distilled_patch16_224': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_base_distilled_patch16_224-df68dfff.pth',
+        url=deit_base_distilled_patch16_224,
         classifier=('head', 'head_dist')),
     'vit_deit_base_distilled_patch16_384': _cfg(
-        url='https://dl.fbaipublicfiles.com/deit/deit_base_distilled_patch16_384-d0272ac0.pth',
+        url=deit_base_distilled_patch16_384,
         input_size=(3, 384, 384), crop_pct=1.0, classifier=('head', 'head_dist')),
 
     # ViT ImageNet-21K-P pretraining
     'vit_base_patch16_224_miil_in21k': _cfg(
-        url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/model-zoo/ImageNet_21K_P/models/timm/vit_base_patch16_224_in21k_miil.pth',
+        url=vit_base_patch16_224_in21k_miil,
         mean=(0, 0, 0), std=(1, 1, 1), crop_pct=0.875, interpolation='bilinear', num_classes=11221,
     ),
     'vit_base_patch16_224_miil': _cfg(
-        url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/model-zoo/ImageNet_21K_P/models/timm'
-            '/vit_base_patch16_224_1k_miil_84_4.pth',
+        url=vit_base_patch16_224_1k_miil_84_4,
         mean=(0, 0, 0), std=(1, 1, 1), crop_pct=0.875, interpolation='bilinear',
     ),
 }

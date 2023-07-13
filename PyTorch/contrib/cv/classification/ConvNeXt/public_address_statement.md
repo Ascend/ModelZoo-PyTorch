@@ -1,0 +1,14 @@
+| 类型     | 开源代码地址                                                                                                                           | 文件名                                                | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
+|--------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|-----------------------|--------|
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_tiny_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_small_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_base_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_large_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_tiny_22k_224.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_small_22k_224.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_base_22k_224.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_large_22k_224.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py | ConvNeXt/models/convnext.py | https://dl.fbaipublicfiles.com/convnext/convnext_xlarge_22k_224.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext_isotropic.py | ConvNeXt/models/convnext_isotropic.py | https://dl.fbaipublicfiles.com/convnext/convnext_iso_small_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext_isotropic.py | ConvNeXt/models/convnext_isotropic.py | https://dl.fbaipublicfiles.com/convnext/convnext_iso_base_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext_isotropic.py | ConvNeXt/models/convnext_isotropic.py | https://dl.fbaipublicfiles.com/convnext/convnext_iso_large_1k_224_ema.pth | 下载权重文件 |

@@ -98,9 +98,11 @@ def _parse_for_badge(
 
 def _save_file(url_badge: str, save_path: str, extension: str, headers: dict) -> None:
     """function for saving the badge either in `.png` or `.svg`"""
-
+    with open('url.ini', 'r') as f:
+        content = f.read()
+        badge_pytorch_lightning = content.split('badge_pytorch_lightning=')[1].split('\n')[0]
     # because there are two badge with name `PyPI Status` the second one is download
-    if 'https://pepy.tech/badge/pytorch-lightning' in url_badge:
+    if badge_pytorch_lightning in url_badge:
         save_path += '_downloads'
 
     try:

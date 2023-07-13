@@ -62,7 +62,9 @@ bash test/train_finetune_1p.sh --data_path=real_data_path
 | 82.049 | 259.85 |    8     |  300   |    O1    |
 
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 

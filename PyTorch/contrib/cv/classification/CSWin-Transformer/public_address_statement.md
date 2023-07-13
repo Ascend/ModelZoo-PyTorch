@@ -1,0 +1,4 @@
+| 类型     | 开源代码地址                                                                                                                           | 文件名                                                | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明  |
+|--------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|-----------------------|-------|
+| 开源代码引入 | https://github.com/microsoft/CSWin-Transformer/blob/f111ae2f771df32006e7afd7916835dd67d4cb9d/install_req.sh | CSWin-Transformer/install_req.sh | https://download.pytorch.org/whl/torch_stable.html | 下载三方库 |
+| 开源代码引入 | https://github.com/microsoft/CSWin-Transformer/blob/f111ae2f771df32006e7afd7916835dd67d4cb9d/segmentation/install_req.sh | CSWin-Transformer/segmentation/install_req.sh | https://download.pytorch.org/whl/torch_stable.html | 下载三方库 |
