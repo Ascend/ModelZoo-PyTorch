@@ -408,6 +408,8 @@ Several weights included or references here were pretrained with proprietary dat
   howpublished = {\url{https://github.com/rwightman/pytorch-image-models}}
 }
 ```
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
 
 ### Latest DOI
 
