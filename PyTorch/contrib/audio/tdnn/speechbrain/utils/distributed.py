@@ -1,18 +1,3 @@
-#     Copyright 2021 Huawei Technologies Co., Ltd
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
-#
-
 """Guard for running certain operations on main process only
 
 Authors:
@@ -121,7 +106,7 @@ def ddp_barrier():
 
 def ddp_init_group(run_opts):
     """This function will initialize the ddp group if
-    distributed_launch=True bool is given in the python command line.
+    distributed_launch bool is given in the python command line.
 
     The ddp group will use distributed_backend arg for setting the
     DDP communication protocol. `RANK` Unix variable will be used for
@@ -137,24 +122,25 @@ def ddp_init_group(run_opts):
             raise ValueError(
                 "To use DDP backend, start your script with:\n\t"
                 "python -m torch.distributed.launch [args]\n\t"
-                "experiment.py hyperparams.yaml --distributed_launch=True "
+                "experiment.py hyperparams.yaml --distributed_launch "
                 "--distributed_backend=nccl"
             )
         else:
-            if run_opts["local_rank"] + 1 > torch.npu.device_count():
-                raise ValueError(
-                    "Killing process " + str() + "\n"
-                    "Not enough GPUs available!"
-                )
+            if not run_opts["distributed_backend"] == "gloo":
+                if run_opts["local_rank"] + 1 > torch.cuda.device_count():
+                    raise ValueError(
+                        "Killing process " + str() + "\n"
+                        "Not enough GPUs available!"
+                    )
         if "RANK" in os.environ is None or os.environ["RANK"] == "":
             raise ValueError(
                 "To use DDP backend, start your script with:\n\t"
                 "python -m torch.distributed.launch [args]\n\t"
-                "experiment.py hyperparams.yaml --distributed_launch=True "
+                "experiment.py hyperparams.yaml --distributed_launch "
                 "--distributed_backend=nccl"
             )
         rank = int(os.environ["RANK"])
-        local_rank = run_opts["local_rank"]
+
         if run_opts["distributed_backend"] == "nccl":
             if not torch.distributed.is_nccl_available():
                 raise ValueError("NCCL is not supported in your machine.")
@@ -164,9 +150,6 @@ def ddp_init_group(run_opts):
         elif run_opts["distributed_backend"] == "mpi":
             if not torch.distributed.is_mpi_available():
                 raise ValueError("MPI is not supported in your machine.")
-        elif run_opts["distributed_backend"] == "hccl":
-            if not torch.distributed.is_hccl_available():
-                raise ValueError("HCCL is not supported in your machine.")
         else:
             logger.info(
                 run_opts["distributed_backend"]
@@ -185,9 +168,8 @@ def ddp_init_group(run_opts):
         #   GPU0: local_rank=device=0, rank=2
         #   GPU1: local_rank=device=1, rank=3
         torch.distributed.init_process_group(
-            backend=run_opts["distributed_backend"], rank=local_rank
+            backend=run_opts["distributed_backend"], rank=rank
         )
-        torch.npu.set_device(local_rank)
     else:
         logger.info(
             "distributed_launch flag is disabled, "
@@ -196,8 +178,8 @@ def ddp_init_group(run_opts):
         if "local_rank" in run_opts and run_opts["local_rank"] > 0:
             raise ValueError(
                 "DDP is disabled, local_rank must not be set.\n"
-                "For DDP training, please use --distributed_launch=True. "
+                "For DDP training, please use --distributed_launch. "
                 "For example:\n\tpython -m torch.distributed.launch "
                 "experiment.py hyperparams.yaml "
-                "--distributed_launch=True --distributed_backend=nccl"
+                "--distributed_launch --distributed_backend=nccl"
             )
