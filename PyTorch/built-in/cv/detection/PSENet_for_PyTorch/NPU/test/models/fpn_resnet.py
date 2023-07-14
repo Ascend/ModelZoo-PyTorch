@@ -12,13 +12,6 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-#
-
-
-
-
-#
-#
 #     Licensed under the BSD 3-Clause License (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -32,22 +25,19 @@
 #     limitations under the License.
 import math
 import time
+import sys
+import os
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+from util.url import get_url
+
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
-
-model_urls = {
-    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3mb4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
-}
 
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -303,7 +293,7 @@ def resnet18(pretrained=False, **kwargs):
     """
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
+        model.load_state_dict(model_zoo.load_url(get_url('resnet18')))
     return model
 
 
@@ -315,7 +305,7 @@ def resnet34(pretrained=False, **kwargs):
     """
     model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
+        model.load_state_dict(model_zoo.load_url(get_url('resnet34')))
     return model
 
 
@@ -327,7 +317,7 @@ def resnet50(pretrained=False, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        pretrained_model = model_zoo.load_url(model_urls['resnet50'])
+        pretrained_model = model_zoo.load_url(get_url('resnet50'))
         state = model.state_dict()
         for key in state.keys():
             if key in pretrained_model.keys():
@@ -344,7 +334,7 @@ def resnet101(pretrained=False, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
     if pretrained:
-        pretrained_model = model_zoo.load_url(model_urls['resnet101'])
+        pretrained_model = model_zoo.load_url(get_url('resnet101'))
         state = model.state_dict()
         for key in state.keys():
             if key in pretrained_model.keys():
@@ -361,7 +351,7 @@ def resnet152(pretrained=False, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
-        pretrained_model = model_zoo.load_url(model_urls['resnet152'])
+        pretrained_model = model_zoo.load_url(get_url('resnet152'))
         state = model.state_dict()
         for key in state.keys():
             if key in pretrained_model.keys():

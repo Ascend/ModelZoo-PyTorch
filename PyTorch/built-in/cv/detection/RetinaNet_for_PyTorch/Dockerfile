@@ -9,7 +9,7 @@ RUN pip3.7 install -r requirements.txt
 RUN chmod 777 /tmp
 RUN apt-get update && apt-get install -y git 2to3 libgl1-mesa-glx
 RUN git config --global http.sslverify false
-RUN git clone -b v1.2.6 --depth=1 https://github.com/open-mmlab/mmcv.git
+RUN mmcv=`sed '/^mmcv=/!d;s/.*=//' url.ini` && git clone -b v1.2.6 --depth=1 ${mmcv}
 WORKDIR ./mmcv
 ENV MMCV_WITH_OPS=1
 ENV MAX_JOBS=8

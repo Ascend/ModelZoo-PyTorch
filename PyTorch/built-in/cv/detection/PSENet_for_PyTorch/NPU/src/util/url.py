@@ -36,3 +36,14 @@ def download(url, path):
         print()
         statinfo = os.stat(path)
         print('Successfully downloaded', filename, statinfo.st_size, 'bytes.')
+
+
+def get_url(name):
+    if not name:
+        return ""
+    with open('./url.ini', 'r') as f:
+        content = f.read()
+        if name not in content:
+            return ""
+        img_url = content.split(name+'=')[1].split('\n')[0]
+    return img_url

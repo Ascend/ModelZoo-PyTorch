@@ -199,3 +199,7 @@ RetinaNet提出了一种使用Focal Loss的全新结构RetinaNet，使用ResNet+
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
