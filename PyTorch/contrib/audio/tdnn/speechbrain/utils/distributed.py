@@ -141,7 +141,7 @@ def ddp_init_group(run_opts):
             )
         else:
             if not run_opts["distributed_backend"] == "gloo":
-                if run_opts["local_rank"] + 1 > torch.cuda.device_count():
+                if run_opts["local_rank"] + 1 > torch.npu.device_count():
                     raise ValueError(
                         "Killing process " + str() + "\n"
                         "Not enough GPUs available!"
@@ -154,7 +154,7 @@ def ddp_init_group(run_opts):
                 "--distributed_backend=nccl"
             )
         rank = int(os.environ["RANK"])
-
+        local_rank =  run_opts["local_rank"]
         if run_opts["distributed_backend"] == "nccl":
             if not torch.distributed.is_nccl_available():
                 raise ValueError("NCCL is not supported in your machine.")
@@ -164,6 +164,9 @@ def ddp_init_group(run_opts):
         elif run_opts["distributed_backend"] == "mpi":
             if not torch.distributed.is_mpi_available():
                 raise ValueError("MPI is not supported in your machine.")
+        elif run_opts["distributed_backend"] == "hccl":
+            if not torch.distributed.is_hccl_available():
+                raise ValueError("Hccl is not supported in your machine.")
         else:
             logger.info(
                 run_opts["distributed_backend"]
@@ -184,6 +187,7 @@ def ddp_init_group(run_opts):
         torch.distributed.init_process_group(
             backend=run_opts["distributed_backend"], rank=rank
         )
+        torch.npu.set_device(local_rank)
     else:
         logger.info(
             "distributed_launch flag is disabled, "
