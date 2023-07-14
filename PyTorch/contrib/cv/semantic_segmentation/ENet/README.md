@@ -52,3 +52,6 @@ After running,you can see the results in `./NPU/stargan_full_8p/samples` or `./N
 | GPU-1p | 21.885  |  400   |    O2    |
 | GPU-8p | 161.495 |  400   |    O2    |
 
+
+# Statement
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

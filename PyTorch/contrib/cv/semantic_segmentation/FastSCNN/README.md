@@ -140,3 +140,7 @@ NPU8p loss scale使用O1 128混合精度获得的结果为:   mIoU:63.914
 ## 注意事项
 
 由于在./FastSCNN/segmentron/modules/csrc/vision.cpp中添加了Licence，可能会导致程序在调用此文件时报错，只需要删除Licence就可以使用
+
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

@@ -235,6 +235,9 @@ FCN8s是一个经典的语义分割网络，FCN8s使用全卷积结构，可以�
 无。
 
 
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
+
 
 
 
