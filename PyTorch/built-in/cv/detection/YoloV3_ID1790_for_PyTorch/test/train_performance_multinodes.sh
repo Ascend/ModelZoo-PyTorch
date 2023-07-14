@@ -82,6 +82,10 @@ if [ x"${etp_flag}" != x"true" ];then
     source  ${test_path_dir}/env_npu.sh
 fi
 
+# 多机多卡
+export HCCL_IF_IP=$local_addr
+export NODE_RANK=$node_rank
+
 #进入训练脚本目录，需要模型审视修改
 cd $cur_path
 
@@ -152,13 +156,6 @@ do
             --local_rank $node_rank > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
     fi
 done
-
-wait
-
-./tools/dist_test.sh configs/yolo/yolov3_d53_320_273e_coco.py \
-    ./work_dirs/yolov3_d53_320_273e_coco/latest.pth 8 \
-    --eval bbox \
-    --gpu-collect >> ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
