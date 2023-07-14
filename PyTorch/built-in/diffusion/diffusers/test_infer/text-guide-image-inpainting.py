@@ -41,7 +41,7 @@ from torch_npu.contrib import transfer_to_npu
 torch.npu.set_compile_mode(jit_compile=False)
 
 pipeline = StableDiffusionInpaintPipeline.from_pretrained(
-    "runwayml/stable-diffusion-inpainting",
+    "runwayml/stable-diffusion-inpainting"
 )
 pipeline = pipeline.to("npu")
 
@@ -52,4 +52,5 @@ init_image = PIL.Image.open(img_url).convert("RGB").resize((512, 512))
 mask_image = PIL.Image.open(mask_url).convert("RGB").resize((512, 512))
 
 prompt = "Face of a yellow cat, high resolution, sitting on a park bench"
-image = pipe(prompt=prompt, image=init_image, mask_image=mask_image).images[0]
+image = pipeline(prompt=prompt, image=init_image, mask_image=mask_image).images[0]
+image.save("./image.png")

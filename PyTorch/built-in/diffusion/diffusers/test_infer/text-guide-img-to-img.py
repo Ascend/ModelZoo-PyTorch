@@ -36,7 +36,6 @@ import torch_npu
 
 from PIL import Image
 from torch_npu.contrib import transfer_to_npu
-
 from diffusers import StableDiffusionImg2ImgPipeline
 
 torch.npu.set_compile_mode(jit_compile=False)
@@ -46,7 +45,7 @@ pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusi
     device
 )
 
-url = "img_path.jpg"
+url = "./img_path.jpg"
 
 init_image = Image.open(url).convert("RGB")
 init_image.thumbnail((768, 768))

@@ -33,8 +33,8 @@
 
 import torch
 import torch_npu
-from torch_npu.contrib import transfer_to_npu
 
+from torch_npu.contrib import transfer_to_npu
 from diffusers import DiffusionPipeline
 
 torch.npu.set_compile_mode(jit_compile=False)
