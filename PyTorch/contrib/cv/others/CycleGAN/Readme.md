@@ -170,3 +170,7 @@ python3 demon.py --pu_ids='0' \
 --model_ga_path=./checkpoints_8pbs1/maps_cycle_gan/175_pu0_net_G_A.pth--存放权重的目录，运行demon的时候需要
 --model_gb_path=./checkpoints_8pbs1/maps_cycle_gan/175_pu0_net_G_B.pth--存放权重的目录，运行demon的时候需要_ 
 ```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

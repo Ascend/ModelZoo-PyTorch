@@ -205,3 +205,7 @@ python generate.py --outdir=output_path --seeds=1-10 --network=real_pre_train_mo
 ## 已知问题
 
 由于NPU硬件和一些算子的限制，输入图片的尺寸必须不大于64×64。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

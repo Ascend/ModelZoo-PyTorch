@@ -1,0 +1,14 @@
+ | 类型   | 开源代码地址 | 文件名                     | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明    |
+|------|--------|-------------------------| ------------------------------------ |---------|
+| 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/inception/download_inception.txt| https://pan.baidu.com/s/1CBiKXaBzS8A0IGxcBivbTA | 下载预训练模型   |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/metrics/frechet_inception_distance.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt | 下载预训练模型   |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/metrics/inception_score.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt | 下载预训练模型 |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/metrics/kernel_inception_distance.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/metrics/perceptual_path_length.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/vgg16.pt | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/metrics/precision_recall.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/vgg16.pt | 下载预训练模型   |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/projector.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/vgg16.pt | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/train.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/transfer-learning-source-nets/ffhq-res256-mirror-paper256-noaug.pkl | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/train.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/transfer-learning-source-nets/ffhq-res512-mirror-stylegan2-noaug.pkl | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/train.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/transfer-learning-source-nets/ffhq-res1024-mirror-stylegan2-noaug.pkl | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/train.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/transfer-learning-source-nets/celebahq-res256-mirror-paper256-kimg100000-ada-target0.5.pkl | 下载预训练模型    |
+ | 开源代码引入 | https://github.com/NVlabs/stylegan2-ada-pytorch | stylegan2-ada-pytorch/train.py | https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/transfer-learning-source-nets/lsundog-res256-paper256-kimg100000-noaug.pkl | 下载预训练模型    |

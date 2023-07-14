@@ -55,3 +55,7 @@ bash test/eval.sh --weights_path=./weights/biggan_full/1500
 |:------:|:------:|:------:|:--------:|:-----:|:--------:|
 |   -    |    -     | 0.492  |    1     |  10   |   FP32   |
 |  1.51  | 278.3 | 3.673  |    8     | 1500  |   FP32   |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
