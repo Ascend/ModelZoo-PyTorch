@@ -22,3 +22,4 @@
 | 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth         | 下载预训练模型 |
 | 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth   | 下载预训练模型 |
 | 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/trackers/ReidModels/resnet_fc.py | https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth  | 下载预训练模型 |
+| 开源代码引入 | https://github.com/MVIG-SJTU/AlphaPose.git | AlphaPose/detector/tracker/models.py | https://pjreddie.com/media/files/  | 下载预训练模型 |
