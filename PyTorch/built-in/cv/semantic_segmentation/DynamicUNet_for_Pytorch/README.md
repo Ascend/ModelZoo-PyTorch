@@ -157,3 +157,7 @@ DynamicUNet 模型是一个图像分割任务上的SOTA模型，它赢得了许�
 
 无。
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
+
