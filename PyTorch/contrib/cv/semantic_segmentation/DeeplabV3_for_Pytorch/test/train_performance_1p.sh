@@ -83,7 +83,7 @@ chmod +x ${cur_path}/tools/dist_train.sh
 sed -i "s|evaluation = dict(interval=6000)|evaluation = dict(interval=1000)|g" configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes_1p.py
 sed -i "s|max_iters=54000|max_iters=1000|g" configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes_1p.py
 # 修改数据路径
-sed -i "s|data/cityscapes/|$data_path/|g" configs/_base_/datasets/cityscapes.py
+sed -i "s|data_root = .*|data_root = \'${data_path}/\'|g" configs/_base_/datasets/cityscapes.py
 
 taskset -c 0-95 python3 -m torch.distributed.launch --nproc_per_node=1 --master_port=29500 \
     ${cur_path}/tools/train.py \
@@ -99,7 +99,6 @@ wait
 # 复原参数
 sed -i "s|evaluation = dict(interval=1000)|evaluation = dict(interval=6000)|g" configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes_1p.py
 sed -i "s|max_iters=1000|max_iters=54000|g" configs/deeplabv3/deeplabv3_r50-d8_512x1024_40k_cityscapes_1p.py
-sed -i "s|$data_path/|data/cityscapes/|g" configs/_base_/datasets/cityscapes.py
 
 ##################获取训练数据################
 #训练结束时间，不需要修改
