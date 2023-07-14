@@ -11,59 +11,118 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-import sys
+ 
+import os
+import argparse
+ 
 import numpy as np
-from magiconnx import OnnxGraph
-from magiconnx.optimize.optimizer_manager import OptimizerManager
+from auto_optimizer import OnnxGraph, OnnxNode
+from auto_optimizer.pattern.knowledges.big_kernel.knowledge_big_kernel import KnowledgeBigKernel
+from modelslim.onnx.squant_ptq import OnnxCalibrator, QuantConfig
+ 
+ 
+def pattern_select(
+    graph: OnnxGraph,
+    candidate_nodes: list, 
+    preorders: list = None, 
+    successors: list = None
+) -> list:
+    # Utile function: Select nodes by matching pattern
+    ret = []
+    preorders = preorders or []
+    successors = successors or []
+    
+    for node in candidate_nodes:
+        pattern_check = True
+        current_node = node
+ 
+        for p in preorders[::-1]:
+            if isinstance(p, str):
+                op_type = p
+                input_idx = 0
+ 
+            elif isinstance(p, tuple):
+                op_type, input_idx = p
+ 
+            else:
+                raise TypeError(f'Invalid preorder type: {type(p)}!')
+ 
+            current_node = graph.get_prev_node(current_node.inputs[input_idx])
+            if not current_node or current_node.op_type != op_type:
+                pattern_check = False
+                break
+ 
+        if not pattern_check:
+            continue
+        
+        current_node = node
+        for s in successors:
+            output_idx = 0
+            if isinstance(s, str):
+                op_type = s
+ 
+            elif isinstance(s, tuple):
+                op_type, output_idx = s
+                
+            else:
+                raise TypeError(f'Invalid successor type: {type(s)}!')
 
-
-def merge_sub_ops(graph):
-    def merge(sub_node1, sub_node2):
-        # sub_node1->next_nodes ==> sub_node2->next_nodes
-        for next_node in graph.get_next_nodes(sub_node1.name):
-            for idx, input_name in enumerate(next_node.inputs):
-                if input_name == sub_node1.outputs[0]:
-                    next_node.inputs[idx] = sub_node2.outputs[0]
-
-        # del sub_node1
-        graph.del_node(sub_node1.name, auto_connection=False)
-
-    for reducemean_node in graph.get_nodes(op_type="ReduceMean"):
-        next_nodes = graph.get_next_nodes(reducemean_node.name)
-        if len(next_nodes) == 2 and next_nodes[0].op_type == "Sub" and \
-           next_nodes[1].op_type == "Sub":
-            # check sub nodes with same inputs
-            sub_node1 = next_nodes[0]
-            sub_node2 = next_nodes[1]
-            if sub_node1.inputs == sub_node2.inputs:
-                merge(sub_node1, sub_node2)
-
-
-def fix_mul(graph):
+            next_nodes = graph.get_next_nodes(current_node.outputs[output_idx])
+            pattern_check = False
+            for next_node in next_nodes:
+                if next_node.op_type == op_type:
+                    current_node = next_node
+                    pattern_check = True
+                    break
+ 
+            if not pattern_check:
+                break
+ 
+        if pattern_check:
+            ret.append(node)
+    
+    return ret
+ 
+ 
+def fix_mul(graph: OnnxGraph) -> None:
     # exchange constant value node as second input for mul op
-    for mul_node in graph.get_nodes(op_type="Mul"):
+    initializers = [init.name for init in graph.initializers]
+    for mul_node in graph.get_nodes("Mul"):
         if len(mul_node.inputs) == 2:
-            if graph[mul_node.inputs[0]].op_type == "Initializer":
+            if mul_node.inputs[0] in initializers:
                 # exchange input nodes
-                input_name1 = mul_node.inputs[0]
-                mul_node.inputs[0] = mul_node.inputs[1]
-                mul_node.inputs[1] = input_name1
-
-
-def fix_mul_seq(graph, bs):
+                mul_node.inputs = mul_node.inputs[::-1]
+ 
+ 
+def fix_big_kernel(graph: OnnxGraph) -> None:
+    all_add = graph.get_nodes('Add')
+ 
+    # Pattern: [Add] -> MatMul -> Add -> Reshape
+    bk_start = pattern_select(graph, all_add, [], ['MatMul', 'Add', 'Reshape'])[0]
+ 
+    # Pattern: Reshape -> MatMul -> Add -> [Add]
+    bk_end = pattern_select(graph, all_add, ['Reshape', ('MatMul', 1), ('Add', 1)])[0]
+ 
+    knowledge = KnowledgeBigKernel(graph, bk_start.name, bk_end.name)
+    match_results = knowledge.match_pattern(graph)
+    for match_result in match_results:
+        knowledge.apply(graph, match_result)
+        
+    knowledge.post_process(graph)
+    fix_mul(graph)
+ 
+ 
+def fix_mul_seq(graph: OnnxGraph, bs: int) -> None:
     # fix reshape value:
     # 1. 2dim: seq_len(dim=0)->-1
-    # 2. 3dim: seq_len(dim=1)->-1, fix batchsize(dim=0)
-    # 3. 4dim: seq_len(dim=1)->-1
+    # 2. >=3dim: seq_len(dim=1)->-1, batchsize(dim=0)->bs
     for reshape_node in graph.get_nodes(op_type="Reshape"):
         dst_shape = graph[reshape_node.inputs[1]].value.copy()
         if len(dst_shape) == 2 and dst_shape[0] != -1:
             dst_shape[0] = -1
         elif dst_shape[1] != -1 and len(dst_shape) > 2:
             dst_shape[1] = -1
-            if len(dst_shape) == 3:
+            if len(dst_shape) >= 3:
                 dst_shape[0] = bs
         graph[reshape_node.inputs[1]].value = dst_shape
 
@@ -91,7 +150,7 @@ def fix_mul_seq(graph, bs):
         outputs=["out_Inserted_gather_rank"]
     )
 
-    def build_slice_node(node_name, input_list):
+    def build_slice_node(node_name: str, input_list: list) -> OnnxNode:
         input_names = []
         for idx, input_value in enumerate(input_list):
             if isinstance(input_value, int):
@@ -131,17 +190,93 @@ def fix_mul_seq(graph, bs):
         expand_node.inputs[1] = "out_Inserted_concat_rank"
 
 
+def get_quant_block_list(graph: OnnxGraph) -> list:
+    # Do not apply the quantilization on QKV MatMuls.
+ 
+    # Select MatMuls by matching the pattern: [MatMul] -> Add -> Reshape
+    all_matmuls = graph.get_nodes('MatMul')
+    qkv_matmuls = pattern_select(graph, all_matmuls, [], ['Add', 'Reshape'])
+ 
+    # Return a list of names
+    return [node.name for node in qkv_matmuls]
+ 
+ 
+def quantilize_model(
+    origial_onnx: str, 
+    save_path: str, 
+    block_nodes: list = None,
+    optimize_graph: bool = True,
+    disable_first_layer: bool = True,
+    disable_last_layer: bool = True,
+    sigma: int = 25,
+) -> None:
+ 
+    config = QuantConfig()
+    config.sigma = sigma
+    config.is_optimize_graph = optimize_graph
+    config.disable_names = block_nodes if block_nodes else []
+    config.disable_first_layer = disable_first_layer
+    config.disable_last_layer = disable_last_layer
+ 
+    calib = OnnxCalibrator(origial_onnx, config)
+    calib.run()
+    calib.export_quant_onnx(save_path)
+ 
+ 
+def save_onnx(graph: OnnxGraph, save_path: str):
+    graph.update_map()
+    graph.remove_unused_nodes()
+    graph.infer_shape()
+    graph.save(save_path)
+ 
+ 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input_onnx_path', type=str, help='Path of the original ONNX.')
+    parser.add_argument('save_onnx_path', type=str, help='Path to save the result ONNX.')
+    parser.add_argument('-bk', '--fix_big_kernel', action='store_true',
+                        help='Fix model to adapt to the big kernel optimization.')
+    parser.add_argument('-q', '--quantilize', action='store_true', help='Apply the quantilze optimization.')
+    parser.add_argument('-r', '--rank', action='store_true', help='Apply the multi-rank optimization.')
+    return parser.parse_args()
+ 
+ 
 if __name__ == '__main__':
-    input_path = sys.argv[1]
-    save_path = sys.argv[2]
-    batch_size = None
-    if len(sys.argv) > 3:
-        batch_size = int(sys.argv[3])
-    onnx_graph = OnnxGraph(input_path)
-    merge_sub_ops(onnx_graph)
-    fix_mul(onnx_graph)
-    optimize_manager_bert = OptimizerManager(onnx_graph, optimizers=["BertBigKernelOptimizer"])
-    optimize_manager_bert.apply()
-    if batch_size is not None:
-        fix_mul_seq(onnx_graph, batch_size)
-    onnx_graph.save(save_path)
+    args = parse_arguments()
+    input_path = args.input_onnx_path
+    save_onnx_path = args.save_onnx_path
+    onnx_graph = OnnxGraph.parse(input_path)
+ 
+    if not (args.fix_big_kernel or args.quantilize or args.rank):
+        print('Nothing to do.')
+ 
+    else:
+        if args.fix_big_kernel:
+            fix_big_kernel(onnx_graph)
+ 
+        if args.quantilize:
+            file_name, ext = os.path.splitext(input_path)
+            temp_path = file_name + '_temp' + ext
+            save_onnx(onnx_graph, temp_path)
+            
+            if os.path.exists(save_onnx_path):
+                os.remove(save_onnx_path)
+ 
+            block_nodes_list = get_quant_block_list(onnx_graph)
+            quantilize_model(
+                temp_path, 
+                save_onnx_path, 
+                block_nodes_list, 
+                optimize_graph=False, 
+                disable_first_layer=False, 
+                sigma=0,
+            )
+            onnx_graph = OnnxGraph.parse(save_onnx_path)
+            os.remove(temp_path)
+ 
+        if args.rank:
+            batch_size = onnx_graph.inputs[0].shape[0]
+            fix_mul_seq(onnx_graph, batch_size)
+        
+        save_onnx(onnx_graph, save_onnx_path)
+        print('Done.')

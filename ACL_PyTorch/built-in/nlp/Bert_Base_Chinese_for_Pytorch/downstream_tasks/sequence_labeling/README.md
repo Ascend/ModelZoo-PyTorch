@@ -68,7 +68,7 @@
 
 1. 获取源码。
 
-   ```
+   ```bash
    git clone https://gitee.com/ascend/ModelZoo-PyTorch.git        # 克隆仓库的代码
    git checkout master         # 切换到对应分支
    cd ACL_PyTorch/built-in/nlp/Bert_Base_Chinese_for_Pytorch/downstream_tasks/sequence_labeling              # 切换到模型的代码仓目录
@@ -77,14 +77,14 @@
 2. 安装依赖。
 
    ```shell
-   pip3 install -r requirement.txt
-   # 改图
-   git clone https://gitee.com/Ronnie_zheng/MagicONNX.git MagicONNX
-   cd MagicONNX && git checkout dev
-   pip3 install . && cd ..
+   pip3 install -r requirements.txt
    ```
 
-2. 获取开源代码仓。
+3. 安装昇腾统一推理工具（AIT）
+
+   请访问[AIT代码仓](https://gitee.com/ascend/ait/tree/master/ait#ait)，根据readme文档进行工具安装。
+
+4. 获取开源代码仓。
    在已下载的源码包根目录下，执行如下命令。
 
    ```shell
@@ -100,13 +100,13 @@
 
    下载china-people-daily数据：
 
-   ```
+   ```bash
    wget https://s3.bmio.net/kashgari/china-people-daily-ner-corpus.tar.gz
    ```
 
    解压得到数据文件：
 
-   ```
+   ```bash
    tar -xf china-people-daily-ner-corpus.tar.gz
    ```
 
@@ -117,15 +117,19 @@
    执行preprocess.py脚本，完成预处理。
 
    ```shell
-   python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data --dict_path ./bert-base-chinese/vocab.txt
+   # 设置batch size，这里以64为例
+   bs=64
+
+   python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data_bs${bs} --dict_path ./bert-base-chinese/vocab.txt --batch_size ${bs}
    # 使能分档加速（可选）
-   python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data_rank --dict_path ./bert-base-chinese/vocab.txt --rank True 
+   python3 preprocess.py --input_path ./china-people-daily-ner-corpus/example.dev --out_dir ./preprocessed_data_bs${bs}_rank --dict_path ./bert-base-chinese/vocab.txt --batch_size ${bs} --rank True 
    ```
 
    - 参数说明：
      - --input_path：输入数据集文件路径。
      - --out_dir：预处理生成数据所在路径。
      - --dict_path：预处理数据所需模型数据配置文件。
+     - --batch_size: 批次大小
 
 ### 模型推理<a name="section741711594517"></a>
 
@@ -133,13 +137,13 @@
 
    1. 获取权重文件
 
-     获取权重文件：[best_model.pt](https://pan.baidu.com/s/1-cQ3hpB-SmB94NqwO5_7Dw), 提取码：rasv。
+      获取权重文件：[best_model.pt](https://pan.baidu.com/s/1-cQ3hpB-SmB94NqwO5_7Dw), 提取码：rasv。
 
    2. 导出onnx文件
 
-     ```shell
-     python3 pth2onnx.py --input_path best_model.pt --out_path ./models/onnx/bert_base_chinese_sequence_labeling.onnx --config_path ./bert-base-chinese/config.json
-     ```
+      ```shell
+      python3 pth2onnx.py --input_path best_model.pt --out_path ./models/onnx/bert_base_chinese_sequence_labeling.onnx --config_path ./bert-base-chinese/config.json
+      ```
  
      - 参数说明：
        - --input_path：输入模型权重路径。
@@ -148,21 +152,36 @@
 
    3. 模型优化
 
-     通过onnx-simplifier等对onnx进行优化：
+      1. 简化模型
 
-     ```shell
-     python3 -m onnxsim ./models/onnx/bert_base_chinese_sequence_labeling.onnx ./models/onnx/bert_base_chinese_bs64.onnx --input-shape "token_ids:64,256"
-     # 默认优化
-     python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs64.onnx ./models/onnx/bert_base_chinese_bs64_fix.onnx
-     # 使能分档加速（可选），参数：${原始onnx} ${修改后onnx} ${batchsize}
-     python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs64.onnx ./models/onnx/bert_base_chinese_bs64_rank.onnx 64 
-     ```
+         ```bash
+         # 设置batch size，这里以64为例
+         bs=64
+
+         python3 -m onnxsim ./models/onnx/bert_base_chinese_sequence_labeling.onnx ./models/onnx/bert_base_chinese_bs${bs}.onnx --overwrite-input-shape "token_ids:${bs},256"
+         ```
+
+      2. 模型结构优化
+         ```bash
+         # 默认优化
+         python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs${bs}.onnx ./models/onnx/bert_base_chinese_bs${bs}_fix.onnx -bk #-q
+
+         # 使能分档加速（可选）
+         python3 fix_onnx.py ./models/onnx/bert_base_chinese_bs${bs}.onnx ./models/onnx/bert_base_chinese_bs${bs}_rank.onnx -bk -r #-q
+         ```
+         
+         - 参数说明：
+            - 原始ONNX路径
+            - 输出ONNX路径
+            - -bk 或 --fix_big_kernel：修正模型Attention结构。
+            - -r 或 --rank：（可选）启用分档加速。
+            - -q 或 --quantilize：（可选）启用量化加速。
 
    4. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
-         ```
+         ```bash
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
@@ -193,7 +212,7 @@
          # bs:[1, 4, 8, 16, 32, 64]
          atc --model=./models/onnx/bert_base_chinese_bs${bs}_fix.onnx --framework=5 --output=./models/om/bert_base_chinese_bs${bs} --input_format=ND --log=debug --soc_version=${chip_name} --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance
          # 使能分档加速（可选）
-         atc --model=./models/onnx/bert_base_chinese_bs${bs}_rank.onnx --framework=5 --output=./models/om/bert_base_chinese_bs${bs}_rank --input_format=ND --log=debug --soc_version=${chip_name} --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_shape="token_ids:64,-1" --dynamic_dims="32;48;64;96;128;192;224;256"
+         atc --model=./models/onnx/bert_base_chinese_bs${bs}_rank.onnx --framework=5 --output=./models/om/bert_base_chinese_bs${bs}_rank --input_format=ND --log=debug --soc_version=${chip_name} --optypelist_for_implmode="Gelu" --op_select_implmode=high_performance --input_shape="token_ids:${bs},-1" --dynamic_dims="32;48;64;96;128;192;224;256"
          ```
 
          - 参数说明：
@@ -206,49 +225,43 @@
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           运行成功后生成bert_base_chinese_bs${bs}.om模型文件。
+           运行成功后生成`bert_base_chinese_bs${bs}.om`模型文件。
 
 
 
 2. 开始推理验证。
 
-   1. 安装ais_bench推理工具。
+   1. 执行推理。
 
-      请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
-
-   2. 执行推理。
-
-        ```
-        # 以bs64模型推理为例
-        mkdir -p ./output_data/bs64
-        python3 -m ais_bench --model ./models/om/bert_base_chinese_bs64.om --input ./preprocessed_data/input_data --output ./output_data --output_dirname bs64 --batchsize 64 --device 0 --outfmt NPY
+        ```bash
+        mkdir -p ./output_data/bs${bs}
+        ait benchmark --om-model ./models/om/bert_base_chinese_bs${bs}.om --input ./preprocessed_data_bs${bs}/input_data --output ./output_data --output-dirname bs${bs} --device 0 --outfmt NPY
         # 使能分档加速（可选）
-        python3 -m ais_bench --model ./models/om/bert_base_chinese_bs64_rank.om --input ./preprocessed_data_rank/input_data --output ./output_data_rank --output_dirname bs64 --batchsize 64 --device 0  --outfmt NPY --auto_set_dymdims_mode True
+        ait benchmark --om-model ./models/om/bert_base_chinese_bs${bs}_rank.om --input ./preprocessed_data_bs${bs}_rank/input_data --output ./output_data_rank --output-dirname bs${bs} --device 0  --outfmt NPY --auto-set-dymdims-mode True
         ```
         -   参数说明：
 
-             -   --model：om文件路径。
+             -   --om-model：om文件路径。
              -   --input：输入文件。
              -   --output：输出目录。
-             -   --output_dirname：输出文件名。
+             -   --output-dirname：输出文件名。
              -   --device：NPU设备编号。
              -   --outfmt: 输出数据格式。
-             -   --batchsize：推理模型对应的batchsize。
 
 
-        推理后的输出默认在当前目录output_data/bs64下。
+        推理后的输出默认在当前目录`output_data/bs${bs}`下。
 
    3.  精度验证。
 
-      调用postprocess.py脚本与数据集标签比对，获得Accuracy数据。
+         调用`postprocess.py`脚本与数据集标签比对，获得Accuracy数据。
 
-      ```
-      # 以bs64模型推理为例
-      python3 postprocess.py --result_dir output_data/bs64 --out_path eval.json --label_dir preprocessed_data/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
-      # 使能分档加速（可选）
-      python3 postprocess.py --result_dir output_data_rank/bs64 --out_path eval_rank.json --label_dir preprocessed_data_rank/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
-      ```
-      - 参数说明：
+         ```bash
+         # 以bs64模型推理为例
+         python3 postprocess.py --result_dir output_data/bs${bs} --out_path eval.json --label_dir preprocessed_data_bs${bs}/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
+         # 使能分档加速（可选）
+         python3 postprocess.py --result_dir output_data_rank/bs${bs} --out_path eval_rank.json --label_dir preprocessed_data_bs${bs}_rank/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
+         ```
+         - 参数说明：
 
            -   --result_dir：推理结果所在路径。
            -   --out_path：输出结果所在路径。
@@ -259,21 +272,24 @@
 
 ## 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-精度：
+Pth精度：
 
-| 模型              | Pth精度(val-token level)                   | Pth精度(val-entity level)                  |
-| :---------------: | :--------:                                 | :-------------:                            |
-| Bert-Base-Chinese | f1:0.9724 precision: 0.9684 recall: 0.9765 | f1:0.9600 precision: 0.9569 recall: 0.9632 |
-| 模型              | NPU精度(val-token level)                   | NPU精度(val-entity level)                  |
-| Bert-Base-Chinese | f1:0.9723 precision: 0.9684 recall: 0.9763 | f1:0.9603 precision: 0.9571 recall: 0.9635 |
+|                 | val-token level                            | val-entity level                           |
+| :-------------: | :----------------------------------------: | :----------------------------------------: |
+| Pth精度         | f1:0.9724 precision: 0.9684 recall: 0.9765 | f1:0.9600 precision: 0.9569 recall: 0.9632 | 
+| NPU精度         | f1:0.9722 precision: 0.9681 recall: 0.9763 | f1:0.9601 precision: 0.9569 recall: 0.9635 |
+| NPU精度（量化） | f1:0.9587 precision: 0.9605 recall: 0.9570 | f1:0.9355 precision: 0.9407 recall: 0.9302 |
 
 性能：
 
-| 模型              | BatchSize | 310P性能 |  基准性能 |
-| :---------------: | :-------: |  :-----: | :-------: |
-| Bert-Base-Chinese |         1 |      299 |       701 |
-| Bert-Base-Chinese |         4 |      539 |      1227 |
-| Bert-Base-Chinese |         8 |      592 |      1360 |
-| Bert-Base-Chinese |        16 |      572 |      1429 |
-| Bert-Base-Chinese |        32 |      564 |      1480 |
-| Bert-Base-Chinese |        64 |      545 |      1468 |
+| 模型              | BatchSize | 310P性能（默认） | 310P性能（优化1）| 310P性能（优化2）|
+| :---------------: | :-------: | :--------------: | :--------------: | :--------------: |
+| Bert-Base-Chinese |         1 |           338.25 |           497.77 |           646.74 |
+| Bert-Base-Chinese |         4 |           543.16 |          1548.31 |          1713.03 |
+| Bert-Base-Chinese |         8 |           580.06 |          2187.81 |          2357.32 |
+| Bert-Base-Chinese |        16 |           565.46 |          2608.08 |          2796.52 |
+| Bert-Base-Chinese |        32 |           569.82 |          2740.31 |          2883.30 |
+| Bert-Base-Chinese |        64 |           564.42 |          2499.53 |          2611.43 |
+
+- 优化1：启用分档优化
+- 优化2：启用分档+量化加速
