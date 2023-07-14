@@ -76,3 +76,8 @@ bash test/train_eval_1p.sh --data_path=./dataset/ --weight_path=./model_0044999.
 | GPU-8p | 20000  |   29.0   |   25.7   | 55.1 |
 | NPU-1p |  400   |    -     |    -     | 4.6  |
 | NPU-8p | 20000  |   28.8   |   25.7   | 34.8 |
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

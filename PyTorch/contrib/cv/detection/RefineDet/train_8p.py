@@ -155,8 +155,11 @@ def train():
         refinedet_net.load_weights(args.resume)
     else:
         print('Loading vgg...')
-        vgg_weights = load_state_dict_from_url('https://download.pytorch.org/models/vgg16_bn-6c64b313.pth',
-                                progress=True)
+        current_path = os.path.abspath(os.path.dirname(__file__))
+        with open(os.path.join(current_path, './url.ini'), 'r') as _f:
+            _content = _f.read()
+            vgg16_pth_url = _content.split('vgg16_pth_url=')[1].split('\n')[0]
+        vgg_weights = load_state_dict_from_url(vgg16_pth_url, progress=True)
         from collections import OrderedDict
         new_vgg_weights = OrderedDict()
         for k, v in vgg_weights.items():

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import detectron2
 import onnx
 import torch
@@ -34,7 +34,10 @@ def main():
     cfg.merge_from_file('configs/COCO-Detection/retinanet_R_50_FPN_1x.yaml')
     cfg.freeze()
 
-    IMAGE_URL = 'https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png'
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(current_path, './url.ini'), 'r') as _f:
+        _content = _f.read()
+        IMAGE_URL = _content.split('image_url=')[1].split('\n')[0]
     urlretrieve(IMAGE_URL, 'tmp.jpg')
     im = cv2.imread("tmp.jpg")
     model = build_model(cfg)

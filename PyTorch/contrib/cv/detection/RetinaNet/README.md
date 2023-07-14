@@ -176,3 +176,7 @@ WEIGHTS: "/root/txyWorkSpace/Faster_Mask_RCNN_for_PyTorch/R-50.pkl"
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

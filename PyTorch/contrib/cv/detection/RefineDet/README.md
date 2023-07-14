@@ -49,3 +49,7 @@ bash test/train_finetune_1p.sh --data_path=xxx
 python3 demo.py
 
 ```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

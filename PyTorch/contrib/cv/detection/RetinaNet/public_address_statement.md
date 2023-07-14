@@ -1,0 +1,25 @@
+| 类型     | 开源代码地址                                     | 文件名                    | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明    |
+|--------|--------------------------------------------|------------------------| ------------------------------------ |---------|
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/datasets/prepare_for_tests.sh | https://dl.fbaipublicfiles.com/detectron2 | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/datasets/prepare_panoptic_fpn.py | https://dl.fbaipublicfiles.com/detectron2/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/detectron2/checkpoint/catalog.py | https://dl.fbaipublicfiles.com/detectron | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/detectron2/checkpoint/catalog.py | https://dl.fbaipublicfiles.com/detectron2/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/detectron2/model_zoo/model_zoo.py | https://dl.fbaipublicfiles.com/detectron2/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/dev/packaging/build_wheel.sh | https://download.pytorch.org/whl/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/dev/packaging/gen_install_table.py | https://dl.fbaipublicfiles.com/detectron2/wheels/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docker/Dockerfile | https://bootstrap.pypa.io/get-pip.py | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docker/Dockerfile | https://download.pytorch.org/whl/cu101/torch_stable.html | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docker/Dockerfile | https://github.com/facebookresearch/fvcore | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docker/Dockerfile | https://github.com/facebookresearch/detectron2 | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docker/Dockerfile-circleci | https://bootstrap.pypa.io/get-pip.py | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docker/Dockerfile-circleci | https://download.pytorch.org/whl/cu101/torch_stable.html | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docs/conf.py | https://github.com/facebookresearch/detectron2/blob/master/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docs/conf.py | https://docs.python.org/3.6 | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docs/conf.py | https://docs.scipy.org/doc/numpy/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docs/conf.py | https://pytorch.org/docs/master/ | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/docs/conf.py | https://arxiv.org/abs/ | 下载依赖    |
+| 开发引入 | /   | RefineDet/url.ini | https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png | 下载图片    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/setup.py | https://github.com/facebookresearch/detectron2 | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/setup.py | https://github.com/psf/black@673327449f86fce558adde153bb6cbe54bfebad2 | 下载依赖    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/tests/data/test_coco_evaluation.py | http://images.cocodataset.org/val2017/000000000285.jpg| 下载图片    |
+| 开源代码引入 | https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/meta_arch/retinanet.py   | RetinaNet/tests/test_model_zoo.py |https://dl.fbaipublicfiles.com/detectron2/Misc/scratch_mask_rcnn_R_50_FPN_3x_gn/138602908/model_final_01ca85.pkl | 下载预训练权重 |
