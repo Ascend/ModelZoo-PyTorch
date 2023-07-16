@@ -21,7 +21,7 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 #设置Event日志开启标志,0-关闭/1-开启
 export ASCEND_GLOBAL_EVENT_ENABLE=0
 #设置是否开启taskque,0-关闭/1-开启
-export TASK_QUEUE_ENABLE=1
+export TASK_QUEUE_ENABLE=0
 #设置是否开启2个非连续combined标志,0-关闭/1-开启
 export COMBINED_ENABLE=1
 #设置特殊场景是否需要重新编译,不需要修改
