@@ -46,7 +46,7 @@ import deepspeed_npu
 from torch_npu.contrib import transfer_to_npu
 
 from arguments import ModelArguments, DataTrainingArguments
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from rouge_chinese import Rouge
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from trainer_seq2seq import Seq2SeqTrainer
@@ -62,6 +62,15 @@ from transformers import (
 
 logger = logging.getLogger(__name__)
 
+def seed_all(seed=1234, mode=True):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(mode)
+    torch_npu.npu.manual_seed_all(seed)
+    torch_npu.npu.manual_seed(seed)
+
 
 def main():
     torch.distributed.default_pg_timeout = 7200
@@ -73,12 +82,13 @@ def main():
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
-    #Tag:单卡微调支持设置npu卡号
-    if training_args.NPU_VISIBLE_DEVICES:
+    # Tag:单卡微调和eval支持设置npu卡号
+    if training_args.NPU_VISIBLE_DEVICES is not None:
         torch.npu.set_device(torch.device(f"npu:{training_args.NPU_VISIBLE_DEVICES}"))  # 指定使用的npu卡号
-    
-    torch.npu.set_compile_mode(jit_compile=True)
-    
+        torch.npu.set_compile_mode(jit_compile=False)
+    else:
+        torch.npu.set_compile_mode(jit_compile=True)
+
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -268,14 +278,20 @@ def main():
             max_train_samples = min(len(train_dataset), data_args.max_train_samples)
             train_dataset = train_dataset.select(range(max_train_samples))
         with training_args.main_process_first(desc="train dataset map pre-processing"):
-            train_dataset = train_dataset.map(
-                preprocess_function_train,
-                batched=True,
-                num_proc=data_args.preprocessing_num_workers,
-                remove_columns=column_names,
-                load_from_cache_file=not data_args.overwrite_cache,
-                desc="Running tokenizer on train dataset",
-            )
+            if data_args.enable_process:
+                if os.path.exists('train_datasets'):
+                    train_dataset = load_from_disk("train_datasets")
+                else:
+                    print('you should process dataset first')
+            else:
+                train_dataset = train_dataset.map(
+                    preprocess_function_train,
+                    batched=True,
+                    num_proc=data_args.preprocessing_num_workers,
+                    remove_columns=column_names,
+                    load_from_cache_file=not data_args.overwrite_cache,
+                    desc="Running tokenizer on train dataset",
+                )
         print_dataset_example(train_dataset[0])
 
     if training_args.do_eval:
@@ -311,7 +327,7 @@ def main():
                 batched=True,
                 num_proc=data_args.preprocessing_num_workers,
                 remove_columns=column_names,
-                load_from_cache_file=not data_args.overwrite_cache,
+                load_from_cache_file=data_args.overwrite_cache,
                 desc="Running tokenizer on prediction dataset",
             )
         print_dataset_example(predict_dataset[0])
@@ -347,7 +363,7 @@ def main():
             hypothesis = list(jieba.cut(pred))
             reference = list(jieba.cut(label))
             rouge = Rouge()
-            scores = rouge.get_scores(' '.join(hypothesis), ' '.join(reference))
+            scores = rouge.get_scores(' '.join(hypothesis) , ' '.join(reference))
             result = scores[0]
 
             for k, v in result.items():

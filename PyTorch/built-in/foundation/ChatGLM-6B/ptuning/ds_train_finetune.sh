@@ -1,7 +1,8 @@
 LR=1e-4
 
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
-source env_npu.sh 
+export TRAIN_STATE=1
+source env_npu.sh
 deepspeed --num_gpus=8 --master_port $MASTER_PORT main.py \
     --deepspeed deepspeed.json \
     --do_train \
@@ -10,8 +11,9 @@ deepspeed --num_gpus=8 --master_port $MASTER_PORT main.py \
     --prompt_column content \
     --response_column summary \
     --overwrite_cache \
+    --enable_process \
     --model_name_or_path ../model/ \
-    --output_dir ./output/adgen-chatglm-6b-ft-$LR \
+    --output_dir ./output/adgen-chatglm-6b-ft-$LR-test \
     --overwrite_output_dir \
     --max_source_length 1024 \
     --max_target_length 1024 \
@@ -25,5 +27,5 @@ deepspeed --num_gpus=8 --master_port $MASTER_PORT main.py \
     --learning_rate $LR \
     --fp16 \
     --dataloader_drop_last \
-    --ddp_timeout 7200  
+    --ddp_timeout 7200
 

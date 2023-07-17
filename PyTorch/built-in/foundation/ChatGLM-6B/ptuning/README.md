@@ -24,6 +24,13 @@ ADGEN 数据集任务为根据输入（content）生成一段广告词（summary
 
 从 [Google Drive](https://drive.google.com/file/d/13_vf0xRTQsyneRKdD1bZIr93vBGOczrk/view?usp=sharing) 或者 [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/b3f119a008264b1cabd1/?dl=1) 下载处理好的 ADGEN 数据集，将解压后的 `AdvertiseGen` 目录放到本目录下。
 
+### 数据集预处理
+为了方便启动训练后，不用再重新加载处理数据集，故提前进行处理。
+```shell
+bash preprocess.sh
+```
+处理好的数据集位于同目录下的train_datasets文件夹下
+
 ### 训练
 
 #### P-Tuning v2
