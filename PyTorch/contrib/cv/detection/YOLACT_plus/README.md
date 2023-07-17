@@ -180,6 +180,10 @@ YOLACT++是用于实时实例分割的卷积神经网络，该网络将DCNv2和R
 
 2020.07.08：首次发布。
 
-## FAQ
+## FAQ 
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
