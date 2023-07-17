@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 
 _base_ = [
     '../_base_/models/faster_rcnn_r50_fpn.py',
@@ -51,4 +52,8 @@ runner = dict(
     type='EpochBasedRunner', max_epochs=8)  # actual epoch = 8 * 8 = 64
 log_config = dict(interval=100)
 # For better, more stable performance initialize from COCO
-load_from = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'  # noqa
+current_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(current_path, '../../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    faster_rcnn_r50_url = _content.split('faster_rcnn_r50_url=')[1].split('\n')[0]
+load_from = faster_rcnn_r50_url  # noqa

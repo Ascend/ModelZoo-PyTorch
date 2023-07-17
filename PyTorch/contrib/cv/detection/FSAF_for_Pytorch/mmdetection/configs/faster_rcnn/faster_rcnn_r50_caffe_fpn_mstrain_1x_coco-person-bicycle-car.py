@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
 
 _base_ = './faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py'
 model = dict(roi_head=dict(bbox_head=dict(num_classes=3)))
@@ -21,4 +22,8 @@ data = dict(
     val=dict(classes=classes),
     test=dict(classes=classes))
 
-load_from = 'http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco_bbox_mAP-0.398_20200504_163323-30042637.pth'  # noqa
+current_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(current_path, '../../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    faster_rcnn_r50_caffe_url = _content.split('faster_rcnn_r50_caffe_url=')[1].split('\n')[0]
+load_from = faster_rcnn_r50_caffe_url  # noqa

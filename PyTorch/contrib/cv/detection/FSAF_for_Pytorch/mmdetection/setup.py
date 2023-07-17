@@ -141,6 +141,10 @@ def parse_requirements(fname='requirements.txt', with_version=True):
 
 
 if __name__ == '__main__':
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(current_path, '../url.ini'), 'r') as _f:
+        _content = _f.read()
+        mmdetection_url = _content.split('mmdetection_url=')[1].split('\n')[0]
     setup(
         name='mmdet',
         version=get_version(),
@@ -150,7 +154,7 @@ if __name__ == '__main__':
         author='OpenMMLab',
         author_email='openmmlab@gmail.com',
         keywords='computer vision, object detection',
-        url='https://github.com/open-mmlab/mmdetection',
+        url=mmdetection_url,
         packages=find_packages(exclude=('configs', 'tools', 'demo')),
         classifiers=[
             'Development Status :: 5 - Production/Stable',

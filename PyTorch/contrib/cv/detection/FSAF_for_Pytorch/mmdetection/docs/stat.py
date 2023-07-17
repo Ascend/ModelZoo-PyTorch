@@ -14,6 +14,7 @@
 #
 
 #!/usr/bin/env python
+import os
 import functools as func
 import glob
 import os.path as osp
@@ -21,7 +22,10 @@ import re
 
 import numpy as np
 
-url_prefix = 'https://github.com/open-mmlab/mmdetection/blob/master/'
+current_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(current_path, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    url_prefix = _content.split('prefix_url=')[1].split('\n')[0]
 
 files = sorted(glob.glob('../configs/*/README.md'))
 
