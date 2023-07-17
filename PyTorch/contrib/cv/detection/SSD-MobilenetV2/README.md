@@ -171,3 +171,7 @@ Inverted Residuals （倒残差结构 ）；Linear Bottlenecks（结构的最后
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

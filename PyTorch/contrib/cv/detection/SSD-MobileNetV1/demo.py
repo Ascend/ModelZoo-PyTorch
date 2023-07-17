@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import os
+
 from vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd
 from vision.ssd.data_preprocessing import PredictionTransform
 from vision.ssd.config import mobilenetv1_ssd_config as config
@@ -22,8 +24,11 @@ import cv2
 
 def get_raw_data():
     from urllib.request import urlretrieve
-    IMAGE_URL = 'https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png'
-    urlretrieve(IMAGE_URL, 'tmp.jpg')
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(current_path, './url.ini'), 'r') as _f:
+        _content = _f.read()
+        image_url = _content.split('image_url=')[1].split('\n')[0]
+    urlretrieve(image_url, 'tmp.jpg')
     image = cv2.imread("tmp.jpg")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image

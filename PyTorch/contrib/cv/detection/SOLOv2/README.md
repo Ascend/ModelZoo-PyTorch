@@ -196,7 +196,9 @@ SOLOv2建立了一个简单，直接，快速的实例分割框架，具有很�
 
 无。
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 

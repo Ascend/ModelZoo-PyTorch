@@ -188,3 +188,7 @@ SOLOv1框架的核心思想是按位置分割对象。输入图像在概念上�
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

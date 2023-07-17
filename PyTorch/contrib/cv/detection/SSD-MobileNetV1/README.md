@@ -173,3 +173,7 @@ SSD是一种one-stage的目标检测框架。SSD_MobileNetV1使用MobileNetV1提
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
