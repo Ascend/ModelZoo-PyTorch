@@ -1,7 +1,5 @@
 ﻿| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
 | ---- | ------------ | ------ | ------------------------------------ | -------- |
-| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
-| ---- | ------------ | ------ | ------------------------------------ | -------- |
 | 开源代码引入 | https://github.com/rwightman/pytorch-pretrained-gluonresnet | GhostNet_ID1622_for_PyTorch/timm/models/gluon_resnet.py | https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet18_v1b-0757602b.pth | 下载预训练模型 |
 | 开源代码引入 | https://github.com/rwightman/pytorch-pretrained-gluonresnet | GhostNet_ID1622_for_PyTorch/timm/models/gluon_resnet.py | https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet34_v1b-c6d82d59.pth | 下载预训练模型 |
 | 开源代码引入 | https://github.com/rwightman/pytorch-pretrained-gluonresnet | GhostNet_ID1622_for_PyTorch/timm/models/gluon_resnet.py | https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet50_v1b-0ebe02e2.pth | 下载预训练模型 |

@@ -113,6 +113,8 @@ MODEL_CLASSES = {
 | bert_wwm_ext | 85.4 | 85.8 | epoch=4,length=512,lr=2e-5 |
 | robertta_wwm_ext | 84.5 | 84.9 | epoch=4,length=512,lr=2e-5 |
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
