@@ -237,6 +237,9 @@ MMsegmentation仓，使用swin-transfermer作为backbone做分割任务。
 | 8p-竞品V | 1.5|48.35 | 27.59 | 160000    |        - |
 | 8p-NPU  | 1.5|47.52 | 22.36 | 160000    |       O1 |
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
 
 # 版本说明
 
@@ -248,10 +251,3 @@ MMsegmentation仓，使用swin-transfermer作为backbone做分割任务。
 
 
 无。
-
-
-
-
-
-
-
