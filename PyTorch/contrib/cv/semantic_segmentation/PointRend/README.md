@@ -67,3 +67,9 @@ bash test/train_finetune_1p.sh --data_path=数据集路径(如/root/datasets) --
 | :------: | :------:  | :------: | :------: | :------: |
 | 78.08    | 8.47      | 1        | 65000    | O1       |
 | 77.58    | 29.01     | 8        | 65000    | O1       |
+
+```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

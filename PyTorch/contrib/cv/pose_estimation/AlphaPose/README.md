@@ -109,3 +109,7 @@ python scripts/pthtar2onnx.py --cfg configs/coco/resnet/256x192_res50_lr1e-3_1x.
 
 # Statement
 For details about the public address of the code in this repository, you can get from the file public_address_statement.md
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
