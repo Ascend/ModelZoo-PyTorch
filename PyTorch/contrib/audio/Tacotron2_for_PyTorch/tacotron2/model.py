@@ -1,29 +1,27 @@
-# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
-#
-# Licensed under the BSD 3-Clause License  (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://opensource.org/licenses/BSD-3-Clause
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+Copyright 2023 Huawei Technologies Co., Ltd
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 from math import sqrt
-import numpy as np
+
 import torch
+from tacotron2_common.layers import ConvNorm, LinearNorm, NpuLSTMCell
+from tacotron2_common.utils import to_gpu, get_mask_from_lengths
 from torch import nn
 from torch.nn import functional as F
-import sys
-from os.path import abspath, dirname
-# enabling modules discovery from global entrypoint
-sys.path.append(abspath(dirname(__file__)+'/../'))
-from common.layers import ConvNorm, LinearNorm, NpuLSTMCell
-from common.utils import to_gpu, get_mask_from_lengths
 
 
 class LocationLayer(nn.Module):
@@ -39,10 +37,7 @@ class LocationLayer(nn.Module):
                                          bias=False, w_init_gain='tanh')
 
     def forward(self, attention_weights_cat):
-        #with torch.autograd.profiler.record_function("LocationLayer"):
-        #print("attention_weights_cat:",attention_weights_cat.shape)
         processed_attention = self.location_conv(attention_weights_cat)
-        #print("processed_attention:",processed_attention.shape)
         processed_attention = processed_attention.transpose(1, 2)
         processed_attention = self.location_dense(processed_attention)
         return processed_attention
@@ -61,7 +56,6 @@ class Attention(nn.Module):
         self.location_layer = LocationLayer(attention_location_n_filters,
                                             attention_location_kernel_size,
                                             attention_dim)
-        # self.score_mask_value = -float("inf")
         self.score_mask_value = torch.finfo(torch.float16).min
 
     def get_alignment_energies(self, query, processed_memory,
@@ -97,11 +91,8 @@ class Attention(nn.Module):
         attention_weights_cat: previous and cummulative attention weights
         mask: binary mask for padded data
         """
-        #with torch.autograd.profiler.record_function("Attention"):
         alignment = self.get_alignment_energies(
             attention_hidden_state, processed_memory, attention_weights_cat)
-        #stream = torch.npu.current_stream()
-        #stream.synchronize()
         alignment = alignment.masked_fill(mask, self.score_mask_value)
 
         attention_weights = F.softmax(alignment, dim=1)
@@ -120,10 +111,8 @@ class Prenet(nn.Module):
              for (in_size, out_size) in zip(in_sizes, sizes)])
 
     def forward(self, x):
-        #with torch.autograd.profiler.record_function("Prenet"):
         for linear in self.layers:
             x = F.dropout(F.relu(linear(x)), p=0.5, training=True)
-            # x = F.relu(linear(x))
         return x
 
 
@@ -168,80 +157,23 @@ class Postnet(nn.Module):
         self.n_convs = len(self.convolutions)
 
     def forward(self, x):
-        #with torch.autograd.profiler.record_function("Postnet"):
         i = 0
         for conv in self.convolutions:
             if i < self.n_convs - 1:
                 x = F.dropout(torch.tanh(conv(x)), 0.5, training=self.training)
-                # x = torch.tanh(conv(x))
             else:
                 x = F.dropout(conv(x), 0.5, training=self.training)
-                # x = conv(x)
             i += 1
 
         return x
 
-class DropoutV2(nn.Module):
-    r"""Applies an NPU compatible dropout operation.
-
-        This dropout method generates pseudo-random seed based on LCG(linear congruential generator) method.
-        Since Ascend910 does not have a hardware unit that can generate real random numbers,
-        we used the LCG method to generate pseudo-random seeds
-
-        .. note::
-            max_seed is a hyper-parameter strongly related to the underlying operator.
-            Please check the MAX(2 ** 31 - 1 / 2 ** 10 - 1) in dropout_v2.py in the opp package for matching settings.
-            By default, it is matched by the Pytorch and OPP packages.
-
-    Args:
-        p: probability of an element to be zeroed. Default: 0.5
-        inplace: If set to ``True``, will do this operation in-place. Default: ``False``
-
-    Shape:
-        - Input: :math:`(*)`. Input can be of any shape
-        - Output: :math:`(*)`. Output is of the same shape as input
-
-    Examples::
-
-        >>> m = DropoutV2(p=0.5)
-        >>> input = torch.randn(20, 16)
-        >>> output = m(input)
-        """
-
-    def __init__(self, p=0.5, inplace=False,
-                 max_seed=2 ** 31 - 1):
-        super(DropoutV2, self).__init__()
-
-        self.p = p
-        self.seed = torch.from_numpy(
-            np.random.uniform(1, max_seed, size=(32 * 1024 * 12,)).astype(np.float32))
-
-        self.checked = False
-
-    def check_self(self, x):
-        r"""Check device equipment between tensors.
-        """
-        if self.seed.device == x.device:
-            self.checked = True
-            return
-
-        self.seed = self.seed.to(x.device)
-
-    def forward(self, x):
-        if not self.training:
-            return x
-
-        if not self.checked:
-            self.check_self(x)
-
-        x, mask, _ = torch.npu_dropoutV2(x, self.seed, p=self.p)
-        return x
 
 class Encoder(nn.Module):
     """Encoder module:
         - Three 1-d convolution banks
         - Bidirectional LSTM
     """
+
     def __init__(self, encoder_n_convolutions,
                  encoder_embedding_dim, encoder_kernel_size):
         super(Encoder, self).__init__()
@@ -258,9 +190,6 @@ class Encoder(nn.Module):
             convolutions.append(conv_layer)
         self.convolutions = nn.ModuleList(convolutions)
 
-        # self.lstm = nn.LSTM(encoder_embedding_dim,
-        #                     int(encoder_embedding_dim / 2), 1,
-        #                     batch_first=True, bidirectional=True)
         self.lstm_fw = nn.LSTM(encoder_embedding_dim,
                                int(encoder_embedding_dim / 2), 1)
         self.lstm_bw = nn.LSTM(encoder_embedding_dim,
@@ -268,18 +197,10 @@ class Encoder(nn.Module):
 
     @torch.jit.ignore
     def forward(self, x, input_lengths):
-        #with torch.autograd.profiler.record_function("Encoder"):
         for conv in self.convolutions:
             x = F.dropout(F.relu(conv(x)), 0.5, self.training)
-            # x = F.relu(conv(x))
 
-        # x = x.transpose(1, 2)
         x = x.permute(2, 0, 1)
-        #print("enter encoder*************")
-        # pytorch tensor are not reversible, hence the conversion
-        # input_lengths = input_lengths.cpu().numpy()
-        # x = nn.utils.rnn.pack_padded_sequence(
-        #     x, input_lengths, batch_first=True)
         """
         outputs = self.lstm_with_packed_sequence(x, input_lengths, bidirectional=True, batch_first=False)
         print("get output********************")
@@ -299,9 +220,6 @@ class Encoder(nn.Module):
         outputs = torch.cat((outputs_fw, outputs_bw), 2)
         outputs = outputs.transpose(0, 1)
 
-        # outputs, _ = nn.utils.rnn.pad_packed_sequence(
-        #     outputs, batch_first=True)
-
         return outputs
 
     @torch.jit.export
@@ -309,7 +227,6 @@ class Encoder(nn.Module):
         device = x.device
         for conv in self.convolutions:
             x = F.dropout(F.relu(conv(x.to(device))), 0.5, self.training)
-            # x = F.relu(conv(x.to(device)))
 
         x = x.transpose(1, 2)
 
@@ -325,7 +242,6 @@ class Encoder(nn.Module):
         return outputs
 
     def lstmcell_with_packed_sequence(self, x, t, h0, c0, input_lengths, outputs_collect, lstm):
-        #print("lstmcell_with_packed_sequence*************")
         xt = x[t, :, :].reshape(1, x.shape[1], x.shape[2])
         lstm.flatten_parameters()
         outputs, (h1, c1) = lstm(xt, (h0, c0))
@@ -362,7 +278,6 @@ class Encoder(nn.Module):
             stream = torch.npu.current_stream()
             stream.synchronize()
             outputs_fw = torch.cat(outputs_collect)
-            #print("outputs_collect:",len(outputs_collect),outputs_collect)
 
             # fullfill bw LSTM
             h0_bw = torch.zeros(1, batch_size, hidden_size).to(x.device)
@@ -371,14 +286,9 @@ class Encoder(nn.Module):
             for tr in range(max_input_len - 1, -1, -1):
                 outputs_collect, h0_bw, c0_bw = self.lstmcell_with_packed_sequence(x, tr, h0_bw, c0_bw, input_lengths,
                                                                                    outputs_collect, self.lstm_bw)
-            #import pdb
-            #pdb.set_trace()
             outputs_collect.reverse()
             stream = torch.npu.current_stream()
             stream.synchronize()
-            print("before cat  **************")
-            #print("outputs_collect:",len(outputs_collect),outputs_collect)
-            torch.save(outputs_collect,"a.tensor")
             stream = torch.npu.current_stream()
             stream.synchronize()
             outputs_bw = torch.cat(outputs_collect)
@@ -386,9 +296,7 @@ class Encoder(nn.Module):
             # combine fw/bw LSTM
             stream = torch.npu.current_stream()
             stream.synchronize()
-            print("before cat two *****************************")
             outputs = torch.cat((outputs_fw, outputs_bw), 2)
-            print("after cat two *****************************")
         else:
             h0 = torch.zeros(1, batch_size, hidden_size).to(x.device)
             c0 = torch.zeros(1, batch_size, hidden_size).to(x.device)
@@ -398,6 +306,7 @@ class Encoder(nn.Module):
                                                                              outputs_collect, self.lstm_fw)
             outputs = torch.cat(outputs_collect)
         return outputs
+
 
 class Decoder(nn.Module):
     def __init__(self, n_mel_channels, n_frames_per_step,
@@ -425,9 +334,6 @@ class Decoder(nn.Module):
             n_mel_channels * n_frames_per_step,
             [prenet_dim, prenet_dim])
 
-        #self.attention_rnn = nn.LSTMCell(
-        #    prenet_dim + encoder_embedding_dim,
-        #    attention_rnn_dim)
         self.attention_rnn = NpuLSTMCell(
             prenet_dim + encoder_embedding_dim,
             attention_rnn_dim)
@@ -437,9 +343,6 @@ class Decoder(nn.Module):
             attention_dim, attention_location_n_filters,
             attention_location_kernel_size)
 
-        #self.decoder_rnn = nn.LSTMCell(
-        #    attention_rnn_dim + encoder_embedding_dim,
-        #    decoder_rnn_dim, 1)
         self.decoder_rnn = NpuLSTMCell(
             attention_rnn_dim + encoder_embedding_dim,
             decoder_rnn_dim, 1)
@@ -451,9 +354,6 @@ class Decoder(nn.Module):
         self.gate_layer = LinearNorm(
             decoder_rnn_dim + encoder_embedding_dim, 1,
             bias=True, w_init_gain='sigmoid')
-
-        self.attention_dropout = DropoutV2(p=p_attention_dropout)
-        self.decoder_dropout = DropoutV2(p=p_decoder_dropout)
 
     def get_go_frame(self, memory):
         """ Gets all zeros frames to use as first decoder input
@@ -469,7 +369,7 @@ class Decoder(nn.Module):
         dtype = memory.dtype
         device = memory.device
         decoder_input = torch.zeros(
-            B, self.n_mel_channels*self.n_frames_per_step,
+            B, self.n_mel_channels * self.n_frames_per_step,
             dtype=dtype, device=device)
         return decoder_input
 
@@ -527,8 +427,7 @@ class Decoder(nn.Module):
         decoder_inputs = decoder_inputs.transpose(1, 2)
         decoder_inputs = decoder_inputs.view(
             decoder_inputs.size(0),
-            int(decoder_inputs.size(1)/self.n_frames_per_step), -1)
-        # (B, T_out, n_mel_channels) -> (T_out, B, n_mel_channels)
+            int(decoder_inputs.size(1) / self.n_frames_per_step), -1)
         decoder_inputs = decoder_inputs.transpose(0, 1)
         return decoder_inputs
 
@@ -578,9 +477,8 @@ class Decoder(nn.Module):
         cell_input = torch.cat((decoder_input, attention_context), -1)
         attention_hidden, attention_cell = self.attention_rnn(
             cell_input.unsqueeze(0), (attention_hidden.unsqueeze(0), attention_cell.unsqueeze(0)))
-        # attention_hidden = F.dropout(
-        #     attention_hidden, self.p_attention_dropout, self.training)
-        attention_hidden = self.attention_dropout(attention_hidden)
+        attention_hidden = F.dropout(
+            attention_hidden, self.p_attention_dropout, self.training)
 
         attention_hidden, attention_cell = attention_hidden.squeeze(0), attention_cell.squeeze(0)
 
@@ -597,9 +495,8 @@ class Decoder(nn.Module):
 
         decoder_hidden, decoder_cell = self.decoder_rnn(
             decoder_input.unsqueeze(0), (decoder_hidden.unsqueeze(0), decoder_cell.unsqueeze(0)))
-        # decoder_hidden = F.dropout(
-        #     decoder_hidden, self.p_decoder_dropout, self.training)
-        decoder_hidden = self.decoder_dropout(decoder_hidden)
+        decoder_hidden = F.dropout(
+            decoder_hidden, self.p_decoder_dropout, self.training)
         decoder_hidden, decoder_cell = decoder_hidden.squeeze(0), decoder_cell.squeeze(0)
 
         decoder_hidden_attention_context = torch.cat(
@@ -627,7 +524,6 @@ class Decoder(nn.Module):
         gate_outputs: gate outputs from the decoder
         alignments: sequence of attention weights from the decoder
         """
-        #with torch.autograd.profiler.record_function("Decoder"):
         decoder_input = self.get_go_frame(memory).unsqueeze(0)
         decoder_inputs = self.parse_decoder_inputs(decoder_inputs)
         decoder_inputs = torch.cat((decoder_input, decoder_inputs), dim=0)
@@ -646,7 +542,6 @@ class Decoder(nn.Module):
         mel_outputs, gate_outputs, alignments = [], [], []
 
         while len(mel_outputs) < decoder_inputs.size(0) - 1:
-
             decoder_input = decoder_inputs[len(mel_outputs)]
             (mel_output,
              gate_output,
@@ -671,8 +566,6 @@ class Decoder(nn.Module):
             mel_outputs += [mel_output.squeeze(1)]
             gate_outputs += [gate_output.squeeze()]
             alignments += [attention_weights]
-        #stream = torch.npu.current_stream()
-        #stream.synchronize()
         mel_outputs, gate_outputs, alignments = self.parse_decoder_outputs(
             torch.stack(mel_outputs),
             torch.stack(gate_outputs),
@@ -747,7 +640,7 @@ class Decoder(nn.Module):
             dec = torch.le(torch.sigmoid(gate_output),
                            self.gate_threshold).to(torch.int32).squeeze(1)
 
-            not_finished = not_finished*dec
+            not_finished = not_finished * dec
             mel_lengths += not_finished
 
             if self.early_stopping and torch.sum(not_finished) == 0:
@@ -800,7 +693,7 @@ class Tacotron2(nn.Module):
 
     def parse_batch(self, batch):
         text_padded, input_lengths, mel_padded, gate_padded, \
-            output_lengths = batch
+        output_lengths = batch
         text_padded = to_gpu(text_padded).long()
         input_lengths = to_gpu(input_lengths).long()
         max_len = torch.max(input_lengths.data).item()
@@ -813,7 +706,6 @@ class Tacotron2(nn.Module):
             (mel_padded, gate_padded))
 
     def parse_output(self, outputs, output_lengths):
-        # type: (List[Tensor], Tensor) -> List[Tensor]
         if self.mask_padding and output_lengths is not None:
             mask = get_mask_from_lengths(output_lengths)
             mask = mask.expand(self.n_mel_channels, mask.size(0), mask.size(1))
@@ -826,25 +718,12 @@ class Tacotron2(nn.Module):
         return outputs
 
     def forward(self, inputs):
-
-        #myembedding=torch.nn.Embedding(148, 512).to("cpu")
         inputs, input_lengths, targets, max_len, output_lengths = inputs
         input_lengths, output_lengths = input_lengths.data, output_lengths.data
-        #inputs=inputs.to("cpu").long()
-        #print("inputs:",inputs.shape,inputs.dtype)
         embedded_inputs = self.embedding(inputs.long()).transpose(1, 2)
-        #embedded_inputs = myembedding(inputs).transpose(1, 2)
-        #embedded_inputs = embedded_inputs.half().to("npu")
         encoder_outputs = self.encoder(embedded_inputs, input_lengths)
-        #print("encoder_outputs*******************")
-        #import pdb
-        #pdb.set_trace()
-        # stream = torch.npu.current_stream()
-        # stream.synchronize()
         mel_outputs, gate_outputs, alignments = self.decoder(
             encoder_outputs, targets, memory_lengths=input_lengths)
-        # stream = torch.npu.current_stream()
-        # stream.synchronize()
         mel_outputs_postnet = self.postnet(mel_outputs)
         mel_outputs_postnet = mel_outputs + mel_outputs_postnet
 
@@ -852,9 +731,7 @@ class Tacotron2(nn.Module):
             [mel_outputs, mel_outputs_postnet, gate_outputs, alignments],
             output_lengths)
 
-
     def infer(self, inputs, input_lengths):
-
         embedded_inputs = self.embedding(inputs).transpose(1, 2)
         encoder_outputs = self.encoder.infer(embedded_inputs, input_lengths)
         mel_outputs, gate_outputs, alignments, mel_lengths = self.decoder.infer(
@@ -864,6 +741,6 @@ class Tacotron2(nn.Module):
         mel_outputs_postnet = mel_outputs + mel_outputs_postnet
 
         BS = mel_outputs_postnet.size(0)
-        alignments = alignments.unfold(1, BS, BS).transpose(0,2)
+        alignments = alignments.unfold(1, BS, BS).transpose(0, 2)
 
         return mel_outputs_postnet, mel_lengths, alignments

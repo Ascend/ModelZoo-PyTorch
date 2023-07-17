@@ -17,6 +17,7 @@ import sys
 import subprocess
 
 import torch
+import torch_npu
 
 
 def main():

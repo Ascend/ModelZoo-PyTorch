@@ -1,24 +1,28 @@
-# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
-#
-# Licensed under the BSD 3-Clause License  (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://opensource.org/licenses/BSD-3-Clause
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+Copyright 2023 Huawei Technologies Co., Ltd
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 from torch import nn
 
 
 class Tacotron2Loss(nn.Module):
-    def __init__(self):
+    def __init__(self, mse_weight, logits_weight):
         super(Tacotron2Loss, self).__init__()
+        self.mse_weight = mse_weight
+        self.logits_weight = logits_weight
 
     def forward(self, model_output, targets):
         mel_target, gate_target = targets[0], targets[1]
@@ -31,4 +35,4 @@ class Tacotron2Loss(nn.Module):
         mel_loss = nn.MSELoss()(mel_out, mel_target) + \
             nn.MSELoss()(mel_out_postnet, mel_target)
         gate_loss = nn.BCEWithLogitsLoss()(gate_out, gate_target)
-        return mel_loss + gate_loss
+        return self.mse_weight * mel_loss + self.logits_weight * gate_loss

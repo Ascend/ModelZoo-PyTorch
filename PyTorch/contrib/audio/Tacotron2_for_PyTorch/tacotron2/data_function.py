@@ -14,13 +14,13 @@
 # limitations under the License.
 
 import random
-import numpy as np
+
+import tacotron2_common.layers as layers
 import torch
 import torch.utils.data
-
-import common.layers as layers
-from common.utils import load_wav_to_torch, load_filepaths_and_text, to_gpu
 from tacotron2.text import text_to_sequence
+from tacotron2_common.utils import load_wav_to_torch, load_filepaths_and_text, to_gpu
+
 
 class TextMelLoader(torch.utils.data.Dataset):
     """
@@ -28,6 +28,7 @@ class TextMelLoader(torch.utils.data.Dataset):
         2) normalizes text and converts them to sequences of one-hot vectors
         3) computes mel-spectrograms from audio files.
     """
+
     def __init__(self, dataset_path, audiopaths_and_text, args):
         self.audiopaths_and_text = load_filepaths_and_text(dataset_path, audiopaths_and_text)
         self.text_cleaners = args.text_cleaners
@@ -82,6 +83,7 @@ class TextMelLoader(torch.utils.data.Dataset):
 class TextMelCollate():
     """ Zero-pads model inputs and targets based on number of frames per setep
     """
+
     def __init__(self, n_frames_per_step):
         self.n_frames_per_step = n_frames_per_step
 
@@ -97,19 +99,17 @@ class TextMelCollate():
             dim=0, descending=True)
         max_input_len = input_lengths[0]
         max_input_len = 192
-        #max_input_len = 256
 
         text_padded = torch.IntTensor(len(batch), max_input_len)
         text_padded.zero_()
-        for i in range(len(ids_sorted_decreasing)):
-            text = batch[ids_sorted_decreasing[i]][0]
+        for i, x in enumerate(ids_sorted_decreasing):
+            text = batch[x][0]
             text_padded[i, :text.size(0)] = text
 
         # Right zero-pad mel-spec
         num_mels = batch[0][1].size(0)
         max_target_len = max([x[1].size(1) for x in batch])
         max_target_len = 896
-        #max_target_len = 1024
         if max_target_len % self.n_frames_per_step != 0:
             max_target_len += self.n_frames_per_step - max_target_len % self.n_frames_per_step
             assert max_target_len % self.n_frames_per_step == 0
@@ -120,21 +120,22 @@ class TextMelCollate():
         gate_padded = torch.FloatTensor(len(batch), max_target_len)
         gate_padded.zero_()
         output_lengths = torch.IntTensor(len(batch))
-        for i in range(len(ids_sorted_decreasing)):
-            mel = batch[ids_sorted_decreasing[i]][1]
+        for i, x in enumerate(ids_sorted_decreasing):
+            mel = batch[x][1]
             mel_padded[i, :, :mel.size(1)] = mel
-            gate_padded[i, mel.size(1)-1:] = 1
+            gate_padded[i, mel.size(1) - 1:] = 1
             output_lengths[i] = mel.size(1)
 
         # count number of items - characters in text
         len_x = [x[2] for x in batch]
         len_x = torch.Tensor(len_x)
         return text_padded, input_lengths, mel_padded, gate_padded, \
-            output_lengths, len_x
+               output_lengths, len_x
+
 
 def batch_to_gpu(batch):
     text_padded, input_lengths, mel_padded, gate_padded, \
-        output_lengths, len_x = batch
+    output_lengths, len_x = batch
     text_padded = to_gpu(text_padded)
     input_lengths = to_gpu(input_lengths)
     max_len = torch.max(input_lengths.data).item()

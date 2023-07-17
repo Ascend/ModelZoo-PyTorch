@@ -74,54 +74,26 @@ ln -nsf $data_path ${cur_path}/
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-KERNEL_NUM=$(($(nproc)/8))
-for((RANK_ID=0;RANK_ID<RANK_SIZE;RANK_ID++))
-do
-    if [ $(uname -m) = "aarch64" ]
-    then
-        PID_START=$((KERNEL_NUM * RANK_ID))
-        PID_END=$((PID_START + KERNEL_NUM - 1))
-        taskset -c $PID_START-$PID_END python3 -u ${cur_path}/train.py \
-            -m Tacotron2 \
-            -o ./output/ \
-            --amp \
-            -lr 1e-3 \
-            --epochs ${epochs} \
-            -bs $batch_size \
-            --weight-decay 1e-6 \
-            --grad-clip-thresh 1.0 \
-            --cudnn-enabled \
-            --load-mel-from-disk \
-            --training-files=filelists/ljs_mel_text_train_filelist.txt \
-            --validation-files=filelists/ljs_mel_text_val_filelist.txt \
-            --log-file nvlog.json \
-            --anneal-steps 500 1000 1500 \
-            --anneal-factor 0.3 \
-            --rank ${RANK_ID} \
-            --seed 0 \
-            --dist-backend 'hccl' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
-    else
-        python3 -u ${currentDir}/train.py \
-            -m Tacotron2 \
-            -o ./output/ \
-            --amp \
-            -lr 1e-3 \
-            --epochs 301 \
-            -bs $batch_size \
-            --weight-decay 1e-6 \
-            --grad-clip-thresh 1.0 \
-            --cudnn-enabled \
-            --load-mel-from-disk \
-            --training-files=filelists/ljs_mel_text_train_filelist.txt \
-            --validation-files=filelists/ljs_mel_text_val_filelist.txt \
-            --log-file nvlog.json \
-            --anneal-steps 500 1000 1500 \
-            --anneal-factor 0.3 \
-            --rank ${RANK_ID} \
-            --seed 0 \
-            --dist-backend 'hccl' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
-    fi
-done
+python3 -u -m multiproc -m train \
+          -m Tacotron2 \
+          -o ./output/ \
+          --amp \
+          -lr 1e-3 \
+          --epochs ${epochs} \
+          -bs $batch_size \
+          --weight-decay 1e-6 \
+          --grad-clip-thresh 1.0 \
+          --cudnn-enabled \
+          --load-mel-from-disk \
+          --training-files=filelists/ljs_mel_text_train_filelist.txt \
+          --validation-files=filelists/ljs_mel_text_val_filelist.txt \
+          --log-file nvlog.json \
+          --anneal-steps 500 1000 1500 \
+          --anneal-factor 0.3 \
+          --rank ${RANK_ID} \
+          --seed 0 \
+          --dist-backend 'hccl' > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+
 wait
 ##################获取训练数据################
 #训练结束时间，不需要修改

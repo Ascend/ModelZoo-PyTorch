@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
 import argparse
-import sys
-sys.path.append('./')
-from inference import checkpoint_from_distributed, unwrap_distributed, load_and_setup_model
+
+import torch
+from inference import load_and_setup_model
+
 
 def parse_args(parser):
     """
@@ -35,7 +35,6 @@ def parse_args(parser):
 
 
 def main():
-
     parser = argparse.ArgumentParser(
         description='PyTorch Tacotron 2 Inference')
     parser = parse_args(parser)
@@ -44,13 +43,11 @@ def main():
     tacotron2 = load_and_setup_model('Tacotron2', parser, args.tacotron2,
                                      amp_run=args.fp16, cpu_run=False,
                                      forward_is_infer=True)
-    
+
     jitted_tacotron2 = torch.jit.script(tacotron2)
 
     torch.jit.save(jitted_tacotron2, args.output)
-    
+
 
 if __name__ == '__main__':
     main()
-
-    

@@ -20,10 +20,7 @@ import time
 import torch
 import argparse
 
-import sys
-sys.path.append('./')
-
-from common.utils import to_gpu, get_mask_from_lengths
+from tracotron2_common.utils import to_gpu, get_mask_from_lengths
 from tacotron2.text import text_to_sequence
 from inference import MeasureTime, prepare_input_sequence, load_and_setup_model
 import dllogger as DLLogger

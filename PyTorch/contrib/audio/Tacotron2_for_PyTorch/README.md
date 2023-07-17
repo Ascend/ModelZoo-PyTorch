@@ -1,10 +1,10 @@
 # Tacotron2 for PyTorch
 
--   [概述](概述.md)
--   [准备训练环境](准备训练环境.md)
--   [开始训练](开始训练.md)
--   [训练结果展示](训练结果展示.md)
--   [版本说明](版本说明.md)
+-   [概述](#概述)
+-   [准备训练环境](#准备训练环境)
+-   [开始训练](#开始训练)
+-   [训练结果展示](#训练结果展示)
+-   [版本说明](#版本说明)
 
 
 # 概述
@@ -45,7 +45,6 @@ Tacotron2是一个从文字直接转化为语音的神经网络。这个体系�
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
-
 - 安装依赖。
 
   在模型源码包根目录下执行命令。
@@ -106,7 +105,7 @@ Tacotron2是一个从文字直接转化为语音的神经网络。这个体系�
 
      ```
      bash ./test/train_full_8p.sh --data_path=./LJSpeech-1.1  # 8卡精度
-
+     
      bash ./test/train_performance_8p.sh --data_path=./LJSpeech-1.1 # 8卡性能
      ```
 
@@ -134,12 +133,12 @@ Tacotron2是一个从文字直接转化为语音的神经网络。这个体系�
 |   NAME   | Accuracy | FPS  | Epochs | AMP_Type | Torch_Version |
 | :------: | :---: | :--: | :----: | :------: | :-----------: |
 | 1p-竞品V |     |      | 1        | O2       | 1.5 |
-| 8p-竞品V |     |      | 301      | O2       | 1.5 |
+| 8p-竞品A |     |  236913  | 301      | O2       | 1.5 |
 | 1p-NPU |     |      | 1        | O2       | 1.5 |
-| 8p-NPU |     |      | 301      | O2       | 1.5 |
+| 8p-NPU |     | 69470 | 301      | O2       | 1.5 |
 
 
-# 版本说明
+# 版本说明:
 
 ## 变更
 
@@ -151,4 +150,4 @@ Tacotron2是一个从文字直接转化为语音的神经网络。这个体系�
 
 # 公网地址说明
 
-代码涉及公网地址参考 public_address_statement.md
+代码涉及公网地址参考 [public_address_statement.md](./public_address_statement.md)

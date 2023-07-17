@@ -1,5 +1,5 @@
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+
 import torch
 
 from tacotron2.data_function import TextMelLoader
-from common.utils import load_filepaths_and_text
+from tacotron2_common.utils import load_filepaths_and_text
+
 
 def parse_args(parser):
     """
@@ -52,27 +54,27 @@ def parse_args(parser):
 
 
 def audio2mel(dataset_path, audiopaths_and_text, melpaths_and_text, args):
-
     melpaths_and_text_list = load_filepaths_and_text(dataset_path, melpaths_and_text)
     audiopaths_and_text_list = load_filepaths_and_text(dataset_path, audiopaths_and_text)
 
     data_loader = TextMelLoader(dataset_path, audiopaths_and_text, args)
 
     for i in range(len(melpaths_and_text_list)):
-        if i%100 == 0:
+        if i % 100 == 0:
             print("done", i, "/", len(melpaths_and_text_list))
 
         mel = data_loader.get_mel(audiopaths_and_text_list[i][0])
         torch.save(mel, melpaths_and_text_list[i][0])
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='PyTorch Tacotron 2 Training')
     parser = parse_args(parser)
     args = parser.parse_args()
     args.load_mel_from_disk = False
 
     audio2mel(args.dataset_path, args.wav_files, args.mel_files, args)
+
 
 if __name__ == '__main__':
     main()

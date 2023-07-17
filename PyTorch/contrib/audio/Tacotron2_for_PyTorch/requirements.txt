@@ -1,6 +1,8 @@
+numpy
+matplotlib
 unidecode
-sndfile
 inflect
-librosa==0.8.1
-numba==0.46.0
-llvmlite==0.30.0
+librosa
+llvmlite==0.39.1
+numba==0.56.4
+git+https://github.com/NVIDIA/dllogger
