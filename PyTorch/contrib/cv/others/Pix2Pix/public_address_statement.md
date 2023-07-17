@@ -1,0 +1,9 @@
+ | 类型   | 开源代码地址 | 文件名                     | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明    |
+|------|--------|-------------------------| ------------------------------------ |---------|
+| 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/datasets/download_cyclegan_dataset.sh | https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets/ | 下载数据集   |
+ | 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/datasets/download_pix2pix_dataset.sh | http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/ | 下载数据集   |
+ | 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/scripts/download_cyclegan_model.sh | http://efrosgans.eecs.berkeley.edu/cyclegan/pretrained_models/ | 下载预训练模型 |
+ | 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/scripts/download_pix2pix_model.sh | http://efrosgans.eecs.berkeley.edu/pix2pix/models-pytorch/ | 下载依赖    |
+ | 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/scripts/eval_cityscapes/download_fcn8s.sh | http://people.eecs.berkeley.edu/~tinghuiz/projects/pix2pix/fcn-8s-cityscapes/fcn-8s-cityscapes.caffemodel | 下载预训练模型    |
+ | 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/util/get_data.py | http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/ | 下载数据集   |
+ | 开源代码引入 | https://gitee.com/iiiimp/modelzoo/tree/master/contrib/PyTorch/Research/cv/gan/Pix2Pix | Pix2Pix/util/get_data.py | https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets | 下载数据集    |

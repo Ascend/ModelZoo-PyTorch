@@ -36,3 +36,6 @@
     # 验收结果： OK 
     # 备注：直接看图片效果
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

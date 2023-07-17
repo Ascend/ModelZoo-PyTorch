@@ -71,3 +71,7 @@ The checkpoints are in the "outputs/" dir.
 | :----: | :---: | :--------------: | :------: |
 | 1p-GPU | 13.38 |      81.69       |    O1    |
 | 1p-NPU | 13.3  |      85.20       |    O1    |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

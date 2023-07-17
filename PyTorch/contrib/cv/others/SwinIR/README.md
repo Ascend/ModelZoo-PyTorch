@@ -183,7 +183,9 @@ SwinIR是一个使用Swin转变的经典的图像复原网络。
 
 无。
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 
