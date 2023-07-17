@@ -174,10 +174,10 @@ stabilityai/stable-diffusion-2-1
 
 # 推理
 
-##文生图
+## 文生图
 参考实现：(https://huggingface.co/docs/diffusers/using-diffusers/conditional_image_generation)
 
-###预训练模型准备
+### 预训练模型准备
 
 联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
@@ -191,7 +191,7 @@ CompVis/ldm-text2im-large-256
 generator = DiffusionPipeline.from_pretrained("CompVis/ldm-text2im-large-256",torch_dtype=torch.float16)
 ```
 
-###运行推理
+### 运行推理
 
 ```shell 
 python test_infer/text-to-image.py
@@ -199,11 +199,11 @@ python test_infer/text-to-image.py
 
 修改prompt等操作需要对代码进行修改
 
-##文本指导图生图
+## 文本指导图生图
 
 参考实现：(https://huggingface.co/docs/diffusers/using-diffusers/img2img)
 
-###预训练模型准备
+### 预训练模型准备
 
 联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
@@ -217,7 +217,7 @@ nitrosocke/Ghibli-Diffusion
 pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusion").to(device)
 ```
 
-###运行推理
+### 运行推理
 
 修改test_infer/text-guide-img-to-img.py中url为本地图片地址
 
@@ -227,11 +227,11 @@ python test_infer/text-guide-img-to-img.py
 
 修改prompt等操作需要对代码进行修改
 
-##文本指导图像修复
+## 文本指导图像修复
 
 参考实现：(https://huggingface.co/docs/diffusers/using-diffusers/inpaint)
 
-###预训练模型准备
+### 预训练模型准备
 
 联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
@@ -243,7 +243,7 @@ runwayml/stable-diffusion-inpainting
 ```python 
 pipeline = StableDiffusionInpaintPipeline.from_pretrained("runwayml/stable-diffusion-inpainting")
 ```
-###运行推理
+### 运行推理
 
 ```shell 
 python test_infer/text-guide-image-inpainting.py
@@ -251,11 +251,11 @@ python test_infer/text-guide-image-inpainting.py
 
 修改prompt等操作需要对代码进行修改
 
-##纹理反转
+## 纹理反转
 
 参考实现：(https://huggingface.co/docs/diffusers/using-diffusers/textual_inversion_inference)
 
-###预训练模型准备
+### 预训练模型准备
 
 联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
@@ -269,7 +269,7 @@ runwayml/stable-diffusion-v1-5
 pretrained_model_name = "runwayml/stable-diffusion-v1-5"
 ```
 
-###数据集准备
+### 数据集准备
 
 联网情况下，数据会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下。用户也可参考该数据集自行准备数据集：
 
@@ -283,7 +283,7 @@ sd-concepts-library/cat-toy
 repo_id = "sd-concepts-library/cat-toy"
 ```
 
-###运行推理
+### 运行推理
 
 
 ```shell 
@@ -292,11 +292,11 @@ python  test_infer/textual-inversion.py
 
 修改prompt等操作需要对代码进行修改
 
-##文本指导图像深度生成
+## 文本指导图像深度生成
 
 参考实现：(https://huggingface.co/docs/diffusers/using-diffusers/depth2img)
 
-###预训练模型准备
+### 预训练模型准备
 
 联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
@@ -310,7 +310,7 @@ stabilityai/stable-diffusion-2-depth
 pipe = StableDiffusionDepth2ImgPipeline.from_pretrained("stabilityai/stable-diffusion-2-depth").to("npu")
 ```
 
-###运行推理
+### 运行推理
 
 ```shell 
 python test_infer/text-guide-depth-to-image.py
@@ -318,11 +318,11 @@ python test_infer/text-guide-depth-to-image.py
 
 修改prompt等操作需要对代码进行修改
 
-##无条件图像生成
+## 无条件图像生成
 
 参考实现：(https://huggingface.co/docs/diffusers/using-diffusers/unconditional_image_generation)
 
-###预训练模型准备
+### 预训练模型准备
 
 联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
@@ -336,7 +336,7 @@ anton-l/ddpm-butterflies-128
 generator = DiffusionPipeline.from_pretrained("anton-l/ddpm-butterflies-128")
 ```
 
-###运行推理
+### 运行推理
 
 ```shell 
 python test_infer/unconditional-image-generation.py
