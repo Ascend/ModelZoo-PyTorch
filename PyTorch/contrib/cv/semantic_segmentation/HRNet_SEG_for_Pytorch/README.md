@@ -66,3 +66,6 @@ Log path:
 | :------: | :------: | :------:    |  :------:  | :------: | :------: |
 | 81.04    |   28     |   NPU       |     8      |   484    |    O1    |
 | 81.26    |   42     |   GPU       |     8      |   484    |    O1    |
+
+# Statement
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

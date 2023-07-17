@@ -18,5 +18,5 @@ RUN pip install --no-cache-dir ninja
 RUN apt-get update && apt-get install libgtk2.0-dev -y && rm -rf /var/lib/apt/lists/*
 
 # Install Apex
-RUN cd /home/ && git clone https://github.com/NVIDIA/apex.git apex && cd apex && python setup.py install --cuda_ext --cpp_ext
+RUN cd /home/ && apex_url=`sed '/^apex_url=/!d;s/.*=//' url.ini` && git clone {apex_url} apex && cd apex && python setup.py install --cuda_ext --cpp_ext
 WORKDIR /home/

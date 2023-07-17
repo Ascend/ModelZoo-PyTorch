@@ -63,3 +63,5 @@ nohup bash test/train_full_8p.sh --data_path=./large_asset_dir/ &
 nohup bash test/train_performance_8p.sh --data_path=./large_asset_dir/ &
 ```
 
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

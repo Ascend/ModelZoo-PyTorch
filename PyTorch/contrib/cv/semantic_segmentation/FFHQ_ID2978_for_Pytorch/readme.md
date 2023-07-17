@@ -41,3 +41,6 @@ python3 run_deeplab.py
 
 - 原始图像、GPU分割、NPU分割效果对比如下：
 <br> 调用deeplab模型后，原始图片被分割为：背景、皮肤、鼻子、眼睛等部分。
+
+# Statement
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
