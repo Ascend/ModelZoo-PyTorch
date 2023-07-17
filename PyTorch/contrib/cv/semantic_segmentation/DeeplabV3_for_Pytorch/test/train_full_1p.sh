@@ -80,7 +80,7 @@ if [ x"${etp_flag}" != x"true" ];then
 fi
 chmod +x ${cur_path}/tools/dist_train.sh
 # 修改数据路径
-sed -i "s|data/cityscapes/|$data_path/|g" configs/_base_/datasets/cityscapes.py
+sed -i "s|data_root = .*|data_root = \'${data_path}/\'|g" configs/_base_/datasets/cityscapes.py
 
 taskset -c 0-95 python3 -m torch.distributed.launch --nproc_per_node=1 --master_port=29500 \
     ${cur_path}/tools/train.py \

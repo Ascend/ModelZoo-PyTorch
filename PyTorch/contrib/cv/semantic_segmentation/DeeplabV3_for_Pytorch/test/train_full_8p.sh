@@ -70,7 +70,7 @@ fi
 
 chmod +x ${cur_path}/tools/train.py
 # 修改数据路径
-sed -i "s|data/cityscapes/|$data_path/|g" configs/_base_/datasets/cityscapes.py
+sed -i "s|data_root = .*|data_root = \'${data_path}/\'|g" configs/_base_/datasets/cityscapes.py
 
 KERNEL_NUM=$(($(nproc)/8))
 
