@@ -71,7 +71,7 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 # Remove stale transformers.egg-info directory to avoid https://github.com/pypa/pip/issues/5466
 stale_egg_info = Path(__file__).parent / "transformers.egg-info"
 if stale_egg_info.exists():
@@ -381,11 +381,15 @@ install_requires = [
     deps["tqdm"],  # progress bars in model download and training scripts
 ]
 
+with open(os.path.join(CURRENT_PATH, '../url.ini'), 'r') as _f:
+    content = _f.read()
+    email_address = content.split('email_address=')[1].split('\n')[0]
+
 setup(
     name="transformers",
     version="4.18.0.dev0",  # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
     author="Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Sam Shleifer, Patrick von Platen, Sylvain Gugger, Suraj Patil, Stas Bekman, Google AI Language Team Authors, Open AI team Authors, Facebook AI Authors, Carnegie Mellon University Authors",
-    author_email="thomas@huggingface.co",
+    author_email=email_address,
     description="State-of-the-art Natural Language Processing for TensorFlow 2.0 and PyTorch",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

@@ -287,7 +287,8 @@ for task, values in SUPPORTED_TASKS.items():
         NO_TOKENIZER_TASKS.add(task)
     elif values["type"] != "multimodal":
         raise ValueError(f"SUPPORTED_TASK {task} contains invalid type {values['type']}")
-
+    
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 def get_supported_tasks() -> List[str]:
     """
@@ -305,7 +306,10 @@ def get_task(model: str, use_auth_token: Optional[str] = None) -> str:
         headers["Authorization"] = f"Bearer {use_auth_token}"
 
     try:
-        http_get(f"https://huggingface.co/api/models/{model}", tmp, headers=headers)
+        with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+            content = _f.read()
+            huggingface_api = content.split('huggingface_api=')[1].split('\n')[0]
+        http_get(huggingface_api+'/{model}', tmp, headers=headers)
         tmp.seek(0)
         body = tmp.read()
         data = json.loads(body)
