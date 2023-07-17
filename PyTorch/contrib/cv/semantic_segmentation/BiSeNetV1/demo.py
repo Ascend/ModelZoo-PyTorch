@@ -1,3 +1,19 @@
+
+# Copyright 2023 The HuggingFace Datasets Authors and the current dataset script contributor.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
 from argparse import ArgumentParser
 
 import mmcv
@@ -5,10 +21,16 @@ import mmcv
 from mmseg.apis import inference_segmentor, init_segmentor, show_result_pyplot
 from mmseg.core.evaluation import get_palette
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, 'url.ini'), 'r') as _f:
+    _content = _f.read()
+    test_image_url = _content.split('test_image_url=')[1].split('\n')[0]
+
+
 def get_raw_data():
     from PIL import Image
     from urllib.request import urlretrieve
-    IMAGE_URL = 'https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png'
+    IMAGE_URL = test_image_url
     urlretrieve(IMAGE_URL, 'tmp.jpg')
 
 
