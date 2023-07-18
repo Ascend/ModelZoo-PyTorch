@@ -43,9 +43,13 @@ class OmInferencer:
         self.with_aipp = (len(input_shape) == 4 and input_shape[-1] == 3)
 
     def infer(self, inputs):
+        """Infer one batch data."""
         num_inputs = len(inputs)
-        assert num_inputs <= self.batch_size
-        num_pad = self.batch_size - len(inputs)
+        if num_inputs > self.batch_size:
+            raise RuntimeError(
+                f'Input conflict! model batch size: {self.batch_size}, '
+                f'but received inputs size: {num_inputs}.')
+        num_pad = self.batch_size - num_inputs
         inputs_ = inputs + [inputs[-1]] * num_pad
         inputs_ = np.concatenate(inputs_, axis=0)
         outputs = self.session.infer([inputs_])
@@ -60,25 +64,27 @@ def eval(config, logger):
     device_id = int(config['device_id']) if 'device_id' in config else 0
     om_inferencer = OmInferencer(om_path=config['om_path'], device_id=device_id)
     batch_size = om_inferencer.batch_size
+
     if om_inferencer.with_aipp:
         transforms_config = config['Eval']['dataset']['transforms' ]
-        assert 'NormalizeImage' in transforms_config[3]
-        # remove NormalizeImage because AIPP can do same thing
-        transforms_config.pop(3)
-        assert 'ToCHWImage' in transforms_config[3]
-        # remove ToCHWImage because AIPP require HWC
-        transforms_config.pop(3)
+        for t in transforms_config:
+            if 'NormalizeImage' in t:
+                # remove NormalizeImage because AIPP can do same thing
+                t.pop('NormalizeImage')
+            if 'ToCHWImage' in t:
+                # remove ToCHWImage because AIPP require HWC
+                t.pop('ToCHWImage')
+        config['Eval']['dataset']['transforms' ] = [
+            t for t in transforms_config if not t.is_empty()]
 
-    # valid_dataloader = build_dataloader(config, 'Eval', device, logger)
     valid_dataloader = build_dataloader(config, 'Eval', None, logger)
-    post_process_class = build_post_process(config['PostProcess'],
-                                            config['Global'])
+    post_process_class = build_post_process(
+                            config['PostProcess'], config['Global'])
     eval_class = build_metric(config['Metric'])
-    max_iter = len(valid_dataloader)
-    if platform.system() == "Windows":
-        max_iter -= 1
+    max_iter = len(valid_dataloader) -1 if platform.system() == "Windows" \
+                    else len(valid_dataloader)
 
-    inputs, infos = [], []
+    data_list = []
     total_size = len(valid_dataloader)
     num_batchs = ceil(len(valid_dataloader) / batch_size)
     logger.info(f'Total: {total_size} images  {num_batchs} batchs.')
@@ -86,31 +92,33 @@ def eval(config, logger):
     for i, batch in enumerate(valid_dataloader):
         if i >= max_iter:
             break
-        info = [item.numpy() for item in batch]
-        image = batch[0].numpy()
+        batch_numpy = [item.numpy() for item in batch]
         if om_inferencer.with_aipp:
-            image = image.astype(np.uint8)
+            batch_numpy[0] = batch_numpy[0].astype(np.uint8)
+        data_list.append(batch_numpy)
 
-        inputs.append(image)
-        infos.append(info)
-        if len(inputs) < batch_size:
+        if i % batch_size < batch_size - 1:
             continue
 
-        outputs = om_inferencer.infer(inputs)
-        for out, info_ in zip(outputs, infos):
-            preds = {'maps': paddle.to_tensor(out.astype(np.float32))}
-            post_result = post_process_class(preds, info_[1])
-            eval_class(post_result, info_)
-        inputs, infos = [], []
+        # do infer once data reaches a full batch
+        input_list = [batch_numpy[0] for batch_numpy in data_list]
+        output_list = om_inferencer.infer(input_list)
+        for output, batch_numpy in zip(output_list, data_list):
+            preds = {'maps': paddle.to_tensor(output.astype(np.float32))}
+            post_result = post_process_class(preds, batch_numpy[1])
+            eval_class(post_result, batch_numpy)
+        data_list.clear()
         pbar.update(1)
 
-    if inputs:
-        outputs = om_inferencer.infer(inputs)
-        for out, info_ in zip(outputs, infos):
-            preds = {'maps': paddle.to_tensor(out.astype(np.float32))}
-            post_result = post_process_class(preds, info_[1])
-            eval_class(post_result, info_)
-        pbar.update(1)        
+    # infer last batch
+    if data_list:
+        input_list = [batch_numpy[0] for batch_numpy in data_list]
+        output_list = om_inferencer.infer(input_list)
+        for output, batch_numpy in zip(output_list, data_list):
+            preds = {'maps': paddle.to_tensor(output.astype(np.float32))}
+            post_result = post_process_class(preds, batch_numpy[1])
+            eval_class(post_result, batch_numpy)
+        pbar.update(1)      
 
     pbar.close()
     om_inferencer.close()

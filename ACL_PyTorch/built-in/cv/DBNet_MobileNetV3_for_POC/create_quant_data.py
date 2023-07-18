@@ -18,6 +18,7 @@ from pathlib import Path
 import platform
 import sys
 import numpy as np
+from tqdm import tqdm
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
@@ -29,21 +30,20 @@ import tools.program as program
 
 def eval(config, logger):
     save_dir = Path(config['save_dir'])
-    save_dir.mkdir(parents=True, exist_ok=True)
+    save_dir.mkdir(parents=True, exist_ok=True, mode=644)
     batch_size = config['batch_size']
     valid_dataloader = build_dataloader(config, 'Eval', None, logger)
-    max_iter = len(valid_dataloader)
-    if platform.system() == "Windows":
-        max_iter -= 1
+    max_iter = len(valid_dataloader) - 1 if platform.system() == "Windows" \
+                    else len(valid_dataloader)
 
     logger.info('Processing, please wait a moment.')
     cnt = 0
     inputs = []
-    for i, batch in enumerate(valid_dataloader):
+    for i, batch in tqdm(enumerate(valid_dataloader)):
         if i >= max_iter:
             break
         inputs.append(batch[0].numpy())
-        if len(inputs) < batch_size:
+        if i % batch_size < batch_size - 1:
             continue
         np.concatenate(inputs, axis=0).tofile(str(save_dir / f'x-{cnt:0>2}.bin'))
         inputs = []
