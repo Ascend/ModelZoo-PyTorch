@@ -20,6 +20,7 @@ import pickle
 import platform
 import sys
 
+from ais_bench.infer.interface import InferSession
 import numpy as np
 import paddle
 from tqdm import tqdm
@@ -32,7 +33,6 @@ from ppocr.data import build_dataloader
 from ppocr.postprocess import build_post_process
 from ppocr.metrics import build_metric
 import tools.program as program
-from ais_bench.infer.interface import InferSession
 
 
 class OmInferencer:
@@ -60,7 +60,7 @@ class OmInferencer:
         self.session.finalize()
 
 
-def eval(config, logger):
+def eval_npu(config, logger):
     device_id = int(config['device_id']) if 'device_id' in config else 0
     om_inferencer = OmInferencer(om_path=config['om_path'], device_id=device_id)
     batch_size = om_inferencer.batch_size
@@ -132,7 +132,7 @@ def main():
     config['Eval']['dataset']['data_dir'] = config['data_dir']
     label_file = Path(config['data_dir'])/'test_icdar2015_label.txt'
     config['Eval']['dataset']['label_file_list'] = [str(label_file)]
-    eval(config, logger)
+    eval_npu(config, logger)
 
 
 if __name__ == '__main__':
