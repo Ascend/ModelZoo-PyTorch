@@ -84,7 +84,7 @@
     3. 安装量化工具
     ```bash
     pip install protobuf==3.20.0
-    pip install onnxruntime==1.8.0
+    pip install onnxruntime==1.8.0  # need onnxruntime-1.8.0 to build custom operators
     arch=`arch`
     wget --no-check-certificate -O amct.tar.gz https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/Florence-ASL/Florence-ASL%20V100R001C30SPC703/Ascend-cann-amct_6.3.RC2.alpha003_linux-${arch}.tar.gz?response-content-type=application/octet-stream
     tar -zxvf amct.tar.gz && cd amct/amct_onnx/
@@ -93,6 +93,7 @@
     cd amct_onnx_op && python setup.py build
     cd ../../../
     rm -rf amct/ amct.tar.gz
+    pip install onnxruntime==1.14.1  # need onnxruntime-1.14.1 to quantize.
     ```
 
     4. 安装OM推理工具
@@ -171,13 +172,37 @@
         
         生成ONNX模型后，执行以下命令，对ONNX模型做些许修改以提升性能：
         ```bash
+        # usage: modify_onnx.py [-h] <input_onnx> <output_onnx>
+        
+        # modify onnx model.
+        # positional arguments:
+        #     input_onnx   path to input onnx file.
+        #     output_onnx  path to save modified onnx model.
+
         python3 modify_onnx.py ./models/db_mv3.onnx ./models/db_mv3_opti.onnx
         ```
+        说明：参数1为原始ONNX路径，参数2为修改后ONNX的保存路径。
 
         运行结束后，当前`./models`下将会生成修改后的ONNX模型`db_mv3_opti.onnx`。
 
     3. 模型量化
-        在量化前，我们先生成校验数据，以确保量化后模型精度不会损失：
+        在量化前，我们需要生成一份配置文件，作用是在量化时跳过下面两部分节点：
+        1. Dequant节点会破坏部分Conv/ConvTranspose与后续节点融合进而导致性能并未得到优化，所以跳过这部分Conv/ConvTranspose节点。
+        2. 跳过模型尾部少量导致模型精度下降的Conv/ConvTranspose节点。
+        
+        执行以下命令即可自动生成配置文件：
+        ```bash
+        # usage: create_quant_config.py [-h] <input_onnx> <output_config>
+        
+        # create quantization config for AMCT.
+        # positional arguments:
+        #     input_onnx     path to onnx file.
+        #     output_config  path to save quantization config.
+
+        python3 create_quant_config.py ./models/db_mv3_opti.onnx ./quant.cfg
+        ```
+
+        然后生成量化时用于校准精度的数据：
         ```bash
         python3 create_quant_data.py \
         -c PaddleOCR/configs/det/det_mv3_db.yml \
@@ -187,7 +212,7 @@
            save_dir=./quant_data/
         ```
 
-        然后使用`amct`工具，对ONNX模型进行量化，以进一步提升模型性能：
+        最后使用`amct`工具，对ONNX模型进行量化，以进一步提升模型性能：
         ```bash
         amct_onnx calibration \
             --model ./models/db_mv3_opti.onnx \
