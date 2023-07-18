@@ -193,7 +193,7 @@
             --model ./models/db_mv3_opti.onnx \
             --save_path ./models/quanted \
             --input_shape "x:24,3,736,1280" \
-            --data_dir "./data/" \
+            --data_dir "./quant_data/" \
             --data_types "float32" \
             --calibration_config ./quant.cfg
         ```
