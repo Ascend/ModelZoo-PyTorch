@@ -181,7 +181,6 @@
 
         python3 modify_onnx.py ./models/db_mv3.onnx ./models/db_mv3_opti.onnx
         ```
-        说明：参数1为原始ONNX路径，参数2为修改后ONNX的保存路径。
 
         运行结束后，当前`./models`下将会生成修改后的ONNX模型`db_mv3_opti.onnx`。
 
@@ -325,4 +324,4 @@
 
 | 芯片型号   | Batch Size   | 数据集    | 精度         | 性能   |
 | --------- | ------------ | --------- | ----------- |------- |
-|310P3      | 24           | ICDAR2015 | hmean=74.3% | 225fps |
+|310P3      | 24           | ICDAR2015 | hmean=74.5% | 225fps |
