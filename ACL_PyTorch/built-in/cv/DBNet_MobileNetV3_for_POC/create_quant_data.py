@@ -39,7 +39,7 @@ def eval(config, logger):
     logger.info('Processing, please wait a moment.')
     cnt = 0
     inputs = []
-    for i, batch in tqdm(enumerate(valid_dataloader)):
+    for i, batch in tqdm(enumerate(valid_dataloader), desc='Processed'):
         if i >= max_iter:
             break
         inputs.append(batch[0].numpy())
