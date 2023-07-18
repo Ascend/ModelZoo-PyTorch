@@ -14,10 +14,12 @@
 
 
 import argparse
+import os
+import stat
 import sys
 
-import numpy as np
 from auto_optimizer import OnnxGraph
+import numpy as np
 
 
 def need_skip_conv(onnx_graph, conv_node):
@@ -79,9 +81,11 @@ def find_skip_nodes(onnx_path, save_path):
             skip_node_names.append(node.name)
             continue
 
-    with open(save_path, 'w') as f:
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    modes = stat.S_IWUSR | stat.S_IRUSR
+    with os.fdopen(os.open(save_path, flags, modes), 'w') as fout:
         for node_name in skip_node_names:
-            f.write(f'skip_layers : "{node_name}"\n')
+            fout.write(f'skip_layers : "{node_name}"\n')
 
 
 if __name__ == '__main__':
