@@ -187,7 +187,7 @@
 
     3. 模型量化
         在量化前，我们需要生成一份配置文件，作用是在量化时跳过下面两部分节点：
-        1. Dequant节点会破坏部分Conv/ConvTranspose与后续节点融合进而导致性能并未得到优化，所以跳过这部分Conv/ConvTranspose节点。
+        1. Dequant节点会破坏部分Conv/ConvTranspose与后续节点融合进而导致性能劣化，所以跳过这部分Conv/ConvTranspose节点。
         2. 跳过模型尾部少量导致模型精度下降的Conv/ConvTranspose节点。
         
         执行以下命令即可自动生成配置文件：
