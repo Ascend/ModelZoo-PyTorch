@@ -28,7 +28,7 @@ from ppocr.data import build_dataloader
 import tools.program as program
 
 
-def eval(config, logger):
+def create_quant_data(config, logger):
     save_dir = Path(config['save_dir'])
     save_dir.mkdir(parents=True, exist_ok=True, mode=644)
     batch_size = config['batch_size']
@@ -50,12 +50,13 @@ def eval(config, logger):
         cnt += 1
     logger.info(f'Done. Quantization data are saved in {save_dir}.')
 
+
 def main():
     config, _, logger, _ = program.preprocess()
     config['Eval']['dataset']['data_dir'] = config['data_dir']
     label_file = Path(config['data_dir'])/'test_icdar2015_label.txt'
     config['Eval']['dataset']['label_file_list'] = [str(label_file)]
-    eval(config, logger)
+    create_quant_data(config, logger)
 
 
 if __name__ == '__main__':
