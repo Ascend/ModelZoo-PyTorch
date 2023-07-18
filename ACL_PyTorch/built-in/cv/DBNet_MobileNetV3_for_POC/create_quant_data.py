@@ -13,86 +13,51 @@
 # limitations under the License.
 
 
-import argparse
 import os
-import stat
+from pathlib import Path
+import platform
 import sys
-
-from auto_optimizer import OnnxGraph
 import numpy as np
+from tqdm import tqdm
+
+__dir__ = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(__dir__)
+sys.path.insert(0, os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
+
+from ppocr.data import build_dataloader
+import tools.program as program
 
 
-def need_skip_conv(onnx_graph, conv_node):
-    # check shape
-    output_channel = onnx_graph.get_value_info(conv_node.outputs[0]).shape[1]
-    if output_channel % 16 != 0:
-        return False
+def create_quant_data(config, logger):
+    save_dir = Path(config['save_dir'])
+    save_dir.mkdir(parents=True, exist_ok=True, mode=644)
+    batch_size = config['batch_size']
+    valid_dataloader = build_dataloader(config, 'Eval', None, logger)
+    max_iter = len(valid_dataloader) - 1 if platform.system() == "Windows" \
+                    else len(valid_dataloader)
 
-    # check structure
-    next_nodes = onnx_graph.get_next_nodes(conv_node.outputs[0])
-    if len(next_nodes) != 1 and next_nodes[0].op_type != 'BatchNormalization':
-        return False
-    next_nodes = onnx_graph.get_next_nodes(next_nodes[0].outputs[0])
-    if len(next_nodes) != 2:
-        return False
-    next_nodes_dict = {node.op_type: node for node in next_nodes}
-    if list(next_nodes_dict.keys()) != ['Add', 'Mul']:
-        return False
-    next_nodes = onnx_graph.get_next_nodes(next_nodes_dict['Add'].outputs[0])
-    if len(next_nodes) != 1 and next_nodes[0].op_type != 'Clip':
-        return False
-
-    return True
-
-
-def need_skip_convtranspose(onnx_graph, convt_node):
-    # check shape
-    output_channel = onnx_graph.get_value_info(convt_node.outputs[0]).shape[1]
-    if output_channel % 16 != 0:
-        return False
-
-    # check structure
-    next_nodes = onnx_graph.get_next_nodes(convt_node.outputs[0])
-    if len(next_nodes) != 1 and next_nodes[0].op_type != 'BatchNormalization':
-        return False
-
-    return True
-
-
-def find_skip_nodes(onnx_path, save_path):
-    g = OnnxGraph.parse(onnx_path)
-    num_nodes = len(g.nodes)
-
-    skip_node_names = []
-    for i, node in enumerate(g.nodes):
-
-        # Under certain conditions, Dequant will destroy Conv/ConvTranspose 
-        # fusion, and further lead to performance lower. So, need to skip these 
-        # nodes when quantization.
-        if node.op_type == 'Conv' and need_skip_conv(g, node):
-            skip_node_names.append(node.name)
+    logger.info('Processing, please wait a moment.')
+    cnt = 0
+    inputs = []
+    for i, batch in tqdm(enumerate(valid_dataloader), desc='Processed'):
+        if i >= max_iter:
+            break
+        inputs.append(batch[0].numpy())
+        if i % batch_size < batch_size - 1:
             continue
-        if node.op_type == 'ConvTranspose' and need_skip_convtranspose(g, node):
-            skip_node_names.append(node.name)
-            continue
+        np.concatenate(inputs, axis=0).tofile(str(save_dir / f'x-{cnt:0>2}.bin'))
+        inputs = []
+        cnt += 1
+    logger.info(f'Done. Quantization data are saved in {save_dir}.')
 
-        # skip last layer to reduce precision loss
-        if num_nodes - i <= 10 and node.op_type in ['Conv', 'ConvTranspose']:
-            skip_node_names.append(node.name)
-            continue
 
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    modes = stat.S_IWUSR | stat.S_IRUSR
-    with os.fdopen(os.open(save_path, flags, modes), 'w') as fout:
-        for node_name in skip_node_names:
-            fout.write(f'skip_layers : "{node_name}"\n')
+def main():
+    config, _, logger, _ = program.preprocess()
+    config['Eval']['dataset']['data_dir'] = config['data_dir']
+    label_file = Path(config['data_dir'])/'test_icdar2015_label.txt'
+    config['Eval']['dataset']['label_file_list'] = [str(label_file)]
+    create_quant_data(config, logger)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-                        description='create quantization config for AMCT.')
-    parser.add_argument('input_onnx', type=str, help='path to onnx file.')
-    parser.add_argument('output_config', type=str, 
-                        help='path to save quantization config.')
-    args = parser.parse_args()
-    find_skip_nodes(args.input_onnx, args.output_config)
+    main()
