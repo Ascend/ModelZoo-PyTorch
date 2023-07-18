@@ -74,8 +74,7 @@ def eval(config, logger):
             if 'ToCHWImage' in t:
                 # remove ToCHWImage because AIPP require HWC
                 t.pop('ToCHWImage')
-        config['Eval']['dataset']['transforms' ] = [
-            t for t in transforms_config if not t.is_empty()]
+    config['Eval']['dataset']['transforms'] = [t for t in transforms_config if t]
 
     valid_dataloader = build_dataloader(config, 'Eval', None, logger)
     post_process_class = build_post_process(
@@ -88,7 +87,7 @@ def eval(config, logger):
     total_size = len(valid_dataloader)
     num_batchs = ceil(len(valid_dataloader) / batch_size)
     logger.info(f'Total: {total_size} images  {num_batchs} batchs.')
-    pbar = tqdm(total=num_batchs)
+    pbar = tqdm(total=num_batchs, desc='eval model', leave=True)
     for i, batch in enumerate(valid_dataloader):
         if i >= max_iter:
             break
