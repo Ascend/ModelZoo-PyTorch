@@ -45,3 +45,8 @@ python3 demo.py --model-path /path/to/model_best.pth.tar
 | :------: | :------:  | :------: | :------: | :------: |
 | -        | 202       | 1        | 1      | O2       |
 | 79.36   | 1807      | 8        | 150      | O2       |
+```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
