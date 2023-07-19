@@ -93,7 +93,10 @@ def get_raw_data():
     # 请自定义获取数据方式，请勿将原始数据上传至代码仓
     from PIL import Image
     from urllib.request import urlretrieve
-    IMAGE_URL = 'https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png'
+    with open('url.ini', 'r') as f:
+        content = f.read()
+        img_url = content.split('img_url=')[1].split('\n')[0]
+    IMAGE_URL = img_url
     urlretrieve(IMAGE_URL, 'tmp.jpg')
     img = Image.open("tmp.jpg")
     img = img.convert('RGB')

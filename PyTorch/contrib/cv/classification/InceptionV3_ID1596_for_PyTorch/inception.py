@@ -18,6 +18,7 @@
 from collections import namedtuple
 import warnings
 import re
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -29,11 +30,14 @@ except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
 __all__ = ['Inception3', 'inception_v3', 'InceptionOutputs', '_InceptionOutputs']
-
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    inception_v3_google = content.split('inception_v3_google=')[1].split('\n')[0]
 
 model_urls = {
     # Inception v3 ported from TensorFlow
-    'inception_v3_google': 'https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth',
+    'inception_v3_google': inception_v3_google,
 }
 
 InceptionOutputs = namedtuple('InceptionOutputs', ['logits', 'aux_logits'])

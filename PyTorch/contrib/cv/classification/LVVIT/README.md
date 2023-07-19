@@ -91,3 +91,6 @@ Example log:Train: 257 [ 150/625 ( 24%)]  Loss:  9.841134 (10.1421)  Time: 1.941
 As log  above get FPS：1054.88
 ```
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

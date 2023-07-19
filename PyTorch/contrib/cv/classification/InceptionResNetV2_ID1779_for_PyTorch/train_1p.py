@@ -45,6 +45,10 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
+with open('url.ini', 'r') as f:
+    content = f.read()
+    inceptionresnetv2 = content.split('inceptionresnetv2=')[1].split('\n')[0]
+
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--data', metavar='DIR',
                     help='path to dataset')
@@ -79,7 +83,7 @@ parser.add_argument('--world-size', default=-1, type=int,
                     help='number of nodes for distributed training')
 parser.add_argument('--rank', default=-1, type=int,
                     help='node rank for distributed training')
-parser.add_argument('--dist-url', default='https://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth', type=str,
+parser.add_argument('--dist-url', default=inceptionresnetv2, type=str,
                     help='url used to set up pretained training')
 parser.add_argument('--dist-backend', default='nccl', type=str,
                     help='distributed backend')

@@ -385,3 +385,6 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
 | --------- | --------- | ----------- | --------------- | 
 |Ascend910A| 128         | ILSVRC2012  | Top1Acc=78.06% Top5@Acc=93.81% 
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -176,3 +176,7 @@ GoogLeNet对网络中的传统卷积层进行了修改，提出了被称为Incep
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

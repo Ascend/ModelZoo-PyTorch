@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import warnings
 from collections import namedtuple
 import torch
@@ -31,9 +32,14 @@ except ImportError:
 
 __all__ = ['GoogLeNet', 'googlenet', "GoogLeNetOutputs", "_GoogLeNetOutputs"]
 
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    googlenet = content.split('googlenet=')[1].split('\n')[0]
+
 model_urls = {
     # GoogLeNet ported from TensorFlow
-    'googlenet': 'https://download.pytorch.org/models/googlenet-1378be20.pth',
+    'googlenet': googlenet,
 }
 
 GoogLeNetOutputs = namedtuple('GoogLeNetOutputs', ['logits', 'aux_logits2', 'aux_logits1'])

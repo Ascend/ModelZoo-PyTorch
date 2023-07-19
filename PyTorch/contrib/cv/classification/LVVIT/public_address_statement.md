@@ -1,0 +1,7 @@
+| 类型     | 开源代码地址                                                       | 文件名                                          | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
+|--------|--------------------------------------------------------------|----------------------------------------------|------------------------|----|
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/setup.py | LVVIT/setup.py | jzh0103@gmail.com | 作者邮箱 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/setup.py | LVVIT/setup.py | https://github.com/zihangJiang/TokenLabeling | 开源地址 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/zihangJiang/TokenLabeling/releases/download/1.0/lvvit_m-56M-224-84.0.pth.tar | 下载权重文件 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/zihangJiang/TokenLabeling/releases/download/1.0/lvvit_s-26M-224-83.3.pth.tar | 下载权重文件 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/zihangJiang/TokenLabeling/releases/download/1.0/lvvit_s-26M-384-84.4.pth.tar | 下载权重文件 |

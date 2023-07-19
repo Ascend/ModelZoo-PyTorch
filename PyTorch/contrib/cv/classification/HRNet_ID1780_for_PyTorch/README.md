@@ -420,5 +420,7 @@ HRNet（High-Resolution Net）是针对2D人体姿态估计（Human Pose Estimat
 |   910A        | 1          |  ImageNet          | 76.02/Top1 91.72/Top5 |
 
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 

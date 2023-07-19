@@ -32,3 +32,7 @@ bash test/train_full_8p.sh --data_path=[path of imagenet]
 | Acc@1 |             Npu\_nums | Epochs   | AMP\_Type | FPS |
 | :------: | :------: | :------: | :------: | :------: | 
 |    67.272       | 8        | 100      | O1       | 3869 |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
