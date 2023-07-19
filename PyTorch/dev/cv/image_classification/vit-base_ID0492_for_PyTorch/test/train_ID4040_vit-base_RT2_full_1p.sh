@@ -37,7 +37,7 @@ over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling=False
-
+precision_mode="allow_mix_precision"
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
     echo"usage:./train_performance_1P.sh <args>"
@@ -58,12 +58,7 @@ fi
 for para in $*
 do
     if [[ $para == --precision_mode* ]];then
-        apex_opt_level=`echo ${para#*=}`
-        if [[ $apex_opt_level != "O1" ]] && [[ $apex_opt_level != "O2" ]] && [[ $apex_opt_level != "O3" ]]; then
-            echo "[Error] para \"precision_mode\" must be config O1 or O2 or O3"
-            exit 1
-        fi
-        PREC="--apex --apex-opt-level "$apex_opt_level
+        precision_mode=`echo ${para#*=}`
     elif [[ $para == --over_dump* ]];then
         over_dump=`echo ${para#*=}`
         over_dump_path=${cur_path}/output/overflow_dump
@@ -81,7 +76,11 @@ do
     elif [[ $para == --data_path* ]];then
         data_path=`echo ${para#*=}`
     elif [[ $para == --ckpt_path* ]];then
-      ckpt_path=`echo ${para#*=}`
+        ckpt_path=`echo ${para#*=}`
+	elif [[ $para == --fp32 ]];then
+	    fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+	    hf32=`echo ${para#*=}`
     fi
 done
 
@@ -142,9 +141,9 @@ do
         --train_batch_size=64 \
         --num_steps=10000 \
         --npu-fused-sgd \
-        --fp16 \
         --data_dir ${data_path} \
-        --fp16_opt_level O2 > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+	--precision_mode=$precision_mode \
+        $prec > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 done 
 wait
 
@@ -174,7 +173,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'mix'_'acc'
+fi 
 
 ##获取性能数据，不需要修改
 #吞吐量

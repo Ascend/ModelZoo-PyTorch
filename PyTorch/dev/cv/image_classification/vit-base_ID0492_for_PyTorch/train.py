@@ -196,6 +196,11 @@ def train(args, model):
                                 lr=args.learning_rate,
                                 momentum=0.9,
                                 weight_decay=args.weight_decay)
+    if args.precision_mode == "must_keep_origin_dtype":
+        optimizer = torch.optim.SGD(model.parameters(),
+                                lr=args.learning_rate,
+                                momentum=0.9,
+                                weight_decay=args.weight_decay)     
     t_total = args.num_steps
     print('lr',args.learning_rate)
     if args.decay_type == "cosine":
@@ -443,6 +448,8 @@ def main():
     parser.add_argument('--npu-fused-sgd', action='store_true')
     parser.add_argument('--combine-grad', action='store_true')
     parser.add_argument( '--ddp',default=False,help='distributed or not ')
+    parser.add_argument('--precision_mode', default='must_keep_origin_dtype', type=str, help='precision_mode')
+    parser.add_argument('--fp32', action='store_true', help='disble_hi_float_32_execution')
     parser.add_argument('--profiling', type=str, default='NONE',
                         help='choose profiling way--CANN,GE,NONE')
     parser.add_argument('--start_step', default=0, type=int,
@@ -462,6 +469,12 @@ def main():
         NPU_WORLD_SIZE = int(os.getenv('NPU_WORLD_SIZE'))
         RANK = int(os.getenv('RANK'))
         torch.distributed.init_process_group('hccl', rank=RANK, world_size=NPU_WORLD_SIZE)
+    if args.precision_mode == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+        torch.npu.matmul.allow_hf32 = True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
 
     print('lr',args.learning_rate)
     # Setup CUDA, GPU & distributed training

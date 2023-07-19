@@ -15,7 +15,7 @@ train_epochs=1
 #训练batch_size
 batch_size=80
 learning_rate=8e-5
-
+precision_mode="allow_mix_precision"
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
     echo"usage:./train_performance_1P.sh <args>"
@@ -55,6 +55,10 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --ckpt_path* ]];then
         ckpt_path=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+	fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+	hf32=`echo ${para#*=}`
     fi
 done
 
@@ -65,6 +69,14 @@ if [[ $data_path == "" ]];then
 fi
 
 export RANK=0
+
+
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec=" "
+else
+    prec="--fp16"
+fi
+
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
@@ -101,7 +113,6 @@ do
 		  --learning_rate ${learning_rate} \
 		  --num_train_epochs ${train_epochs} \
 		  --seed 1 \
-		  --fp16 \
 		  --use_npu \
 		  --loss_scale 4096 \
 		  --vocab_file ${data_path}/data/uncased_L-24_H-1024_A-16/vocab.txt \
@@ -111,6 +122,8 @@ do
 		  --do_lower_case \
 		  --output_dir ${cur_path}/../results \
 		  --config_file bert_base_config.json \
+                  $prec \
+                  ${fp32} \
           --json-summary ${cur_path}/output/${ASCEND_DEVICE_ID}/dllogger.json > ${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 done 
 wait
@@ -142,8 +155,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
-
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'acc'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'acc'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'mix'_'acc'
+fi
 ##获取性能数据
 #吞吐量，不需要修改
 ActualFPS=${FPS}
