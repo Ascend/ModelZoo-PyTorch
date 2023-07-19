@@ -36,7 +36,7 @@ over_dump=False
 data_dump_flag=False
 data_dump_step="10"
 profiling="None"
-start_step=0
+precision_mode="allow_mix_precision"
 stop_step=20
 
 if [[ $1 == --help || $1 == --h ]];then
@@ -56,6 +56,10 @@ do
       batch_size=`echo ${para#*=}`
     elif [[ $para == --learning_rate* ]];then
       learning_rate=`echo ${para#*=}`
+    elif [[ $para == --fp32 ]];then
+	fp32=`echo ${para#*=}`
+    elif [[ $para == --hf32 ]];then
+	hf32=`echo ${para#*=}`
     elif [[ $para == --bin_mode* ]];then
         bin_mode="True"
     elif [[ $para == --bin_analysis* ]];then
@@ -69,9 +73,10 @@ do
     fi
 done
 
-PREC=""
-if [[ $precision_mode == "amp" ]];then
-  PREC="--apex"
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec=" "
+else
+    prec="--fp16 --fp16_opt_level O2"
 fi
 
 #校验是否传入data_path,不需要修改
@@ -114,12 +119,11 @@ nohup python3 $cur_path/../train.py  \
         --addr=127.0.0.1 \
         --train_batch_size=64 \
         --num_steps=100 \
-        --npu-fused-sgd \
-        --fp16 \
+		--npu-fused-sgd \
         --data_dir ${data_path} \
-        --fp16_opt_level O2 \
 		--profiling ${profiling} \
-		--start_step ${start_step} \
+		--precision_mode=$precision_mode \
+	    $prec
 		--stop_step ${stop_step} \
 		--bin True > $cur_path/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 
@@ -148,7 +152,13 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=`uname -m`
-CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'perf'
+if [[ ${fp32} == "--fp32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'fp32'_'perf'
+elif [[ ${hf32} == "--hf32" ]];then
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'hf32'_'perf'
+else
+  CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'mix'_'perf'
+fi 
 #修改二进制用例名称
 if [ $bin_mode == "True" ];then
     CaseName=$CaseName"_binary"

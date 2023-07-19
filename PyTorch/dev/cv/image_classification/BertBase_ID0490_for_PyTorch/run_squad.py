@@ -836,6 +836,8 @@ def main():
                         default=False,
                         action='store_true',
                         help="Mixed precision training")
+    parser.add_argument('--precision_mode', default='must_keep_origin_dtype', type=str, help='precision_mode')
+    parser.add_argument('--fp32', action='store_true', help='disble_hi_float_32_execution')
     parser.add_argument('--amp',
                         default=False,
                         action='store_true',
@@ -909,6 +911,12 @@ def main():
                         action='store_true',
                         help='whether to enable graph mode.')
     args = parser.parse_args()
+    if args.precision_mode == 'must_keep_origin_dtype':
+        torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
+        torch.npu.matmul.allow_hf32 = True
+        if args.fp32:
+            torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
+            torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True
     args.fp16 = args.fp16 or args.amp
 
     if args.local_rank == -1 or args.no_cuda:
