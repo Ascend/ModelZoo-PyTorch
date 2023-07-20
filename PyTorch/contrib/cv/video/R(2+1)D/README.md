@@ -62,3 +62,7 @@ sh ./test/run_8p_perf.sh
 ## log文件位置
 
 运行产生的log文件和模型的参数文件在 项目目录的 work_dirs 文件夹下
+
+## 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
