@@ -6,6 +6,7 @@
 ## LICENSE file in the root directory of this source tree 
 ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 """ResNet variants"""
+import os
 import math
 import torch
 import torch.nn as nn
@@ -14,8 +15,11 @@ from .splat import SplAtConv2d, DropBlock2D
 from .build import RESNEST_MODELS_REGISTRY
 
 __all__ = ['ResNet', 'Bottleneck']
-
-_url_format = 'https://s3.us-west-1.wasabisys.com/resnest/module/{}-{}.pth'
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    resnest = content.split('resnest=')[1].split('\n')[0]
+_url_format = resnest + '/{}-{}.pth'
 
 _model_sha256 = {name: checksum for checksum, name in [
     ]}

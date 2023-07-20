@@ -43,3 +43,6 @@ Accuracy|FPS|Npu_nums|Epochs|AMP_Type
 97.39|225|1|80|O1
 97.80|1615|8|80|O1
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -68,3 +68,7 @@ bash ./test/train_eval_8p.sh --data_path=real_data_path
 | :------: | :------:  | :------: | :------:   | :------: |
 | -        | 69       | 1        | 1(1000step) | O2       |
 | 79.625   | 353      | 8        | 90          | O2       |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

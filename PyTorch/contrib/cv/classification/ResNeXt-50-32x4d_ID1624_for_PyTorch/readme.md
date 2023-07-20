@@ -170,3 +170,7 @@ ResNeXt-50-32x4d是一个经典的图像分类网络，对于一个L层的网络
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

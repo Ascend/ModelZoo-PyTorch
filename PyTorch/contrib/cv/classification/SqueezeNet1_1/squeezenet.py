@@ -14,6 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
 import torch
 import torch.nn as nn
@@ -22,10 +23,14 @@ from torch import Tensor
 from typing import Any
 
 __all__ = ['SqueezeNet', 'squeezenet1_0', 'squeezenet1_1']
-
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    squeezenet1_0 = content.split('squeezenet1_0=')[1].split('\n')[0]
+    squeezenet1_1 = content.split('squeezenet1_1=')[1].split('\n')[0]
 model_urls = {
-    'squeezenet1_0': 'https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth',
-    'squeezenet1_1': 'https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth',
+    'squeezenet1_0': squeezenet1_0,
+    'squeezenet1_1': squeezenet1_1,
 }
 
 

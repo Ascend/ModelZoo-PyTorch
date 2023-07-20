@@ -68,3 +68,7 @@ python3 pthtar2onnx.py
   year={2021},
   doi={10.1109/TPAMI.2019.2938758}, 
 }
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

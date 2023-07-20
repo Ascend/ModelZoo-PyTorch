@@ -68,3 +68,7 @@ $E$为当前一轮的Epoch序号，从0开始
 |Epochs|Learning rate                         |Optimization type|FPS     |Acc@1 |Acc@5 |
 |:----:|:------------------------------------:|:---------------:|:------:|:----:|:----:|
 |120   |$0.3\times (1+\cos{\frac{E\pi}{120}})$|O2               |1022.920|80.564|94.428|
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -1,0 +1,3 @@
+| 类型     | 开源代码地址                                                       | 文件名                                         | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明  |
+|--------|--------------------------------------------------------------|---------------------------------------------|------------------------|-------|
+| 开源代码引入 | https://github.com/fxia22/pointnet.pytorch/blob/f0c2430b0b1529e3f76fb5d6cd6ca14be763d975/scripts/download.sh | PointNet/test/download.sh | https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip | 下载三方库 |

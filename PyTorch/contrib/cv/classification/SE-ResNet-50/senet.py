@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import os
+
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 from torchvision.models import ResNet
@@ -126,11 +128,14 @@ def se_resnet50(num_classes=1_000, pretrained=False):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
+    cur_path = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+        content = f.read()
+        seresnet50 = content.split('seresnet50=')[1].split('\n')[0]
     model = ResNet(SEBottleneck, [3, 4, 6, 3], num_classes=num_classes)
     model.avgpool = nn.AdaptiveAvgPool2d(1)
     if pretrained:
-        model.load_state_dict(load_state_dict_from_url(
-            "https://github.com/moskomule/senet.pytorch/releases/download/archive/seresnet50-60a8950a85b2b.pkl"))
+        model.load_state_dict(load_state_dict_from_url(seresnet50))
     return model
 
 

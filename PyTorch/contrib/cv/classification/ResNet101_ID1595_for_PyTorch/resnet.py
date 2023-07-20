@@ -14,19 +14,28 @@
 # limitations under the License.
 # ============================================================================
 
+import os
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
 
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    resnet18 = content.split('resnet18=')[1].split('\n')[0]
+    resnet34 = content.split('resnet34=')[1].split('\n')[0]
+    resnet50 = content.split('resnet50=')[1].split('\n')[0]
+    resnet101 = content.split('resnet101=')[1].split('\n')[0]
+    resnet152 = content.split('resnet152=')[1].split('\n')[0]
 
 model_urls = {
-    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+    'resnet18': resnet18,
+    'resnet34': resnet34,
+    'resnet50': resnet50,
+    'resnet101': resnet101,
+    'resnet152': resnet152,
 }
 
 

@@ -24,7 +24,11 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
 if not os.path.exists(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048')):
-    www = 'https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip'
+    cur_path = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+        content = f.read()
+        modelnet40_ply_hdf5_2048 = content.split('modelnet40_ply_hdf5_2048=')[1].split('\n')[0]
+    www = modelnet40_ply_hdf5_2048
     zipfile = os.path.basename(www)
     os.system('wget %s; unzip %s' % (www, zipfile))
     os.system('mv %s %s' % (zipfile[:-4], DATA_DIR))

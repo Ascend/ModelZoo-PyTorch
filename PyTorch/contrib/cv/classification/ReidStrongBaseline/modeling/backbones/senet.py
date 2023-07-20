@@ -18,6 +18,7 @@ https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 """
 from __future__ import print_function, division, absolute_import
 from collections import OrderedDict
+import os
 import math
 import torch
 import torch.nn as nn
@@ -26,10 +27,20 @@ from torch.utils import model_zoo
 __all__ = ['SENet', 'senet154', 'se_resnet50', 'se_resnet101', 'se_resnet152',
            'se_resnext50_32x4d', 'se_resnext101_32x4d']
 
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    senet154 = content.split('senet154=')[1].split('\n')[0]
+    se_resnet50 = content.split('se_resnet50=')[1].split('\n')[0]
+    se_resnet101 = content.split('se_resnet101=')[1].split('\n')[0]
+    se_resnet152 = content.split('se_resnet152=')[1].split('\n')[0]
+    se_resnext50_32x4d = content.split('se_resnext50_32x4d=')[1].split('\n')[0]
+    se_resnext101_32x4d = content.split('se_resnext101_32x4d=')[1].split('\n')[0]
+
 pretrained_settings = {
     'senet154': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/senet154-c7b49a05.pth',
+            'url': senet154,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],
@@ -40,7 +51,7 @@ pretrained_settings = {
     },
     'se_resnet50': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnet50-ce0d4300.pth',
+            'url': se_resnet50,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],
@@ -51,7 +62,7 @@ pretrained_settings = {
     },
     'se_resnet101': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnet101-7e38fcc6.pth',
+            'url': se_resnet101,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],
@@ -62,7 +73,7 @@ pretrained_settings = {
     },
     'se_resnet152': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnet152-d17c99b7.pth',
+            'url': se_resnet152,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],
@@ -73,7 +84,7 @@ pretrained_settings = {
     },
     'se_resnext50_32x4d': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+            'url': se_resnext50_32x4d,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],
@@ -84,7 +95,7 @@ pretrained_settings = {
     },
     'se_resnext101_32x4d': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
+            'url': se_resnext101_32x4d,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 
+import os
 import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
@@ -20,10 +21,16 @@ import torch
 import torch.nn.functional as F
 __all__ = ['Res2Net', 'res2net50_v1b', 'res2net101_v1b']
 
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    res2net50_v1b_26w_4s = content.split('res2net50_v1b_26w_4s=')[1].split('\n')[0]
+    res2net101_v1b_26w_4s = content.split('res2net101_v1b_26w_4s=')[1].split('\n')[0]
+
 
 model_urls = {
-    'res2net50_v1b_26w_4s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net50_v1b_26w_4s-3cf99910.pth',
-    'res2net101_v1b_26w_4s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net101_v1b_26w_4s-0812c246.pth',
+    'res2net50_v1b_26w_4s': res2net50_v1b_26w_4s,
+    'res2net101_v1b_26w_4s': res2net101_v1b_26w_4s,
 }
 
 

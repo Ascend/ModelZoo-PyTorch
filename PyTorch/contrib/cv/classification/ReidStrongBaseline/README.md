@@ -93,3 +93,7 @@ bash ./test/eval_1p.sh --data_path=xxx
 bash ./test/eval_8p.sh --data_path=xxx 
 #$data_path for real path to Market1501_datasets
 ```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

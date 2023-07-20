@@ -68,3 +68,6 @@ Suggestion the pillow is 9.1.0 and the torchvision is 0.6.0
 |   -    | 820  | 1        |   1    |  O2  |
 | 76.838 | 6400 | 8        |  100   |  O2  |
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

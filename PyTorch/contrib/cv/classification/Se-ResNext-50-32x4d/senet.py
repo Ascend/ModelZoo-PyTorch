@@ -19,6 +19,8 @@
 senet.py - Model and module class for Senet154 and se_resnext50_32x4d
 """
 from __future__ import print_function, division, absolute_import
+
+import os
 from collections import OrderedDict
 import math
 
@@ -26,11 +28,14 @@ import torch.nn as nn
 from torch.utils import model_zoo
 
 __all__ = ['se_resnext50_32x4d']
-
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    se_resnext50_32x4d = content.split('se_resnext50_32x4d=')[1].split('\n')[0]
 pretrained_settings = {
     'se_resnext50_32x4d': {
         'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+            'url': se_resnext50_32x4d,
             'input_space': 'RGB',
             'input_size': [3, 224, 224],
             'input_range': [0, 1],

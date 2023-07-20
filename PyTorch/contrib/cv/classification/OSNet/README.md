@@ -70,3 +70,7 @@ python pthtar2onnx.py
 | 8p-GPU | 80.3 |    O2    |  350   | 1045.535 |
 | 8p-NPU | 80.2 |    O2    |  350   | 1091.358 |
 
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

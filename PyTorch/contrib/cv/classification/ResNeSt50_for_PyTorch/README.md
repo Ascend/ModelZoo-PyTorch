@@ -90,3 +90,7 @@ output_8p_full/checkpint_apex_xxx.pth  # 8p训练的模型文件
 | -        | 388.38    | 1        | 1        | O1       |
 | 78.808   | 3168.55   | 8        | 120      | O1       |
 
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

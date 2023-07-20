@@ -17,26 +17,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import torch
 import torch.nn as nn
 from .utils import load_state_dict_from_url
 
 
-__all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
-           'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
-           'wide_resnet50_2', 'wide_resnet101_2']
-
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    resnet18 = content.split('resnet18=')[1].split('\n')[0]
+    resnet34 = content.split('resnet34=')[1].split('\n')[0]
+    resnet50 = content.split('resnet50=')[1].split('\n')[0]
+    resnet101 = content.split('resnet101=')[1].split('\n')[0]
+    resnet152 = content.split('resnet152=')[1].split('\n')[0]
+    resnext50_32x4d = content.split('resnext50_32x4d=')[1].split('\n')[0]
+    resnext101_32x8d = content.split('resnext101_32x8d=')[1].split('\n')[0]
+    wide_resnet50_2 = content.split('wide_resnet50_2=')[1].split('\n')[0]
+    wide_resnet101_2 = content.split('wide_resnet101_2=')[1].split('\n')[0]
 
 model_urls = {
-    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
-    'resnext50_32x4d': 'https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth',
-    'resnext101_32x8d': 'https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth',
-    'wide_resnet50_2': 'https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth',
-    'wide_resnet101_2': 'https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth',
+    'resnet18': resnet18,
+    'resnet34': resnet34,
+    'resnet50': resnet50,
+    'resnet101': resnet101,
+    'resnet152': resnet152,
+    'resnext50_32x4d': resnext50_32x4d,
+    'resnext101_32x8d': resnext101_32x8d,
+    'wide_resnet50_2': wide_resnet50_2,
+    'wide_resnet101_2': wide_resnet101_2,
 }
 
 

@@ -173,3 +173,7 @@ ResNet是ImageNet竞赛中分类问题效果较好的网络，它引入了残差
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

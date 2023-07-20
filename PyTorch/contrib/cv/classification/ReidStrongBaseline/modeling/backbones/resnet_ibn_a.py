@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import os
 import torch
 import torch.nn as nn
 import math
@@ -21,11 +22,17 @@ import torch.utils.model_zoo as model_zoo
 __all__ = ['ResNet_IBN', 'resnet50_ibn_a', 'resnet101_ibn_a',
            'resnet152_ibn_a']
 
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+    content = f.read()
+    resnet50 = content.split('resnet50=')[1].split('\n')[0]
+    resnet101 = content.split('resnet101=')[1].split('\n')[0]
+    resnet152 = content.split('resnet152=')[1].split('\n')[0]
 
 model_urls = {
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+    'resnet50': resnet50,
+    'resnet101': resnet101,
+    'resnet152': resnet152,
 }
 
 

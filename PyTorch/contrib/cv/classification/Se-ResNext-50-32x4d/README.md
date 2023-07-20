@@ -180,3 +180,7 @@ ResNeXt是ResNet和Inception的结合体，而SE_ResNeXt50_32x4d是将se模块�
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
