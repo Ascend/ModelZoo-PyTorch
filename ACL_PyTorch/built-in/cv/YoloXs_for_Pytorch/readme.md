@@ -124,9 +124,9 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
       yolox_s.pth权重文件[下载链接](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.pth)。
 
    2. 导出onnx文件。
-
+      * 如果需要将nms以算子形式移至模型内，请参照graphmodify.md
       使用export_onnx.py导出onnx文件。
-
+       
       ```
       python3 YOLOX/tools/export_onnx.py -c ./yolox_s.pth -f YOLOX/exps/default/yolox_s.py --dynamic
       ```

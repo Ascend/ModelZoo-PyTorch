@@ -1,0 +1,216 @@
+diff --git a/yolox/evaluators/coco_evaluator.py b/yolox/evaluators/coco_evaluator.py
+index d7a6393..5162f5a 100644
+--- a/yolox/evaluators/coco_evaluator.py
++++ b/yolox/evaluators/coco_evaluator.py
+@@ -23,7 +23,9 @@ from yolox.utils import (
+     postprocess,
+     synchronize,
+     time_synchronized,
+-    xyxy2xywh
++    xyxy2xywh,
++    yxyx2xywh,
++    center_xywh2upper_left_xywh
+ )
+
+
+@@ -164,7 +166,7 @@ class COCOEvaluator:
+             with torch.no_grad():
+                 imgs = imgs.type(tensor_type)
+
+-                # skip the the last iters since batchsize might be not enough for batch inference
++                # skip the last iters since batchsize might be not enough for batch inference
+                 is_time_record = cur_iter < len(self.dataloader) - 1
+                 if is_time_record:
+                     start = time.time()
+@@ -203,19 +205,27 @@ class COCOEvaluator:
+         ):
+             if output is None:
+                 continue
+-            output = output.cpu()
+-
+-            bboxes = output[:, 0:4]
++            try:
++                output = output.cpu()
++                bboxes = output[:, 0:4]
++            except:
++                continue
+
+             # preprocessing: resize
+             scale = min(
+                 self.img_size[0] / float(img_h), self.img_size[1] / float(img_w)
+             )
++
+             bboxes /= scale
+-            bboxes = xyxy2xywh(bboxes)
+
+-            cls = output[:, 6]
+-            scores = output[:, 4] * output[:, 5]
++            bboxes = yxyx2xywh(bboxes)
++            cls = output[:, 5]
++            scores = output[:, 4]
++
++            # bboxes = xyxy2xywh(bboxes)
++            # cls = output[:, 6]
++            # scores = output[:, 4] * output[:, 5]
++
+             for ind in range(bboxes.shape[0]):
+                 label = self.dataloader.dataset.class_ids[int(cls[ind])]
+                 pred_data = {
+@@ -263,7 +273,7 @@ class COCOEvaluator:
+                 json.dump(data_dict, open("./yolox_testdev_2017.json", "w"))
+                 cocoDt = cocoGt.loadRes("./yolox_testdev_2017.json")
+             else:
+-                _, tmp = tempfile.mkstemp()
++                _, tmp = tempfile.mkstemp()  # 生成临时文件
+                 json.dump(data_dict, open(tmp, "w"))
+                 cocoDt = cocoGt.loadRes(tmp)
+             try:
+diff --git a/yolox/exp/yolox_base.py b/yolox/exp/yolox_base.py
+index 611b258..a3ba203 100644
+--- a/yolox/exp/yolox_base.py
++++ b/yolox/exp/yolox_base.py
+@@ -103,12 +103,14 @@ class Exp(BaseExp):
+         self.test_size = (640, 640)
+         # confidence threshold during evaluation/test,
+         # boxes whose scores are less than test_conf will be filtered
+-        self.test_conf = 0.01
++        self.score_thresh = 0.01
+         # nms threshold
+-        self.nmsthre = 0.65
++        self.nms_thresh = 0.65
++        # detection per img max
++        self.detection_per_img = 200
+
+     def get_model(self):
+-        from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
++        from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead, YOLOPOSTPROCESS
+
+         def init_yolo(M):
+             for m in M.modules():
+@@ -120,7 +122,9 @@ class Exp(BaseExp):
+             in_channels = [256, 512, 1024]
+             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
+             head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act)
+-            self.model = YOLOX(backbone, head)
++            postprocess = YOLOPOSTPROCESS(self.score_thresh, self.nms_thresh, self.detection_per_img)
++
++            self.model = YOLOX(backbone, head, postprocess)
+
+         self.model.apply(init_yolo)
+         self.model.head.initialize_biases(1e-2)
+diff --git a/yolox/models/__init__.py b/yolox/models/__init__.py
+index c74fd30..a8794aa 100644
+--- a/yolox/models/__init__.py
++++ b/yolox/models/__init__.py
+@@ -9,3 +9,4 @@ from .yolo_fpn import YOLOFPN
+ from .yolo_head import YOLOXHead
+ from .yolo_pafpn import YOLOPAFPN
+ from .yolox import YOLOX
++from .yolo_postprocess import YOLOPOSTPROCESS
+\ No newline at end of file
+diff --git a/yolox/models/network_blocks.py b/yolox/models/network_blocks.py
+index 68aacfc..db255db 100644
+--- a/yolox/models/network_blocks.py
++++ b/yolox/models/network_blocks.py
+@@ -207,4 +207,4 @@ class Focus(nn.Module):
+             ),
+             dim=1,
+         )
+-        return self.conv(x)
++        return self.conv(x)
+\ No newline at end of file
+diff --git a/yolox/models/yolox.py b/yolox/models/yolox.py
+index 8b8ab04..3eb75af 100644
+--- a/yolox/models/yolox.py
++++ b/yolox/models/yolox.py
+@@ -6,7 +6,7 @@ import torch.nn as nn
+
+ from .yolo_head import YOLOXHead
+ from .yolo_pafpn import YOLOPAFPN
+-
++from .yolo_postprocess import YOLOPOSTPROCESS
+
+ class YOLOX(nn.Module):
+     """
+@@ -15,15 +15,18 @@ class YOLOX(nn.Module):
+     and detection results during test.
+     """
+
+-    def __init__(self, backbone=None, head=None):
++    def __init__(self, backbone=None, head=None, postprocess=None):
+         super().__init__()
+         if backbone is None:
+             backbone = YOLOPAFPN()
+         if head is None:
+             head = YOLOXHead(80)
++        if postprocess is None:
++            postprocess = YOLOPOSTPROCESS()
+
+         self.backbone = backbone
+         self.head = head
++        self.postprocess = postprocess
+
+     def forward(self, x, targets=None):
+         # fpn output content features of [dark3, dark4, dark5]
+@@ -44,5 +47,5 @@ class YOLOX(nn.Module):
+             }
+         else:
+             outputs = self.head(fpn_outs)
+-
++        outputs = self.postprocess(outputs)
+         return outputs
+diff --git a/yolox/utils/boxes.py b/yolox/utils/boxes.py
+index dbe10d9..33d002a 100644
+--- a/yolox/utils/boxes.py
++++ b/yolox/utils/boxes.py
+@@ -15,6 +15,8 @@ __all__ = [
+     "adjust_box_anns",
+     "xyxy2xywh",
+     "xyxy2cxcywh",
++    "yxyx2xywh",
++    "center_xywh2upper_left_xywh"
+ ]
+
+
+@@ -66,8 +68,8 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
+                 detections[:, 6],
+                 nms_thre,
+             )
+-
+         detections = detections[nms_out_index]
++
+         if output[i] is None:
+             output[i] = detections
+         else:
+@@ -133,3 +135,16 @@ def xyxy2cxcywh(bboxes):
+     bboxes[:, 0] = bboxes[:, 0] + bboxes[:, 2] * 0.5
+     bboxes[:, 1] = bboxes[:, 1] + bboxes[:, 3] * 0.5
+     return bboxes
++
++def center_xywh2upper_left_xywh(bboxes):
++    bboxes[:, 0] = bboxes[:, 0] - bboxes[:, 2]/2.
++    bboxes[:, 1] = bboxes[:, 1] - bboxes[:, 3]/2.
++    return bboxes
++
++def yxyx2xywh(bboxes):
++    bbox_new = torch.zeros_like(bboxes)
++    bbox_new[:, 0] = bboxes[:, 1]
++    bbox_new[:, 1] = bboxes[:, 0]
++    bbox_new[:, 2] = bboxes[:, 3] - bboxes[:, 1]
++    bbox_new[:, 3] = bboxes[:, 2] - bboxes[:, 0]
++    return bbox_new
+\ No newline at end of file
+diff --git a/yolox/utils/demo_utils.py b/yolox/utils/demo_utils.py
+index 7122237..95cabff 100644
+--- a/yolox/utils/demo_utils.py
++++ b/yolox/utils/demo_utils.py
+@@ -80,8 +80,8 @@ def multiclass_nms_class_aware(boxes, scores, nms_thr, score_thr):
+ def multiclass_nms_class_agnostic(boxes, scores, nms_thr, score_thr):
+     """Multiclass NMS implemented in Numpy. Class-agnostic version."""
+     cls_inds = scores.argmax(1)
++    print(cls_inds)
+     cls_scores = scores[np.arange(len(cls_inds)), cls_inds]
+-
+     valid_score_mask = cls_scores > score_thr
+     if valid_score_mask.sum() == 0:
+         return None
