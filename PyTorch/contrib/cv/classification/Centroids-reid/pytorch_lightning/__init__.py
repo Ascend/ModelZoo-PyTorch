@@ -3,8 +3,8 @@
 import logging as python_logging
 import os
 import time
-
-with open('url.ini', 'r') as f:
+cur_path = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(cur_path, '../url.ini'), 'r') as f:
     content = f.read()
     author_email = content.split('author_email=')[1].split('\n')[0]
     github_pytorch_lightning = content.split('github_pytorch_lightning=')[1].split('\n')[0]

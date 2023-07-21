@@ -28,7 +28,7 @@ __all__ = ['SENet', 'senet154', 'se_resnet50', 'se_resnet101', 'se_resnet152',
            'se_resnext50_32x4d', 'se_resnext101_32x4d']
 
 cur_path = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+with open(os.path.join(cur_path, '../../url.ini'), 'r') as f:
     content = f.read()
     senet154 = content.split('senet154=')[1].split('\n')[0]
     se_resnet50 = content.split('se_resnet50=')[1].split('\n')[0]

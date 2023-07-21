@@ -16,7 +16,7 @@ from .build import RESNEST_MODELS_REGISTRY
 
 __all__ = ['ResNet', 'Bottleneck']
 cur_path = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+with open(os.path.join(cur_path, '../../url.ini'), 'r') as f:
     content = f.read()
     resnest = content.split('resnest=')[1].split('\n')[0]
 _url_format = resnest + '/{}-{}.pth'

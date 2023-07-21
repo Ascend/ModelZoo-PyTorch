@@ -23,7 +23,7 @@ __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'wide_resnet50_2', 'wide_resnet101_2']
 
 cur_path = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(cur_path, 'url.ini'), 'r') as f:
+with open(os.path.join(cur_path, '../url.ini'), 'r') as f:
     content = f.read()
     resnet18 = content.split('resnet18=')[1].split('\n')[0]
     resnet34 = content.split('resnet34=')[1].split('\n')[0]
