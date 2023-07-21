@@ -14,14 +14,20 @@
 # limitations under the License.
 """ BEiT model configuration"""
 
+import os
 from ...configuration_utils import PretrainedConfig
 from ...utils import logging
 
 
 logger = logging.get_logger(__name__)
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../../../../url.ini'), 'r') as _f:
+    content = _f.read()
+    beit_in22k = content.split('beit-base-patch16-224-in22k=')[1].split('\n')[0]
+
 BEIT_PRETRAINED_CONFIG_ARCHIVE_MAP = {
-    "microsoft/beit-base-patch16-224-in22k": "https://huggingface.co/microsoft/beit-base-patch16-224-in22k/resolve/main/config.json",
+    "microsoft/beit-base-patch16-224-in22k": beit_in22k,
     # See all BEiT models at https://huggingface.co/models?filter=beit
 }
 

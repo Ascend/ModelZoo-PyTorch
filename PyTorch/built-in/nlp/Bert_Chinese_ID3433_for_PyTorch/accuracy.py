@@ -13,8 +13,8 @@
 # limitations under the License.
 """Accuracy metric."""
 
+import os
 from sklearn.metrics import accuracy_score
-
 import datasets
 
 
@@ -58,10 +58,14 @@ _CITATION = """\
 }
 """
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 @datasets.utils.file_utils.add_start_docstrings(_DESCRIPTION, _KWARGS_DESCRIPTION)
 class Accuracy(datasets.Metric):
-    def _info(self):
+    def _info(self):        
+        with open(os.path.join(CURRENT_PATH, '../url.ini'), 'r') as _f:
+            content = _f.read()
+            accuracy_score_url = content.split('accuracy_score_url=')[1].split('\n')[0]
         return datasets.MetricInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
@@ -77,7 +81,7 @@ class Accuracy(datasets.Metric):
                     "references": datasets.Value("int32"),
                 }
             ),
-            reference_urls=["https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html"],
+            reference_urls=[accuracy_score_url],
         )
 
     def _compute(self, predictions, references, normalize=True, sample_weight=None):

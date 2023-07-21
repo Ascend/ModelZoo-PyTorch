@@ -14,7 +14,7 @@
 # limitations under the License.
 """Convert BEiT checkpoints from the unilm repository."""
 
-
+import os
 import argparse
 import json
 from pathlib import Path
@@ -37,7 +37,7 @@ from transformers.utils import logging
 
 logging.set_verbosity_info()
 logger = logging.get_logger(__name__)
-
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 # here we list all keys to be renamed (original name on the left, our name on the right)
 def create_rename_keys(config, has_lm_head=False, is_semantic=False):
@@ -356,7 +356,10 @@ def convert_beit_checkpoint(checkpoint_url, pytorch_dump_folder_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
+    
+    with open(os.path.join(CURRENT_PATH, '../../../../../url.ini'), 'r') as _f:
+        content = _f.read()
+        beit_ft22kto1k = content.split('beit_base_patch16_224_pt22k_ft22kto1k=')[1].split('\n')[0]
     parser.add_argument(
         "--checkpoint_url",
         default="https://unilm.blob.core.windows.net/beit/beit_base_patch16_224_pt22k_ft22kto1k.pth",

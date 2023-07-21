@@ -71,7 +71,13 @@ DUMMY_DIFF_TOKENIZER_IDENTIFIER = "julien-c/dummy-diff-tokenizer"
 # Used to test the hub
 USER = "__DUMMY_TRANSFORMERS_USER__"
 PASS = "__DUMMY_TRANSFORMERS_PASS__"
-ENDPOINT_STAGING = "https://moon-staging.huggingface.co"
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(CURRENT_PATH, '../../../url.ini'), 'r') as _f:
+    content = _f.read()
+    test_api_url = content.split('test_api_url=')[1].split('\n')[0]
+
+ENDPOINT_STAGING = test_api_url
 
 
 def parse_flag_from_env(key, default=False):
