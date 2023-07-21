@@ -20,6 +20,7 @@ import os
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
@@ -64,6 +65,7 @@ from .token_classification import (
 from .zero_shot_classification import ZeroShotClassificationArgumentHandler, ZeroShotClassificationPipeline
 from .zero_shot_image_classification import ZeroShotImageClassificationPipeline
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 if is_tf_available():
     import tensorflow as tf
@@ -305,7 +307,10 @@ def get_task(model: str, use_auth_token: Optional[str] = None) -> str:
         headers["Authorization"] = f"Bearer {use_auth_token}"
 
     try:
-        http_get(f"https://huggingface.co/api/models/{model}", tmp, headers=headers)
+        with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+            content = _f.read()
+            huggingface_api = content.split('huggingface_api=')[1].split('\n')[0]
+        http_get(huggingface_api+'/{model}', tmp, headers=headers)
         tmp.seek(0)
         body = tmp.read()
         data = json.loads(body)

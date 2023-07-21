@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2017
 # All rights reserved.
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -31,8 +31,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==========================================================================
 
+import os
 import setuptools
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+    content = _f.read()
+    fsner_url = content.split('fsner_url=')[1].split('\n')[0]
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -45,7 +51,7 @@ setuptools.setup(
     description="Few-shot Named Entity Recognition",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/huggingface/transformers/tree/master/examples/research_projects/fsner",
+    url=fsner_url,
     project_urls={
         "Bug Tracker": "https://github.com/huggingface/transformers/issues",
     },

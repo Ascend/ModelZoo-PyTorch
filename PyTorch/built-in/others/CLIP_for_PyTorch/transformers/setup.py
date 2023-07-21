@@ -66,11 +66,13 @@ To create the package for pypi.
 import os
 import re
 import shutil
+import stat
 from distutils.core import Command
 from pathlib import Path
 
 from setuptools import find_packages, setup
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 # Remove stale transformers.egg-info directory to avoid https://github.com/pypa/pip/issues/5466
 stale_egg_info = Path(__file__).parent / "transformers.egg-info"
@@ -221,9 +223,11 @@ class DepsTableUpdateCommand(Command):
         ]
         target = "src/transformers/dependency_versions_table.py"
         print(f"updating {target}")
-        with open(target, "w", encoding="utf-8", newline="\n") as f:
-            f.write("\n".join(content))
-
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL  # 注意根据具体业务的需要设置文件读写方式
+        modes = stat.S_IWUSR | stat.S_IRUSR  # 注意根据具体业务的需要设置文件权限
+        encoding = "utf-8"
+        with os.fdopen(os.open(target, flags, modes, encoding), 'w') as fout:
+            fout.write("\n".join(content))
 
 extras = {}
 
@@ -381,11 +385,18 @@ install_requires = [
     deps["tqdm"],  # progress bars in model download and training scripts
 ]
 
+with open(os.path.join(CURRENT_PATH, '../url.ini'), 'r') as _f:
+    content = _f.read()
+    email_address = content.split('email_address=')[1].split('\n')[0]
+
 setup(
     name="transformers",
     version="4.18.0.dev0",  # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
-    author="Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Sam Shleifer, Patrick von Platen, Sylvain Gugger, Suraj Patil, Stas Bekman, Google AI Language Team Authors, Open AI team Authors, Facebook AI Authors, Carnegie Mellon University Authors",
-    author_email="thomas@huggingface.co",
+    author="Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, \
+        Sam Shleifer, Patrick von Platen, Sylvain Gugger, Suraj Patil, \
+            Stas Bekman, Google AI Language Team Authors, Open AI team Authors, \
+                Facebook AI Authors, Carnegie Mellon University Authors",
+    author_email=email_address,
     description="State-of-the-art Natural Language Processing for TensorFlow 2.0 and PyTorch",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
