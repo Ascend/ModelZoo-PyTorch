@@ -11,8 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import setuptools
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+    content = _f.read()
+    fsner_url = content.split('fsner_url=')[1].split('\n')[0]
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -25,7 +31,7 @@ setuptools.setup(
     description="Few-shot Named Entity Recognition",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/huggingface/transformers/tree/master/examples/research_projects/fsner",
+    url=fsner_url,
     project_urls={
         "Bug Tracker": "https://github.com/huggingface/transformers/issues",
     },

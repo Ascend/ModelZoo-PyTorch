@@ -288,6 +288,7 @@ for task, values in SUPPORTED_TASKS.items():
     elif values["type"] != "multimodal":
         raise ValueError(f"SUPPORTED_TASK {task} contains invalid type {values['type']}")
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 def get_supported_tasks() -> List[str]:
     """
@@ -305,19 +306,22 @@ def get_task(model: str, use_auth_token: Optional[str] = None) -> str:
         headers["Authorization"] = f"Bearer {use_auth_token}"
 
     try:
-        http_get(f"https://huggingface.co/api/models/{model}", tmp, headers=headers)
+        with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+            content = _f.read()
+            huggingface_api = content.split('huggingface_api=')[1].split('\n')[0]
+        http_get(huggingface_api + '/{model}', tmp, headers=headers)
         tmp.seek(0)
         body = tmp.read()
-        data = json.loads(body)
+        _data = json.loads(body)
     except Exception as e:
         raise RuntimeError(f"Instantiating a pipeline without a task set raised an error: {e}")
-    if "pipeline_tag" not in data:
+    if "pipeline_tag" not in _data:
         raise RuntimeError(
             f"The model {model} does not seem to have a correct `pipeline_tag` set to infer the task automatically"
         )
-    if data.get("library_name", "transformers") != "transformers":
-        raise RuntimeError(f"This model is meant to be used with {data['library_name']} not with transformers")
-    task = data["pipeline_tag"]
+    if _data.get("library_name", "transformers") != "transformers":
+        raise RuntimeError(f"This model is meant to be used with {_data['library_name']} not with transformers")
+    task = _data["pipeline_tag"]
     return task
 
 

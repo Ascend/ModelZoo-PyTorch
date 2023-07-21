@@ -15,6 +15,7 @@
 import contextlib
 import importlib
 import io
+import os
 import json
 import tempfile
 import unittest
@@ -56,7 +57,7 @@ PINNED_SHA1 = "d9e9f15bc825e4b2c9249e9578f884bbcb5e3684"
 # Sha-1 of config.json on the top of `main`, for checking purposes
 PINNED_SHA256 = "4b243c475af8d0a7754e87d7d096c92e5199ec2fe168a2ee7998e3b8e9bcb1d3"
 # Sha-256 of pytorch_model.bin on the top of `main`, for checking purposes
-
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 # Dummy contexts to test `ContextManagers`
 @contextlib.contextmanager
@@ -82,10 +83,13 @@ class TestImportMechanisms(unittest.TestCase):
 
 class GetFromCacheTests(unittest.TestCase):
     def test_bogus_url(self):
+        with open(os.path.join(CURRENT_PATH, '../../../url.ini'), 'r') as _f:
+            content = _f.read()
+            cv_url = content.split('cv_url=')[1].split('\n')[0]
         # This lets us simulate no connection
         # as the error raised is the same
         # `ConnectionError`
-        url = "https://bogus"
+        url = cv_url
         with self.assertRaisesRegex(ValueError, "Connection error"):
             _ = get_from_cache(url)
 
