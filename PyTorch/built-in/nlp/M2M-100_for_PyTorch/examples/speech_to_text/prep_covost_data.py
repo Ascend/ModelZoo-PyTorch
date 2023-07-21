@@ -29,12 +29,11 @@ from torch.utils.data import Dataset
 from torchaudio.datasets.utils import download_url, extract_archive
 from tqdm import tqdm
 
-
 log = logging.getLogger(__name__)
 
 
 MANIFEST_COLUMNS = ["id", "audio", "n_frames", "tgt_text", "speaker"]
-
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 class CoVoST(Dataset):
     """Create a Dataset for CoVoST (https://github.com/facebookresearch/covost).
@@ -48,9 +47,12 @@ class CoVoST(Dataset):
         download (bool, optional): Whether to download the dataset if it is not
         found at root path. (default: ``False``).
     """
-
+    with open(os.path.join(CURRENT_PATH, '../../url.ini', 'r')) as _f:
+        content = _f.read()
+        cv_url = content.split('cv_url=')[1].split('\n')[0]
+        
     CV_URL_TEMPLATE = (
-        "https://voice-prod-bundler-ee1969a6ce8178826482b88"
+        cv_url,        
         "e843c335139bd3fb4.s3.amazonaws.com/{ver}/{lang}.tar.gz"
     )
     COVOST_URL_TEMPLATE = (

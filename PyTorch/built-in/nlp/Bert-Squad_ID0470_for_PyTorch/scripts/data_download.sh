@@ -22,7 +22,7 @@ cd vocab && python3 download_models.py && rm *.zip && rm ./*/*.ckpt.*
 cd $DATA_DIR/squad && . squad_download.sh
 
 # Download SWAG
-git clone https://github.com/rowanz/swagaf.git $DATA_DIR/swag
+git clone `sed '/^data_download_url=/!d;s/.*=//' ../url.ini` $DATA_DIR/swag
 
 # Download GLUE
 cd $DATA_DIR/glue && . download_mrpc.sh

@@ -1,5 +1,5 @@
 git config --global http.sslverify false
-git clone https://github.com/kaldi-asr/kaldi.git
+git clone `sed '/^kaldi_url=/!d;s/.*=//' url.ini`
 cd kaldi/tools
 apt update
 apt install -y automake autoconf wget sox libtool subversion python2.7

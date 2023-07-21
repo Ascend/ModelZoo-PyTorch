@@ -93,9 +93,6 @@ def test():
         for data in test_loader:
             inputs, input_sizes, targets, target_sizes, utt_list = data
             inputs = inputs.to(device)
-            # rnput_sizes = input_sizes.to(device)
-            # target = target.to(device)
-            # target_sizes = target_sizes.to(device)
 
             probs = model(inputs)
 

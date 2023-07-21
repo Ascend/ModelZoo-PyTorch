@@ -146,6 +146,10 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
 备注：一定要有竞品和NPU。
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
+
 # 版本说明
 
 ## 变更

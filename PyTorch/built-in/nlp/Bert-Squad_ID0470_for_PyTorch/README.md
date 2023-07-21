@@ -178,6 +178,10 @@ BERT-Large模型是一个24层，1024维，24个自注意头（self attention he
 | 8p-bert-large | 90.87 | 833 | 2 | O2 | 1.8 |
 | 8p-bert-base | 87.011 | 2602 | 2 | O2 | 1.8 |
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
+
 # 版本说明
 
 ## 变更

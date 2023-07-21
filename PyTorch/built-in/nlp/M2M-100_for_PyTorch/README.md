@@ -196,3 +196,6 @@ Please cite as:
   year = {2019},
 }
 ```
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

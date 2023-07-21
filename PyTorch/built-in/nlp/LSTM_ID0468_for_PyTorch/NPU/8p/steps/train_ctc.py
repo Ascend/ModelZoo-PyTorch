@@ -44,6 +44,12 @@ from utils.data_loader import Vocab, SpeechDataset, SpeechDataLoader
 supported_rnn = {'nn.LSTM': nn.LSTM, 'nn.GRU': nn.GRU, 'nn.RNN': nn.RNN}
 supported_activate = {'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid}
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(CURRENT_PATH, '../../../url.ini', 'r')) as _f:
+    content = _f.read()
+    master_url = content.split('master_url=')[1].split('\n')[0]
+    
 parser = argparse.ArgumentParser(description='cnn_lstm_ctc')
 parser.add_argument('--conf', default='conf/ctc_config.yaml', help='conf file with argument of LSTM and training')
 
@@ -76,7 +82,7 @@ parser.add_argument('--loss_scale', default=128., type=float,
                     help='loss scale using in amp, default -1 means dynamic')
 parser.add_argument('--opt_level', default='O2', type=str,
                     help='loss scale using in amp, default -1 means dynamic')
-parser.add_argument('--addr', default='90.88.145.42', type=str, help='master addr')
+parser.add_argument('--addr', default=master_url, type=str, help='master addr')
 
 
 MAX = 2147483647
@@ -142,7 +148,7 @@ def run_epoch(epoch_id, model, data_iter, loss_fn, device, args, opts, sum_write
 
         if is_training:
             optimizer.zero_grad()
-            #if args.opt_level and args.use_npu:
+
             if args.apex and args.use_npu:
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
@@ -154,15 +160,12 @@ def run_epoch(epoch_id, model, data_iter, loss_fn, device, args, opts, sum_write
             total_errs += batch_errs
             total_tokens += batch_tokens
             batch_time += (time.time() - end)
-            # sum_writer.add_scalar('Accuary/train/total_loss', total_loss / (i+1), global_step)
-            # sum_writer.add_scalar('Accuary/train/total_wer', total_errs / total_tokens, global_step)
+
         else:
             batch_errs, batch_tokens = model.module.compute_wer(index.numpy(), input_sizes.numpy(), targets.numpy(),
                                                                 target_sizes.numpy())
             total_errs += batch_errs
             total_tokens += batch_tokens
-            # sum_writer.add_scalar('Accuary/valid/total_loss', total_loss / (i+1), global_step)
-            # sum_writer.add_scalar('Accuary/valid/total_wer', total_errs / total_tokens, global_step)
 
         if is_training:
             if i <= 3:
