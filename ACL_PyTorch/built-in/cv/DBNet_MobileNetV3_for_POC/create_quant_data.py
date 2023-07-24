@@ -13,16 +13,10 @@
 # limitations under the License.
 
 
-import os
 from pathlib import Path
 import platform
-import sys
 import numpy as np
 from tqdm import tqdm
-
-__dir__ = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(__dir__)
-sys.path.insert(0, os.path.abspath(os.path.join(__dir__, 'PaddleOCR')))
 
 from ppocr.data import build_dataloader
 import tools.program as program

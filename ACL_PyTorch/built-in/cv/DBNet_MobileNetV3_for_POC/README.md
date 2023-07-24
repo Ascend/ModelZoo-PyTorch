@@ -44,7 +44,7 @@
   | output  | FLOAT16   | 24 x 1 x 736 x 1280  | NCHW        |
 
 
-# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+# 推理环境<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动
 
@@ -83,16 +83,22 @@
     
     3. 安装量化工具
     ```bash
+    pip install onnx==1.12.0
     pip install protobuf==3.20.0
     pip install onnxruntime==1.8.0  # need onnxruntime-1.8.0 to build custom operators
     arch=`arch`
     wget --no-check-certificate -O amct.tar.gz https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/Florence-ASL/Florence-ASL%20V100R001C30SPC703/Ascend-cann-amct_6.3.RC2.alpha003_linux-${arch}.tar.gz?response-content-type=application/octet-stream
     tar -zxvf amct.tar.gz && cd amct/amct_onnx/
-    pip install amct_onnx-0.10.1-py3-none-linux_aarch64.whl
-    tar -zxvf amct_onnx_op.tar.gz
-    cd amct_onnx_op && python setup.py build
-    cd ../../../
-    rm -rf amct/ amct.tar.gz
+    pip install amct_onnx-0.10.1-py3-none-linux_${arch}.whl
+    tar -zxvf amct_onnx_op.tar.gz && cd amct_onnx_op
+    git clone -b v1.8.0 https://github.com/microsoft/onnxruntime.git
+    cd onnxruntime/include/onnxruntime/core/session/
+    cp onnxruntime_c_api.h ../../../../../inc/
+    cp onnxruntime_cxx_api.h ../../../../../inc/
+    cp onnxruntime_cxx_inline.h ../../../../../inc/
+    cp onnxruntime_session_options_config_keys.h ../../../../../inc/
+    cd ../../../../../ && rm -rf onnxruntime
+    python setup.py build && cd ../../../ && rm -rf amct/ amct.tar.gz
     pip install onnxruntime==1.14.1  # need onnxruntime-1.14.1 to quantize.
     ```
 
@@ -114,12 +120,14 @@
     cd PaddleOCR 
     git reset --hard 7f2d05cfe4e
     python3 setup.py install
+    cd ..
+    export PYTHONPATH="`realpath ./PaddleOCR`:${PYTHONPATH}"
     ```
 
 
 ## 准备数据集<a name="section183221994411"></a>
 
-- 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
     该模型使用ICDAR2015测试集中的500张图片来验证模型精度。请参考[该链接](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.5/doc/doc_ch/dataset/ocr_datasets.md)下载对应数据集文件并解压，本项目需要的数据目录结构如下:
     ```
@@ -131,12 +139,30 @@
         └── test_icdar2015_label.txt
     ```
 
+2. 数据预处理
+
+    执行以下代码将原始数据转换成bin文件，并将处理过程中的中间信息保存成npz文件，计算模型精度指标时需要用到这些中间信息。  
+    ```bash
+    python3 data_preprocess.py \
+        -c PaddleOCR/configs/det/det_mv3_db.yml \
+        -o Global.use_gpu=False \
+           data_dir=./icdar2015/text_localization/ \
+           bin_dir=./data_bin/ \
+           info_dir=./data_info/ 
+    ```
+    
+    参数说明：  
+    -    -c：配置文件
+    -    -o Global.use_gpu：是否使能gpu
+    -    -o data_dir: 测试集路径
+    -    -o bin_dir：模型输入数据保存目录
+    -    -o info_dir：中间信息保存目录
 
 ## 模型推理<a name="section741711594517"></a>
 
-1. 模型转换。
+1. 模型转换。  
   
-    1. 获取Paddle模型。
+    1. 获取Paddle模型。  
 
         该模型的训练模型链接为：https://paddleocr.bj.bcebos.com/dygraph_v2.0/en/det_mv3_db_v2.0_train.tar
         ```bash
@@ -144,7 +170,7 @@
         cd ./checkpoint && tar xf det_mv3_db_v2.0_train.tar && cd ..
         ```
 
-        以上命令执行结束后，继续执行以下命令将训练模型转换为推理模型：
+        以上命令执行结束后，继续执行以下命令将训练模型转换为推理模型：  
         ```bash
         python3 PaddleOCR/tools/export_model.py \
             -c PaddleOCR/configs/det/det_mv3_db.yml \
@@ -153,9 +179,9 @@
                 Global.use_gpu=False
         ```
 
-     2. 导出ONNX文件
+     2. 导出ONNX文件  
 
-        在当前目录下运行`paddle2onnx`命令，运行成功后，当前目录下会生成`db_mv3.onnx`文件。
+        在当前目录下运行`paddle2onnx`命令，运行成功后，当前目录下会生成`db_mv3.onnx`文件。  
         ```bash
         mkdir models
         paddle2onnx \
@@ -170,7 +196,7 @@
 
         `paddle2onnx`的用法请通过`paddle2onnx -h`命令查看。
         
-        生成ONNX模型后，执行以下命令，对ONNX模型做些许修改以提升性能：
+        生成ONNX模型后，执行以下命令，对ONNX模型做些许修改以提升性能：  
         ```bash
         # usage: modify_onnx.py [-h] <input_onnx> <output_onnx>
         
@@ -184,12 +210,12 @@
 
         运行结束后，当前`./models`下将会生成修改后的ONNX模型`db_mv3_opti.onnx`。
 
-    3. 模型量化
-        在量化前，我们需要生成一份配置文件，作用是在量化时跳过下面两部分节点：
+    3. 模型量化  
+        在量化前，我们需要生成一份配置文件，作用是在量化时跳过下面两部分节点：  
         1. Dequant节点会破坏部分Conv/ConvTranspose与后续节点融合进而导致性能劣化，所以跳过这部分Conv/ConvTranspose节点。
         2. 跳过模型尾部少量导致模型精度下降的Conv/ConvTranspose节点。
         
-        执行以下命令即可自动生成配置文件：
+        执行以下命令即可自动生成配置文件：  
         ```bash
         # usage: create_quant_config.py [-h] <input_onnx> <output_config>
         
@@ -201,7 +227,7 @@
         python3 create_quant_config.py ./models/db_mv3_opti.onnx ./quant.cfg
         ```
 
-        然后生成量化时用于校准精度的数据：
+        然后生成量化时用于校准精度的数据：  
         ```bash
         python3 create_quant_data.py \
         -c PaddleOCR/configs/det/det_mv3_db.yml \
@@ -211,7 +237,7 @@
            save_dir=./quant_data/
         ```
 
-        最后使用`amct`工具，对ONNX模型进行量化，以进一步提升模型性能：
+        最后使用`amct`工具，对ONNX模型进行量化，以进一步提升模型性能：  
         ```bash
         amct_onnx calibration \
             --model ./models/db_mv3_opti.onnx \
@@ -224,9 +250,9 @@
         量化后的模型存放路径为 `models/quanted_deploy_model.onnx`。
 
 
-    4. 使用ATC工具将ONNX模型转OM模型。
+    4. 使用ATC工具将ONNX模型转OM模型。  
 
-        （1）配置环境变量。
+        （1）配置环境变量。  
         ```bash
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         ```
@@ -234,7 +260,7 @@
         > **说明：** 
         >该脚本中环境变量仅供参考，请以实际安装环境配置环境变量。详细介绍请参见《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。
 
-        （2）执行命令查看芯片名称（$\{chip\_name\}）。
+        （2）执行命令查看芯片名称（$\{chip\_name\}）。  
         ```
         npu-smi info
         #该设备芯片名为Ascend310P3 （自行替换）
@@ -251,9 +277,9 @@
         +===================+=================+======================================================+
         ```
 
-        （3）执行ATC命令。
+        （3）执行ATC命令。  
       
-        在`PaddleOCR`目录执行
+        执行以下命令将ONNX模型转为OM模型
         ```bash
         atc --framework=5 \
             --model=models/quanted_deploy_model.onnx \
@@ -269,7 +295,7 @@
             --log=error
         ```
 
-        运行成功后，当前`models`下将会生成`db_mv3.om`模型文件。`atc`各参数的含义请参考：
+        运行成功后，当前`models`下将会生成`db_mv3.om`模型文件。`atc`各参数的含义请参考：  
 
         -    --framework：5代表ONNX模型
         -    --model：为ONNX模型文件
@@ -286,42 +312,53 @@
 
 
 
-2. 推理验证
+2. 推理验证  
 
     该模型使用`ais_bench`工具进行推理，其安装、用法等详细信息请参考[ais_bench工具Gitee主页](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)
 
 
-    1. 执行推理并验证精度
+    1. 执行推理  
         ```bash
-        python3 eval_npu.py \
+        python3 -m ais_bench --model models/db_mv3.om --input ./data_bin \
+            --output ./ --output_dirname om_outputs --batchsize 24
+        ```
+    
+    2. 性能验证  
+        当推理结束后，观察日志，关键字throughput即为模型的吞吐率，例如以下测得性能为449.19fps  
+        ```
+        [INFO] multidevice run end qsize:4 result:0
+        i:1 device_1 throughput:226.43004497955928 start_time:1690190567.8889167 end_time:1690190570.9299388
+        i:0 device_0 throughput:222.76300429514114 start_time:1690190568.8170185 end_time:1690190571.819632
+        [INFO] summary throughput:449.19304927470046
+
+        ```
+    
+    3. 精度验证  
+        ```bash
+        python3 model_eval.py \
         -c PaddleOCR/configs/det/det_mv3_db.yml \
         -o Global.use_gpu=False \
-           data_dir=./icdar2015/text_localization/ \
-           om_path=models/db_mv3.om \
-           device_id=0
+           output_dir=./om_outputs/ \
+           info_dir=./data_info/
         ```
 
-        参数说明：
+        参数说明：  
         -    -c：配置文件
         -    -o Global.use_gpu：是否使能gpu
-        -    -o data_dir: 测试集路径
-        -    -o om_path：OM模型路径
-        -    -o device_id：选择NPU的device_id
+        -    -o output_dir: 推理结果保存目录
+        -    -o info_dir：数据预处理时的中间信息保存目录
 
-        推理完成后， 模型的精度指标会打屏显示。
-   
-    2. 纯推理验证性能
-        ```bash
-        python3 -m ais_bench --model models/db_mv3.om --loop 100 --batchsize 24
+        推理完成后， 模型的精度指标会打屏显示。  
         ```
-        参数说明：
-        - --model: OM模型路径
-        - --loop: 循环次数
-        - --batchsize: 模型输入的batchsize
+        [2023/07/24 10:11:02] ppocr INFO: ↓↓↓↓↓↓↓↓↓↓↓ Metrics ↓↓↓↓↓↓↓↓↓↓↓
+        [2023/07/24 10:11:02] ppocr INFO: precision = 0.765871000507872
+        [2023/07/24 10:11:02] ppocr INFO: recall = 0.7260471834376505
+        [2023/07/24 10:11:02] ppocr INFO: hmean = 0.7454275827978251
+        ```
+ 
 
+# 模型精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-# 性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
-
-| 芯片型号   | Batch Size   | 数据集    | 精度         | 性能   |
-| --------- | ------------ | --------- | ----------- |------- |
-|310P3      | 24           | ICDAR2015 | hmean=74.5% | 225fps |
+| 芯片型号  | Batch Size | 数据集    | 精度        |
+| -------- | ---------- | --------- | ----------- |
+|310P3     | 24         | ICDAR2015 | hmean=74.5% |
