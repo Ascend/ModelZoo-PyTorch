@@ -16,10 +16,8 @@
 import argparse
 import os
 import stat
-import sys
 
 from auto_optimizer import OnnxGraph
-import numpy as np
 
 
 def need_skip_conv(onnx_graph, conv_node):
@@ -30,16 +28,16 @@ def need_skip_conv(onnx_graph, conv_node):
 
     # check structure
     next_nodes = onnx_graph.get_next_nodes(conv_node.outputs[0])
-    if len(next_nodes) != 1 and next_nodes[0].op_type != 'BatchNormalization':
+    if len(next_nodes) != 1 or next_nodes[0].op_type != 'BatchNormalization':
         return False
     next_nodes = onnx_graph.get_next_nodes(next_nodes[0].outputs[0])
     if len(next_nodes) != 2:
         return False
     next_nodes_dict = {node.op_type: node for node in next_nodes}
-    if list(next_nodes_dict.keys()) != ['Add', 'Mul']:
+    if set(next_nodes_dict.keys()) != set(['Add', 'Mul']):
         return False
     next_nodes = onnx_graph.get_next_nodes(next_nodes_dict['Add'].outputs[0])
-    if len(next_nodes) != 1 and next_nodes[0].op_type != 'Clip':
+    if len(next_nodes) != 1 or next_nodes[0].op_type != 'Clip':
         return False
 
     return True
@@ -53,7 +51,7 @@ def need_skip_convtranspose(onnx_graph, convt_node):
 
     # check structure
     next_nodes = onnx_graph.get_next_nodes(convt_node.outputs[0])
-    if len(next_nodes) != 1 and next_nodes[0].op_type != 'BatchNormalization':
+    if len(next_nodes) != 1 or next_nodes[0].op_type != 'BatchNormalization':
         return False
 
     return True
@@ -77,7 +75,7 @@ def find_skip_nodes(onnx_path, save_path):
             continue
 
         # skip last layer to reduce precision loss
-        if num_nodes - i <= 10 and node.op_type in ['Conv', 'ConvTranspose']:
+        if num_nodes - i < 10 and node.op_type in ['Conv', 'ConvTranspose']:
             skip_node_names.append(node.name)
             continue
 
