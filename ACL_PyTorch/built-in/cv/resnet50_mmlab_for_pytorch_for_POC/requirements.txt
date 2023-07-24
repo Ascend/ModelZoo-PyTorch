@@ -1,0 +1,15 @@
+torch==1.13.1
+torchaudio==0.13.1
+torchvision==0.9.1
+mmcv==1.6.0
+Pillow==8.0.1
+onnx==1.12.0
+decorator==5.1.0
+attrs==22.2.0
+mpmatch==1.1.0
+onnxruntime==1.10.0
+tqdm==4.63.1
+opencv-python
+sympy
+cython
+numpy
