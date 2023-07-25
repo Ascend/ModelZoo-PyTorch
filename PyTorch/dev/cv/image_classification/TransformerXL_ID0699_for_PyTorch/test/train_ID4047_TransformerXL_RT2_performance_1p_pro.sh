@@ -53,8 +53,13 @@ do
     fi
 done
 
-if [ $profiling == "GE" ];then
-    export GE_PROFILING_TO_STD_OUT=1
+if [[ $profiling == "cann" ]];then
+   profiling="--profiling=CANN --start_step=0 --stop_step=20"
+elif [[ $profiling == "ge" ]];then
+   export GE_PROFILING_TO_STD_OUT=1
+   profiling="--profiling=GE --start_step=0 --stop_step=20"
+else
+   profiling=" "
 fi
 
 if [[ $data_path  == "" ]];then
@@ -92,11 +97,10 @@ nohup python3 -m torch.distributed.launch \
     --data=$data_path \
     --log_interval=1 \
     --max_step=$train_steps \
-    --profiling ${profiling} \
     --start_step ${start_step} \
     --stop_step ${stop_step} \
     --bin ${bin_mode} \
-    --precision_mode=$precision_mode ${fp32} ${hf32} ${prec} > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    --precision_mode=$precision_mode ${fp32} ${hf32} ${prec} ${profiling}> $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
 e2e_time=$(( $end - $start ))

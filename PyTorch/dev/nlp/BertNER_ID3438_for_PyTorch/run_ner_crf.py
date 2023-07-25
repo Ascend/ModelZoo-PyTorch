@@ -57,6 +57,17 @@ from processors.ner_seq import collate_fn
 from metrics.ner_metrics import SeqEntityScore
 from tools.finetuning_argparse import get_argparse
 import apex
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now... Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
 torch.npu.set_compile_mode(jit_compile=False)
 
 MODEL_CLASSES = {
@@ -186,11 +197,15 @@ def train(args, train_dataset, model, tokenizer):
         args.save_steps = len(train_dataloader)
     if args.logging_steps == -1:
         args.logging_steps = len(train_dataloader)
+    profiler = Profile(start_step=int(os.getenv("PROFILE_START_STEP", 10)),
+                       profile_type=os.getenv("PROFILE_TYPE"))
+
     for epoch in range(int(args.num_train_epochs)):
         if args.local_rank in [-1, 0]:
             pbar.reset()
             pbar.epoch_start(current_epoch=epoch)
         for step, batch in enumerate(train_dataloader):
+            profiler.start()
             begin= time.time()
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
@@ -249,6 +264,7 @@ def train(args, train_dataset, model, tokenizer):
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
                     logger.info("Saving optimizer and scheduler states to %s", output_dir)
             print("{} step cost {:.2f}".format(step, time.time() - begin))
+            profiler.end()
         logger.info("\n")
         if 'npu' in str(args.device):
             torch.npu.empty_cache()

@@ -36,6 +36,8 @@ do
         data_path=`echo ${para#*=}`
     elif [[ $para == --precision_mode* ]];then
         precision_mode=`echo ${para#*=}`
+    elif [[ $para == --profiling* ]];then
+        profiling=`echo ${para#*=}`
     elif [[ $para == --fp32* ]];then
         fp32=`echo ${para#*=}`
     elif [[ $para == --hf32* ]];then
@@ -52,6 +54,15 @@ if [[ $precision_mode == "must_keep_origin_dtype" ]];then
    prec=""
 else
    prec="--fp16"
+fi
+
+if [[ $profiling == "cann" ]];then
+   profiling="--profiling=CANN --start_step=0 --stop_step=20"
+elif [[ $profiling == "ge" ]];then
+   export GE_PROFILING_TO_STD_OUT=1
+   profiling="--profiling=GE --start_step=0 --stop_step=20" 
+else
+   profiling=" "
 fi
 
 ##############执行训练##########
@@ -78,7 +89,7 @@ nohup python3 -m torch.distributed.launch \
     --data=$data_path \
     --log_interval=1 \
     --max_step=$train_steps \
-    --precision_mode=$precision_mode ${fp32} ${hf32} ${prec} > $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
+    --precision_mode=$precision_mode ${fp32} ${hf32} ${prec} ${profiling}> $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log 2>&1 &
 wait
 end=$(date +%s)
 e2e_time=$(( $end - $start ))
