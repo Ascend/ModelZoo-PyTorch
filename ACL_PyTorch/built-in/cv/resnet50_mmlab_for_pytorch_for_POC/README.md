@@ -1,4 +1,4 @@
-# ResNet50_mmlab 推理指导
+# ResNet50_mmlab_for_pytorch_for_POC 推理指导
 
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
@@ -85,32 +85,41 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
     ```bash
     pip3 install -r requirements.txt
     ```
-    说明：在resnet50_mmlab_for_pytorch_for_POC目录下安装基础环境，某些库如果通过此方式安装失败，可使用pip单独进行安装。
+    说明：某些库如果通过此方式安装失败，可使用pip单独进行安装。
 
     2. 安装量化工具
-    ```bash
-    pip install protobuf==3.20.0
-    pip install onnxruntime==1.8.0
-    arch=`arch`
-    wget --no-check-certificate -O amct.tar.gz https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/Florence-ASL/Florence-ASL%20V100R001C30SPC703/Ascend-cann-amct_6.3.RC2.alpha003_linux-${arch}.tar.gz?response-content-type=application/octet-stream
-    tar -zxvf amct.tar.gz && cd amct/amct_onnx/
-    pip install amct_onnx-0.10.1-py3-none-linux_aarch64.whl
-    tar -zxvf amct_onnx_op.tar.gz
-    cd amct_onnx_op && python setup.py build
-    cd ../../../
-    rm -rf amct/ amct.tar.gz
-    ```
-
-    3. 安装OM推理工具
-    ```bash
-    arch=`arch`
-    wget --no-check-certificate https://aisbench.obs.myhuaweicloud.com/packet/ais_bench_infer/0.0.2/aclruntime-0.0.2-cp37-cp37m-linux_${arch}.whl
-    pip install aclruntime-0.0.2-cp37-cp37m-linux_${arch}.whl
-    rm aclruntime-0.0.2-cp37-cp37m-linux_${arch}.whl
-    wget --no-check-certificate https://aisbench.obs.myhuaweicloud.com/packet/ais_bench_infer/0.0.2/ais_bench-0.0.2-py3-none-any.whl
-    pip install ais_bench-0.0.2-py3-none-any.whl
-    rm ais_bench-0.0.2-py3-none-any.whl
-    ```
+        1. 下载软件包
+            下载Ascend-cann-amct_{software version}_linux-{arch}.tar.gz软件包，可根据需要下载社区版。
+        2. 安装
+            软件包解压后进入amct目录下的amct_onnx文件夹，找到amct_onnx-{version}-py3-none-linux_{arch}.whl文件，执行如下命令
+            ```bash
+            pip3 install amct_onnx-{version}-py3-none-linux_{arch}.whl --user
+            ```
+            出现 Successfully installed amct-onnx-{version} 则说明安装成功。
+        3. 编译并安装自定义算子包
+            1. 在amct_onnx文件夹下解压自定义算子包
+                ```bash
+                tar -zvxf amct_onnx_op.tar.gz
+                ```
+                解压后文件夹目录如下
+                ```bash
+                amct_onnx_op
+                |---inc
+                |---src
+                |---setup.py
+                ```
+            2. 如服务器无法联网，则需在https://github.com/microsoft/onnxruntime/tree/v1.8.0/include/onnxruntime/core/session目录里下载如下四个文件（注意：切换到v1.8.0分支再下载），上次传到amct_onnx_op/inc目录下。若能联网，则跳过此步。
+                ```bash
+                onnxruntime_cxx_api.h
+                onnxruntime_cxx_inline.h
+                onnxruntime_c_api.h
+                onnxruntime_session_options_config_keys.h
+                ```
+            3. 编译并安装自定义算子包
+                ```bash
+                cd amct_onnx_op && python3 setup.py build
+                ```
+                出现 [INFO] Install amct_onnx_op success! 即为安装成功。
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -312,6 +321,6 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号  | Batch Size | 数据集      | 精度    | 性能      |
-|-------|------------|----------|-------|---------|
-| 310P3 | 24         | cifar100 | 78.55% | 14290 |
+| 芯片型号  | Batch Size | 数据集  | 精度    | 
+|----------|------------|----------|-------|
+|  310P3  |       24       | cifar100 | 78.55% |
