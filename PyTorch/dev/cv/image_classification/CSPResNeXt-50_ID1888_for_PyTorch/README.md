@@ -421,3 +421,6 @@ Several weights included or references here were pretrained with proprietary dat
 ### Latest DOI
 
 [![DOI](https://zenodo.org/badge/168799526.svg)](https://zenodo.org/badge/latestdoi/168799526)
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md

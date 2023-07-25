@@ -46,7 +46,7 @@ supported_activate = {'relu': nn.ReLU, 'tanh': nn.Tanh, 'sigmoid': nn.Sigmoid}
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(CURRENT_PATH, '../../../url.ini', 'r')) as _f:
+with open(os.path.join(CURRENT_PATH, '../../../url.ini'), 'r') as _f:
     content = _f.read()
     master_url = content.split('master_url=')[1].split('\n')[0]
     

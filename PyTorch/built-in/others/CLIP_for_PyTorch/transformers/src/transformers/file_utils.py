@@ -327,7 +327,7 @@ CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 _staging_mode = os.environ.get("HUGGINGFACE_CO_STAGING", "NO").upper() in ENV_VARS_TRUE_VALUES
 
-with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+with open(os.path.join(CURRENT_PATH, '../../../url.ini'), 'r') as _f:
     content = _f.read()
     moon_staging_url = content.split('moon-staging_url=')[1].split('\n')[0]
 
