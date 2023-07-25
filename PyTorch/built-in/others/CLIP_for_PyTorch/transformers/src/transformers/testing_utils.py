@@ -74,7 +74,7 @@ PASS = "__DUMMY_TRANSFORMERS_PASS__"
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
+with open(os.path.join(CURRENT_PATH, '../../../url.ini'), 'r') as _f:
     content = _f.read()
     moon_staging_url = content.split('moon-staging_url=')[1].split('\n')[0]
     

@@ -1,5 +1,5 @@
 # Step 1: Download enwiki
-wget `sed '/^enwiki-latest-pages-articles=/!d;s/.*=//' ../url.ini`
+wget `sed '/^enwiki-latest-pages-articles=/!d;s/.*=//' url.ini`
 bzip2 -dk enwiki-latest-pages-articles.xml.bz2
 
 

@@ -20,7 +20,7 @@ CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open(os.path.join(CURRENT_PATH, '../../../../url.ini', 'r')) as _f:
+with open(os.path.join(CURRENT_PATH, '../../../../url.ini'), 'r') as _f:
     content = _f.read()
     fsner_url = content.split('fsner_url=')[1].split('\n')[0]
 
