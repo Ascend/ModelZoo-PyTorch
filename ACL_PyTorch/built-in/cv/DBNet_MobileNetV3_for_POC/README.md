@@ -81,37 +81,9 @@
     ```
 
     
-    3. 安装量化工具
-    ```bash
-    pip install onnx==1.12.0
-    pip install protobuf==3.20.0
-    pip install onnxruntime==1.8.0  # need onnxruntime-1.8.0 to build custom operators
-    arch=`arch`
-    wget --no-check-certificate -O amct.tar.gz https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/Florence-ASL/Florence-ASL%20V100R001C30SPC703/Ascend-cann-amct_6.3.RC2.alpha003_linux-${arch}.tar.gz?response-content-type=application/octet-stream
-    tar -zxvf amct.tar.gz && cd amct/amct_onnx/
-    pip install amct_onnx-0.10.1-py3-none-linux_${arch}.whl
-    tar -zxvf amct_onnx_op.tar.gz && cd amct_onnx_op
-    git clone -b v1.8.0 https://github.com/microsoft/onnxruntime.git
-    cd onnxruntime/include/onnxruntime/core/session/
-    cp onnxruntime_c_api.h ../../../../../inc/
-    cp onnxruntime_cxx_api.h ../../../../../inc/
-    cp onnxruntime_cxx_inline.h ../../../../../inc/
-    cp onnxruntime_session_options_config_keys.h ../../../../../inc/
-    cd ../../../../../ && rm -rf onnxruntime
-    python setup.py build && cd ../../../ && rm -rf amct/ amct.tar.gz
-    pip install onnxruntime==1.14.1  # need onnxruntime-1.14.1 to quantize.
-    ```
+    3. 参考[AMCT(ONNX)](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/70RC1alpha001/developmenttools/devtool/atlasamctonnx_16_0004.html)主页安装量化工具。  
 
-    4. 安装OM推理工具
-    ```bash
-    arch=`arch`
-    wget --no-check-certificate https://aisbench.obs.myhuaweicloud.com/packet/ais_bench_infer/0.0.2/aclruntime-0.0.2-cp37-cp37m-linux_${arch}.whl
-    pip install aclruntime-0.0.2-cp37-cp37m-linux_${arch}.whl
-    rm aclruntime-0.0.2-cp37-cp37m-linux_${arch}.whl
-    wget --no-check-certificate https://aisbench.obs.myhuaweicloud.com/packet/ais_bench_infer/0.0.2/ais_bench-0.0.2-py3-none-any.whl
-    pip install ais_bench-0.0.2-py3-none-any.whl
-    rm ais_bench-0.0.2-py3-none-any.whl
-    ```
+    4. 参考[ais_bench的Gitee主页](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)安装OM推理工具。  
 
 2. 获取源码。
 
@@ -324,14 +296,8 @@
         ```
     
     2. 性能验证  
-        当推理结束后，观察日志，关键字throughput即为模型的吞吐率，例如以下测得性能为449.19fps  
-        ```
-        [INFO] multidevice run end qsize:4 result:0
-        i:1 device_1 throughput:226.43004497955928 start_time:1690190567.8889167 end_time:1690190570.9299388
-        i:0 device_0 throughput:222.76300429514114 start_time:1690190568.8170185 end_time:1690190571.819632
-        [INFO] summary throughput:449.19304927470046
+        当推理结束后，观察日志，关键字throughput对应的数值即为模型的吞吐率。
 
-        ```
     
     3. 精度验证  
         ```bash
