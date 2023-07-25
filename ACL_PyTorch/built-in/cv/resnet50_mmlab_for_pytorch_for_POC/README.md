@@ -108,7 +108,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
                 |---src
                 |---setup.py
                 ```
-            2. 如服务器无法联网，则需在https://github.com/microsoft/onnxruntime/tree/v1.8.0/include/onnxruntime/core/session目录里下载如下四个文件（注意：切换到v1.8.0分支再下载），上次传到amct_onnx_op/inc目录下。若能联网，则跳过此步。
+            2. 如服务器无法联网，则需在https://github.com/microsoft/onnxruntime/tree/v1.8.0/include/onnxruntime/core/session 目录里下载如下四个文件（注意：切换到v1.8.0分支再下载），上次传到amct_onnx_op/inc目录下。若能联网，则跳过此步。
                 ```bash
                 onnxruntime_cxx_api.h
                 onnxruntime_cxx_inline.h
