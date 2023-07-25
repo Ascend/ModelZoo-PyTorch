@@ -90,6 +90,12 @@ if [[ $data_path == "" ]];then
     exit 1
 fi
 
+if [[ $precision_mode == "must_keep_origin_dtype" ]];then
+    prec=" "
+else
+    prec="--fp16 --fp16_opt_level O2"
+fi
+
 #添加二进制代码
 line=`grep "import torch" ${cur_path}/../train.py -n | tail -1|awk -F ':' '{print $1}'`
 sed -i "$[line+1]itorch.npu.set_compile_mode(jit_compile=False)" ${cur_path}/../train.py
