@@ -5,7 +5,7 @@
 
 
 # 推理引擎
-提供C++/Python统一接口，实现onnx 模型解析、构图等能力，快速实现ONNX模型向OM模型的迁移。
+提供C++/Python统一接口，实现onnx 模型解析、构图等能力，快速实现ONNX模型向OM模型的迁移。详情使用请见[**AscendIE readme文档**](./AscendIE/readme.md)。
 
 参考使用样例。
 
