@@ -7,6 +7,7 @@ batch_size=1
 max_train_steps=15000
 device_id=0
 mixed_precision="no"
+resolution=512
 dataset_name="lambdalabs/pokemon-blip-captions"
 local_data_dir=""
 
@@ -15,10 +16,16 @@ for para in $*; do
     model_name=$(echo ${para#*=})
   elif [[ $para == --batch_size* ]]; then
     batch_size=$(echo ${para#*=})
-  elif [[ $para == --max_steps* ]]; then
+  elif [[ $para == --max_train_steps* ]]; then
     max_train_steps=$(echo ${para#*=})
+  elif [[ $para == --device_id* ]]; then
+    device_id=$(echo ${para#*=})
   elif [[ $para == --mixed_precision* ]]; then
     mixed_precision=$(echo ${para#*=})
+  elif [[ $para == --resolution* ]]; then
+    resolution=$(echo ${para#*=})
+  elif [[ $para == --dataset_name* ]]; then
+    dataset_name=$(echo ${para#*=})
   elif [[ $para == --local_data_dir* ]]; then
     local_data_dir=$(echo ${para#*=})
   fi
@@ -66,7 +73,7 @@ python3 examples/text_to_image/train_text_to_image.py \
   --pretrained_model_name_or_path=$model_name \
   --dataset_name=$dataset_name \
   --local_data_dir=$local_data_dir \
-  --resolution=512 --center_crop --random_flip \
+  --resolution=$resolution --center_crop --random_flip \
   --train_batch_size=$batch_size \
   --gradient_accumulation_steps=1 \
   --gradient_checkpointing \
@@ -76,6 +83,9 @@ python3 examples/text_to_image/train_text_to_image.py \
   --lr_scheduler="constant" --lr_warmup_steps=0 \
   --mixed_precision=$mixed_precision \
   --without_jit \
+  --use_ema \
+  --dataloader_num_workers=8 \
+  --use_megatron_npu_adamW \
   --output_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
@@ -98,7 +108,7 @@ ActualFPS=$(awk 'BEGIN{printf "%.2f\n", '${FPS}'}')
 echo "Final Performance images/sec : $ActualFPS"
 
 #loss值，不需要修改
-ActualLoss=$(grep "train_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
+ActualLoss=$(grep "step_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
 
 #打印，不需要修改
 echo "Final Train Loss : ${ActualLoss}"

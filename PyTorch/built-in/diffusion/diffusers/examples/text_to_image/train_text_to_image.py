@@ -937,6 +937,11 @@ def main():
 
                 # Backpropagate
                 accelerator.backward(loss)
+                try:
+                    logger.info(f"accelerator.scaler:{accelerate.scaler.get_scale()}")
+                except Exception:
+                    pass
+
                 if accelerator.sync_gradients:
                     if args.use_npu_fuse_adamW and args.use_clip_grad_norm_fused:
                         optimizer.optimizer.clip_grad_norm_fused_(args.max_grad_norm)
@@ -949,8 +954,9 @@ def main():
                 avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
                 train_loss += avg_loss.item() / args.gradient_accumulation_steps
                 end_time = time.time()
-                logger.info(f"train_loss {loss}")
-                logger.info(f"train_samples_per_second {args.train_batch_size/(end_time-start_time)}")
+
+                logger.info(f"train_samples_per_second "
+                            f"{args.train_batch_size * accelerator.num_processes/(end_time - start_time)}")
 
 
             # Checks if the accelerator has performed an optimization step behind the scenes

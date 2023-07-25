@@ -46,7 +46,7 @@
   
 - 安装依赖。
 
-  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  在模型根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```shell
   pip install -e .                    # 安装diffusers
   cd examples/text_to_image/           # 根据下游任务安装对应依赖
@@ -171,6 +171,19 @@ stabilityai/stable-diffusion-2-1
 | 8p-竞品A | 0.321 | 13.278 | 4 | fp32 |      1.13      |
 |  1p-NPU  | \ | 1.312 | 1 | fp32 |      1.8      |
 |  8p-NPU  | 0.319 | 13.389 | 4 | fp32 |      1.8      |
+
+**表3** 训练支持场景
+
+| SD版本/AMP_Type |                fp16                 |               fp32                |
+| :-------------: | :---------------------------------: | :-------------------------------: |
+|      SD1.5      | 支持，需设置--mixd_precision="fp16" | 支持，需设置--mixd_precision="no" |
+|      SD2.1      |               不支持                |            支持，同上             |
+
+> **说明：** 
+>
+> 910A仅支持fp16训练，在训练时必须指定--mixd_precision="fp16"；910B同时支持fp16与fp32训练。
+
+
 
 # 推理
 
@@ -352,4 +365,11 @@ python test_infer/unconditional-image-generation.py
 
 ## FAQ
 
-无。
+1. 使用训练后的权重推理，如果出现NSFW检测，需要在推理前，关闭模型中的NSFW检测，具体做法：
+
+   ```
+   1) 找到模型文件model_index.json，将其中的requires_safety_checker参数设置为false
+   2) 删除safetychecker参数及其对应的参数值
+   ```
+
+   
