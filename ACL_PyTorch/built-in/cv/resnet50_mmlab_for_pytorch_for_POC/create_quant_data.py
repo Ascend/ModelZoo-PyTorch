@@ -31,7 +31,7 @@ model_config = {
 
 def resize(img, size, interpolation=Image.BILINEAR):
     if isinstance(size, int):
-        w, h = img.size
+        w, h, _ = img.shape
         if (w <= h and w == size) or (h <= w and h == size):
             return img
         if w < h:
@@ -66,7 +66,7 @@ def create_image_dataset(path):
     with os.fdopen(os.open('img_label.txt', flags, modes), 'w') as f:
         for i in range(imgY.shape[0]):
             f.write('img' + str(i) + ' ' + str(imgY[i]) + '\n')
-    for i in range(imgX.shape[0]):
+    for i in tqdm(range(imgX.shape[0])):
         imgs = imgX[i]
         img0 = imgs[0]
         img1 = imgs[1]
@@ -80,22 +80,16 @@ def create_image_dataset(path):
     print("create visual dataset successfully")
 
 
-def amct_input_bin(pic_path):
-    in_files = sorted(os.listdir(src_path))
-    image_name = in_files[0]
-    file_path = os.path.join(src_path, image_name)
-    if os.path.isdir(file_path):
-        image_name = os.listdir(file_path)[0]
-        file_path = os.path.join(file_path, image_name)
+def amct_input_bin(pic_path, save_path):
     imgs_to_label = {}
     with open('./img_label.txt', 'r') as f:
         for line in f.readlines():
             img, label = line.split()[0], line.split()[1]
             imgs_to_label[img] = int(label)
 
-    for img_name in imgs_to_label.keys():
-        file = img_name + '.png'
-        img = cv2.imread(os.path.join(pic_path, file))
+    for img_name in tqdm(imgs_to_label.keys()):
+        image_name = img_name + '.png'
+        img = cv2.imread(os.path.join(pic_path, image_name))
         img = resize(img, model_config['resize']) # Resize
         img = img.transpose(2, 0, 1) # ToTensor: HWC -> CHW
         img = np.expand_dims(img, 0)
@@ -121,9 +115,8 @@ def main():
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     if args.amct:
-        amct_input_bin(pic_path)
+        amct_input_bin(pic_path, save_path)
 
 
 if __name__ == '__main__':
     main()
-    
