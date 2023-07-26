@@ -1109,7 +1109,6 @@ def main():
         profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
                           profile_type=os.getenv('PROFILE_TYPE'))
         for epoch in range(int(args.num_train_epochs)):
-            #train_iter = tqdm(train_dataloader, desc="Iteration", disable=args.disable_progress_bar) if is_main_process() else train_dataloader
             train_iter = train_dataloader
             step_start_time = time.time()
             for step, batch in enumerate(train_iter):
