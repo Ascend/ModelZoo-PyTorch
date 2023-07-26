@@ -1,0 +1,111 @@
+diff --git a/assets/ops/dcn/functions/deform_conv.py b/assets/ops/dcn/functions/deform_conv.py
+index 6af75a7..47fe6ed 100644
+--- a/assets/ops/dcn/functions/deform_conv.py
++++ b/assets/ops/dcn/functions/deform_conv.py
+@@ -2,7 +2,7 @@ import torch
+ from torch.autograd import Function
+ from torch.nn.modules.utils import _pair
+ 
+-from .. import deform_conv_cuda
++# from .. import deform_conv_cuda
+ 
+ 
+ class DeformConvFunction(Function):
+diff --git a/assets/ops/dcn/functions/deform_pool.py b/assets/ops/dcn/functions/deform_pool.py
+index 65ff0ef..67a2e71 100644
+--- a/assets/ops/dcn/functions/deform_pool.py
++++ b/assets/ops/dcn/functions/deform_pool.py
+@@ -1,7 +1,7 @@
+ import torch
+ from torch.autograd import Function
+ 
+-from .. import deform_pool_cuda
++# from .. import deform_pool_cuda
+ 
+ 
+ class DeformRoIPoolingFunction(Function):
+diff --git a/assets/ops/dcn/modules/deform_conv.py b/assets/ops/dcn/modules/deform_conv.py
+index 50d15d1..1a31c5a 100644
+--- a/assets/ops/dcn/modules/deform_conv.py
++++ b/assets/ops/dcn/modules/deform_conv.py
+@@ -123,9 +123,24 @@ class ModulatedDeformConv(nn.Module):
+             self.bias.data.zero_()
+ 
+     def forward(self, x, offset, mask):
++        reshape_offset = offset.reshape(offset.shape[0], -1, 2, offset.shape[2], offset.shape[3])
++        offset_x = reshape_offset[:, :, 1, ...].reshape(\
++            offset.shape[0], reshape_offset.shape[1], offset.shape[2], offset.shape[3])
++        offset_y = reshape_offset[:, :, 0, ...].reshape(\
++            offset.shape[0], reshape_offset.shape[1], offset.shape[2], offset.shape[3])
++        
++        offset = torch.cat((offset_x, offset_y), 1)
++
++        torch.ops.load_library(
++            "/opt/buildtools/Python-3.9.11/lib/python3.9/site-packages/torch_aie/lib/libplaceholder.so")
++        modulated_deform_conv = torch.ops.aie_cust.modulated_deform_conv
++        if not self.with_bias:
++            return modulated_deform_conv(x, offset, mask, self.weight, x.new_empty(1),
++                                     self.stride, self.padding, self.dilation,
++                                     self.groups, self.deformable_groups, self.with_bias)
+         return modulated_deform_conv(x, offset, mask, self.weight, self.bias,
+                                      self.stride, self.padding, self.dilation,
+-                                     self.groups, self.deformable_groups)
++                                     self.groups, self.deformable_groups, self.with_bias)
+ 
+ 
+ class ModulatedDeformConvPack(ModulatedDeformConv):
+diff --git a/backbones/resnet.py b/backbones/resnet.py
+index df6e5a2..796b02f 100644
+--- a/backbones/resnet.py
++++ b/backbones/resnet.py
+@@ -129,7 +129,8 @@ class Bottleneck(nn.Module):
+             self.conv2_offset = nn.Conv2d(
+                 planes, deformable_groups * offset_channels,
+                 kernel_size=3,
+-                padding=1)
++                padding=1,
++                stride=stride)
+             self.conv2 = conv_op(
+                 planes, planes, kernel_size=3, padding=1, stride=stride,
+                 deformable_groups=deformable_groups, bias=False)
+@@ -295,7 +296,7 @@ def resnet50(pretrained=True, **kwargs):
+     return model
+ 
+ 
+-def deformable_resnet50(pretrained=True, **kwargs):
++def deformable_resnet50(pretrained=False, **kwargs):
+     """Constructs a ResNet-50 model with deformable conv.
+     Args:
+         pretrained (bool): If True, returns a model pre-trained on ImageNet
+diff --git a/structure/model.py b/structure/model.py
+index 060191b..4ee5a20 100644
+--- a/structure/model.py
++++ b/structure/model.py
+@@ -36,7 +36,7 @@ class SegDetectorModel(nn.Module):
+ 
+         self.model = BasicModel(args)
+         # for loading models
+-        self.model = parallelize(self.model, distributed, local_rank)
++        # self.model = parallelize(self.model, distributed, local_rank)
+         self.criterion = SegDetectorLossBuilder(
+             args['loss_class'], *args.get('loss_args', []), **args.get('loss_kwargs', {})).build()
+         self.criterion = parallelize(self.criterion, distributed, local_rank)
+diff --git a/structure/representers/seg_detector_representer.py b/structure/representers/seg_detector_representer.py
+index a962ca1..18af012 100644
+--- a/structure/representers/seg_detector_representer.py
++++ b/structure/representers/seg_detector_representer.py
+@@ -192,10 +192,10 @@ class SegDetectorRepresenter(Configurable):
+     def box_score_fast(self, bitmap, _box):
+         h, w = bitmap.shape[:2]
+         box = _box.copy()
+-        xmin = np.clip(np.floor(box[:, 0].min()).astype(np.int), 0, w - 1)
+-        xmax = np.clip(np.ceil(box[:, 0].max()).astype(np.int), 0, w - 1)
+-        ymin = np.clip(np.floor(box[:, 1].min()).astype(np.int), 0, h - 1)
+-        ymax = np.clip(np.ceil(box[:, 1].max()).astype(np.int), 0, h - 1)
++        xmin = np.clip(np.floor(box[:, 0].min()).astype(np.int32), 0, w - 1)
++        xmax = np.clip(np.ceil(box[:, 0].max()).astype(np.int32), 0, w - 1)
++        ymin = np.clip(np.floor(box[:, 1].min()).astype(np.int32), 0, h - 1)
++        ymax = np.clip(np.ceil(box[:, 1].max()).astype(np.int32), 0, h - 1)
+ 
+         mask = np.zeros((ymax - ymin + 1, xmax - xmin + 1), dtype=np.uint8)
+         box[:, 0] = box[:, 0] - xmin

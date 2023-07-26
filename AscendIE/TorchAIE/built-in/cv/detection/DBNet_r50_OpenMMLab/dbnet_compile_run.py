@@ -15,7 +15,6 @@
 import argparse
 import time
 import os
-import json
 import sys
 from copy import deepcopy
 
@@ -31,8 +30,8 @@ from mmocr.evaluation import HmeanIOUMetric
 CURRENT_DIR = os.getcwd()
 
 def get_configs():
-    deploy_cfg_file = "./mmdeploy/configs/mmocr/text-detection/text-detection_torchscript.py"
-    model_cfg_file = "./mmocr/configs/textdet/dbnet/dbnet_resnet50-dcnv2_fpnc_1200e_icdar2015.py"
+    deploy_cfg_file = "./configs/mmocr/text-detection/text-detection_torchscript.py"
+    model_cfg_file = "../mmocr/configs/textdet/dbnet/dbnet_resnet50-dcnv2_fpnc_1200e_icdar2015.py"
     return load_config(deploy_cfg_file, model_cfg_file)
 
 def get_torch_model(task_processor):

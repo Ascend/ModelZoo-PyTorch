@@ -1,3 +1,0 @@
-export PYTHONPATH=$PWD/mmdeploy/:$PYTHONPATH
-export PYTHONPATH=$PWD/mmocr/:$PYTHONPATH
-export PYTHONPATH=$PWD/mmcv/:$PYTHONPATH
