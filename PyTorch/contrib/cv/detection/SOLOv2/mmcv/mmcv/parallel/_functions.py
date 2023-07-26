@@ -41,8 +41,8 @@ def scatter(input, devices, streams=None):
 
         # npu_diff
         if devices != [-1]:
-            with torch.cuda.device(devices[0]), torch.cuda.stream(stream):
-                output = output.cuda(devices[0], non_blocking=True)
+            with torch.npu.device(devices[0]), torch.npu.stream(stream):
+                output = output.npu(devices[0], non_blocking=True)
         else:
             pass
 
@@ -60,8 +60,8 @@ def synchronize_stream(output, devices, streams):
                                    [streams[i]])
     elif isinstance(output, torch.Tensor):
         if output.numel() != 0:
-            with torch.cuda.device(devices[0]):
-                main_stream = torch.cuda.current_stream()
+            with torch.npu.device(devices[0]):
+                main_stream = torch.npu.current_stream()
                 main_stream.wait_stream(streams[0])
                 output.record_stream(main_stream)
     else:
@@ -89,7 +89,7 @@ class Scatter(object):
         streams = None
         if input_device == -1 and target_gpus != [-1]:
             # Perform CPU to GPU copies in a background stream
-            streams = [_get_stream(device) for device in target_gpus]
+            streams = [_get_stream(torch.device(f"npu:{device}")) for device in target_gpus]
 
         outputs = scatter(input, target_gpus, streams)
         # Synchronize with the copy stream
