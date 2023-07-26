@@ -45,11 +45,23 @@ from tokenization import (BasicTokenizer, BertTokenizer, whitespace_tokenize)
 from utils import is_main_process, format_step
 import dllogger, time
 from apex.optimizers import npu_fused_bert_adam, NpuFusedBertAdam
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
 
 RANK = int(os.getenv('RANK'))
 
-# torch._C._jit_set_profiling_mode(False)
-# torch._C._jit_set_profiling_executor(False)
 
 if sys.version_info[0] == 2:
     import cPickle as pickle
@@ -734,29 +746,6 @@ def _compute_softmax(scores):
 
 
 
-# from apex.multi_tensor_apply import multi_tensor_applier
-# class GradientClipper:
-#     """
-#     Clips gradient norm of an iterable of parameters.
-#     """
-#     def __init__(self, max_grad_norm):
-#         self.max_norm = max_grad_norm
-#         if multi_tensor_applier.available:
-#             import amp_C
-#             self._overflow_buf = torch.cuda.IntTensor([0])
-#             self.multi_tensor_l2norm = amp_C.multi_tensor_l2norm
-#             self.multi_tensor_scale = amp_C.multi_tensor_scale
-#         else:
-#             raise RuntimeError('Gradient clipping requires cuda extensions')
-#
-#     def step(self, parameters):
-#         l = [p.grad for p in parameters if p.grad is not None]
-#         total_norm, _ = multi_tensor_applier(self.multi_tensor_l2norm, self._overflow_buf, [l], False)
-#         total_norm = total_norm.item()
-#         if (total_norm == float('inf')): return
-#         clip_coef = self.max_norm / (total_norm + 1e-6)
-#         if clip_coef < 1:
-#             multi_tensor_applier(self.multi_tensor_scale, self._overflow_buf, [l, l], clip_coef)
 
 
 def main():
@@ -1032,13 +1021,6 @@ def main():
     ]
     if args.do_train:
         if args.fp16:
-            # try:
-            #     from apex.optimizers import NpuFusedAdam
-            # except ImportError:
-            #     raise ImportError(
-            #         "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-            # optimizer = NpuFusedAdam(optimizer_grouped_parameters,
-            #                       lr=args.learning_rate)
 
             optimizer = NpuFusedBertAdam(optimizer_grouped_parameters,
                                          lr=args.learning_rate,
@@ -1060,13 +1042,6 @@ def main():
                                     t_total=num_train_optimization_steps)
 
     if args.local_rank != -1:
-        # try:
-        #     from apex.parallel import DistributedDataParallel as DDP
-        # except ImportError:
-        #     raise ImportError(
-        #         "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-        #
-        # model = DDP(model)
 
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], broadcast_buffers=False, find_unused_parameters=True)
     elif n_npu > 1:
@@ -1131,13 +1106,15 @@ def main():
         #gradClipper = GradientClipper(max_grad_norm=1.0)
         final_loss = None
         train_start = time.time()
+        profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                          profile_type=os.getenv('PROFILE_TYPE'))
         for epoch in range(int(args.num_train_epochs)):
-            #train_iter = tqdm(train_dataloader, desc="Iteration", disable=args.disable_progress_bar) if is_main_process() else train_dataloader
             train_iter = train_dataloader
             step_start_time = time.time()
             for step, batch in enumerate(train_iter):
                 # Terminate early for benchmarking
                 # 图模式
+                profile.start()
                 if args.graph_mode:
                     print("graph mode on")
                     torch.npu.enable_graph_mode()
@@ -1206,6 +1183,7 @@ def main():
                                        "step_loss": round(final_loss, 4), "iter/s": round(1 / step_time, 4),
                                        "learning_rate": round(optimizer.param_groups[0]['lr'], 10)})
                 step_start_time = time.time()
+                profile.end()
             # 图模式
             if args.graph_mode:
                 print("graph mode off")
