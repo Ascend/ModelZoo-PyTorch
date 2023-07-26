@@ -192,3 +192,7 @@ CenterNet2是一个较为新颖的目标检测网络，相比于传统的two sta
    git checkout v0.6.0
    python3 setup.py install
    ```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

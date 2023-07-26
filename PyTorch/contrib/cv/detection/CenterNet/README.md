@@ -214,3 +214,7 @@ CenterNet使用关键点检测的方法去预测目标边框的中心点，然�
    ```
    git clone -b pytorch_1.11 https://github.com/lbin/DCNv2.git
    ```
+   
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
