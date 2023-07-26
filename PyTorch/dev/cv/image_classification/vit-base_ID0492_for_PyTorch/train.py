@@ -45,6 +45,19 @@ from vitutils.data_utils import get_loader
 from vitutils.dist_util import get_world_size
 import sys
 import os
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
 
 NPU_CALCULATE_DEVICE = 0
 if os.getenv('NPU_CALCULATE_DEVICE') and str.isdigit(os.getenv('NPU_CALCULATE_DEVICE')):
@@ -239,6 +252,7 @@ def train(args, model):
     set_seed(args)  # Added here for reproducibility (even between python 2 and 3)
     losses = AverageMeter()
     global_step, best_acc = 0, 0
+    profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),profile_type=os.getenv('PROFILE_TYPE'))
     while True:
         fps = AverageMeter()
         end = time.time()
@@ -252,6 +266,7 @@ def train(args, model):
         print('len',len(epoch_iterator))
         num_steps = 0
         for step, batch in enumerate(epoch_iterator):
+            profile.start()
             if num_steps > args.stop_step:
                 if args.profiling == 'GE' or args.profiling == 'CANN':
                     import sys
@@ -375,6 +390,7 @@ def train(args, model):
                     if global_step % t_total == 0:
                         break
             num_steps = num_steps + 1
+            profile.end()
 
 
         losses.reset()

@@ -45,6 +45,20 @@ from tokenization import (BasicTokenizer, BertTokenizer, whitespace_tokenize)
 from utils import is_main_process, format_step
 import dllogger, time
 from apex.optimizers import npu_fused_bert_adam, NpuFusedBertAdam
+try:
+    from torch_npu.utils.profiler import Profile
+except Exception:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
 
 RANK = int(os.getenv('RANK'))
 
@@ -1131,6 +1145,8 @@ def main():
         #gradClipper = GradientClipper(max_grad_norm=1.0)
         final_loss = None
         train_start = time.time()
+        profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
+                          profile_type=os.getenv('PROFILE_TYPE'))
         for epoch in range(int(args.num_train_epochs)):
             #train_iter = tqdm(train_dataloader, desc="Iteration", disable=args.disable_progress_bar) if is_main_process() else train_dataloader
             train_iter = train_dataloader
@@ -1138,6 +1154,7 @@ def main():
             for step, batch in enumerate(train_iter):
                 # Terminate early for benchmarking
                 # 图模式
+                profile.start()
                 if args.graph_mode:
                     print("graph mode on")
                     torch.npu.enable_graph_mode()
@@ -1206,6 +1223,7 @@ def main():
                                        "step_loss": round(final_loss, 4), "iter/s": round(1 / step_time, 4),
                                        "learning_rate": round(optimizer.param_groups[0]['lr'], 10)})
                 step_start_time = time.time()
+                profile.end()
             # 图模式
             if args.graph_mode:
                 print("graph mode off")
