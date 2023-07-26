@@ -36,8 +36,8 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
 
   | Torch_Version      | 三方库依赖版本                                 |
   | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.5 | - |
-  | PyTorch 1.8 | - |
+  | PyTorch 1.8 | torchaudio==0.8.1 |
+  | PyTorch 1.11 | torchaudio==0.11.0 |
 
 - 环境准备指导。
 
@@ -74,7 +74,7 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
    ```
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
-
+   用户可从www.openslr.org/31/获取train-clean-5的数据集
 # 开始训练
 
 ## 训练模型
@@ -94,8 +94,8 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
      启动单卡训练。
 
      ```
-     bash ./test/train_full_1p.sh --data_folder=/data/xxx/   # 单卡精度
-     bash ./test/train_performance_1p.sh --data_folder=/data/xxx/  # 单卡性能 
+     bash ./test/train_full_1p.sh --data_folder=./data   # 单卡精度
+     bash ./test/train_performance_1p.sh --data_folder=./data  # 单卡性能 
      ```
 
    - 单机8卡训练
@@ -103,11 +103,11 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
      启动8卡训练。
 
      ```
-     bash ./test/train_full_8p.sh --data_folder=/data/xxx/   # 8卡精度
-     bash ./test/train_performance_8p.sh --data_folder=/data/xxx/  # 8卡性能    
+     bash ./test/train_full_8p.sh --data_folder=./data   # 8卡精度
+     bash ./test/train_performance_8p.sh --data_folder=./data  # 8卡性能    
      ```
 
-   --data_folder参数填写数据集路径，需写到数据集的一级目录。
+   --data_folder参数为当前目录data文件夹下数据集路径。
    
 3. 日志文件夹如下。
 
