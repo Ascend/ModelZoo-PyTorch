@@ -148,13 +148,6 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
    cd ctc_decoder/swig && bash setup.sh
    ```
 
-5. 安装acl_infer
-
-   ```
-   git clone https://gitee.com/peng-ao/pyacl.git
-   cd pyacl
-   pip3 install .
-   ```
 
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -290,10 +283,10 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
    2. 非流式分档场景精度和性能验证。
 
-      端到端encoder + decoder
+      端到端encoder + decoder，多进程
 
       ```
-      python3 wenet/bin/recognize_om.py --config=aishell_u2pp_conformer_exp/train.yaml --test_data=aishell_u2pp_conformer_exp/data.list --dict=aishell_u2pp_conformer_exp/units.txt --mode=attention_rescoring --result_file=static_result_bs${batch_size}.txt --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt
+      python3 wenet/bin/recognize_om.py --config=aishell_u2pp_conformer_exp/train.yaml --test_data=aishell_u2pp_conformer_exp/data.list --dict=aishell_u2pp_conformer_exp/units.txt --mode=attention_rescoring --result_file=static_result_bs${batch_size}.log --encoder_om=om/offline_encoder_static_bs${batch_size}.om --decoder_om=om/offline_decoder_static_bs${batch_size}.om --batch_size=${batch_size} --device_id=0 --static --test_file=static_test_result_bs${batch_size}.txt --num_process=4 --encoder_gears="262, 326, 390, 454, 518, 582, 646, 710, 774, 838, 902, 966, 1028, 1284, 1478" --decoder_gears="96, 144, 384"
       ```
 
       - 参数说明：
@@ -308,10 +301,14 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
         - --device_id：卡序号。
         - --static：是否执行分档模式。
         - --test_file：性能结果文件。
+        - --num_process: 多进程数量。
+        - --encoder_gears: encoder挡位信息，与atc转换模型时的挡位一致
+        - --decoder_gears: decoder挡位信息，与atc转换模型时的挡位一致
+        - --output_size: static为false即动态模型时生效，预估的encoder各个输出大小
 
       ```
       # 精度验证
-      python3 tools/compute-wer.py --char=1 --v=1 aishell_u2pp_conformer_exp/text static_result_bs${batch_size}.txt
+      python3 tools/compute-wer.py --char=1 --v=1 aishell_u2pp_conformer_exp/text static_result_bs${batch_size}.log
       ```
 
       - 参数说明：
@@ -350,16 +347,16 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
 性能参考下列数据。 
 
-非流式分档（encoder + decoder）场景
+非流式分档（encoder + decoder）场景，进程数4。
 
 | 芯片型号        | Batch Size | 数据集       | 精度(WER) | 端到端性能（fps） |
 |-------------|------------|-----------|---------|----------------|
-| Ascend310P3 | 1          | aishell   | 4.67%   | 36.72          |
-| Ascend310P3 | 4          | aishell   | 4.67%   | 42.57          |
-| Ascend310P3 | 8          | aishell   | 4.67%   | 51.36          |
-| Ascend310P3 | 16         | aishell   | 4.67%   | 52.93          |
-| Ascend310P3 | 32         | aishell   | 4.67%   | 58.39          |
-| Ascend310P3 | 64         | aishell   | 4.67%   | 51.89          |
+| Ascend310P3 | 1          | aishell   | 4.68%   | 150.28          |
+| Ascend310P3 | 4          | aishell   | 4.68%   | 145.34          |
+| Ascend310P3 | 8          | aishell   | 4.68%   | 143.19          |
+| Ascend310P3 | 16         | aishell   | 4.68%   | 133.17          |
+| Ascend310P3 | 32         | aishell   | 4.68%   | 125.46          |
+| Ascend310P3 | 64         | aishell   | 4.68%   | 123.79          |
 
 流式纯推理场景
 

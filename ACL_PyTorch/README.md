@@ -4378,12 +4378,12 @@ Audio
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/Wenet2_for_Pytorch"> WeNet </a>
         </td>
         <td>aishell</td>
-        <td>5.67%</td>
+        <td></td>
+        <td>4.68%</td>
         <td></td>
         <td></td>
+	<td>150.28(bs1)</td>
         <td></td>
-	<td></td>
-        <td>28(bs1)</td>
 	<td nowrap="nowrap">多尺度</td>
 </table>
 

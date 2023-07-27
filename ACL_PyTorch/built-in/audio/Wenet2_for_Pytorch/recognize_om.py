@@ -55,9 +55,6 @@ from wenet.dataset.dataset import Dataset
 from wenet.utils.common import IGNORE_ID
 from wenet.utils.file_utils import read_symbol_table
 from wenet.utils.config import override_config
-
-from pyacl.acl_infer import AclNet, init_acl, release_acl
-
 try:
     from swig_decoders import map_batch, \
         ctc_beam_search_decoder_batch, \
@@ -66,74 +63,7 @@ except ImportError:
     print('Please install ctc decoders first')
     sys.exit(1)
 
-
-def _pad_sequence(sequences, batch_first=False, padding_value=0, mul_shape=None, batch_size=1, input_batch_size=1):
-    r"""Pad a list of variable length Tensors with ``padding_value``
-
-    ``pad_sequence`` stacks a list of Tensors along a new dimension,
-    and pads them to equal length. For example, if the input is list of
-    sequences with size ``L x *`` and if batch_first is False, and ``T x B x *``
-    otherwise.
-
-    `B` is batch size. It is equal to the number of elements in ``sequences``.
-    `T` is length of the longest sequence.
-    `L` is length of the sequence.
-    `*` is any number of trailing dimensions, including none.
-
-    Example:
-        >>> from torch.nn.utils.rnn import pad_sequence
-        >>> a = torch.ones(25, 300)
-        >>> b = torch.ones(22, 300)
-        >>> c = torch.ones(15, 300)
-        >>> pad_sequence([a, b, c]).size()
-        torch.Size([25, 3, 300])
-
-    Note:
-        This function returns a Tensor of size ``T x B x *`` or ``B x T x *``
-        where `T` is the length of the longest sequence. This function assumes
-        trailing dimensions and type of all the Tensors in sequences are same.
-
-    Arguments:
-        sequences (list[Tensor]): list of variable length sequences.
-        batch_first (bool, optional): output will be in ``B x T x *`` if True, or in
-            ``T x B x *`` otherwise
-        padding_value (float, optional): value for padded elements. Default: 0.
-
-    Returns:
-        Tensor of size ``T x B x *`` if :attr:`batch_first` is ``False``.
-        Tensor of size ``B x T x *`` otherwise
-    """
-
-    # assuming trailing dimensions and type of all the Tensors
-    # in sequences are same and fetching those from sequences[0]
-
-    max_size = sequences[0].size()
-    trailing_dims = max_size[1:]
-
-    max_len = max([s.size(0) for s in sequences])
-    if mul_shape is not None:
-        for in_shape in mul_shape:
-            if max_len < in_shape:
-                max_len = in_shape
-                break
-    if batch_first:
-        out_dims = (len(sequences), max_len) + trailing_dims
-    else:
-        out_dims = (max_len, len(sequences)) + trailing_dims
-
-    out_tensor = sequences[0].data.new(*out_dims).fill_(padding_value)
-    for i, tensor in enumerate(sequences):
-        length = tensor.size(0)
-        # use index notation to prevent duplicate references to the tensor
-        if batch_first:
-            out_tensor[i, :length, ...] = tensor
-        else:
-            out_tensor[:length, i, ...] = tensor
-    if batch_first and input_batch_size < batch_size:
-        tmp = torch.zeros([batch_size - input_batch_size,
-                          out_tensor.shape[1], out_tensor.shape[2]], dtype=torch.float32)
-        out_tensor = torch.cat((out_tensor, tmp), 0)
-    return out_tensor
+from ais_bench.infer.interface import InferSession
 
 
 def get_args():
@@ -180,65 +110,251 @@ def get_args():
     parser.add_argument('--static',
                         action='store_true',
                         help='whether to run static model')
-    args = parser.parse_args()
-    print(args)
-    return args
+    parser.add_argument('--num_process',
+                        type=int,
+                        default=2,
+                        help='number of mutiprocesses')
+    parser.add_argument('--encoder_gears',
+                        type=str,
+                        help='dynamic dims gears info for encoder, please input split by ","')
+    parser.add_argument('--decoder_gears',
+                        type=str,
+                        help='dynamic dims gears info for encoder, please input split by ","')
+    parser.add_argument('--output_size',
+                        type=str,
+                        help='only effect in dynamic shapes mode,\
+                              outputs size info for encoder, please input split by ","')
+    args_ = parser.parse_args()
+    print(args_)
+    return args_
 
-def get_dict(args):
-    vocabulary = []
-    char_dict = {}
-    with open(args.dict, 'r') as fin:
-        for line in fin:
+def get_dict(dict_path):
+    vocabulary_ = []
+    char_dict_ = {}
+    with open(dict_path, 'r') as fin_:
+        for line in fin_:
             arr = line.strip().split()
-            if len(arr) == 2:
-                pass
-            else:
+            if len(arr) != 2:
                 print('dict format is incorrect')
-                sys.exit(1)
-            char_dict[int(arr[1])] = arr[0]
-            vocabulary.append(arr[0])
-    return vocabulary, char_dict
+                exit(0)
+            char_dict_[int(arr[1])] = arr[0]
+            vocabulary_.append(arr[0])
+    return vocabulary_, char_dict_
 
-def init_om_session(args):
-    encoder_ort_session = AclNet(
-        model_path=args.encoder_om, device_id=args.device_id, input_data_shape=[
-            120000*args.batch_size, 1*args.batch_size], \
-                output_data_shape=[95744*args.batch_size, 
-            1*args.batch_size, 1583142*args.batch_size, 
-                3704*args.batch_size, 3680*args.batch_size]) # reserved suitable input & output shape
+def init_om_session(device_id, encoder_path, decoder_path, mode):
+    encoder_ort_session = InferSession(device_id, encoder_path)
     decoder_ort_session = None
-    if args.mode == "attention_rescoring":
-        decoder_ort_session = AclNet(model_path=args.decoder_om, \
-                                     device_id=args.device_id, \
-                                        input_data_shape=[
-            args.batch_size*384*256, args.batch_size, args.batch_size*50*10,
-                  args.batch_size*10, args.batch_size*50*10,  
-            args.batch_size*10], output_data_shape=[1*args.batch_size])# reserved suitable input & output shape
+    if mode == "attention_rescoring":
+        decoder_ort_session = InferSession(device_id, decoder_path)
     return encoder_ort_session, decoder_ort_session
 
-def adjust_test_conf(test_conf, batch_size):
+def adjust_test_conf(test_conf_, batch_size_):
     # adjust dataset parameters for om
     # reserved suitable memory
-    test_conf['filter_conf']['max_length'] = 102400
-    test_conf['filter_conf']['min_length'] = 0
-    test_conf['filter_conf']['token_max_length'] = 102400
-    test_conf['filter_conf']['token_min_length'] = 0
-    test_conf['filter_conf']['max_output_input_ratio'] = 102400
-    test_conf['filter_conf']['min_output_input_ratio'] = 0
-    test_conf['speed_perturb'] = False
-    test_conf['spec_aug'] = False
-    test_conf['shuffle'] = False
-    test_conf['sort'] = False
-    test_conf['fbank_conf']['dither'] = 0.0
-    test_conf['batch_conf']['batch_type'] = "static"
-    test_conf['batch_conf']['batch_size'] = batch_size
-    return test_conf    
+    test_conf_['filter_conf']['max_length'] = 102400
+    test_conf_['filter_conf']['min_length'] = 0
+    test_conf_['filter_conf']['token_max_length'] = 102400
+    test_conf_['filter_conf']['token_min_length'] = 0
+    test_conf_['filter_conf']['max_output_input_ratio'] = 102400
+    test_conf_['filter_conf']['min_output_input_ratio'] = 0
+    test_conf_['speed_perturb'] = False
+    test_conf_['spec_aug'] = False
+    test_conf_['shuffle'] = False
+    test_conf_['sort'] = False
+    test_conf_['fbank_conf']['dither'] = 0.0
+    test_conf_['batch_conf']['batch_type'] = "static"
+    test_conf_['batch_conf']['batch_size'] = batch_size_
+    return test_conf_    
 
-def main():
+class AsrOmModel:
+    def __init__(self, args_, reverse_weight_) -> None:
+        self.encoder, self.decoder = init_om_session(args_.device_id, 
+                                                     args_.encoder_om,
+                                                     args_.decoder_om,
+                                                     args_.mode)
+        self.vocabulary, self.char_dict = get_dict(args_.dict)
+        self.reverse_weight = reverse_weight_
+        self.mul_shape = list(map(int, args.encoder_gears.split(',')))
+        self.mul_shape_decoder = list(map(int, args.decoder_gears.split(',')))
+        self.output_size = None
+        if args.output_size:
+            self.output_size = list(map(int, args.output_size.split(',')))
+        self.args = args_
+    
+    def forward(self, data):
+        nums_ = 0
+        eos = sos = len(self.char_dict) - 1
+        mode = "dymdims"
+        if not self.args.static:
+            mode = "dymshape"
+        keys, feats, _, feats_lengths, _ = data
+        feats, feats_lengths = feats.numpy(), feats_lengths.numpy()
+        ort_outs = None
+        if self.args.fp16:
+            feats = feats.astype(np.float16)
+        if self.args.static:
+            pad_size = 0
+            pad_batch = 0
+            for n in self.mul_shape:
+                if n > feats.shape[1]:
+                    pad_size = n - feats.shape[1]
+                    break
+            if feats.shape[0] < self.args.batch_size:
+                pad_batch = self.args.batch_size - feats.shape[0]
+                feats_lengths = np.pad(feats_lengths, [(0, pad_batch)], 'constant')
+            feats_pad = np.pad(feats, [(0, pad_batch), (0, pad_size), (0, 0)], 'constant')
+            ort_outs = self.encoder.infer(
+                [feats_pad, feats_lengths], mode)
+        else:
+            ort_outs = self.encoder.infer([feats, feats_lengths], mode, self.output_size)
+        encoder_out, encoder_out_lens, _, \
+            beam_log_probs, beam_log_probs_idx = ort_outs
+        beam_size = beam_log_probs.shape[-1]
+        batch_size = beam_log_probs.shape[0]
+        num_processes = min(multiprocessing.cpu_count(), batch_size)
+        if self.args.mode == 'ctc_greedy_search':
+            if beam_size != 1:
+                log_probs_idx = beam_log_probs_idx[:, :, 0]
+            batch_sents = []
+            for idx_, seq in enumerate(log_probs_idx):
+                batch_sents.append(seq[0:encoder_out_lens[idx_]].tolist())
+            hyps = map_batch(batch_sents, self.vocabulary, num_processes,
+                                True, 0)
+        elif self.args.mode in ('ctc_prefix_beam_search', "attention_rescoring"):
+            batch_log_probs_seq_list = beam_log_probs.tolist()
+            batch_log_probs_idx_list = beam_log_probs_idx.tolist()
+            batch_len_list = encoder_out_lens.tolist()
+            batch_log_probs_seq = []
+            batch_log_probs_ids = []
+            batch_start = []  # only effective in streaming deployment
+            batch_root = TrieVector()
+            root_dict = {}
+            for i in range(len(batch_len_list)):
+                num_sent = batch_len_list[i]
+                batch_log_probs_seq.append(
+                    batch_log_probs_seq_list[i][0:num_sent])
+                batch_log_probs_ids.append(
+                    batch_log_probs_idx_list[i][0:num_sent])
+                root_dict[i] = PathTrie()
+                batch_root.append(root_dict[i])
+                batch_start.append(True)
+            score_hyps = ctc_beam_search_decoder_batch(batch_log_probs_seq,
+                                                        batch_log_probs_ids,
+                                                        batch_root,
+                                                        batch_start,
+                                                        beam_size,
+                                                        num_processes,
+                                                        0, -2, 0.99999)
+            if self.args.mode == 'ctc_prefix_beam_search':
+                hyps = []
+                for cand_hyps in score_hyps:
+                    hyps.append(cand_hyps[0][1])
+                hyps = map_batch(hyps, self.vocabulary, num_processes, False, 0)
+        if self.args.mode == 'attention_rescoring':
+            ctc_score, all_hyps = [], []
+            max_len = 0
+            for hyps in score_hyps:
+                cur_len = len(hyps)
+                if len(hyps) < beam_size:
+                    hyps += (beam_size - cur_len) * ((-float("INF"), (0,)),)
+                cur_ctc_score = []
+                for hyp in hyps:
+                    cur_ctc_score.append(hyp[0])
+                    all_hyps.append(list(hyp[1]))
+                    if len(hyp[1]) > max_len:
+                        max_len = len(hyp[1])
+                ctc_score.append(cur_ctc_score)
+            if self.args.fp16:
+                ctc_score = np.array(ctc_score, dtype=np.float16)
+            else:
+                ctc_score = np.array(ctc_score, dtype=np.float32)
+            hyps_pad_sos_eos = np.ones(
+                (batch_size, beam_size, max_len + 2), dtype=np.int64) * IGNORE_ID
+            r_hyps_pad_sos_eos = np.ones(
+                (batch_size, beam_size, max_len + 2), dtype=np.int64) * IGNORE_ID
+            hyps_lens_sos = np.ones(
+                (batch_size, beam_size), dtype=np.int32)
+            k = 0
+            for i in range(batch_size):
+                for j in range(beam_size):
+                    cand = all_hyps[k]
+                    l = len(cand) + 2
+                    hyps_pad_sos_eos[i][j][0:l] = [sos] + cand + [eos]
+                    r_hyps_pad_sos_eos[i][j][0:l] = [
+                        sos] + cand[::-1] + [eos]
+                    hyps_lens_sos[i][j] = len(cand) + 1
+                    k += 1
+            best_index = None
+            if not self.args.static:
+                output_size = 100000
+                if self.reverse_weight > 0:
+                    best_index = self.decoder.infer(
+                        [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, 
+                        r_hyps_pad_sos_eos, ctc_score], mode, output_size)
+                else:
+                    best_index = self.decoder.infer(
+                        [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, 
+                         ctc_score], mode, output_size)
+            else:
+                pad_size = 0
+                for n in self.mul_shape_decoder:
+                    if n > encoder_out.shape[1]:
+                        pad_size = n - encoder_out.shape[1]
+                        break
+                encoder_out = np.pad(encoder_out, ((0, 0), (0, pad_size), (0, 0)), 'constant')
+                if self.reverse_weight > 0:
+                    best_index = self.decoder.infer(
+                    [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, r_hyps_pad_sos_eos, ctc_score],
+                    mode)
+                else:
+                    best_index = self.decoder.infer(
+                        [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, ctc_score], mode)
+            best_index = best_index[0]
+            best_sents = []
+            k = 0
+            for idx_ in best_index:
+                cur_best_sent = all_hyps[k: k + beam_size][idx_]
+                best_sents.append(cur_best_sent)
+                k += beam_size
+            hyps = map_batch(best_sents, self.vocabulary, num_processes)
+
+        for i, key in enumerate(keys):
+            nums_ += 1
+            content = hyps[i]
+            logger.info('{} {}'.format(key, content))
+        return nums_
+
+def infer_process(idx_):
+    batches = packed_data[idx_]
+    init_start = time.time()
+    model = AsrOmModel(args, reverse_weight)
+    init_end = time.time()
+    sync_num.append(1)
+    while (len(sync_num) != args.num_process):
+        # sync mutiple processes
+        time.sleep(0.05)
+    
+    nums_ = 0
+    for data in batches:
+        num = model.forward(data)
+        nums_ += num
+    sync_num.pop()
+    return nums_, init_end - init_start
+
+if __name__ == '__main__':
     args = get_args()
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(levelname)s %(message)s')
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level=logging.DEBUG)
+    handler = logging.FileHandler(args.result_file, mode='w')
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
 
+    console = logging.StreamHandler()
+    console.setLevel(level=logging.DEBUG)
+    console_format = logging.Formatter('Recognize: %(message)s')
+    console.setFormatter(console_format)
+    logger.addHandler(handler)
+    logger.addHandler(console)
     with open(args.config, 'r') as fin:
         configs = yaml.safe_load(fin)
     if len(args.override_config) > 0:
@@ -257,183 +373,34 @@ def main():
                            partition=False)
 
     test_data_loader = DataLoader(test_dataset, batch_size=None, num_workers=0)
-    # Init device and om model
-    init_acl(args.device_id)
-    encoder_ort_session, decoder_ort_session = init_om_session(args)
-    # Load dict
-    vocabulary, char_dict = get_dict(args)
-    eos = sos = len(char_dict) - 1
-    # In static mode, need padding for different ranks
-    # mul_shape: padding shape for encoder
-    # mul_shape_decoder: padding shape for decoder
-    mul_shape = [262, 326, 390, 454, 518, 582, 646,
-                 710, 774, 838, 902, 966, 1028, 1284, 1478]
-    mul_shape_decoder = [96, 144, 384]
-    sumt1 = 0
+    manager = multiprocessing.Manager()
+    num_process = args.num_process
+    # packed data for mitiple processes
+    packed_data = [[] for _ in range(num_process)]
+    idx = 0
+    for batch in test_data_loader:
+        packed_data[idx].append(batch)
+        idx = (idx + 1) % num_process
+
+    sync_num = manager.list()
     data_cnt = 0
+    init_times = 0
     total_time = 0
     start = time.time()
-    with torch.no_grad(), open(args.result_file, 'w') as fout:
-        for _, batch in enumerate(test_data_loader):
-            data_cnt = data_cnt + 1
-            keys, feats, _, feats_lengths, _ = batch
-            feats, feats_lengths = feats.numpy(), feats_lengths.numpy()
-            ort_outs = None
-            t1 = 0
-            if args.fp16:
-                feats = feats.astype(np.float16)
-            start_time = time.time()
-            if args.static:
-                feats_pad = _pad_sequence([torch.from_numpy(
-                    x) for x in feats], True, 0, mul_shape, args.batch_size, feats.shape[0])
-                dims1 = {'dimCount': 4, 'name': '', 'dims': [
-                    args.batch_size, feats_pad.shape[1], 80, args.batch_size]}
-                feats_pad = feats_pad.numpy()
-                ort_outs, t1 = encoder_ort_session(
-                    [feats_pad, feats_lengths], dims=dims1)
-            else:
-                ort_outs, t1 = encoder_ort_session([feats, feats_lengths])
-            end_time = time.time()
-            total_time += (end_time - start_time)
-            sumt1 = sumt1 + t1
-            encoder_out, encoder_out_lens, ctc_log_probs, \
-                beam_log_probs, beam_log_probs_idx = ort_outs
-            beam_size = beam_log_probs.shape[-1]
-            batch_size = beam_log_probs.shape[0]
-            num_processes = min(multiprocessing.cpu_count(), batch_size)
-            if args.mode == 'ctc_greedy_search':
-                if beam_size != 1:
-                    log_probs_idx = beam_log_probs_idx[:, :, 0]
-                batch_sents = []
-                for idx, seq in enumerate(log_probs_idx):
-                    batch_sents.append(seq[0:encoder_out_lens[idx]].tolist())
-                hyps = map_batch(batch_sents, vocabulary, num_processes,
-                                 True, 0)
-            elif args.mode in ('ctc_prefix_beam_search', "attention_rescoring"):
-                batch_log_probs_seq_list = beam_log_probs.tolist()
-                batch_log_probs_idx_list = beam_log_probs_idx.tolist()
-                batch_len_list = encoder_out_lens.tolist()
-                batch_log_probs_seq = []
-                batch_log_probs_ids = []
-                batch_start = []  # only effective in streaming deployment
-                batch_root = TrieVector()
-                root_dict = {}
-                for i in range(len(batch_len_list)):
-                    num_sent = batch_len_list[i]
-                    batch_log_probs_seq.append(
-                        batch_log_probs_seq_list[i][0:num_sent])
-                    batch_log_probs_ids.append(
-                        batch_log_probs_idx_list[i][0:num_sent])
-                    root_dict[i] = PathTrie()
-                    batch_root.append(root_dict[i])
-                    batch_start.append(True)
-                score_hyps = ctc_beam_search_decoder_batch(batch_log_probs_seq,
-                                                           batch_log_probs_ids,
-                                                           batch_root,
-                                                           batch_start,
-                                                           beam_size,
-                                                           num_processes,
-                                                           0, -2, 0.99999)
-                if args.mode == 'ctc_prefix_beam_search':
-                    hyps = []
-                    for cand_hyps in score_hyps:
-                        hyps.append(cand_hyps[0][1])
-                    hyps = map_batch(hyps, vocabulary, num_processes, False, 0)
-            if args.mode == 'attention_rescoring':
-                ctc_score, all_hyps = [], []
-                max_len = 0
-                for hyps in score_hyps:
-                    cur_len = len(hyps)
-                    if len(hyps) < beam_size:
-                        hyps += (beam_size - cur_len) * [(-float("INF"), (0,))]
-                    cur_ctc_score = []
-                    for hyp in hyps:
-                        cur_ctc_score.append(hyp[0])
-                        all_hyps.append(list(hyp[1]))
-                        if len(hyp[1]) > max_len:
-                            max_len = len(hyp[1])
-                    ctc_score.append(cur_ctc_score)
-                if args.fp16:
-                    ctc_score = np.array(ctc_score, dtype=np.float16)
-                else:
-                    ctc_score = np.array(ctc_score, dtype=np.float32)
-                hyps_pad_sos_eos = np.ones(
-                    (batch_size, beam_size, max_len + 2), dtype=np.int64) * IGNORE_ID
-                r_hyps_pad_sos_eos = np.ones(
-                    (batch_size, beam_size, max_len + 2), dtype=np.int64) * IGNORE_ID
-                hyps_lens_sos = np.ones(
-                    (batch_size, beam_size), dtype=np.int32)
-                k = 0
-                for i in range(batch_size):
-                    for j in range(beam_size):
-                        cand = all_hyps[k]
-                        l = len(cand) + 2
-                        hyps_pad_sos_eos[i][j][0:l] = [sos] + cand + [eos]
-                        r_hyps_pad_sos_eos[i][j][0:l] = [
-                            sos] + cand[::-1] + [eos]
-                        hyps_lens_sos[i][j] = len(cand) + 1
-                        k += 1
-                best_index = None
-                t2 = 0
-                T2 = hyps_pad_sos_eos.shape[2]
-                dims2 = None
-                if not args.static:
-                    if reverse_weight > 0:
-                        best_index, t2 = decoder_ort_session(
-                            [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, 
-                            r_hyps_pad_sos_eos, ctc_score])
-                    else:
-                        best_index, t2 = decoder_ort_session(
-                            [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, ctc_score])
-                else:
-                    encoder_out_pad = _pad_sequence([torch.from_numpy(
-                        x) for x in encoder_out], True, 0, mul_shape_decoder, args.batch_size, encoder_out.shape[0])
-                    encoder_out = encoder_out_pad.numpy()
-                    if reverse_weight > 0:
-                        dims2 = {'dimCount': 14, 'name': '', 'dims': [args.batch_size, encoder_out.shape[1],
-                                encoder_out.shape[2], args.batch_size, args.batch_size, 10, T2, args.batch_size, 
-                                10, args.batch_size, 10, T2, args.batch_size, 10]}
 
-                    else:
-                        dims2 = {'dimCount': 11, 'name': '', 'dims': [args.batch_size, encoder_out.shape[1], 
-                                encoder_out.shape[2], args.batch_size, args.batch_size, 10, T2, 
-                                args.batch_size, 10, args.batch_size, 10]}
+    with multiprocessing.Pool(num_process) as p:
+        for nums, init_time in list(p.map(infer_process, range(num_process))):
+            init_times = max(init_times, init_time)
+            data_cnt += nums
 
-                    if reverse_weight > 0:
-                        best_index, t2 = decoder_ort_session(
-                        [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, r_hyps_pad_sos_eos, ctc_score],
-                        dims=dims2)
-                    else:
-                        best_index, t2 = decoder_ort_session(
-                            [encoder_out, encoder_out_lens, hyps_pad_sos_eos, hyps_lens_sos, ctc_score], dims=dims2)
-                sumt2 = sumt1 + t2
-                best_index = best_index[0]
-                best_sents = []
-                k = 0
-                for idx in best_index:
-                    cur_best_sent = all_hyps[k: k + beam_size][idx]
-                    best_sents.append(cur_best_sent)
-                    k += beam_size
-                hyps = map_batch(best_sents, vocabulary, num_processes)
-
-            for i, key in enumerate(keys):
-                content = hyps[i]
-                logging.info('{} {}'.format(key, content))
-                fout.write('{} {}\n'.format(key, content))
-        end = time.time()
-        fps = float((data_cnt * args.batch_size) / (end - start))
-        fps_str = "fps: {}\n".format(fps)
-        resstr = "total time: {}\n".format(end - start)
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL 
-        modes = stat.S_IWUSR | stat.S_IRUSR
-        with os.fdopen(os.open(args.test_file, flags, modes), 'w') as f:
-            f.write(fps_str)
-            f.write(resstr)
-    encoder_ort_session.release_model()
-    if args.mode == "attention_rescoring":
-        decoder_ort_session.release_model()
-    release_acl(args.device_id)
-
-
-if __name__ == '__main__':
-    main()
+    end = time.time()
+    fps = float((data_cnt) / (end - start - init_times))
+    fps_str = "fps: {}\n".format(fps)
+    resstr = "total time: {}\n".format(end - start - init_times)
+    print(fps_str)
+    print(resstr)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL 
+    modes = stat.S_IWUSR | stat.S_IRUSR
+    with os.fdopen(os.open(args.test_file, flags, modes), 'w') as f:
+        f.write(fps_str)
+        f.write(resstr)
