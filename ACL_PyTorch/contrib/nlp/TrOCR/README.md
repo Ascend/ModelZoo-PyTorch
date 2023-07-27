@@ -99,11 +99,15 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
 
 1. 获取原始数据集。
 
-    从此链接获取[IAM数据集](https://layoutlm.blob.core.windows.net/trocr/dataset/IAM.tar.gz)
-    解压数据集至当前目录。
+    获取[IAM数据集](https://github.com/microsoft/unilm/tree/master/trocr)并解压数据集至当前目录。
     ```bash
     wget https://layoutlm.blob.core.windows.net/trocr/dataset/IAM.tar.gz
     tar zxvf IAM.tar.gz
+    ```
+
+    注：若链接下载失败，请在链接的后面添加以下后缀重试：
+    ```
+    ?sv=2022-11-02&ss=b&srt=o&sp=r&se=2033-06-08T16:48:15Z&st=2023-06-08T08:48:15Z&spr=https&sig=a9VXrihTzbWyVfaIDlIT1Z0FoR1073VB0RLQUMuudD4%3D
     ```
 
 2. 获取权重文件。  
@@ -111,6 +115,8 @@ TrOCR是一种端到端的文本识别方法，具有预先训练好的图像Tra
     ```bash
     wget https://layoutlm.blob.core.windows.net/trocr/model_zoo/fairseq/trocr-small-handwritten.pt
     ```
+
+    注：若链接下载失败，操作方法和上一步骤相同。
 
 3. 数据预处理。
 
