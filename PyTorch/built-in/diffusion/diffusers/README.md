@@ -134,7 +134,10 @@ stabilityai/stable-diffusion-2-1
    - 单机8卡训练
    
      ```shell
-     bash test/train_full_8p_text_to_image.sh  # 8卡精度
+     bash test/train_full_8p_text_to_image.sh # 8卡精度
+     
+     bash test/train_full_8p_text_to_image_sd1-5_fp16.sh  # 8卡精度，SD1.5，fp16
+     bash test/train_performance_8p_text_to_image_sd1-5_fp16.sh # 8卡性能，SD1.5，fp16
      ```
      
      
@@ -157,6 +160,7 @@ stabilityai/stable-diffusion-2-1
    --resolution                        //分辨率
    --num_train_epochs                  //训练epoch数
    --gradient_accumulation_steps	    //梯度累计步数
+   --mixed_precision				   //精度模式
    ```
    
    训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
@@ -169,8 +173,12 @@ stabilityai/stable-diffusion-2-1
 | :------: | :---: | :--: | :------: | :-----------: | :-----------: |
 | 1p-竞品A | \ | 1.313 | 1 | fp32 |      1.13      |
 | 8p-竞品A | 0.321 | 13.278 | 4 | fp32 |      1.13      |
-|  1p-NPU  | \ | 1.312 | 1 | fp32 |      1.8      |
-|  8p-NPU  | 0.319 | 13.389 | 4 | fp32 |      1.8      |
+|  1p-NPU-910B  | \ | 1.312 | 1 | fp32 |      1.8      |
+|  8p-NPU-910B  | 0.319 | 13.389 | 4 | fp32 |      1.8      |
+| 8p-竞品A | \ | 54.000 | 3 | fp16 |      1.13      |
+|  8p-NPU-910  | \ | 24.000 | 3 | fp16 |      1.8      |
+
+
 
 **表3** 训练支持场景
 

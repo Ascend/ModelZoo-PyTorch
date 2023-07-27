@@ -2,10 +2,10 @@
 Network="diffusers"
 
 # 预训练模型
-model_name="CompVis/stable-diffusion-v1-4"
+model_name="runwayml/stable-diffusion-v1-5"
 batch_size=1
 max_train_steps=1500
-mixed_precision="no"
+mixed_precision="fp16"
 resolution=512
 dataset_name="lambdalabs/pokemon-blip-captions"
 local_data_dir=""
@@ -54,6 +54,7 @@ if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ]; then
 else
   mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/
 fi
+
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)

@@ -55,15 +55,6 @@ else
   mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/
 fi
 
-
-#创建DeviceID输出目录，不需要修改
-if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ]; then
-  rm -rf ${cur_path}/test/output/${ASCEND_DEVICE_ID}
-  mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/
-else
-  mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/
-fi
-
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 echo "start_time: ${start_time}"
@@ -74,7 +65,7 @@ python -m torch.distributed.launch --nproc_per_node 8 --use_env \
   --dataset_name=$dataset_name \
   --local_data_dir=$local_data_dir \
   --resolution=$resolution --center_crop --random_flip \
-  --train_batch_size=1 \
+  --train_batch_size=$batch_size \
   --gradient_accumulation_steps=1 \
   --gradient_checkpointing \
   --max_train_steps=$max_train_steps \
@@ -99,7 +90,7 @@ e2e_time=$(($end_time - $start_time))
 echo "------------------ Final result ------------------"
 
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "train_samples_per_second " ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $9}')
+FPS=$(grep "train_samples_per_second " ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
 
 #获取性能数据，不需要修改
 #吞吐量
@@ -109,7 +100,7 @@ ActualFPS=$(awk 'BEGIN{printf "%.2f\n", '${FPS}'}')
 echo "Final Performance images/sec : $ActualFPS"
 
 #loss值，不需要修改
-ActualLoss=$(grep "step_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
+ActualLoss=$(grep -o "step_loss=[0-9.]*" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
 
 #打印，不需要修改
 echo "Final Train Loss : ${ActualLoss}"

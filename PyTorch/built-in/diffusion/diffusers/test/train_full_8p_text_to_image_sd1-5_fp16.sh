@@ -2,10 +2,10 @@
 Network="diffusers"
 
 # 预训练模型
-model_name="CompVis/stable-diffusion-v1-4"
+model_name="runwayml/stable-diffusion-v1-5"
 batch_size=1
-max_train_steps=1500
-mixed_precision="no"
+max_train_steps=15000
+mixed_precision="fp16"
 resolution=512
 dataset_name="lambdalabs/pokemon-blip-captions"
 local_data_dir=""

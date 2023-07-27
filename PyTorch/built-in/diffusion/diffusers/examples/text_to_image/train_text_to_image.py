@@ -938,7 +938,7 @@ def main():
                 # Backpropagate
                 accelerator.backward(loss)
                 try:
-                    logger.info(f"accelerator.scaler:{accelerate.scaler.get_scale()}")
+                    logger.info(f"accelerator.scaler:{accelerator.scaler.get_scale()}")
                 except Exception:
                     pass
 
