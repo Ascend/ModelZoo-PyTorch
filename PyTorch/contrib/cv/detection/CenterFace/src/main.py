@@ -47,7 +47,6 @@ def main(opt, qtepoch=[0,]):
       torch.npu.config.allow_internal_format=False
       if opt.hf32:
           torch.npu.conv.allow_hf32 = True
-          torch.npu.matmul.allow_hf32 = True
       if opt.fp32:
           torch.npu.conv.allow_hf32 = False
           torch.npu.matmul.allow_hf32 = False

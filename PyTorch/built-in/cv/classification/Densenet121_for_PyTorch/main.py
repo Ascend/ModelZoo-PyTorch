@@ -175,7 +175,6 @@ def main():
     option = {}
     if args.opt_level == 'O0':
         torch.npu.config.allow_internal_format=False # 全局ND开关，默认值True
-        torch.npu.matmul.allow_hf32 = True
         if args.fp32:
             torch.npu.conv.allow_hf32 = False      # conv支持HF32开关，默认值True
             torch.npu.matmul.allow_hf32 = False   # matmul支持HF32开关，默认值True

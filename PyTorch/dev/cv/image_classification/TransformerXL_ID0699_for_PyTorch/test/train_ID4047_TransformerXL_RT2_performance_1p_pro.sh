@@ -54,10 +54,10 @@ do
 done
 
 if [[ $profiling == "cann" ]];then
-   profiling="--profiling=CANN --start_step=0 --stop_step=20"
+   profiling="--profiling=CANN --start_step=0 --stop_step=10"
 elif [[ $profiling == "ge" ]];then
    export GE_PROFILING_TO_STD_OUT=1
-   profiling="--profiling=GE --start_step=0 --stop_step=20"
+   profiling="--profiling=GE --start_step=0 --stop_step=10"
 else
    profiling=" "
 fi
