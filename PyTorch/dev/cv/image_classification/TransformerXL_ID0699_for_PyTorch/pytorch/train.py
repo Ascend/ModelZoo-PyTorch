@@ -753,7 +753,7 @@ def train(tr_iter, va_iter, model, para_model, model_config, optimizer,
                 logging.info(log_str)
                 dllogger.log(step=tuple([train_step]), data=dllogger_data)
 
-            num_steps = num_steps + 1
+        num_steps = num_steps + 1
 
         do_periodic_eval = train_step % args.eval_interval == 0
         is_final_step = train_step == args.max_step
@@ -1239,7 +1239,6 @@ if __name__ == "__main__":
     option = {}
     if args.precision_mode == 'must_keep_origin_dtype':
         torch.npu.config.allow_internal_format = False  # 全局ND开关，默认值True
-        torch.npu.matmul.allow_hf32 = True
         if args.fp32:
             torch.npu.conv.allow_hf32 = False  # conv支持HF32开关，默认值True
             torch.npu.matmul.allow_hf32 = False  # matmul支持HF32开关，默认值True

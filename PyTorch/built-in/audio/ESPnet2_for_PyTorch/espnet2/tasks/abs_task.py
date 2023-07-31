@@ -1053,7 +1053,6 @@ class AbsTask(ABC):
             raise RuntimeError('ALLOW_FP32 and ALLOW_HF32 cannot be set at the same time!')
         elif os.getenv('ALLOW_HF32', False):
             torch.npu.conv.allow_hf32 = True
-            torch.npu.matmul.allow_hf32 = True
         elif os.getenv('ALLOW_FP32', False):
             torch.npu.conv.allow_hf32 = False
             torch.npu.matmul.allow_hf32 = False
