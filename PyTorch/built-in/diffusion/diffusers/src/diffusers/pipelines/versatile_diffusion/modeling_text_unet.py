@@ -1156,7 +1156,7 @@ class DownBlockFlat(nn.Module):
 
                     return custom_forward
 
-                if is_torch_version(">=", "1.11.0"):
+                if is_torch_version(">", "1.11.0"):
                     hidden_states = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(resnet), hidden_states, temb, use_reentrant=False
                     )
@@ -1289,7 +1289,7 @@ class CrossAttnDownBlockFlat(nn.Module):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">", "1.11.0") else {}
                 hidden_states = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(resnet),
                     hidden_states,
@@ -1393,7 +1393,7 @@ class UpBlockFlat(nn.Module):
 
                     return custom_forward
 
-                if is_torch_version(">=", "1.11.0"):
+                if is_torch_version(">", "1.11.0"):
                     hidden_states = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(resnet), hidden_states, temb, use_reentrant=False
                     )
@@ -1523,7 +1523,7 @@ class CrossAttnUpBlockFlat(nn.Module):
 
                     return custom_forward
 
-                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">=", "1.11.0") else {}
+                ckpt_kwargs: Dict[str, Any] = {"use_reentrant": False} if is_torch_version(">", "1.11.0") else {}
                 hidden_states = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(resnet),
                     hidden_states,

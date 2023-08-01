@@ -2,9 +2,9 @@
 Network="diffusers"
 
 # 预训练模型
-model_name="CompVis/stable-diffusion-v1-4"
+model_name="runwayml/stable-diffusion-v1-5"
 batch_size=1
-max_train_steps=1500
+max_train_steps=15000
 mixed_precision="no"
 resolution=512
 dataset_name="lambdalabs/pokemon-blip-captions"
@@ -48,12 +48,15 @@ fi
 source ${test_path_dir}/env_npu.sh
 
 #创建DeviceID输出目录，不需要修改
-if [ -d ${cur_path}/test/output/${ASCEND_DEVICE_ID} ]; then
-  rm -rf ${cur_path}/test/output/${ASCEND_DEVICE_ID}
-  mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/
-else
-  mkdir -p ${cur_path}/test/output/$ASCEND_DEVICE_ID/
+output_path=${cur_path}/test/output/${ASCEND_DEVICE_ID}
+
+if [ -d ${output_path} ]; then
+  rm -rf ${output_path}
 fi
+
+mkdir -p ${output_path}
+
+
 
 #训练开始时间，不需要修改
 start_time=$(date +%s)

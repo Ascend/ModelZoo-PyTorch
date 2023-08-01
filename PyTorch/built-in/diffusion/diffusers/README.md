@@ -134,16 +134,18 @@ stabilityai/stable-diffusion-2-1
    - 单机8卡训练
    
      ```shell
-     bash test/train_full_8p_text_to_image.sh # 8卡精度
-     
      bash test/train_full_8p_text_to_image_sd1-5_fp16.sh  # 8卡精度，SD1.5，fp16
+     bash test/train_full_8p_text_to_image_sd1-5_fp32.sh  # 8卡精度，SD1.5，fp32
+     bash test/train_full_8p_text_to_image_sd2-1_fp32.sh  # 8卡精度，SD2.1，fp32
      bash test/train_performance_8p_text_to_image_sd1-5_fp16.sh # 8卡性能，SD1.5，fp16
+     bash test/train_performance_8p_text_to_image_sd1-5_fp32.sh # 8卡性能，SD1.5，fp32
+     bash test/train_performance_8p_text_to_image_sd2-1_fp32.sh # 8卡性能，SD2.1，fp32
      ```
      
      
    
    
-   模型训练脚本参数说明如下。
+   模型训练python训练脚本参数说明如下。
    
    ```shell
    train_text_to_image.py：
@@ -152,6 +154,7 @@ stabilityai/stable-diffusion-2-1
    --dataset_name                      //数据集名称
    --dataset_config_name               //数据集配置     
    --train_data_dir                    //符合huggingface结构的训练数据集
+   --train_batch_size                  //设置batch_size
    --image_column                      //图片所在列
    --caption_column                    //图片caption所在列
    --max_train_samples                 //最大训练样本数
@@ -159,25 +162,31 @@ stabilityai/stable-diffusion-2-1
    --output_dir                        //输出路径
    --resolution                        //分辨率
    --num_train_epochs                  //训练epoch数
-   --gradient_accumulation_steps	    //梯度累计步数
-   --mixed_precision				   //精度模式
+   --gradient_accumulation_steps       //梯度累计步数
+   --mixed_precision                   //精度模式
+   --use_megatron_npu_adamW            //使用megatron优化器
+   --use_npu_fuse_adamW                //使用NPU融合优化器
+   --use_clip_grad_norm_fused          //使用融合CLIP操作（必须搭配NPU融合优化器使用）
    ```
    
    训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
 
 # 训练结果展示
 
-**表 2**  训练结果展示表(910B，SD2.1）
+**表 2**  训练结果展示表
 
-|   NAME   | clip_score(use_ema) | FPS  | batch_size | AMP_Type | Torch_Version |
-| :------: | :---: | :--: | :------: | :-----------: | :-----------: |
-| 1p-竞品A | \ | 1.313 | 1 | fp32 |      1.13      |
-| 8p-竞品A | 0.321 | 13.278 | 4 | fp32 |      1.13      |
-|  1p-NPU-910B  | \ | 1.312 | 1 | fp32 |      1.8      |
-|  8p-NPU-910B  | 0.319 | 13.389 | 4 | fp32 |      1.8      |
-| 8p-竞品A | \ | 54.000 | 3 | fp16 |      1.13      |
-|  8p-NPU-910  | \ | 24.000 | 3 | fp16 |      1.8      |
-
+|   NAME   | sd版本 | clip_score(use_ema) | FPS  | batch_size | AMP_Type | Torch_Version |
+| :------: | :---: | :---: | :--: | :------: | :-----------: | :-----------: |
+| 1p-竞品A | 1.5 | \ | 1.313 | 1 | fp32 |      1.13      |
+|  1p-NPU  | 1.5 | \ | 1.312 | 1 | fp32 |      1.8      |
+| 8p-竞品A | 1.5 | \ | 54.000 | 3 | fp16 |      1.13      |
+|  8p-NPU-910  | 1.5 | \ | 24.000 | 3 | fp16 |      1.8      |
+| 8p-竞品A | 1.5 | \ |   待测   | 4 | fp16 |    1.13    |
+|  8p-NPU-910B  | 1.5 | \ | 35.290 | 4 | fp16 |   1.8    |
+| 8p-竞品A | 1.5 | \ |   待测  | 4 | fp32 |   1.13    |
+|  8p-NPU-910B  | 1.5 | 0.319 | 31.000 | 4 | fp32 |   1.8      |
+|  8p-竞品A   |  2.1   | 0.321 | 待测 | 4 | fp32 | 1.13  |
+|  8p-NPU-910B  | 2.1 | \ | 16.000 | 4 | fp32 |      1.8      |
 
 
 **表3** 训练支持场景
@@ -185,7 +194,7 @@ stabilityai/stable-diffusion-2-1
 | SD版本/AMP_Type |                fp16                 |               fp32                |
 | :-------------: | :---------------------------------: | :-------------------------------: |
 |      SD1.5      | 支持，需设置--mixd_precision="fp16" | 支持，需设置--mixd_precision="no" |
-|      SD2.1      |               不支持                |            支持，同上             |
+|      SD2.1      |               不支持                | 支持，需设置--mixd_precision="no" |
 
 > **说明：** 
 >
@@ -212,7 +221,7 @@ CompVis/ldm-text2im-large-256
 generator = DiffusionPipeline.from_pretrained("CompVis/ldm-text2im-large-256",torch_dtype=torch.float16)
 ```
 
-### 运行推理
+### 运行在线推理
 
 ```shell 
 python test_infer/text-to-image.py
@@ -238,7 +247,7 @@ nitrosocke/Ghibli-Diffusion
 pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusion").to(device)
 ```
 
-### 运行推理
+### 运行在线推理
 
 修改test_infer/text-guide-img-to-img.py中url为本地图片地址
 
@@ -264,7 +273,7 @@ runwayml/stable-diffusion-inpainting
 ```python 
 pipeline = StableDiffusionInpaintPipeline.from_pretrained("runwayml/stable-diffusion-inpainting")
 ```
-### 运行推理
+### 运行在线推理
 
 ```shell 
 python test_infer/text-guide-image-inpainting.py
@@ -304,7 +313,7 @@ sd-concepts-library/cat-toy
 repo_id = "sd-concepts-library/cat-toy"
 ```
 
-### 运行推理
+### 运行在线推理
 
 
 ```shell 
@@ -331,7 +340,7 @@ stabilityai/stable-diffusion-2-depth
 pipe = StableDiffusionDepth2ImgPipeline.from_pretrained("stabilityai/stable-diffusion-2-depth").to("npu")
 ```
 
-### 运行推理
+### 运行在线推理
 
 ```shell 
 python test_infer/text-guide-depth-to-image.py
@@ -357,7 +366,7 @@ anton-l/ddpm-butterflies-128
 generator = DiffusionPipeline.from_pretrained("anton-l/ddpm-butterflies-128")
 ```
 
-### 运行推理
+### 运行在线推理
 
 ```shell 
 python test_infer/unconditional-image-generation.py
