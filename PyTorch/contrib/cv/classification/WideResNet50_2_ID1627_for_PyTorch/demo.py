@@ -13,30 +13,36 @@
 # limitations under the License.
 # ============================================================================
 import argparse
+from collections import OrderedDict
+
 import torch
 import torchvision
 from torchvision import datasets, transforms
+
 import models.resnet_0_6_0 as resnet_0_6_0
-from collections import OrderedDict
+from url_utils import get_url
+
 
 def proc_node_module(checkpoint, attr_name):
     new_state_dict = OrderedDict()
     for k, v in checkpoint[attr_name].items():
-        if(k[0: 7] == "module."):
+        if (k[0: 7] == "module."):
             name = k[7:]
         else:
             name = k[0:]
         new_state_dict[name] = v
     return new_state_dict
 
+
 def get_raw_data():
     from PIL import Image
     from urllib.request import urlretrieve
-    IMAGE_URL = 'https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png'
+    IMAGE_URL = get_url('image_url')
     urlretrieve(IMAGE_URL, 'tmp.jpg')
     img = Image.open("tmp.jpg")
     img = img.convert('RGB')
     return img
+
 
 def test():
     loc = 'npu:0'
@@ -50,13 +56,13 @@ def test():
     model.eval()
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
+                                     std=[0.229, 0.224, 0.225])
     rd = get_raw_data()
     data_transfrom = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                normalize])
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        normalize])
 
     inputs = data_transfrom(rd)
     inputs = inputs.unsqueeze(0)
@@ -68,6 +74,7 @@ def test():
     result = torch.argmax(output, 1)
     print("class: ", pred[0][0].item())
     print(result)
+
 
 if __name__ == "__main__":
     test()

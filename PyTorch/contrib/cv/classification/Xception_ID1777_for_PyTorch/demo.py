@@ -18,14 +18,18 @@
 
 
 import os
+import argparse
 
 import torch
 import numpy as np
 from xception import xception 
-import argparse
 from apex import amp
 import apex
 import torch.distributed as dist
+
+from url_utils import get_url
+
+
 parser = argparse.ArgumentParser(description='xception demo ')
 parser.add_argument('--device', default='npu', type=str,
                     help='npu or gpu')
@@ -84,14 +88,14 @@ def get_raw_data():
     # 请自定义获取数据方式，请勿将原始数据上传至代码仓
     from PIL import Image
     from urllib.request import urlretrieve
-    IMAGE_URL = 'https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png'
+    IMAGE_URL = get_url('image_url')
     urlretrieve(IMAGE_URL, 'tmp.jpg')
     img = Image.open("tmp.jpg")
     img = img.convert('RGB')
     return img
 
 
-def pre_process(raw_data):
+def pre_process(data):
     # 请自定义模型预处理方法
     from torchvision import transforms
     normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
@@ -102,14 +106,14 @@ def pre_process(raw_data):
         transforms.ToTensor(),
         normalize
     ])
-    input_data = transforms_list(raw_data)
+    input_data = transforms_list(data)
     return input_data.unsqueeze(0)
 
 
-def post_process(output_tensor):
+def post_process(output):
     # 请自定义后处理方法
     print(output_tensor)
-    return torch.argmax(output_tensor, 1)
+    return torch.argmax(output, 1)
 
 
 if __name__ == '__main__':
@@ -117,13 +121,13 @@ if __name__ == '__main__':
     raw_data = get_raw_data()
 
     # 2. 构建模型
-    model = build_model()
+    model_xception = build_model()
 
     # 3. 预处理
     input_tensor = pre_process(raw_data)
 
     # 4. 执行forward
-    output_tensor = model(input_tensor.to(loc))
+    output_tensor = model_xception(input_tensor.to(loc))
 
     # 5. 后处理
     result = post_process(output_tensor)

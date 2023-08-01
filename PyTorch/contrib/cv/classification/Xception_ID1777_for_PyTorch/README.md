@@ -173,3 +173,7 @@ Xception即Extreme version of Inception。Xception是google继Inception后提出
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -5,7 +5,8 @@
 
 cd "${0%/*}"
 
-BASE=https://dl.fbaipublicfiles.com/detectron2
+# shellcheck disable=SC2006
+BASE=`sed '/^base=/!d;s/.*=//' url.ini`
 mkdir -p coco/annotations
 
 for anno in instances_val2017_100 \
@@ -20,3 +21,6 @@ for anno in instances_val2017_100 \
     wget $BASE/annotations/coco/$anno.json -O $dest
   }
 done
+
+
+
