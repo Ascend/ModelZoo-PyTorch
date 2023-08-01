@@ -90,3 +90,32 @@ CV-detection
 </table>
 
 
+CV-recognition
+
+<table align="center">
+    <tr>
+        <th rowspan=2>Name</th>
+	<th rowspan=2>Dataset</th>
+        <th align="center" colspan=3>精度</th>
+	<th rowspan=2>310P最优性能(对应bs)</th>
+	<th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+	<td>AP</td>
+        <td>mAP</td>
+        <td>Acc</td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://github.com/open-mmlab/mmocr">  CRNN </a>
+        </td>
+        <td>svt</td>
+	<td></td>
+        <td></td>
+        <td> 79.91% </td>
+	<td> 1951(bs8) </td>
+	<td>1 x 1 x 32 x wSize</td>
+    </tr>
+</table>
+
+

@@ -1,4 +1,4 @@
-# DBNet_r50_OpenMMLab
+# CRNN_OpenMMLab
 
 - [概述](#ABSTRACT)
 - [环境准备](#ENV_PREPARE)
