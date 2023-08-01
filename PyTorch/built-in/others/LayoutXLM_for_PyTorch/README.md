@@ -12,6 +12,7 @@
 
 LayoutXLM是用于多语言文档理解的多模式预训练模型，旨在消除视觉丰富的文档理解的语言障碍。实验结果表明，它在XFUND数据集上显著优于现有的SOTA跨语言预训练模型。
 
+LayoutLMv2详见 [README_MV2.md](README_MV2.md)
 - 参考实现：
   
   ```bash
