@@ -190,3 +190,4 @@ echo "ActualLoss = ${ActualLoss}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseNa
 echo "E2ETrainingTime = ${e2e_time}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CompileTime = ${CompileTime}" >> $cur_path/output/$ASCEND_DEVICE_ID/${CaseName}.log
 rm -rf ${data_path}/squad/v1.1/train-v1.1.json_bert-large-uncased_384_128_64                                                                                              
+rm -rf $cur_path/../results
