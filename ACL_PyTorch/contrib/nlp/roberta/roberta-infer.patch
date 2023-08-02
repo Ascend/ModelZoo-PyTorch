@@ -4,9 +4,6 @@ new mode 100644
 index 7f215a3b..95d51728
 --- a/examples/roberta/preprocess_GLUE_tasks.sh
 +++ b/examples/roberta/preprocess_GLUE_tasks.sh
-
- 
- 
 @@ -134,7 +134,7 @@ do
      do
        LANG="input$INPUT_TYPE"

@@ -56,8 +56,8 @@
 
   | 配套                                                            | 版本    | 环境准备指导                                                                                          |
   | ------------------------------------------------------------    | ------- | ------------------------------------------------------------                                          |
-  | 固件与驱动                                                      | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                            | 6.0.RC1 | -                                                                                                     |
+  | 固件与驱动                                                      | 23.0.RC2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                            | 6.3.RC2 | -                                                                                                     |
   | Python                                                          | 3.7.5   | -                                                                                                     |
   | PyTorch                                                         | 1.5.0+  | -                                                                                                     |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
@@ -356,3 +356,4 @@
    | 动态     |        128 |          8 | SST-2  | Acc: 94.7% | Acc: 94.7% | 906fps   |
    | 动态     |        128 |         16 | SST-2  | Acc: 94.7% | Acc: 94.7% | 1277fps  |
    | 动态     |        128 |         32 | SST-2  | Acc: 94.7% | Acc: 94.7% | 1715fps  |
+   | 动态     |        128 |         64 | SST-2  | Acc: 94.7% | Acc: 94.7% | 1895fps  |

@@ -54,8 +54,8 @@ ALBERT是BERT 的“改进版”，主要通过通过Factorized embedding parame
 
 | 配套                                                            | 版本    | 环境准备指导                                                                                          |
 | ------------------------------------------------------------    | ------- | ------------------------------------------------------------                                          |
-| 固件与驱动                                                      | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-| CANN                                                            | 6.0.RC1 | -                                                                                                     |
+| 固件与驱动                                                      | 23.0.RC2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+| CANN                                                            | 6.3.RC2 | -                                                                                                     |
 | Python                                                          | 3.7.5   | -                                                                                                     |
 | PyTorch                                                         | 1.5.0+ | -                                                                                                     |
 | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                                                                     |
@@ -360,7 +360,8 @@ seq128对应的精度性能如下：
 | Albert bs4  | 535fps    |
 | Albert bs8  | 953fps    |
 | Albert bs16 | 1518fps   |
-| Albert bs32 | 2170fps   |
+| Albert bs32 | 2195fps   |
+| Albert bs64 | 2346fps   |
 
 
 其他seq精度性能结果如下(不同seq模型：展示bs1和最优bs精度/性能)：

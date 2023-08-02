@@ -3,5 +3,5 @@ transformers==4.20.0
 datasets==2.7.1
 onnxoptimizer==0.2.7
 onnx-simplifier==0.3.6
-request==2.27.1
+requests==2.27.1
 onnxruntime

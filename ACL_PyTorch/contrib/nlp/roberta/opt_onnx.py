@@ -12,17 +12,83 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-
+ 
+ 
 import sys
+from typing import Optional, List, Union
+ 
 import numpy as np
-from auto_optimizer import OnnxGraph
-
-
+from auto_optimizer import OnnxGraph, OnnxNode
+ 
+ 
+def pattern_select(
+    graph: OnnxGraph,
+    candidate_nodes: Union[str, List[str]], 
+    preorders: Optional[List[str]] = None, 
+    successors: Optional[List[str]] = None
+) -> List[OnnxNode]:
+    ret = []
+    preorders = preorders or []
+    successors = successors or []
+ 
+    if isinstance(candidate_nodes, str):
+        candidate_nodes = graph.get_nodes(candidate_nodes)
+    
+    for node in candidate_nodes:
+        pattern_check = True
+        current_node = node
+        for p in preorders[::-1]:
+            if isinstance(p, str):
+                op_type = p
+                input_idx = 0
+ 
+            elif isinstance(p, tuple):
+                op_type, input_idx = p
+ 
+            else:
+                raise TypeError(f"Invalid preorder type: {type(p)}!")
+ 
+            current_node = graph.get_prev_node(current_node.inputs[input_idx])
+            if not current_node or current_node.op_type != op_type:
+                pattern_check = False
+                break
+ 
+        if not pattern_check:
+            continue
+        
+        current_node = node
+        for s in successors:
+            output_idx = 0
+            if isinstance(s, str):
+                op_type = s
+ 
+            elif isinstance(s, tuple):
+                op_type, output_idx = s
+                
+            else:
+                raise TypeError(f"Invalid successor type: {type(s)}!")
+ 
+            next_nodes = graph.get_next_nodes(current_node.outputs[output_idx])
+            pattern_check = False
+            for next_node in next_nodes:
+                if next_node.op_type == op_type:
+                    current_node = next_node
+                    pattern_check = True
+                    break
+ 
+            if not pattern_check:
+                break
+ 
+        if pattern_check:
+            ret.append(node)
+    
+    return ret
+ 
+ 
 def insert_reshape_node(graph, anchor_node, dst_shape, mode='after'):
     inserted_reshape_node = graph.add_node(
         f"Reshape_{mode}_{anchor_node.name}",
-        "Reshape"
+        "Reshape",
     )
     inserted_reshape_init = graph.add_initializer(
         f"Reshape_init_{mode}_{anchor_node.name}",
@@ -30,8 +96,8 @@ def insert_reshape_node(graph, anchor_node, dst_shape, mode='after'):
     )
     graph.insert_node(anchor_node.name, inserted_reshape_node, mode=mode)
     inserted_reshape_node.inputs.append(inserted_reshape_init.name)
-
-
+ 
+ 
 def fix_cpu(graph):
     for cast_node in graph.get_nodes(op_type="Cast"):
         next_node = graph.get_next_nodes(cast_node.outputs[0])[0]
@@ -43,27 +109,24 @@ def fix_cpu(graph):
                 np.array(1, dtype='int32')
             )
             next_node.inputs[1] = inserted_add_init.name
-
-
+ 
+ 
 def merge_axis(graph, seq, bs):
-    for gather_node in graph.get_nodes(op_type="Gather"):
-        next_node = graph.get_next_nodes(gather_node.outputs[0])[0]
-        if next_node.op_type == "Add":
-            # insert reshape node: 3 axis -> 2 axis
-            insert_reshape_node(graph, next_node, [-1, 768])
-    for sub_node in graph.get_nodes(op_type="Sub"):
-        next_node = graph.get_next_nodes(sub_node.outputs[0])[0]
-        if next_node.op_type == "Mul":
-            # insert reshape node: 3 axis -> 2 axis
-            insert_reshape_node(graph, sub_node, [bs*seq, 1])
-
-    for gather_node in graph.get_nodes(op_type="Gather"):
-        next_node = graph.get_next_nodes(gather_node.outputs[0])[0]
-        if next_node.op_type == "Gemm":
-            # insert reshape node: 2 axis -> 3 axis
-            insert_reshape_node(graph, gather_node, [-1, seq, 768], mode='before')
-
-
+    # insert reshape node: 3 axis -> 2 axis
+    # Pattern: Gather -> [Add]
+    target_add = pattern_select(graph, 'Add', preorders=['Gather'])[0]
+    insert_reshape_node(graph, target_add, [-1, 768])
+ 
+    # Pattern: [Sub] -> Mul
+    target_sub = pattern_select(graph, 'Sub', successors=['Mul'])[0]
+    insert_reshape_node(graph, target_sub, [bs*seq, 1])
+ 
+    # insert reshape node: 2 axis -> 3 axis
+    # Pattern: [Gather] -> Gemm
+    target_gather = pattern_select(graph, 'Gather', successors=['Gemm'])[0]
+    insert_reshape_node(graph, target_gather, [-1, seq, 768], mode='before')
+ 
+ 
 def opt_attention(graph, seq, bs):
     # remove first/last transpose node
     transpose_nodes = graph.get_nodes(op_type="Transpose")
@@ -72,7 +135,7 @@ def opt_attention(graph, seq, bs):
                              key=lambda node : int(node.name.split("_")[1]))
     graph.remove(transpose_nodes[0].name)
     graph.remove(transpose_nodes[-1].name)
-
+ 
     for softmax_node in graph.get_nodes(op_type="Softmax"):
         softmax_node['axis'] = -1
         # structure1:
@@ -85,7 +148,7 @@ def opt_attention(graph, seq, bs):
         reshape_node2_1 = graph.get_prev_node(transpose_node1_1.inputs[0])
         transpose_node1_2 = graph.get_prev_node(matmul_node1.inputs[1])
         reshape_node2_2 = graph.get_prev_node(transpose_node1_2.inputs[0])
-
+ 
         # opt reshape order && change transpose perm
         dst_shape_name = reshape_node1.inputs[1]
         graph[dst_shape_name].value = np.array([bs, seq, 12, 64], dtype="int64")
@@ -153,7 +216,7 @@ def opt_attention(graph, seq, bs):
         mul_node.inputs[0] = matmul_node1.outputs[0]
         inserted_add_node.inputs[0] = mul_node.outputs[0]
         mul_node.name = "bert_" + mul_node.name
-
+ 
         # structure2:
         # softmax->matmul_node2<-transpose_node2->reshape_node3
         matmul_node2 = graph.get_next_nodes(softmax_node.outputs[0])[0]
@@ -162,7 +225,7 @@ def opt_attention(graph, seq, bs):
         # change reshape/transpose paras
         transpose_node2['perm'] = [0, 2, 1, 3]
         reshape_node3.inputs[1] = dst_shape_name
-
+ 
         # structure3:
         # softmax->matmul_node2->transpose_node3->reshape_node4
         transpose_node3 = graph.get_next_nodes(matmul_node2.outputs[0])[0]
@@ -170,17 +233,19 @@ def opt_attention(graph, seq, bs):
         # change reshape/transpose paras
         transpose_node3 ['perm'] = [0, 2, 1, 3]
         graph[reshape_node4.inputs[1]].value = np.array([-1, 768], dtype='int64')
-
-
+ 
+ 
 if __name__ == '__main__':
     input_path = sys.argv[1]
     save_path = sys.argv[2]
     bs = int(sys.argv[3])
     seq = int(sys.argv[4])
-
+ 
     onnx_graph = OnnxGraph.parse(input_path)
     fix_cpu(onnx_graph)
     merge_axis(onnx_graph, seq, bs)
     opt_attention(onnx_graph, seq, bs)
+    onnx_graph.update_map()
+    onnx_graph.remove_unused_nodes()
     onnx_graph.infershape()
     onnx_graph.save(save_path)
