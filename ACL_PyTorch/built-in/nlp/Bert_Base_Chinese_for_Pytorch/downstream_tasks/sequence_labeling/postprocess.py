@@ -16,13 +16,13 @@
 import os
 import json
 import argparse
+
 from tqdm import tqdm
 import numpy as np
 import torch
 from seqeval.metrics import classification_report
 from seqeval.scheme import IOB2
 from bert4torch.layers import CRF
-import torch.nn as nn
 
 
 def pad_data(path, seq=256):
@@ -30,9 +30,11 @@ def pad_data(path, seq=256):
     if len(data.shape) == 1:
         return np.pad(data, ((0, seq-data.shape[0])),
                       "constant", constant_values=(0))
+    
     elif len(data.shape) == 2:
         return np.pad(data, ((0, 0), (0, seq-data.shape[1])),
                       "constant", constant_values=(0))
+    
     else:
         return np.pad(data, ((0, 0), (0, seq-data.shape[1]), (0, 0)),
                       "constant", constant_values=(0))
@@ -58,10 +60,18 @@ def evaluate(result_dir, label_dir):
         attention_mask = torch.Tensor(pad_data(attention_mask_path))[data_mask]
 
         scores = crf.decode(emission_score, attention_mask)
-        true_labels += [[categories_id2label[int(l)] for
-                         l in label if l != -100] for label in labels]
-        true_predictions += [[categories_id2label[int(p)] for
-                              p in score if p != -100] for score in scores]
+
+        true_label = []
+        for label in labels:
+            true_label += [categories_id2label[int(l)] for l in label if l != -100]
+
+        true_labels += true_label
+
+        true_prediction = []
+        for score in scores:
+            true_prediction += [categories_id2label[int(p)] for p in score if p != -100]
+
+        true_predictions += true_prediction
 
         attention_mask = labels.gt(0)
         # token粒度
@@ -85,7 +95,22 @@ def evaluate(result_dir, label_dir):
     f2, p2, r2 = 2 * X2 / (Y2 + Z2), X2 / Y2, X2 / Z2
     print("val-token level: f1:{}, precision: {}, recall:{}".format(f1, p1, r1))
     print("val-entity level: f1:{}, precision: {}, recall:{}".format(f2, p2, r2))
-    return eval_result, f1, p1, r1, f2, p2, r2
+
+    result_dict = {
+        "seqeval_result": eval_result,
+        "val-token  level": {
+            "f1": f1,
+            "precision": p1,
+            "recall": r1
+        },
+        "val-entity level": {
+            "f1": f2,
+            "precision": p2,
+            "recall": r2
+        }
+    }
+
+    return result_dict
 
 
 def trans_entity2tuple(scores):
@@ -98,17 +123,21 @@ def trans_entity2tuple(scores):
             flag_tag = categories_id2label[item.item()]
             if flag_tag.startswith('B-'):  # B
                 entity_ids.append([i, j, j, flag_tag[2:]])
+
             elif len(entity_ids) == 0:
                 continue
+
             elif (len(entity_ids[-1]) > 0) and flag_tag.startswith('I-') and \
                  (flag_tag[2:] == entity_ids[-1][-1]):  # I
                 entity_ids[-1][-2] = j
+
             elif len(entity_ids[-1]) > 0:
                 entity_ids.append([])
 
         for i in entity_ids:
             if i:
                 batch_entity_ids.add(tuple(i))
+
     return batch_entity_ids
 
 
@@ -120,14 +149,14 @@ def parse_arguments():
                         help='save path for evaluation result')
     parser.add_argument('-l', '--label_dir', type=str, required=True,
                         help='label dir for label results')
-    parser.add_argument('-c', '--config_path', type=str, required=True,
-                        help='config path for export model')
-    parser.add_argument('-k', '--ckpt_path', type=str, default="./best_model.pt",
-                        help='result dir for prediction results')
-    args = parser.parse_args()
-    args.out_path = os.path.abspath(args.out_path)
-    os.makedirs(os.path.dirname(args.out_path), exist_ok=True)
-    return args
+    arguments = parser.parse_args()
+    arguments.out_path = os.path.abspath(args.out_path)
+    dir_name = os.path.dirname(args.out_path)
+
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+
+    return arguments
 
 
 if __name__ == '__main__':
@@ -139,20 +168,6 @@ if __name__ == '__main__':
     crf = CRF(len(categories),
               init_transitions=crf_transitions + crf_se_transitions)
 
-    seqeval_result, f1_score, precision, recall, \
-        f2_score, precision2, recall2 = evaluate(args.result_dir, args.label_dir)
-    evaluate_results = {
-        "seqeval_result": seqeval_result,
-        "val-token  level": {
-            "f1": f1_score,
-            "precision": precision,
-            "recall": recall
-        },
-        "val-entity level": {
-            "f1": f2_score,
-            "precision": precision2,
-            "recall": recall2
-        }
-    }
+    evaluate_results = evaluate(args.result_dir, args.label_dir)
     with open(args.out_path, 'w') as f:
         json.dump(evaluate_results, f, ensure_ascii=False, indent=4)

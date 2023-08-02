@@ -257,17 +257,15 @@
 
          ```bash
          # 以bs64模型推理为例
-         python3 postprocess.py --result_dir output_data/bs${bs} --out_path eval.json --label_dir preprocessed_data_bs${bs}/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
+         python3 postprocess.py --result_dir output_data/bs${bs} --out_path eval.json --label_dir preprocessed_data_bs${bs}/label
          # 使能分档加速（可选）
-         python3 postprocess.py --result_dir output_data_rank/bs${bs} --out_path eval_rank.json --label_dir preprocessed_data_bs${bs}_rank/label --config_path ./bert-base-chinese/config.json --ckpt_path ./best_model.pt
+         python3 postprocess.py --result_dir output_data_rank/bs${bs} --out_path eval_rank.json --label_dir preprocessed_data_bs${bs}_rank/label
          ```
          - 参数说明：
 
            -   --result_dir：推理结果所在路径。
            -   --out_path：输出结果所在路径。
            -   --label_dir：GT label所在路径。
-           -   --config_path：模型配置文件。
-           -   --ckpt_path：模型权重文件路径。
 
 
 ## 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
