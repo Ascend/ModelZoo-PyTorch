@@ -115,7 +115,7 @@ SlowFast 是用于视频理解的双流框架的卷积神经网络，该网络�
 ## 模型转换
 
 1. PyTroch 模型转 ONNX 模型  
- 
+
     下载open-mmlab官方提供的[ **预训练模型** ](https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth) 到当前目录，可参考命令：
     ```bash
     wget https://download.openmmlab.com/mmaction/recognition/slowfast/slowfast_r50_8x8x1_256e_kinetics400_rgb/slowfast_r50_8x8x1_256e_kinetics400_rgb_20200716-73547d2b.pth
@@ -168,7 +168,7 @@ SlowFast 是用于视频理解的双流框架的卷积神经网络，该网络�
     
     chip_name=310P3  # 根据 step1 的结果设值
     bs=1  # 根据需要自行设置batchsize
-
+   
     
     # 执行 ATC 进行模型转换
     atc --model=slowfast_sim.onnx \
@@ -235,7 +235,7 @@ SlowFast 是用于视频理解的双流框架的卷积神经网络，该网络�
     运行成功后，程序会将会打印出模型的精度指标：
     ```
     Evaluating top_k_accuracy ...
-
+    
     top1_acc        0.7007
     top5_acc        0.8855
     ```
@@ -246,11 +246,12 @@ SlowFast 是用于视频理解的双流框架的卷积神经网络，该网络�
 
 在310P设备上，当batchsize设为1时OM模型性能最优，达 146.4 fps，此时模型精度为  **{Top1@Acc=70.07%, Top5@Acc=88.55%}**
 
-| 芯片型号   | BatchSize | 数据集      | 精度                              | 性能      |
-| --------- | --------- | ----------- | -------------------------------- | --------- |
-|Ascend310P3| 1         | kinetics400 | Top1@Acc=70.07%, Top5@Acc=88.55% | 138.4 fps |
-|Ascend310P3| 4         | kinetics400 |                                  | 131.1 fps |
-|Ascend310P3| 8         | kinetics400 | Top1@Acc=70.08%, Top5@Acc=88.55% | 128.1 fps |
-|Ascend310P3| 16        | kinetics400 |                                  | 128.8 fps |
-|Ascend310P3| 32        | kinetics400 |                                  | 129.0 fps |
-|Ascend310P3| 64        | kinetics400 |                                  | 129.5 fps |
+| BatchSize | 数据集      | 精度                              | 310P3  | 310B1 |
+| --------- | ----------- | -------------------------------- | --------- | --------- |
+| 1         | kinetics400 | Top1@Acc=70.07%, Top5@Acc=88.55% | 138.4 fps | 19.24 |
+| 4         | kinetics400 |                                  | 131.1 fps | 19.27 |
+| 8         | kinetics400 | Top1@Acc=70.08%, Top5@Acc=88.55% | 128.1 fps | 19.49 |
+| 16        | kinetics400 |                                  | 128.8 fps | 15.42 |
+| 32        | kinetics400 |                                  | 129.0 fps | 13.93 |
+| 64        | kinetics400 |                                  | 129.5 fps | NA |
+|  |  | **最优性能** | **138.4** | **19.49** |

@@ -115,7 +115,7 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
          ```
          > **说明：** 
          运行成功后在output文件夹下生成**mobilenetv2.onnx**模型文件。
-         
+      
    3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
@@ -180,25 +180,25 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
       ```
       python3 -m ais_bench --model ./output/mobilenet_v2_bs4.om --input ./preprocess_data --output ./output --output_dirname subdir --outfmt 'TXT' --batchsize 4
       ```
-
+    
       -   参数说明：
-
+    
            -   model：需要推理om模型的路径。
            -   input：模型需要的输入bin文件夹路径。
            -   output：推理结果输出路径。
            -   outfmt：输出数据的格式。
            -   output_dirname:推理结果输出子文件夹。
-		...
+    	...
 
 
    c.  精度验证。
 
       调用脚本与数据集标签val_label.txt比对，可以获得Accuracy数据，结果保存在result.json中。
-
+    
       ```
       python3 postprocess.py  ./output/subdir  /usr/local/MobileNetV2_for_Pytorch/imagenet/val_label.txt ./ result.json
       ```
-
+    
       ./output/subdir：为生成推理结果所在路径  
     
       /usr/local/MobileNetV2_for_Pytorch/imagenet/val_label.txt：为标签数据
@@ -209,10 +209,10 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
    d.  性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
-
+    
       ```
       python3 -m ais_bench --model ./output/mobilenet_v2_bs${bs}.om --loop 1000 --batchsize ${bs}
-
+    
       ```
 
 
@@ -223,6 +223,7 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
 | 芯片型号  | Batch Size | 数据集      | 精度                    | 性能      |
 |-------|------------|----------|-----------------------|---------|
 | 310P3  | 4          | ImageNet | 71.87/Top1 90.32/Top5 | 7072fps |
+| 310B1 | 4 | ImageNet | 71.87/Top1 90.32/Top5 | 1488.1fps |
 
 
 # 公网地址说明

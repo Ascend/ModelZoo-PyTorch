@@ -115,13 +115,13 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
    ```
 
    - 参数说明：
-        
+     
         - --image_folder_path：原始数据验证集（.jpg）所在路径。
 
         - --bin_folder_path：输出的二进制文件（.bin）所在路径。
-    
+   
     成功运行后生成coco2017_bin文件夹
-    
+   
     2.2：执行gen_dataset_info.py，以val2017文件夹的jpg图片生成coco2017_jpg.info文件
    ```
    python3.7 gen_dataset_info.py jpg ./data/coco/val2017 coco2017_jpg.info
@@ -129,11 +129,11 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
      - 参数说明：
 
        -   参数1(jpg)：输入数据的数据格式
-        
+       
        -   参数2(./val2017)：输入数据的文件夹路径
-        
+       
        -   参数3(coco2017_jpg.info)：生成的info信息文件
-    
+   
        成功运行后生成coco2017_jpg.info文件
 
 
@@ -226,7 +226,7 @@ FasterRCNN-DCN是FasterRCNN与DCN可行变卷积相结合得到的网络模型�
         -   --output_dirname: 输出文件名。
         -   --outfmt: 推理结果保存格式。
         -   --batchsize： 模型对应batchsize。
-
+    
       推理后的输出默认在当前目录ais_result/bs1下。
 
 c.  精度验证。
@@ -263,6 +263,6 @@ c.  精度验证。
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 模型                    | batch_size | 官网pth精度  | 基准性能 | 310离线推理精度 | 310性能 | 310P离线推理精度 | 310P性能 |
-|-------------------------|------------|--------------|----------|-----------------|---------|------------------|----------|
-| faster_rcnn_r50_fpn_dcn |          1 | box AP:41.3% | 5.40FPS  | box AP:41.2%    | 4.61FPS | box AP:41.1%     | 8.00FPS  |
+| batch_size | 官网pth精度  | 基准性能 | 310精度      | 310性能 | 310P3精度    | 310P3性能 | 310B1精度    | 310B1性能 |
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
+| 1          | box AP:41.3% | 5.40FPS  | box AP:41.2% | 4.61FPS | box AP:41.1% | 8.00FPS  | box AP:41.1% | 2.84      |

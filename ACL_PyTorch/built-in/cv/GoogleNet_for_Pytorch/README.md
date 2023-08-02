@@ -139,7 +139,7 @@ commit_id=7d955df73fe0e9b47f7d6c77c699324b256fc41f
          
          # 请根据需要设置Batch size
          bs=8
-
+      
          atc --framework=5 --model=./googlenet_opt.onnx --output=googlenet_bs${bs} --input_format=NCHW --input_shape="366:${bs},3,224,224" --log=debug --soc_version=${chip_name} --insert_op_conf=aipp.config --enable_small_channel=1
          ```
 
@@ -197,12 +197,13 @@ python3 vision_metric_ImageNet.py result/ ImageNet/val_label.txt ./ result.json
 ## 模型推理性能和精度
 
 
-| 芯片型号     | Batch size | 精度 | 性能 |
-| :---------: | :--------: |:------------------------:|:---------:|
-| Ascend310P3 | 1          |Top1: 69.78%, Top5: 89.53%| 2333.64 |
-| Ascend310P3 | 4          |                          | 4778.77 |
-| Ascend310P3 | 8          |Top1: 69.78%, Top5: 89.53%| 6308.38 |
-| Ascend310P3 | 16         |                          | 5906.61 |
-| Ascend310P3 | 32         |                          | 5116.16 |
-| Ascend310P3 | 64         |                          | 4886.97 |
+| Batch size | 精度 | 310P3 | 310B1 |
+| :--------: |:------------------------:|:---------:| :----------: |
+| 1          |Top1: 69.78%, Top5: 89.53%| 2333.64 | 1133.78 |
+| 4          |                          | 4778.77 | 1249.29 |
+| 8          |Top1: 69.78%, Top5: 89.53%| 6308.38 | 1254.85 |
+| 16         |                          | 5906.61 | 1258.53 |
+| 32         |                          | 5116.16 | 1236.4 |
+| 64         |                          | 4886.97 | 877.98 |
+|  | **最优性能** | **6308.38** | **1258.53** |
 

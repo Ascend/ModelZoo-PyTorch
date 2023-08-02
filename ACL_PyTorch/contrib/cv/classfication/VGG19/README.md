@@ -1,4 +1,4 @@
-# VGG16模型-推理指导
+# VGG19模型-推理指导
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
@@ -18,8 +18,8 @@
 
 # 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
 
-VGGNet是牛津大学计算机视觉组（Visual Geometry Group）和Google DeepMind公司的研究员一起研发的深度卷积神经网络，它探索了卷积神经网络的深度与其性能之间的关系，通过反复堆叠3*3的小型卷积核和2*2的最大池化层，成功地构筑了16~19层深的卷积神经网络。VGGNet相比之前state-of-the-art的网络结构，错误率大幅下降，VGGNet论文中全部使用了3*3的小型卷积核和2*2的最大池化核，通过不断加深网络结构来提升性能。
-VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
+VGGNet是牛津大学计算机视觉组（Visual Geometry Group）和Google DeepMind公司的研究员一起研发的深度卷积神经网络，它探索了卷积神经网络的深度与其性能之间的关系，通过反复堆叠 `3*3` 的小型卷积核和 `2*2` 的最大池化层，成功地构筑了16~19层深的卷积神经网络。VGGNet相比之前state-of-the-art的网络结构，错误率大幅下降，VGGNet论文中全部使用了 `3*3` 的小型卷积核和 `2*2` 的最大池化核，通过不断加深网络结构来提升性能。
+VGG19包含了19个隐藏层（16个卷积层和3个全连接层）
 
 - 参考实现：
 
@@ -80,7 +80,7 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
 
 ## 获取源码
 
-1. 获取VGG16源代码。
+1. 获取VGG19源代码。
 
    安装 torchvision 包即可
 
@@ -107,12 +107,12 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
 
 2. 数据预处理。
 
-   将原始数据集转换为模型输入的二进制数据。执行“vgg16_preprocess.py”脚本。
-   ```shell
-   python vgg16_preprocess.py ${dataset_dir} ./prep_dataset
+   将原始数据集转换为模型输入的二进制数据。执行“VGG19_preprocess.py”脚本。
+   ```python
+   python VGG19_preprocess.py ${dataset_dir} ./prep_dataset
    ```
    - 参数说明
-      - `${dataset_dir}`：原始数据验证集（.jpeg）所在路径
+      - ${datasets_path}：原始数据验证集（.jpeg）所在路径
       - `./prep_dataset`：输出的二进制文件（.bin）所在路径
 
     每个图像对应生成一个二进制bin文件，一个附加信息文件。
@@ -125,17 +125,17 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
 
    1. 获取权重文件。
 
-      从源码包中获取权重文件：“vgg16-397923af.pth” 或者通过[下载链接](https://download.pytorch.org/models/vgg16-397923af.pth)
+      从源码包中获取权重文件：“vgg19-dcbb9e9d.pth” 或者通过[下载链接](https://download.pytorch.org/models/vgg19-dcbb9e9d.pth)
 
    2. 导出onnx文件。
 
-      使用 `vgg16_pth2onnx.py` 导出onnx文件。
+      使用 VGG19_pth2onnx.py 导出onnx文件。
 
-      ```shell
-      python vgg16_pth2onnx.py --pth_path=./vgg16-397923af.pth --out=./vgg16.onnx
+      ```python
+      python3 VGG19_pth2onnx.py --pth_path=./vgg19-dcbb9e9d.pth --out=./VGG19.onnx
       ```
 
-      获得 `vgg16.onnx` 文件。
+      获得 `VGG19.onnx` 文件。
 
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -168,8 +168,8 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
          ```shell
          # 这里以batchsize=1为例说明
          atc --framework=5 \
-             --model=./vgg16.onnx \
-             --output=vgg16_bs1 \
+             --model=./VGG19.onnx \
+             --output=VGG19_bs1 \
              --input_format=NCHW \
              --input_shape="actual_input_1:1,3,224,224" \
              --log=error \
@@ -186,7 +186,7 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
 
-           运行成功后生成<u>**vgg16_bs1.om**</u>模型文件。
+           运行成功后生成<u>**VGG19_bs1.om**</u>模型文件。
 
 2. 开始推理验证。
 
@@ -197,9 +197,9 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
    2. 执行推理。
       ```shell
       python -m ais_bench \
-            --model ./vgg16_bs1.om \
+            --model ./VGG19_bs1.om \
             --input ./prep_dataset \
-            --output ./vgg16out/ \
+            --output ./VGG19out/ \
             --outfmt TXT \
             --batchsize 1
       ```
@@ -217,16 +217,16 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
 
    3. 精度验证。
 
-      调用脚本与数据集标签 `val_label.txt` 比对，可以获得Accuracy数据。
+   调用脚本与数据集标签 `val_label.txt` 比对，可以获得Accuracy数据。
 
-      ```shell
-      python vgg16_postprocess.py \
-            --gtfile=./val_label.txt \
-            --result_path=./vgg16out/2022_xx_xx-xx_xx_xx/sumary.json
-      ```
-      -   参数说明：
-      -   --result_path：生成推理结果summary.json所在路径。
-      -   --gtfile_path：标签val_label.txt所在路径
+    ```shell
+    python vgg19_postprocess.py \
+          --gtfile=./val_label.txt \
+          --result_path=./VGG19out/2022_xx_xx-xx_xx_xx/sumary.json
+    ```
+   -   参数说明：
+        -   --result_path：生成推理结果summary.json所在路径。
+        -   --gtfile_path：标签val_label.txt所在路径
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
@@ -235,17 +235,18 @@ VGG16包含了16个隐藏层（13个卷积层和3个全连接层）
 精度参考下列数据:
 |      | top1_acc | top5_acc |
 | ---- | -------- | -------- |
-| 310  | 0.7128   | 0.9038   |
-| 310P | 0.7128   | 0.9038   |
+| 310  | 0.7176   | 0.9080   |
+| 310P | 0.7176   | 0.9080   |
+| 310B | 0.7176   | 0.9080   |
 
 性能参考下列数据:
 
-|           | 310     | 310P    |
-| --------- | ------- | ------- |
-| bs1       | 460.68  | 465.54  |
-| bs4       | 834.48  | 1056.92 |
-| bs8       | 947.02  | 1187.63 |
-| bs16      | 1041.48 | 1424.51 |
-| bs32      | 1076.3  | 1338.95 |
-| bs64      | 936.44  | 1430.39 |
-| 最优batch | 1076.3  | 1508.33 |
+|           | 310*4  | 310P    | 310B   |
+| --------- | ------ | ------- | ------ |
+| bs1       | 415.96 | 419.18  | 97.47  |
+| bs4       | 713.92 | 855.93  | 163.6  |
+| bs8       | 794.51 | 970.49  | 186.89 |
+| bs16      | 860.92 | 1142.91 | 201.26 |
+| bs32      | 881.42 | 1093.61 | 208.05 |
+| bs64      | 765.72 | 1153.01 | 210.34 |
+| 最优batch | 881.42 | 1153.01 | 210.34 |

@@ -153,7 +153,7 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
       2. 优化ONNX文件，安装[auto_optimizer](https://gitee.com/ascend/tools.git)模块。
 
          ```
-	     python -m onnxsim d0.onnx d0_sim.onnx
+	       python -m onnxsim d0.onnx d0_sim.onnx
          python modify.py --model=d0_sim.onnx --out=d0_m.onnx
          ```
 
@@ -260,11 +260,17 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
-| --------- | ---------------- | ---------- | ---------- | --------------- |
-|    Ascend310P3       |        1          |    coco        |     33.4%       |     124            |
-|    Ascend310P3       |        4          |    coco        |     33.4%       |        260         |
-|    Ascend310P3       |        8         |    coco        |     33.4%       |         256        |
-|    Ascend310P3       |        16          |    coco        |     33.4%       |       250          |
-|    Ascend310P3       |        32          |    coco        |     33.4%       |          241       |
-|    Ascend310P3       |        64         |    coco        |     33.4%       |        238         |
+| 芯片型号 | 数据集 | 精度 |
+| --------- | ---------- | ---------- |
+|    Ascend310P3       |    coco        |     33.4%       |
+|    Ascend310B1      |    coco        |     33.4%       |
+
+| Batch Size | 310P3 | 310B1 |
+| ---------- | ----- | ----- |
+| 1          | 124   | 71.21 |
+| 4          | 260   | 64.3  |
+| 8          | 256   | 64.42 |
+| 16         | 250   | 64.75 |
+| 32         | 241   | 64.64 |
+| 64         | 238   | 54.31 |
+| 最优性能   | 260   | 71.21 |

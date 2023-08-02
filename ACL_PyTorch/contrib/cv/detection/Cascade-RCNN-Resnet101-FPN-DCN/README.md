@@ -37,7 +37,7 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
   code_path=contrib/cv/detection/Cascade-RCNN-Resnet101-FPN-DCN
   ```
   
- 
+
 
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -54,8 +54,8 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
   | 输出数据 | 数据类型 | 大小     | 数据排布格式 |
   | -------- | -------- | -------- | ------------ |
   | output  | FLOAT32  | 100 x 5 | ND           |
- 
- 
+
+
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
 - 该模型需要以下插件与驱动   
@@ -68,7 +68,7 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
   | CANN                                                         | 6.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | Pytorch                                                      | 1.7.0   | -                                                            |
-                    
+  
 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -88,7 +88,7 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
    cd mmdetection
    git reset --hard a21eb25535f31634cef332b09fc27d28956fb24b
    pip install -v -e .
-
+    
    ```
     2. 修改模型
    ```
@@ -122,7 +122,7 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
        ├── annotations
             ├──instances_val2017.json
          
-
+   
    ```
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
@@ -137,7 +137,7 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
       -  --image_folder_path：数据集路径。
       -  --bin_folder_path：预处理后的数据文件的相对路径。
       
-    
+
     运行成功后，会在当前目录下生成二进制文件。
 
 
@@ -156,17 +156,17 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
       1. 使用mmdetection/tools/pytorch2onnx.py导出onnx文件。
 
       
-  
+
 
          ```
          python mmdetection/tools/pytorch2onnx.py mmdetection/configs/dcn/cascade_rcnn_r101_fpn_dconv_c3-c5_1x_coco.py ./cascade_rcnn_r101_fpn_dconv_c3- 
          c5_1x_coco_20200203-3b2f0594.pth --output-file=cascadeR101dcn.onnx --shape=1216  
-
+    
          ```
          - 参数说明：
             -  --shape : 模型大小
             -  --output-file: 输出onnx模型
-          
+
 
          获得cascadeR101dcn.onnx文件,模型只支持bs1。
 
@@ -256,48 +256,50 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
    3. 精度验证。
 
       运行get_info.py,生成图片数据文件
+
     ```
     python get_info.py jpg ./coco/val2017 coco2017_jpg.info
     ```
     - 参数说明：
-
+    
       - --第一个参数：原始数据集
       - --第二个参数：图片数据信息
-
+    
       调用“cascadercnn-dcn_postprocess.py”评测模型的精度。
-
+    
     ```
     python cascadercnn-dcn_postprocess.py --bin_data_path=result --prob_thres=0.05 --ifShowDetObj --det_results_path=detection-results --test_annotation=coco2017_jpg.info  
     ```
     - 参数说明：
-
+    
       - --bin_data_path: 推理结果。
       - --test_annotatio: 原始图片信息文件。
       - --det_results_path: 后处理输出结果。
       - --ifShowDetObj：是否将box画在图上显示。
       - --prob_thres: 目标框的置信度阈值
-
+    
       评测结果的mAP值需要使用官方的pycocotools工具，首先将后处理输出的txt文件转化为coco数据集评测精度的标准json格式。
-
+    
     ```
     python txt_to_json.py --npu_txt_path detection-results --json_output_file coco_detection_aisInfer_result
     ```
     - 参数说明：
-
+    
       - --npu_txt_path: 后处理输出结果
       - --json_output_file: 输出json
-
+    
       调用coco_eval.py脚本，输出推理结果的详细评测报告。
-  
+      
     ```
     python coco_eval.py --detection_result coco_detection_aisInfer_result.json --ground_truth ./coco/annotations/instances_val2017.json
     ```
     - 参数说明：
-
+    
       - --detection_result: 输出json
       - --ground_truth: 标签
-     
-    
+
+
+​    
    4. 性能验证。
 
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
@@ -305,9 +307,9 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
     ```
     python -m ais_bench --model ./cascadeR101dcn.om --loop 100 --batchsize 1
     ```
-
+    
     - 参数说明：
-
+    
       - --model: om模型
       - --batchsize: 每次输入模型样本数
       - --loop: 循环次数    
@@ -326,7 +328,6 @@ Cascade-RCNN-Resnet101-FPN-DCN是利用Deformable Conv（可变形卷积）和De
 
 2. 性能对比
 
-    | batchsize | 310 性能 | 310P 性能 | 
-    | ---- | ---- | ---- |
-    | 1 | 2.6  |3.8|
-          
+    | batchsize | 310*4 性能 | 310P3 性能 | 310B1性能 |
+    | ---- | ---- | ---- | ---- |
+    | 1 | 2.6  |3.8|0.853|
