@@ -15,7 +15,7 @@
 # -*- coding:utf-8 -*-
 import sys
 from auto_optimizer import OnnxGraph
-from graph_fusion import GraphFusion, create_mask
+from graph_fusion import create_mask
 
 
 def build_mask(graph, input_node, out_nodes):
@@ -56,9 +56,8 @@ def get_mask_input(graph):
 if __name__ == '__main__':
     input_model = sys.argv[1]
     output_model = sys.argv[2]
-    GraphFusion(input_model=input_model, output_model=output_model, opt_type=2)
 
-    onnx_graph = OnnxGraph.parse(output_model)
+    onnx_graph = OnnxGraph.parse(input_model)
     input_node = onnx_graph['memory']
     out_nodes = get_mask_input(onnx_graph)
     build_mask(onnx_graph, input_node, out_nodes)

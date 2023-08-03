@@ -16,7 +16,7 @@
 import sys
 import numpy as np
 from auto_optimizer import OnnxGraph, OnnxPlaceHolder
-from graph_fusion import GraphFusion, create_mask, keep_dynamic_batch
+from graph_fusion import keep_dynamic_batch
 
 
 def generate_seq_mask(graph, input_node):

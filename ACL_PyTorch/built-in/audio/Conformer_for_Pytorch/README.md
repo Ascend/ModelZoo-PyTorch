@@ -81,7 +81,7 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
 将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
 
 1. 获取权重文件  
-   下载权重放在Conformer_for_Pytorch目录下。权重链接：https://github.com/espnet/espnet/tree/master/egs2/aishell/asr1
+   下载权重放在Conformer_for_Pytorch目录下。权重链接：https://zenodo.org/record/4105763#.X40xe2j7QUE
    
    指定参数为：Conformer + specaug + speed perturbation: feats=raw, n_fft=512, hop_length=128
    
@@ -115,13 +115,11 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    ```
    导出的onnx文件正常在/root/.cache/espnet_onnx/asr_train_asr_qkv/full目录下，在/root/.cache/espnet_onnx/asr_train_asr_qkv目录下则有配置文件config.yaml配置文件以及feats_stats.npz文件
    
-   修改导出的`onnx`模型，修改xformer_decoder.onnx文件以及transformer_lm.onnx文件，原因是两模型中存在Gather算子indices为-1的场景，当前CANN还不支持该场景，有精度问题，并且可以优化部分性能。
+   修改导出的`onnx`模型，修改xformer_decoder.onnx、ctc.onnx、xformer_encoder.onnx文件，使模型支持多batch推理。
    
    ```
    python3 modify_onnx_decoder.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder.onnx \
    /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_decoder_revise.onnx
-   python3 modify_onnx_lm.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm.onnx \
-   /root/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_revise.onnx
    python3 modify_onnx_ctc.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc.onnx \
    /root/.cache/espnet_onnx/asr_train_asr_qkv/full/ctc_dynamic.onnx
    python3 modify_onnx_encoder.py /root/.cache/espnet_onnx/asr_train_asr_qkv/full/xformer_encoder.onnx \

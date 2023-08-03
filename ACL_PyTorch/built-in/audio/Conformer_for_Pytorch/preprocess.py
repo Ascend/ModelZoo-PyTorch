@@ -92,9 +92,7 @@ class Preprocessor:
         pos_mask = pos_mask.reshape([batch * hidden_size, -1])
         return mask, conv_mask, pos_mask, encoder_out_lens.astype("int64")
 
-    def __call__(
-        self, speech):
-        # TODO: combie single batch/multi batch
+    def __call__(self, speech):
         if isinstance(speech, np.ndarray):
             speech = speech[np.newaxis, :]
             speech_length = np.array([speech.shape[1]]).astype("int64")

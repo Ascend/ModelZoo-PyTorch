@@ -13,9 +13,6 @@
 # limitations under the License.
 import functools
 import numpy as np
-from espnet_onnx.asr.frontend.frontend import Frontend
-from espnet_onnx.asr.frontend.normalize.global_mvn import GlobalMVN
-from espnet_onnx.asr.frontend.normalize.utterance_mvn import UtteranceMVN
 from espnet_onnx.utils.function import (
     make_pad_mask,
     mask_fill
@@ -158,12 +155,6 @@ def build_encoder_npu_model(func):
             else:
                 self.encoder = AscendInferSession(kwargs['device_id'], self.config, fp16=kwargs['fp16'])
 
-            self.frontend = Frontend(self.config.frontend, self.providers, use_quantized)
-            if self.config.do_normalize:
-                if self.config.normalize.type == 'gmvn':
-                    self.normalize = GlobalMVN(self.config.normalize)
-                elif self.config.normalize.type == 'utterance_mvn':
-                    self.normalize = UtteranceMVN(self.config.normalize)
         else:
             func(*args, **kwargs)
     return wrapper
