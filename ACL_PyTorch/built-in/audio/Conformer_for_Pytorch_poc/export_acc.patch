@@ -1,0 +1,357 @@
+diff --git a/espnet_onnx/asr/abs_asr_model.py b/espnet_onnx/asr/abs_asr_model.py
+index d55e2c4..51f0577 100644
+--- a/espnet_onnx/asr/abs_asr_model.py
++++ b/espnet_onnx/asr/abs_asr_model.py
+@@ -11,6 +11,7 @@ from espnet_onnx.asr.scorer.length_bonus import LengthBonus
+ from espnet_onnx.asr.scorer.interface import BatchScorerInterface
+ from espnet_onnx.asr.beam_search.beam_search import BeamSearch
+ from espnet_onnx.asr.beam_search.batch_beam_search import BatchBeamSearch
++from espnet_onnx.asr.beam_search.multi_batch_beam_search import MultiBatchBeamSearch
+ from espnet_onnx.asr.beam_search.beam_search_transducer import BeamSearchTransducer
+ 
+ 
+@@ -41,8 +42,12 @@ class AbsASRModel(AbsModel):
+                 if not isinstance(v, BatchScorerInterface)
+             ]
+             if len(non_batch) == 0:
+-                self.beam_search.__class__ = BatchBeamSearch
+-                logging.info("BatchBeamSearch implementation is selected.")
++                if self.providers[0] == 'NPUExecutionProvider' and self.enable_multibatch:
++                    self.beam_search.__class__ = MultiBatchBeamSearch
++                    logging.info("MultiBatchBeamSearch implementation is selected.")
++                else:
++                    self.beam_search.__class__ = BatchBeamSearch
++                    logging.info("BatchBeamSearch implementation is selected.")
+             else:
+                 logging.warning(
+                     f"As non-batch scorers {non_batch} are found, "
+diff --git a/espnet_onnx/asr/asr_model.py b/espnet_onnx/asr/asr_model.py
+index 93e7de3..0a1104c 100644
+--- a/espnet_onnx/asr/asr_model.py
++++ b/espnet_onnx/asr/asr_model.py
+@@ -10,13 +10,16 @@ import numpy as np
+ 
+ from espnet_onnx.asr.abs_asr_model import AbsASRModel
+ from espnet_onnx.asr.beam_search.hyps import Hypothesis
++from espnet_onnx.asr.asr_npu_adapter import speech_npu_adapt, init_speech_npu, speech_npu_call
+ 
+ 
++@speech_npu_adapt
+ class Speech2Text(AbsASRModel):
+     """Wrapper class for espnet2.asr.bin.asr_infer.Speech2Text
+ 
+     """
+ 
++    @init_speech_npu
+     def __init__(self,
+                  tag_name: str = None,
+                  model_dir: Union[Path, str] = None,
+@@ -45,7 +48,7 @@ class Speech2Text(AbsASRModel):
+             self.start_idx = 1
+             self.last_idx = -1
+ 
+-
++    @speech_npu_call
+     def __call__(self, speech: np.ndarray) -> List[
+         Tuple[
+             Optional[str],
+@@ -79,6 +82,7 @@ class Speech2Text(AbsASRModel):
+ 
+         nbest_hyps = self.beam_search(enc[0])[:1]
+ 
++    def _post_process(self, nbest_hyps):
+         results = []
+         for hyp in nbest_hyps:
+             # remove sos/eos and get results
+diff --git a/espnet_onnx/asr/beam_search/batch_beam_search.py b/espnet_onnx/asr/beam_search/batch_beam_search.py
+index 87ee562..ab53483 100644
+--- a/espnet_onnx/asr/beam_search/batch_beam_search.py
++++ b/espnet_onnx/asr/beam_search/batch_beam_search.py
+@@ -102,6 +102,7 @@ class BatchBeamSearch(BeamSearch):
+         Returns:
+             Hypothesis: The initial hypothesis.
+         """
++        batch_num = x.shape[0]
+         init_states = dict()
+         init_scores = dict()
+         for k, d in self.scorers.items():
+@@ -115,7 +116,7 @@ class BatchBeamSearch(BeamSearch):
+                     states=init_states,
+                     yseq=np.array([self.sos], dtype=np.int64),
+                 )
+-            ]
++            ] * batch_num
+         )
+ 
+     def score_full(
+@@ -139,7 +140,7 @@ class BatchBeamSearch(BeamSearch):
+         return scores, states
+ 
+     def score_partial(
+-        self, hyp: BatchHypothesis, ids: np.ndarray, x: np.ndarray
++        self, hyp: BatchHypothesis, ids: np.ndarray, x: np.ndarray, **kwargs
+     ) -> Tuple[Dict[str, np.ndarray], Dict[str, Any]]:
+         """Score new hypothesis by `self.full_scorers`.
+         Args:
+@@ -157,7 +158,7 @@ class BatchBeamSearch(BeamSearch):
+         states = dict()
+         for k, d in self.part_scorers.items():
+             scores[k], states[k] = d.batch_score_partial(
+-                hyp.yseq, ids, hyp.states[k], x
++                hyp.yseq, ids, hyp.states[k], x, **kwargs
+             )
+         return scores, states
+ 
+@@ -257,6 +258,7 @@ class BatchBeamSearch(BeamSearch):
+         maxlen: int,
+         running_hyps: BatchHypothesis,
+         ended_hyps: List[Hypothesis],
++        keep_ori_hyps: bool = False
+     ) -> BatchHypothesis:
+         """Perform post-processing of beam search iterations.
+         Args:
+@@ -308,4 +310,6 @@ class BatchBeamSearch(BeamSearch):
+             hyp = self._select(running_hyps, b)
+             ended_hyps.append(hyp)
+         remained_ids = np.transpose(np.nonzero(is_eos == 0)).reshape(-1)
++        if keep_ori_hyps:
++            return self._batch_select(running_hyps, remained_ids), running_hyps
+         return self._batch_select(running_hyps, remained_ids)
+diff --git a/espnet_onnx/asr/model/decoder.py b/espnet_onnx/asr/model/decoder.py
+index 9090203..9f477c4 100644
+--- a/espnet_onnx/asr/model/decoder.py
++++ b/espnet_onnx/asr/model/decoder.py
+@@ -6,10 +6,10 @@ from espnet_onnx.asr.model.decoders.xformer import XformerDecoder
+ from espnet_onnx.asr.model.decoders.transducer import TransducerDecoder
+ 
+ 
+-def get_decoder(config: Config, providers: List[str], use_quantized: bool = False):
++def get_decoder(config: Config, providers: List[str], use_quantized: bool = False, **kwargs):
+     if config.dec_type == 'RNNDecoder':
+         return RNNDecoder(config, providers, use_quantized)
+     elif config.dec_type == 'TransducerDecoder':
+         return TransducerDecoder(config, providers, use_quantized)
+     else:
+-        return XformerDecoder(config, providers, use_quantized)
++        return XformerDecoder(config, providers, use_quantized, **kwargs)
+diff --git a/espnet_onnx/asr/model/decoders/xformer.py b/espnet_onnx/asr/model/decoders/xformer.py
+index b8ccd20..1376b62 100644
+--- a/espnet_onnx/asr/model/decoders/xformer.py
++++ b/espnet_onnx/asr/model/decoders/xformer.py
+@@ -11,9 +11,11 @@ import onnxruntime
+ 
+ from espnet_onnx.asr.scorer.interface import BatchScorerInterface
+ from espnet_onnx.utils.config import Config
++from espnet_onnx.asr.npu_model_adapter import build_decoder_npu_model
+ 
+ 
+ class XformerDecoder(BatchScorerInterface):
++    @build_decoder_npu_model
+     def __init__(
+         self,
+         config: Config,
+@@ -65,7 +67,7 @@ class XformerDecoder(BatchScorerInterface):
+         n_batch = len(ys)
+         if states[0] is None:
+             batch_state = [
+-                np.zeros((1, 1, self.odim), dtype=np.float32)
++                np.zeros((n_batch, 1, self.odim), dtype=np.float32)
+                 for _ in range(self.n_layers)
+             ]
+         else:
+diff --git a/espnet_onnx/asr/model/encoder.py b/espnet_onnx/asr/model/encoder.py
+index 3a2cb40..32e972c 100644
+--- a/espnet_onnx/asr/model/encoder.py
++++ b/espnet_onnx/asr/model/encoder.py
+@@ -4,8 +4,8 @@ from espnet_onnx.asr.model.encoders.encoder import Encoder
+ from espnet_onnx.asr.model.encoders.streaming import StreamingEncoder
+ 
+ 
+-def get_encoder(config: Config, providers: List[str], use_quantized: bool = False):
++def get_encoder(config: Config, providers: List[str], use_quantized: bool = False, **kwargs):
+     if config.enc_type == 'ContextualXformerEncoder':
+         return StreamingEncoder(config, providers, use_quantized)
+     else:
+-        return Encoder(config, providers, use_quantized)
++        return Encoder(config, providers, use_quantized, **kwargs)
+diff --git a/espnet_onnx/asr/model/encoders/encoder.py b/espnet_onnx/asr/model/encoders/encoder.py
+index bb52644..dd9bff0 100644
+--- a/espnet_onnx/asr/model/encoders/encoder.py
++++ b/espnet_onnx/asr/model/encoders/encoder.py
+@@ -13,9 +13,11 @@ from espnet_onnx.utils.function import (
+     mask_fill
+ )
+ from espnet_onnx.utils.config import Config
++from espnet_onnx.asr.npu_model_adapter import build_encoder_npu_model, encoder_npu_call
+ 
+ 
+ class Encoder:
++    @build_encoder_npu_model
+     def __init__(
+         self,
+         encoder_config: Config,
+@@ -49,6 +51,7 @@ class Encoder:
+         # if self.config.do_postencoder:
+         #     self.postencoder = Postencoder(self.config.postencoder)
+ 
++    @encoder_npu_call
+     def __call__(
+         self, speech: np.ndarray, speech_length: np.ndarray
+     ) -> Tuple[np.ndarray, np.ndarray]:
+diff --git a/espnet_onnx/asr/model/joint_network.py b/espnet_onnx/asr/model/joint_network.py
+index ce17fd3..6e27534 100644
+--- a/espnet_onnx/asr/model/joint_network.py
++++ b/espnet_onnx/asr/model/joint_network.py
+@@ -1,9 +1,11 @@
+ from typing import List
+ 
+ import onnxruntime
++from espnet_onnx.asr.npu_model_adapter import build_joint_network_npu_model
+ 
+ 
+ class JointNetwork:
++    @build_joint_network_npu_model
+     def __init__(
+         self,
+         config,
+diff --git a/espnet_onnx/asr/model/lm.py b/espnet_onnx/asr/model/lm.py
+index 8d38733..0cb4f84 100644
+--- a/espnet_onnx/asr/model/lm.py
++++ b/espnet_onnx/asr/model/lm.py
+@@ -4,10 +4,10 @@ from espnet_onnx.asr.model.lms.seqrnn_lm import SequentialRNNLM
+ from espnet_onnx.asr.model.lms.transformer_lm import TransformerLM
+ 
+ 
+-def get_lm(config: Config, providers: List[str], use_quantized: bool = False):
++def get_lm(config: Config, providers: List[str], use_quantized: bool = False, **kwargs):
+     if config.lm.use_lm:
+         if config.lm.lm_type == 'SequentialRNNLM':
+             return SequentialRNNLM(config.lm, providers, use_quantized)
+         elif config.lm.lm_type == 'TransformerLM':
+-            return TransformerLM(config.lm, providers, use_quantized)
++            return TransformerLM(config.lm, providers, use_quantized, **kwargs)
+     return None
+diff --git a/espnet_onnx/asr/model/lms/transformer_lm.py b/espnet_onnx/asr/model/lms/transformer_lm.py
+index a5bc200..674b37f 100644
+--- a/espnet_onnx/asr/model/lms/transformer_lm.py
++++ b/espnet_onnx/asr/model/lms/transformer_lm.py
+@@ -8,9 +8,11 @@ import onnxruntime
+ from scipy.special import log_softmax
+ 
+ from espnet_onnx.asr.scorer.interface import BatchScorerInterface
++from espnet_onnx.asr.npu_model_adapter import build_transformer_lm_npu_model
+ 
+ 
+ class TransformerLM(BatchScorerInterface):
++    @build_transformer_lm_npu_model
+     def __init__(
+         self,
+         config,
+@@ -98,7 +100,7 @@ class TransformerLM(BatchScorerInterface):
+         is_first_iteration = False
+         if states[0] is None:
+             batch_state = [
+-                np.zeros((1, 1, self.odim), dtype=np.float32)
++                np.zeros((n_batch, 1, self.odim), dtype=np.float32)
+                 for _ in range(self.nlayers)
+             ]
+             is_first_iteration = True
+diff --git a/espnet_onnx/asr/scorer/ctc_prefix_scorer.py b/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
+index c6d094e..42fa31b 100644
+--- a/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
++++ b/espnet_onnx/asr/scorer/ctc_prefix_scorer.py
+@@ -10,6 +10,7 @@ from scipy.special import (
+ 
+ from espnet_onnx.utils.config import Config
+ from .interface import BatchPartialScorerInterface
++from espnet_onnx.asr.npu_model_adapter import ctcprefixscorer_npu_init, ctcprefixscoreth_npu_init, ctcprefixscoreth_npu_call
+ 
+ 
+ class CTCPrefixScore:
+@@ -104,7 +105,7 @@ class CTCPrefixScore:
+ 
+ class CTCPrefixScorer(BatchPartialScorerInterface):
+     """Decoder interface wrapper for CTCPrefixScore."""
+-
++    @ctcprefixscorer_npu_init
+     def __init__(self, ctc: Config, eos: int, providers: List[str], use_quantized: bool = False):
+         """Initialize class.
+         Args:
+@@ -190,7 +191,14 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+         self.impl = CTCPrefixScoreTH(logp, xlen, 0, self.eos)
+         return None
+ 
+-    def batch_score_partial(self, y, ids, state, x):
++    def multi_batch_init_state(self, x: np.ndarray):
++        logp = self.ctc.run(["ctc_out"], {"x": x})[0]
++        xlen = np.sum((x[:, :, 0] != 0), axis=-1)
++        xlen = np.expand_dims(xlen, axis=-1)
++        self.impl = CTCPrefixScoreTH(logp, np.squeeze(xlen), 0, self.eos, multi_batch=True)
++        return None
++
++    def batch_score_partial(self, y, ids, state, x, **kwargs):
+         """Score new token.
+         Args:
+             y (np.ndarray): 1D prefix token
+@@ -211,7 +219,7 @@ class CTCPrefixScorer(BatchPartialScorerInterface):
+             )
+         else:
+             batch_state = None
+-        return self.impl(y, batch_state, ids)
++        return self.impl(y, batch_state, ids, **kwargs)
+     
+     def extend_prob(self, x: np.ndarray):
+         """Extend probs for decoding.
+@@ -255,7 +263,7 @@ class CTCPrefixScoreTH:
+     See also Seki et al. "Vectorized Beam Search for CTC-Attention-Based
+     Speech Recognition," In INTERSPEECH (pp. 3825-3829), 2019.
+     """
+-
++    @ctcprefixscoreth_npu_init
+     def __init__(self, x: np.ndarray, xlens: np.ndarray, blank: int, eos: int, margin: int = 0):
+         """Construct CTC prefix scorer
+         :param np.ndarray x: input label posterior sequences (B, T, O)
+@@ -299,6 +307,7 @@ class CTCPrefixScoreTH:
+         self.idx_b = np.arange(self.batch)
+         self.idx_bo = (self.idx_b * self.odim)[:, None]
+ 
++    @ctcprefixscoreth_npu_call
+     def __call__(self, y, state, scoring_ids=None, att_w=None):
+         """Compute CTC prefix scores for next labels
+         :param list y: prefix label sequences
+diff --git a/espnet_onnx/export/asr/export_asr.py b/espnet_onnx/export/asr/export_asr.py
+index 187d687..ca537a8 100644
+--- a/espnet_onnx/export/asr/export_asr.py
++++ b/espnet_onnx/export/asr/export_asr.py
+@@ -226,7 +226,7 @@ class ASRModelExport:
+             dummy_input,
+             os.path.join(path, f'{model.model_name}.onnx'),
+             verbose=verbose,
+-            opset_version=15,
++            opset_version=11,
+             input_names=model.get_input_names(),
+             output_names=model.get_output_names(),
+             dynamic_axes=model.get_dynamic_axes()
+diff --git a/espnet_onnx/utils/torch_function.py b/espnet_onnx/utils/torch_function.py
+index 7130ce6..b56adf4 100644
+--- a/espnet_onnx/utils/torch_function.py
++++ b/espnet_onnx/utils/torch_function.py
+@@ -53,6 +53,17 @@ def normalize(input: torch.Tensor, p: float = 2.0, dim: int = 1, out: Optional[t
+         denom = input.norm(p, dim, keepdim=True).expand_as(input)
+         return torch.div(input, denom, out=out)
+ 
++def tril_onnx(x, diagonal=0):
++    m = x.shape[0]
++    n = x.shape[1]
++    arange = torch.arange(n, device=x.device)
++    mask = arange.expand(m, n)
++    mask_maker = torch.arange(m, device=x.device).unsqueeze(-1)
++    if diagonal:
++        mask_maker = mask_maker + diagonal
++    mask = mask <= mask_maker
++    return mask * x
+ 
+ def subsequent_mask(size: torch.Tensor):
+-    return torch.ones(size, size).tril()
++    #return torch.ones(size, size).tril()
++    return tril_onnx(torch.ones(size, size))
