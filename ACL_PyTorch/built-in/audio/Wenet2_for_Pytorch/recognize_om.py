@@ -326,20 +326,20 @@ class AsrOmModel:
 
 def infer_process(idx_):
     batches = packed_data[idx_]
-    init_start = time.time()
     model = AsrOmModel(args, reverse_weight)
-    init_end = time.time()
     sync_num.append(1)
     while (len(sync_num) != args.num_process):
         # sync mutiple processes
         time.sleep(0.05)
     
     nums_ = 0
+    infer_s_t = time.time()
     for data in batches:
         num = model.forward(data)
         nums_ += num
+    infer_e_t = time.time()
     sync_num.pop()
-    return nums_, init_end - init_start
+    return nums_, infer_e_t - infer_s_t
 
 if __name__ == '__main__':
     args = get_args()
@@ -372,31 +372,34 @@ if __name__ == '__main__':
                            args.bpe_model,
                            partition=False)
 
-    test_data_loader = DataLoader(test_dataset, batch_size=None, num_workers=0)
+    test_data_loader = DataLoader(test_dataset, batch_size=None, 
+                                  num_workers=multiprocessing.cpu_count() // 2)
     manager = multiprocessing.Manager()
     num_process = args.num_process
+
+    # lots of file will be open, need to change sharing strategy
+    torch.multiprocessing.set_sharing_strategy('file_system')
     # packed data for mitiple processes
     packed_data = [[] for _ in range(num_process)]
     idx = 0
+    pre_s_t = time.time()
     for batch in test_data_loader:
         packed_data[idx].append(batch)
         idx = (idx + 1) % num_process
+    pre_e_t = time.time()
 
     sync_num = manager.list()
     data_cnt = 0
-    init_times = 0
-    total_time = 0
-    start = time.time()
+    infer_times = 0
 
     with multiprocessing.Pool(num_process) as p:
-        for nums, init_time in list(p.map(infer_process, range(num_process))):
-            init_times = max(init_times, init_time)
+        for nums, infer_time in list(p.map(infer_process, range(num_process))):
+            infer_times = max(infer_times, infer_time)
             data_cnt += nums
 
-    end = time.time()
-    fps = float((data_cnt) / (end - start - init_times))
+    fps = float((data_cnt) / (infer_times + pre_e_t - pre_s_t))
     fps_str = "fps: {}\n".format(fps)
-    resstr = "total time: {}\n".format(end - start - init_times)
+    resstr = "total time: {}\n".format(infer_times + pre_e_t - pre_s_t)
     print(fps_str)
     print(resstr)
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL 

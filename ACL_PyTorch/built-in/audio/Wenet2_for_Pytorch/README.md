@@ -351,12 +351,12 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 
 | 芯片型号        | Batch Size | 数据集       | 精度(WER) | 端到端性能（fps） |
 |-------------|------------|-----------|---------|----------------|
-| Ascend310P3 | 1          | aishell   | 4.68%   | 150.28          |
-| Ascend310P3 | 4          | aishell   | 4.68%   | 145.34          |
-| Ascend310P3 | 8          | aishell   | 4.68%   | 143.19          |
-| Ascend310P3 | 16         | aishell   | 4.68%   | 133.17          |
-| Ascend310P3 | 32         | aishell   | 4.68%   | 125.46          |
-| Ascend310P3 | 64         | aishell   | 4.68%   | 123.79          |
+| Ascend310P3 | 1          | aishell   | 4.68%   | 154.80          |
+| Ascend310P3 | 4          | aishell   | 4.68%   | 130.18          |
+| Ascend310P3 | 8          | aishell   | 4.68%   | 156.09          |
+| Ascend310P3 | 16         | aishell   | 4.68%   | 121.78         |
+| Ascend310P3 | 32         | aishell   | 4.68%   | 129.65          |
+| Ascend310P3 | 64         | aishell   | 4.68%   | 105.57         |
 
 流式纯推理场景
 
