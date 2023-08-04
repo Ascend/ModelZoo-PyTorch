@@ -13,10 +13,9 @@
 # limitations under the License.
 
 
-
 import os
 from argparse import ArgumentParser
-from utils import DefaultBoxes, COCODetection
+from utils import DefaultBoxes, Encoder, COCODetection
 from utils import SSDTransformer
 from ssd_r34 import SSD_R34
 import torch
@@ -42,6 +41,7 @@ def dboxes_R34_coco(figsize, strides):
     synt_img=torch.rand([1,3]+figsize)
     _,_,feat_size =ssd_r34(synt_img, extract_shapes = True)
     steps=[(int(figsize[0]/fs[0]),int(figsize[1]/fs[1])) for fs in feat_size]
+    # use the scales here: https://github.com/amdegroot/ssd.pytorch/blob/master/data/config.py
     scales = [(int(s*figsize[0]/300),int(s*figsize[1]/300)) for s in [21, 45, 99, 153, 207, 261, 315]] 
     aspect_ratios =  [[2], [2, 3], [2, 3], [2, 3], [2], [2]] 
     dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
@@ -49,20 +49,18 @@ def dboxes_R34_coco(figsize, strides):
 
 
 def preprocess(coco, output_dir):
-	if not os.path.isdir(output_dir):
-		os.mkdir(output_dir)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir, mode=Oo755)
 
-	for idx, image_id in enumerate(tqdm.tqdm(coco.img_keys)):
+    for idx, image_id in enumerate(tqdm.tqdm(coco.img_keys)):
 
-		img, (htot, wtot), _, _ = coco[idx]
+        img, (htot, wtot), _, _ = coco[idx]
+       
+        inp_data_np = np.expand_dims(np.array(img), axis = 0)
 
-		inp = img.unsqueeze(0)
+        output_file = f'{output_dir}/{image_id:0>12}_{htot}_{wtot}.npy'
 
-		inp_data_np = inp.data.cpu().numpy()
-
-		output_file = f'{output_dir}/{image_id:0>12}_{htot}_{wtot}.npy'
-
-		np.save(output_file, inp_data_np)
+        np.save(output_file, inp_data_np)
 
 def main():
     args = parse_args()

@@ -1,0 +1,17 @@
+589c589
+<             transforms.ToTensor(),
+---
+>             # transforms.ToTensor(),
+591c591,592
+<             self.normalize,])
+---
+>             # self.normalize,
+>             ])
+599c600
+<         print('Transformer: start transforming.')
+---
+>         # print('Transformer: start transforming.')
+601c602
+<             print('Resize image')
+---
+>             # print('Resize image')

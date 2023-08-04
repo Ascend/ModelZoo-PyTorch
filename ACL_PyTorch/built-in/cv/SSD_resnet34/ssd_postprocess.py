@@ -43,55 +43,55 @@ def parse_args():
 
 
 def dboxes_R34_coco(figsize, strides):
-	ssd_r34=SSD_R34(81, strides=strides)
-	synt_img=torch.rand([1,3]+figsize)
-	_,_,feat_size =ssd_r34(synt_img, extract_shapes = True)
-	print('Features size: ', feat_size)
-	steps=[(int(figsize[0]/fs[0]),int(figsize[1]/fs[1])) for fs in feat_size]
-	scales = [(int(s*figsize[0]/300),int(s*figsize[1]/300)) for s in [21, 45, 99, 153, 207, 261, 315]] 
-	aspect_ratios =  [[2], [2, 3], [2, 3], [2, 3], [2], [2]] 
-	dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
-	return dboxes
+    ssd_r34=SSD_R34(81, strides=strides)
+    synt_img=torch.rand([1,3]+figsize)
+    _,_,feat_size =ssd_r34(synt_img, extract_shapes = True)
+    print('Features size: ', feat_size)
+    steps=[(int(figsize[0]/fs[0]),int(figsize[1]/fs[1])) for fs in feat_size]
+    scales = [(int(s*figsize[0]/300),int(s*figsize[1]/300)) for s in [21, 45, 99, 153, 207, 261, 315]] 
+    aspect_ratios =  [[2], [2, 3], [2, 3], [2, 3], [2], [2]] 
+    dboxes = DefaultBoxes(figsize, feat_size, steps, scales, aspect_ratios)
+    return dboxes
 
 
 
 def coco_eval(cocoGt, inv_map, threshold, result_dir):
 
-	result_infos = {}
+    result_infos = {}
 
-	for path in Path(result_dir).iterdir():
-		image_id, htot, wtot, output_id = map(int, path.stem.split('_'))
-		if image_id not in result_infos:
-			result_infos[image_id] = dict(
-				res_paths=[None, None, None],
-				htot=htot,
-				wtot=wtot
-			)
-		result_infos[image_id]['res_paths'][output_id] = str(path)
+    for path in Path(result_dir).iterdir():
+        image_id, htot, wtot, output_id = map(int, path.stem.split('_'))
+        if image_id not in result_infos:
+            result_infos[image_id] = dict(
+                res_paths=[None, None, None],
+                htot=htot,
+                wtot=wtot
+            )
+        result_infos[image_id]['res_paths'][output_id] = str(path)
 
 
-	ret = []
-	for image_id, infos in result_infos.items():
-		loc_path, label_path, prob_path = infos['res_paths']
-		htot = infos['htot']
-		wtot = infos['wtot']
+    ret = []
+    for image_id, infos in result_infos.items():
+        loc_path, label_path, prob_path = infos['res_paths']
+        htot = infos['htot']
+        wtot = infos['wtot']
 
-		loc = np.load(loc_path)
-		label = np.load(label_path)
-		prob = np.load(prob_path)
+        loc = np.load(loc_path)
+        label = np.load(label_path)
+        prob = np.load(prob_path)
 
-		loc = loc.reshape(1, -1, 4)[:, :200, :]
-		label = label.reshape(1, -1)[:, :200]
-		prob = prob.reshape(1, -1)[:, :200]
+        loc = loc.reshape(1, -1, 4)[:, :200, :]
+        label = label.reshape(1, -1)[:, :200]
+        prob = prob.reshape(1, -1)[:, :200]
 
-		lg = label[label > 0].size 
+        lg = label[label > 0].size 
 
-		loc = loc[:, :lg, :]
-		label = label[:, :lg]
-		prob = prob[:, :lg]
+        loc = loc[:, :lg, :]
+        label = label[:, :lg]
+        prob = prob[:, :lg]
 
-		for loc_, label_, prob_ in zip(loc[0], label[0], prob[0]):
-			ret.append([image_id, loc_[0]*wtot,
+        for loc_, label_, prob_ in zip(loc[0], label[0], prob[0]):
+            ret.append([image_id, loc_[0]*wtot,
                                   loc_[1]*htot,
                                   (loc_[2] - loc_[0])*wtot,
                                   (loc_[3] - loc_[1])*htot,
@@ -99,15 +99,15 @@ def coco_eval(cocoGt, inv_map, threshold, result_dir):
                                   inv_map[label_]])
 
 
-	cocoDt = cocoGt.loadRes(np.array(ret))
+    cocoDt = cocoGt.loadRes(np.array(ret))
 
-	E = COCOeval(cocoGt, cocoDt, iouType='bbox')
-	E.evaluate()
-	E.accumulate()
-	E.summarize()
-	print("Current AP: {:.5f} AP goal: {:.5f}".format(E.stats[0], threshold))
+    E = COCOeval(cocoGt, cocoDt, iouType='bbox')
+    E.evaluate()
+    E.accumulate()
+    E.summarize()
+    print("Current AP: {:.5f} AP goal: {:.5f}".format(E.stats[0], threshold))
 
-	return (E.stats[0] >= threshold) 
+    return (E.stats[0] >= threshold) 
 
 
 def main():

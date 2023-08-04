@@ -66,7 +66,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 6.3.RC1 | -                                                            |
+  | CANN                                                         | 6.3.RC2 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
                                                
 
@@ -92,10 +92,12 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
    git clone https://github.com/BowenBao/inference.git
    cd inference/cloud/single_stage_detector/pytorch
    python3 setup.py develop
+   patch -p 1 utils.py utils.patch
    ```
 4. 将前后处理等所有文件移入inference/cloud/single_stage_detector/pytorch中。
 
-5. 修改onnx图。（改为静态提升性能)  
+5. 修改onnx图。 
+
    1.安装改图工具。
    ```
    git clone https://gitee.com/ascend/msadvisor.git
@@ -138,7 +140,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
       -  --output_dir：预处理后的数据文件的相对路径。
 
     
-    将inference/cloud/single_stage_detector/pytorch/utils.py中599和601行注释掉，避免打印信息过多。
+
 
 
 ## 模型推理<a name="section741711594517"></a>
@@ -178,7 +180,9 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
                  --input_format=NCHW \ 
                  --input_shape="image:1,3,1200,1200" \ 
                  --log=error \
-                 --soc_version=Ascend${ChipName} 
+                 --soc_version=Ascend${ChipName} \
+                 --insert_op_conf=./aipp.cfg \
+                 --enable_small_channel=1
          ```
 
          - 参数说明：
@@ -190,7 +194,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
            -   --input\_shape：输入数据的shape。
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
-
+           -   --insert_op_conf:插入aipp
         运行成功后生成ssd_bs1.om模型文件。
 
 2. 开始推理验证。
@@ -256,7 +260,7 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据。
+
 
 1. 精度对比
 
@@ -264,8 +268,3 @@ SSD模型是用于图像检测的模型，通过基于Resnet34残差卷积网络
     | ----------- | --------- | -------- |
     | ssd_resnet34 | 1       | map = 20% |
    
-2. 性能对比
-
-    | batchsize | 310P 性能 | 
-    | ---- | ---- |
-    | 1 | 44|
