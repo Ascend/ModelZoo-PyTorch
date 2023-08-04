@@ -88,38 +88,8 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
     说明：某些库如果通过此方式安装失败，可使用pip单独进行安装。
 
     2. 安装量化工具
-        1. 下载软件包
-            下载Ascend-cann-amct_{software version}_linux-{arch}.tar.gz软件包，可根据需要下载社区版。
-        2. 安装
-            软件包解压后进入amct目录下的amct_onnx文件夹，找到amct_onnx-{version}-py3-none-linux_{arch}.whl文件，执行如下命令
-            ```bash
-            pip3 install amct_onnx-{version}-py3-none-linux_{arch}.whl --user
-            ```
-            出现 Successfully installed amct-onnx-{version} 则说明安装成功。
-        3. 编译并安装自定义算子包
-            1. 在amct_onnx文件夹下解压自定义算子包
-                ```bash
-                tar -zvxf amct_onnx_op.tar.gz
-                ```
-                解压后文件夹目录如下
-                ```bash
-                amct_onnx_op
-                |---inc
-                |---src
-                |---setup.py
-                ```
-            2. 如服务器无法联网，则需在https://github.com/microsoft/onnxruntime/tree/v1.8.0/include/onnxruntime/core/session 目录里下载如下四个文件（注意：切换到v1.8.0分支再下载），上次传到amct_onnx_op/inc目录下。若能联网，则跳过此步。
-                ```bash
-                onnxruntime_cxx_api.h
-                onnxruntime_cxx_inline.h
-                onnxruntime_c_api.h
-                onnxruntime_session_options_config_keys.h
-                ```
-            3. 编译并安装自定义算子包
-                ```bash
-                cd amct_onnx_op && python3 setup.py build
-                ```
-                出现 [INFO] Install amct_onnx_op success! 即为安装成功。
+
+        参考[AMCT(ONNX)](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/70RC1alpha001/developmenttools/devtool/atlasamctonnx_16_0004.html)主页安装量化工具。
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -140,11 +110,11 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
    ```
    python3 preprocess_resnet50_pytorch.py \
         --src_path ./cifar-100-python/test \
-        --save_path ./bin_data \
+        --bin_path ./bin_data 
    ```
    - 参数说明
         - --src_path: 测试数据集地址
-        - --save_path: 生成bin文件地址
+        - --bin_path: 生成bin文件地址
    
    运行成功后,同一目录下生成cifar100数据集的可视化数据集pic,bin格式的数据集bin_data以及label文件img_label.txt
 
@@ -242,7 +212,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
             --output=models/resnet50_quant_bs24 \
             --input_format=NCHW \
             --input_shape="input:24,3,32,32" \
-            --insert_op_conf=./aipp.cfg \
+            --insert_op_conf=./aipp.conf \
             --enable_small_channel=1 \
             --op_select_implmode=high_performance \
             --soc_version=Ascend${chip_name} \
@@ -308,7 +278,7 @@ ResNet50是针对移动端专门定制的轻量级卷积神经网络，该网络
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
       ```
-      python3 -m ais_bench --model ./models/resnet50_quant_bs24.om --loop 100 --batchsize 1
+      python3 -m ais_bench --model ./models/resnet50_quant_bs24.om --loop 100 --batchsize 24
 
       ```
       - 参数说明
