@@ -50,7 +50,7 @@ def dboxes_R34_coco(figsize, strides):
 
 def preprocess(coco, output_dir):
     if not os.path.isdir(output_dir):
-        os.mkdir(output_dir, mode=Oo755)
+        os.mkdir(output_dir, mode=0o640)
 
     for idx, image_id in enumerate(tqdm.tqdm(coco.img_keys)):
 
