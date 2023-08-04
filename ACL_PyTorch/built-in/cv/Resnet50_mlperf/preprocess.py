@@ -14,12 +14,18 @@
 
 import os
 import sys
+import argparse
 import multiprocessing
 import cv2
-from tqdm import tqdm
 import numpy as np
+from tqdm import tqdm
 
-img_resize = 224
+
+model_config = {
+    'resize': 224,
+    'centercrop': 224,
+    'mean': [123.675, 116.28, 103.53]
+}
 
 
 def center_crop(img, out_height, out_width):
@@ -51,22 +57,13 @@ def resize_with_aspectratio(img, size, scale=87.5, inter_pol=cv2.INTER_LINEAR):
 
 
 def gen_input_bin(file_batches, batch, src_path, save_path):
-    for file in tqdm(file_batches[batch]):
-        image = cv2.imread(os.path.join(src_path, file))
+    for file_name in tqdm(file_batches[batch]):
+        image = cv2.imread(os.path.join(src_path, file_name))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        size = img_resize
-        cv2_interpol = cv2.INTER_AREA
-        img = resize_with_aspectratio(image, size, inter_pol=cv2_interpol)
-        img = center_crop(img, size, size)
-        img = np.asarray(img, dtype='float32')
-
-        # normalize image
-        means = np.array([123.68, 116.78, 103.94], dtype=np.float32)
-        img -= means
-
-        img = img.transpose([2, 0, 1])
-
-        np.save(os.path.join(save_path, file.split('.')[0] + ".npy"), img)
+        img = resize_with_aspectratio(image, model_config['resize'], inter_pol=cv2.INTER_AREA)
+        img = center_crop(img, model_config['centercrop'], model_config['centercrop'])
+        img = np.asarray(img, dtype='uint8')
+        img.tofile(os.path.join(save_path, file_name.split('.')[0] + ".bin"))
 
 
 def preprocess(source_path, dest_path):
@@ -84,13 +81,40 @@ def preprocess(source_path, dest_path):
     print("in thread, except will not report! please ensure bin files generated.")
 
 
+def amct_input_bin(src_path, save_path):
+    in_files = os.listdir(src_path)
+    image_names = in_files[0: 64]
+    data = []
+    for image_name in tqdm(image_names):
+        file_path = os.path.join(src_path, image_name)
+        image = cv2.imread(file_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img = resize_with_aspectratio(image, model_config['resize'], inter_pol=cv2.INTER_AREA)
+        img = center_crop(img, model_config['centercrop'], model_config['centercrop'])
+        img = np.asarray(img, dtype='float32')
+        img -= np.array(model_config['mean'], dtype='float32')
+        img = img.transpose([2, 0, 1])
+        data.append(img)
+    batch_data = np.stack(data, axis=0)
+    batch_data.tofile(os.path.join(save_path, image_name.split('.')[0] + ".bin"))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--src_path', type=str, default='./ImageNet/val', help='path to images.')
+    parser.add_argument('--save_path', type=str, default='./rep_dataset', help='path to save bin files.')
+    parser.add_argument('--amct', action='store_true', help='if True, will generate quantization data.')
+    args = parser.parse_args()
+
+    if not os.path.isdir(args.save_path):
+        os.makedirs(os.path.realpath(args.save_path))
+    if args.amct:
+        amct_input_bin(args.src_path, args.save_path)
+    else:
+        preprocess(args.src_path, args.save_path)
+
+
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        raise Exception("usage: python3 xxx.py [input_path] [output_path]")
-    input_path = sys.argv[1]
-    output_path = sys.argv[2]
-    input_path = os.path.realpath(input_path)
-    output_path = os.path.realpath(output_path)
-    if not os.path.isdir(output_path):
-        os.makedirs(os.path.realpath(output_path))
-    preprocess(input_path, output_path)
+    main()
+
+    

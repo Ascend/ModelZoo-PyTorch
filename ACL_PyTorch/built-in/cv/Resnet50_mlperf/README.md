@@ -43,14 +43,14 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | FLOAT32 | batchsize x 3 x 256 x 256 | NCHW         |
+  | input    | FLOAT32 | batchsize x 3 x 224 x 224 | NCHW         |
 
 
 - 输出数据
 
   | 输出数据 | 大小     | 数据类型 |
   | -------- | -------- | -------- |
-  | output   | 1        | INT64    |
+  | output   | batchsize   | INT64    |
 
 
 # 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
@@ -72,9 +72,15 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
 
 1. 安装依赖。
 
-   ```
-   pip3 install -r requirment.txt
-   ```
+   1. 安装基础环境
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+    说明：某些库如果通过此方式安装失败，可使用pip单独进行安装。
+
+    2. 安装量化工具
+
+        参考[AMCT(ONNX)](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/70RC1alpha001/developmenttools/devtool/atlasamctonnx_16_0004.html)主页安装量化工具。
 
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -99,8 +105,14 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
    执行preprocess.py脚本，完成预处理。
 
    ```
-   python3 preprocess.py ./ImageNet/val ./prep_dataset
+   python3 preprocess.py \
+       --src_path ./ImageNet/val \
+       --save_path ./prep_dataset
    ```
+
+   - 参数说明
+        - --src_path: 测试数据集地址
+        - --save_path: 生成预处理数据bin文件地址
 
    每个图像对应生成一个npy文件。运行成功后，在当前目录下生成prep_dataset npy文件夹
 
@@ -132,6 +144,39 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
          ```
    
          获得resnet50.onnx文件。
+   2. 模型量化 
+   
+       在量化前，我们先生成校验数据，以确保量化后模型精度不会损失：
+       ```bash
+        python3 preprocess.py \
+            --src_path ./ImageNet/val \
+            --save_path ./amct_bin_data \
+            --amct
+        ```
+       - 参数说明
+        - --src_path: 测试数据集地址
+        - --save_path: 生成校验数据bin文件地址
+        - --amct: 说明是生成amct量化的校验数据
+
+        然后使用`amct`工具，对ONNX模型进行量化，以进一步提升模型性能：
+        ```bash
+        amct_onnx calibration \
+            --model ./models/resnet50.onnx \
+            --save_path ./models/resnet50_quant \
+            --input_shape "dummy_input:64,3,224,224" \
+            --data_dir "./amct_bin_data/" \
+            --data_types "float32" \
+            --calibration_config ./quant.cfg
+        ```
+        - 参数说明
+          - --model: onnx模型
+          - --save_path: 保存量化后onnx模型文件地址
+          - --input_shape: 模型输入shape
+          - --data_dir: 校验数据
+          - --data_types: 数据类型
+          - -calibration_config: 量化配置文件
+        
+        量化后的模型存放路径为 `models/resnet50_quant_deploy_model.onnx`。
 
 
    2. 使用ATC工具将ONNX模型转OM模型。
@@ -166,7 +211,15 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
       3. 执行ATC命令。
    
          ```
-         atc --model=resnet50.onnx --framework=5 --output=resnet50_bs64 --input_format=NCHW --input_shape="dummy_input:64,3,224,224" --log=error --soc_version=Ascend${chip_name} 
+         atc --model=models/resnet50_quant_deploy_model.onnx \
+         --framework=5 \
+         --output=resnet50_bs64 \
+         --input_format=NCHW \
+         --input_shape="dummy_input:64,3,224,224" \
+         --log=error \
+         --insert_op_conf=./aipp_resnet50.conf \
+         --enable_small_channel=1 \
+         --soc_version=Ascend${chip_name} 
          ```
    
             备注：Ascend${chip_name}请根据实际查询结果填写    
@@ -175,10 +228,12 @@ Resnet是残差网络(Residual Network)的缩写,该系列网络广泛用于目�
            -   --model：为ONNX模型文件。
            -   --framework：5代表ONNX模型。
            -   --output：输出的OM模型。
-           -   --input\_format：输入数据的格式。
-           -   --input\_shape：输入数据的shape。
+           -   --input_format：输入数据的格式。
+           -   --input_shape：输入数据的shape。
            -   --log：日志级别。
-           -   --soc\_version：处理器型号。
+           -   --soc_version：处理器型号。
+           -   --enable_small_channel:是否使能small_channel优化。
+           -   --insert_op_conf：使能AIPP，使用该参数后，则输入数据类型为uint8。
          
            运行成功后生成resnet50_bs64.om模型文件。
            
@@ -208,11 +263,12 @@ b.  执行推理。
 c.  精度验证。
 
 统计推理输出的Accuracy
-调用脚本与数据集标签val\_map.txt比对，可以获得Accuracy数据，结果保存在result.json中。
+调用脚本与数据集标签val_map.txt比对，可以获得Accuracy数据，结果保存在result.json中。
    ```
    python3 accuracy.py ./result ./val_map.txt ./ result.json
    ```
    - 参数说明
+     - result：为推理结果保存文件夹   
      - val_map.txt：为标签数据
      - result.json：为生成结果文件
 
@@ -222,11 +278,11 @@ c.  精度验证。
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| 310P3 | 1 | ImageNet | 76.44% | 1503.92 |
-| 310P3 | 2 | ImageNet | 76.44% | 2272.42 |
-| 310P3 | 4 | ImageNet | 76.44% | 3163.26 |
-| 310P3 | 8 | ImageNet | 76.44% | 3714.24 |
-| 310P3 | 16 | ImageNet | 76.44% | 3793.27 |
-| 310P3 | 32 | ImageNet | 76.44% | 3852.32 |
-| 310P3 | 64 | ImageNet | 76.44% | 3940.45 |
+| 310P3 | 1 | ImageNet | 76.38% | 4089|
+| 310P3 | 2 | ImageNet | 76.38% | 6323|
+| 310P3 | 4 | ImageNet | 76.38% | 9492|
+| 310P3 | 8 | ImageNet | 76.38% | 9403|
+| 310P3 | 16 | ImageNet | 76.38% | 7748|
+| 310P3 | 32 | ImageNet | 76.38% | 7020|
+| 310P3 | 64 | ImageNet | 76.38% | 12141|
 
