@@ -115,7 +115,19 @@ CV-recognition
         <td> 79.91% </td>
 	<td> 1951(bs8) </td>
 	<td>1 x 1 x 32 x wSize</td>
+    <tr>
+        <td>
+        <a href="https://github.com/open-mmlab/mmocr">  ABINet </a>
+        </td>
+        <td>svt</td>
+	<td></td>
+        <td></td>
+        <td> 91.96% </td>
+	<td> 57.53(bs8) </td>
+	<td>bs x 3 x 32 x 128</td>
     </tr>
 </table>
+
+
 
 
