@@ -23,9 +23,9 @@ from bert4torch.models import build_transformer_model, BaseModel
 
 
 class Model(BaseModel):
-    def __init__(self, args):
+    def __init__(self, config_path):
         super().__init__()
-        self.bert = build_transformer_model(config_path=args.config_path, checkpoint_path=None, segment_vocab_size=0)
+        self.bert = build_transformer_model(config_path=config_path, checkpoint_path=None, segment_vocab_size=0)
         # embedding_dims:768, len_categories: 7
         self.fc = nn.Linear(768, 7)  # 包含首尾
         self.crf = CRF(7)
@@ -37,25 +37,18 @@ class Model(BaseModel):
         return emission_score, attention_mask
 
 
+def build_model(config_path, checkpoint_path):
+    model = Model(config_path).to("cpu")
+    model.load_weights(checkpoint_path, strict=False)
+    return model
+ 
+ 
 def pth2onnx(args):
     # build model
-    model = Model(args).to("cpu")
-    model.load_weights(args.input_path, strict=False)
-
-    # dump crf weights for postprocess
-    init_se_transitions_crf = [
-        model.crf.state_dict()['start_transitions'].detach().numpy(),
-        model.crf.state_dict()['end_transitions'].detach().numpy(),
-    ]
-    np.save(".crf.npy", model.crf.state_dict()['transitions'].detach().numpy())
-    np.save(".crf_se.npy", init_se_transitions_crf)
+    model = build_model(args.config_path, args.input_path)
 
     # build data
-    def build_input_data(shape=(1, 256), low=1, high=1024, dtype="int64"):
-        input_data = np.random.uniform(low, high, shape).astype(dtype)
-        return torch.tensor(input_data)
-
-    dummy_input = build_input_data()
+    dummy_input = torch.randint(1, 1024, (1, 256))
     input_names = ["token_ids"]
     output_names = ["emission_score", "attention_mask"]
     torch.onnx.export(
@@ -84,10 +77,10 @@ def parse_arguments():
                         help='config path for export model')
     parser.add_argument('-s', '--seq_len', type=int, default=256,
                         help='max sequence length for output model')
-    args = parser.parse_args()
-    args.out_path = os.path.abspath(args.out_path)
-    os.makedirs(os.path.dirname(args.out_path), exist_ok=True)
-    return args
+    arguments = parser.parse_args()
+    arguments.out_path = os.path.abspath(arguments.out_path)
+    os.makedirs(os.path.dirname(arguments.out_path), exist_ok=True)
+    return arguments
 
 
 if __name__ == '__main__':

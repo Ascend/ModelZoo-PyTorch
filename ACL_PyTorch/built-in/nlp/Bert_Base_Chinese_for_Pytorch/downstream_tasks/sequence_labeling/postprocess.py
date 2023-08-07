@@ -22,7 +22,8 @@ import numpy as np
 import torch
 from seqeval.metrics import classification_report
 from seqeval.scheme import IOB2
-from bert4torch.layers import CRF
+
+from pth2onnx import build_model
 
 
 def pad_data(path, seq=256):
@@ -65,13 +66,13 @@ def evaluate(result_dir, label_dir):
         for label in labels:
             true_label += [categories_id2label[int(l)] for l in label if l != -100]
 
-        true_labels += true_label
+        true_labels.append(true_label)
 
         true_prediction = []
         for score in scores:
             true_prediction += [categories_id2label[int(p)] for p in score if p != -100]
 
-        true_predictions += true_prediction
+        true_predictions.append(true_prediction)
 
         attention_mask = labels.gt(0)
         # token粒度
@@ -85,6 +86,7 @@ def evaluate(result_dir, label_dir):
         X2 += len(entity_pred.intersection(entity_true))
         Y2 += len(entity_pred)
         Z2 += len(entity_true)
+    
     eval_result = classification_report(true_labels,
                                         true_predictions,
                                         digits=4,
@@ -149,9 +151,13 @@ def parse_arguments():
                         help='save path for evaluation result')
     parser.add_argument('-l', '--label_dir', type=str, required=True,
                         help='label dir for label results')
+    parser.add_argument('-c', '--config_path', type=str, required=True,
+                        help='config path for export model')
+    parser.add_argument('-k', '--ckpt_path', type=str, default="./best_model.pt",
+                        help='result dir for prediction results')
     arguments = parser.parse_args()
-    arguments.out_path = os.path.abspath(args.out_path)
-    dir_name = os.path.dirname(args.out_path)
+    arguments.out_path = os.path.abspath(arguments.out_path)
+    dir_name = os.path.dirname(arguments.out_path)
 
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
@@ -165,9 +171,9 @@ if __name__ == '__main__':
     categories_id2label = {i: k for i, k in enumerate(categories)}
     crf_transitions = [torch.Tensor(np.load(".crf.npy"))]
     crf_se_transitions = [torch.Tensor(_) for _ in np.load(".crf_se.npy")]
-    crf = CRF(len(categories),
-              init_transitions=crf_transitions + crf_se_transitions)
 
+    model = build_model(args.config_path, args.ckpt_path)
+    crf = model.crf
     evaluate_results = evaluate(args.result_dir, args.label_dir)
     with open(args.out_path, 'w') as f:
         json.dump(evaluate_results, f, ensure_ascii=False, indent=4)
