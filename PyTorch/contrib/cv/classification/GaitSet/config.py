@@ -29,6 +29,7 @@ conf_1p = {
         # function: utils.data_loader.load_data
         'pid_num': 73,
         'pid_shuffle': False,
+        'device_num': 1,
     },
     "model": {
         'hidden_dim': 256,
@@ -61,6 +62,7 @@ conf_8p = {
         # function: utils.data_loader.load_data
         'pid_num': 73,
         'pid_shuffle': False,
+        'device_num': 8,
     },
     "model": {
         'hidden_dim': 256,

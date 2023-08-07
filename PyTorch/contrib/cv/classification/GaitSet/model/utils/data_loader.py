@@ -1,12 +1,13 @@
 import os
 import os.path as osp
+import torch
 
 import numpy as np
 
 from .data_set import DataSet
 
 
-def load_data(dataset_path, resolution, dataset, pid_num, pid_shuffle, cache=True):
+def load_data(dataset_path, resolution, dataset, pid_num, pid_shuffle, device_num, cache=True):
     seq_dir = list()
     view = list()
     seq_type = list()
@@ -37,6 +38,10 @@ def load_data(dataset_path, resolution, dataset, pid_num, pid_shuffle, cache=Tru
         pid_list = [pid_list[0:pid_num], pid_list[pid_num:]]
         os.makedirs('partition', exist_ok=True)
         np.save(pid_fname, pid_list)
+
+    # Fixed the occasional issue that numpy failed to load data when multi-device
+    if device_num > 1:
+        torch.distributed.barrier()
 
     pid_list = np.load(pid_fname, allow_pickle=True)
     train_list = pid_list[0]
