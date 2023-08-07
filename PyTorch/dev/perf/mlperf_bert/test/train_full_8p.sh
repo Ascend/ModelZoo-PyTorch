@@ -12,15 +12,12 @@ else
 fi
 source ${test_path_dir}/env_npu.sh
 
-#网络名称,同目录名称,需要模型审视修改
-Network="mlperf_bert"
 
 # 指定训练所使用的npu device卡id
 device_id=0
 # 校验是否指定了device_id,分动态分配device_id与手动指定device_id,此处不需要修改
 if [ ${device_id} ]; then
   export ASCEND_DEVICE_ID=${device_id}
-  echo "device id is ${ASCEND_DEVICE_ID}"
 else
   "[Error] device id must be config"
   exit 1
@@ -36,7 +33,7 @@ fi
 
 #################启动训练脚本#################
 data_and_model_path=""
-batch_size=10
+batch_size=16
 loss_scale=0
 fp16=0
 #获取外部传参，可扩展
@@ -55,8 +52,6 @@ do
     export ALLOW_FP32=True
   fi
 done
-
-start_time=$(date +%s)
 
 if [[ fp16 -ne 0 ]]; then
   nohup python3 -m torch.distributed.launch --nproc_per_node=8 run.py \
@@ -115,48 +110,3 @@ else
     --dense_seq_outpu \
     --init_checkpoint=$data_and_model_path/model.ckpt-28252.pt > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 fi
-wait
-
-##################获取训练数据################
-#训练结束时间，不需要修改
-end_time=$(date +%s)
-e2e_time=$(($end_time - $start_time))
-
-#结果打印，不需要修改
-echo "------------------ Final result ------------------"
-#输出性能FPS，需要模型审视修改
-FPS=$(grep "seq/s" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "seq/s':" '{print $2}' | awk -F "," '{print $1}' |  tail -n 2 | head -n 1)
-
-#打印，不需要修改
-echo "Final Performance seq/sec : $FPS"
-
-#输出训练精度,需要模型审视修改
-train_accuracy=$(grep "eval_mlm_accuracy" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "eval_mlm_accuracy':" '{print $2}' | awk -F "}" '{print $1}' | awk 'END {print $1}')
-
-#打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
-echo "E2E Training Duration sec : $e2e_time"
-
-#性能看护结果汇总
-#训练用例信息，不需要修改
-BatchSize=64 #仅用于打印，不在训练中生效
-WORLD_SIZE=1
-DeviceType=$(uname -m)
-CaseName=${Network}_bs${BatchSize}_'p'_'acc'
-
-##获取性能数据，不需要修改
-#吞吐量
-ActualFPS=${FPS}
-
-#从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep "loss:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk -F "loss:" '{print $2}'| awk '{print $1}' >${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${CaseName}_loss.txt
-
-#关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" >${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "RankSize = ${WORLD_SIZE}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log

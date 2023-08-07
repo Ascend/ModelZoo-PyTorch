@@ -103,17 +103,15 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
      启动单卡训练。
 
-     ```
-     bash ./test/train_full_1p.sh               # 单卡精度
-          
-     bash ./test/train_performance_1p.sh        # 单卡性能
+     ``` 
+     bash train_performance_1p.sh --data_and_model_path=<your_path>/input_preprocessing     # 单卡性能
      ```
      
    - 单机8卡训练
      
      启动8卡训练。
         ```
-        bash run_8p.sh --data_and_model_path=<your_path>/input_preprocessing
+        bash train_full_8p.sh --data_and_model_path=<your_path>/input_preprocessing
         ```
 
 
