@@ -42,8 +42,21 @@ from progress.bar import Bar
 from models.data_parallel import DataParallel
 from utils.utils import AverageMeter
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch_npu.utils.profiler import Profile
 from apex import amp
+try:
+    from torch_npu.utils.profiler import Profile
+except ImportError:
+    print("Profile not in torch_npu.utils.profiler now.. Auto Profile disabled.", flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def start(self):
+            pass
+
+        def end(self):
+            pass
+
 
 class NoProling(object):
     def __enter__(self):
