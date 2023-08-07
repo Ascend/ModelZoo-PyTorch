@@ -1103,8 +1103,9 @@ def main():
             train_sampler = RandomSampler(train_data)
         else:
             train_sampler = DistributedSampler(train_data)
+        kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
         train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size * n_npu,
-                                      num_workers=2, pin_memory=True, drop_last=True)
+                                      num_workers=2, pin_memory=True, drop_last=True, **kwargs)
 
         model.train()
         #gradClipper = GradientClipper(max_grad_norm=1.0)

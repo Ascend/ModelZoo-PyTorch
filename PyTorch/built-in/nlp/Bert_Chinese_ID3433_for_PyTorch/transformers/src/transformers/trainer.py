@@ -1391,6 +1391,7 @@ class Trainer:
                     # AT THE VERY END!
                     _ = list(train_dataloader.sampler)
 
+        once_flag = True
         for epoch in range(epochs_trained, num_train_epochs):
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
@@ -1416,7 +1417,10 @@ class Trainer:
             profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
                               profile_type=os.getenv('PROFILE_TYPE'))
             for step, inputs in enumerate(epoch_iterator):
-
+                # 1p skip over first 5 time compile time
+                if epoch == 0 and step > 4 and once_flag and not self.use_combine_ddp:
+                    start_time = time.time()
+                    once_flag = False
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -1592,8 +1596,8 @@ class Trainer:
         # add remaining tr_loss
         self._total_loss_scalar += tr_loss.item()
         train_loss = self._total_loss_scalar / self.state.global_step
-
-        metrics = speed_metrics("train", start_time, num_samples=num_train_samples, num_steps=self.state.max_steps)
+        num_train_samples_act = num_train_samples if self.args.use_combine_ddp else num_train_samples - self.args.per_device_train_batch_size * 5
+        metrics = speed_metrics("train", start_time, num_samples=num_train_samples_act, num_steps=self.state.max_steps)
         self.store_flos()
         metrics["total_flos"] = self.state.total_flos
         metrics["train_loss"] = train_loss

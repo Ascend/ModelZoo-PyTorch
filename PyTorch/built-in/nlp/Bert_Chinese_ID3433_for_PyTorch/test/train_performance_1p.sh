@@ -105,7 +105,7 @@ nohup python3 run_mlm.py \
         --save_steps 5000 \
         --dataloader_num_workers 4 \
         --num_train_epochs ${train_epochs} \
-        --max_train_samples 10000 \
+        --max_train_samples 100000 \
         --overwrite_output_dir \
         --per_device_train_batch_size ${batch_size} \
         --per_device_eval_batch_size ${batch_size} \
