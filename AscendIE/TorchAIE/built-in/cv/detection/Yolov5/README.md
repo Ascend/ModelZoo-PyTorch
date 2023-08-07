@@ -212,14 +212,12 @@ wget https://github.com/ultralytics/yolov5/releases/download/v6.2/yolov5m.pt
 2. 执行推理脚本
    ```
    cd yolov5
-   vim val.py +31
-   # 添加如下两行代码即可实现推理引擎模型推理
-   import torch_aie
-   torch_aie.set_device(0)  # 0表示所使用的NPU_ID
+   cp ../val.diff ./  # 下载本仓的 val.diff 放到获取的yolov5路径里
+   patch -p1 < val.diff
 
    # 执行推理
    batch_size=1  # 设置batch_size
-   python val.py --weights yolov5sb${batch_size}_torch_aie.torchscript --data coco.yaml --img 640 --conf 0.001 --iou 0.65 --batch-size ${batch_size}
+   python val.py --weights yolov5sb${batch_size}_torch_aie.torchscript --data coco.yaml --img 640 --conf 0.001 --iou 0.65 --batch-size ${batch_size} --use-ascendIE
    ```
    
 3.  运行C++样例
@@ -236,14 +234,13 @@ wget https://github.com/ultralytics/yolov5/releases/download/v6.2/yolov5m.pt
 
 yolov5s模型精度如表2
 
-| 芯片型号 | Batch Size   | 数据集 | mAP<sup>val<br>50 | mAP<sup>val<br>50-95 |
+| 芯片型号 | Batch Size   | 数据集 | mAP<sup>val<br>50 | mAP<sup>val<br>50-95|
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 |    Ascend310P3       |       1    |   coco2017         |     56.1%       |   37.1%              |
-|
+
 
 yolov5m模型精度如表3
 
 | 芯片型号 | Batch Size   | 数据集 | mAP<sup>val<br>50 | mAP<sup>val<br>50-95 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
 |    Ascend310P3       |       1    |   coco2017         |     63.2%      |   44.8%             |
-|

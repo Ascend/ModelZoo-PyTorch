@@ -65,27 +65,38 @@ CV-detection
 
 <table align="center">
     <tr>
-        <th rowspan=2>Name</th>
+    <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-        <th align="center" colspan=3>精度</th>
+    <th align="center" colspan=3>精度</th>
 	<th rowspan=2>310P最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
 	<td>AP</td>
-        <td>mAP</td>
-        <td>Acc</td>
+        <td>mAP<sup>val<br>50</td>
+        <td>mAP<sup>val<br>50-95</td>
     </tr>
     <tr>
         <td>
-        <a href="https://github.com/open-mmlab/mmocr">  DBNet </a>
+        <a href="git clone https://github.com/ultralytics/yolov5.git">  Yolov5s </a>
         </td>
-        <td>ICDAR2015</td>
+        <td>coco2017</td>
 	<td></td>
-        <td></td>
+    <td> 56.1% </td>
+        <td> 37.1% </td>
+        <td>  </td>
+	<td> 1 x 3 x 640 x 640 </td>
+    </tr>
+        <tr>
+        <td>
+        <a href="git clone https://github.com/ultralytics/yolov5.git">  Yolov5m </a>
+        </td>
+        <td>coco2017</td>
+	<td></td>
+    <td> 63.2%  </td>
+        <td> 44.8%</td>
         <td> </td>
-	<td> </td>
-	<td></td>
+	<td> 1 x 3 x 640 x 640 </td>
     </tr>
 </table>
 

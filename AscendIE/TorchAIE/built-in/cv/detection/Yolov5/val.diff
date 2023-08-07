@@ -1,0 +1,45 @@
+diff --git a/val.py b/val.py
+index 78abbda..b254df5 100644
+--- a/val.py
++++ b/val.py
+@@ -28,6 +28,7 @@ from threading import Thread
+ import numpy as np
+ import torch
+ from tqdm import tqdm
++import torch_aie
+ 
+ FILE = Path(__file__).resolve()
+ ROOT = FILE.parents[0]  # YOLOv5 root directory
+@@ -120,6 +121,8 @@ def run(data,
+         plots=True,
+         callbacks=Callbacks(),
+         compute_loss=None,
++        npu_id=0,
++        use_ascendIE=False,
+         ):
+     # Initialize/load model and set device
+     training = model is not None
+@@ -137,6 +140,9 @@ def run(data,
+ 
+         # Load model
+         model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data)
++        if use_ascendIE:
++            print(f"set ascend npu_id: {npu_id}")
++            torch_aie.set_device(npu_id)
+         stride, pt, jit, onnx, engine = model.stride, model.pt, model.jit, model.onnx, model.engine
+         imgsz = check_img_size(imgsz, s=stride)  # check image size
+         half &= (pt or jit or onnx or engine) and device.type != 'cpu'  # FP16 supported on limited backends with CUDA
+@@ -339,6 +345,8 @@ def parse_opt():
+     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
+     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
++    parser.add_argument('--npu-id', type=int, default=0, help='set npu device id for AscendIE')
++    parser.add_argument('--use-ascendIE', action='store_true', help='use AscendIE or not')
+     opt = parser.parse_args()
+     opt.data = check_yaml(opt.data)  # check YAML
+     opt.save_json |= opt.data.endswith('coco.yaml')
+@@ -381,3 +389,4 @@ def main(opt):
+ if __name__ == "__main__":
+     opt = parse_opt()
+     main(opt)
++
