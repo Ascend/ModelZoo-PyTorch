@@ -87,7 +87,7 @@ def parse_option():
     parser.add_argument('--max_epochs', type=int, help="max training epochs")
 
     # distributed training
-    parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    parser.add_argument('--local_rank', '--local-rank', type=int, required=True, help='local rank for DistributedDataParallel')
 
     args, unparsed = parser.parse_known_args()
 
