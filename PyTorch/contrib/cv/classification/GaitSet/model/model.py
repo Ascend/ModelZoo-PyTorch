@@ -190,8 +190,6 @@ class Model:
                 self.encoder = nn.parallel.DistributedDataParallel(self.encoder, broadcast_buffers=False, device_ids=[local_rank])
             except:
                 self.encoder = nn.parallel.DistributedDataParallel(self.encoder, broadcast_buffers=False, device_ids=[local_rank])
-        else:
-            self.encoder = nn.DataParallel(self.encoder, device_ids=[local_rank])
 
         self.hard_loss_metric = []
         self.full_loss_metric = []
