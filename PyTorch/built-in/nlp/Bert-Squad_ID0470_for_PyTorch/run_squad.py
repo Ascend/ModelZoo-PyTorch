@@ -43,7 +43,19 @@ import modeling
 from optimization import BertAdam, warmup_linear
 from tokenization import (BasicTokenizer, BertTokenizer, whitespace_tokenize)
 from utils import is_main_process, format_step
-from torch_npu.utils.profiler import Profile
+
+try:
+    from torch_npu.utils.profiler import Profile
+except ModuleNotFoundError:
+    print('Profile not in torch_npu.utils.profiler now... Auto Profile disabled.', flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 import dllogger, time
 from apex.optimizers import npu_fused_bert_adam, NpuFusedBertAdam
 

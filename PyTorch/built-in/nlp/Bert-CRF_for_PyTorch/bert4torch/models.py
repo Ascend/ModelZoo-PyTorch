@@ -28,7 +28,19 @@ from bert4torch.layers import AdaptiveEmbedding, XlnetPositionsEncoding
 from bert4torch.snippets import metric_mapping, search_layer, insert_arguments, delete_arguments, get_kw
 from bert4torch.snippets import ProgbarLogger, EarlyStopping, FGM, PGD, VAT, IterDataset, take_along_dim
 from bert4torch.activations import get_activation
-from torch_npu.utils.profiler import Profile
+
+try:
+    from torch_npu.utils.profiler import Profile
+except ModuleNotFoundError:
+    print('Profile not in torch_npu.utils.profiler now... Auto Profile disabled.', flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 try:
     from apex import amp
     amp.register_half_function(torch.nn.functional, 'softmax')

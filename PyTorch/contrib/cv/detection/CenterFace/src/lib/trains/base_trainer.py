@@ -23,8 +23,20 @@ from models.data_parallel import DataParallel
 from utils.utils import AverageMeter
 from apex import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch_npu.utils.profiler import Profile
 import torch.npu
+
+try:
+    from torch_npu.utils.profiler import Profile
+except ModuleNotFoundError:
+    print('Profile not in torch_npu.utils.profiler now... Auto Profile disabled.', flush=True)
+    class Profile:
+        def __init__(self, *args, **kwargs):
+            pass
+        def start(self):
+            pass
+        def end(self):
+            pass
+
 class ModleWithLoss(torch.nn.Module):
   def __init__(self, model, loss):
     super(ModleWithLoss, self).__init__()
