@@ -198,9 +198,9 @@ mask_rcnn结果
 | NAME    | Acc@1 |  FPS  | Iters | AMP_Type | Torch_Version |
 | :-----: | :---: | :---: | :----: | :------: | :-----------: |
 | 1p-竞品V|   -   | - | 400      |     -    | 1.5 |
-| 8p-竞品V|   -   | - | 10250    |     -    | 1.5 |
+| 8p-竞品V|   32.7   | - | 10250    |     O2    | 1.12 |
 | 1p-NPU  |   -   | 6.071   | 400   |       O2 | 1.8 |
-| 8p-NPU  | 26.3  | 42.933  | 10250 |       O2 | 1.8 |
+| 8p-NPU  | 32.4  | 42.933  | 10250 |       O2 | 1.8 |
 
 faster_rcnn结果
 | NAME    | Acc@1 |  FPS  | Epochs | AMP_Type | Torch_Version |
