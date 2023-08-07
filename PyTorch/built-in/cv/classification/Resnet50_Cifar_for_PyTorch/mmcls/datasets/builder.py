@@ -165,6 +165,8 @@ def build_dataloader(dataset,
             worker_init_fn=init_fn,
             **kwargs)
     else:
+        if torch.__version__ >= "2.0":
+            kwargs['pin_memory_device'] = "npu"
         data_loader = DataLoader(
             dataset,
             batch_size=batch_size,

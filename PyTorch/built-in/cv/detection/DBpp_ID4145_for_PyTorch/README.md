@@ -50,8 +50,26 @@ MMOCR是基于PyTorch和MMDetection的开源工具包，支持众多OCR相关模
   ```
   pip install -r 1.5_requirements.txt  # PyTorch1.5版本
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
-  
+  ```
+ 
+  如果pytorch版本大于等于2.0，请参考[链接](http://download.openmmlab.com/mmcv/dist/npu/torch1.8.0/index.html)下载相应架构mmcv的wheel包
+  并参考如下步骤处理
+  ```
+  mv mmcv_full-1.7.0-cp37-cp37m-linux_aarch64.whl.whl mmcv_full-1.7.0-cp37-cp37m-linux_aarch64.zip
+  unzip mmcv_full-1.7.0-cp37-cp37m-linux_aarch64.zip
+  cd mmcv
+  mkdir mmcv
+  mv * mmcv/
+  cp ../mmcv_need/setup.py ./
+  # 安装mmcv
+  MMCV_WITH_OPS=1 pip3 install -e . 
+  ```
+  如果pytorch版本小于2.0, 按如下方法安装mmcv 
+  ``` 
   pip install mmcv-full -f http://download.openmmlab.com/mmcv/dist/npu/torch1.8.0/index.html
+  ```
+
+  安装mmcv 
   pip install mmdet==2.28.0
   ```
   > **说明：** 

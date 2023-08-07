@@ -58,6 +58,11 @@ MMClassification 是一款基于 PyTorch 的开源图像分类工具箱，是 Op
   ```
   cd /${模型文件夹名称}
   git clone -b v1.7.0 --depth=1 https://github.com/open-mmlab/mmcv.git
+  # pytorch版本大于等于2.1，需执行下列操作
+  cp mmcv_need/setup.py mmcv/ 
+  cp mmcv_need/text.py mmcv/mmcv/runner/hooks/logger/ 
+  ```
+  ```
   cd mmcv
   MMCV_WITH_OPS=1 pip3 install -e .
   
