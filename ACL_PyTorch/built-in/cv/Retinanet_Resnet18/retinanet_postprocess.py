@@ -60,7 +60,7 @@ def get_jpg_info(file_path):
                 shape = img_cv.shape
                 width, height = shape[1], shape[0]
                 content = [img, str(width), str(height)]
-        res.append(content)
+                res.append(content)
     return res
 
 def coco_postprocess(bbox: np.ndarray, image_size, 

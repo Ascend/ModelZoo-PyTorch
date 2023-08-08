@@ -415,7 +415,7 @@ CV-detection
 	<td></td>
         <td>31.6%</td>
         <td></td>
-	<td>16.78(bs1)</td>
+	<td>58.74(bs1)</td>
 	<td>1 x 3 x 1216 x 1216</td>
     </tr>
     <tr>
