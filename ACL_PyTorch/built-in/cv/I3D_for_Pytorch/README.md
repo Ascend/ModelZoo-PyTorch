@@ -99,7 +99,7 @@ url=https://github.com/open-mmlab/mmaction2
 
     ```sh
     cd ..
-    python generate_labels.py
+    python3 data/kinetics400/generate_labels.py
     ```
 
 ## 模型推理
@@ -127,6 +127,11 @@ url=https://github.com/open-mmlab/mmaction2
             -   --verify：对比onnx的输出与pth的输出，默认为false。
             -   --show：显示模型计算图，默认为false。
             -   --output：输出onnx模型文件名。
+
+        2. 使用onnxsimplifier对模型进行简化
+           ```
+           python3 -m onnxsim i3d.onnx i3d_sim.onnx
+           ```
 
     3. 使用ATC工具将onnx模型转为om模型
 
@@ -160,7 +165,7 @@ url=https://github.com/open-mmlab/mmaction2
             本节采用的模型输入为:1x30x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改文件。由于本模型较大，只支持bs=1，4。
             
             ```
-            atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,30,3,32,256,256"
+            atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d_sim.onnx --input_shape="0:1,30,3,32,256,256"
             ```
 
             - 参数说明：
@@ -183,15 +188,14 @@ url=https://github.com/open-mmlab/mmaction2
 
         运行命令获取top1_acc，top5_acc和mean_acc，如出现找不到mmaction的错误，可将mmaction2下的mmaction文件移到mmaction2/tools。
         ```sh
-        mv i3d_inference.py mmaction2/tools
-        cd mmaction2/tools
-        python i3d_inference.py ../configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json -bs 1 --model ../i3d_bs1.om --device_id 0 --show True
+        mv ../i3d_inference.py ./
+        python i3d_inference.py ./configs/recognition/i3d/i3d_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --batch_size 1 --model ../i3d_bs1.om --device_id 0 --show True
         ```
          - 参数说明：
             -   --eval：精度指标。
             -   --model：om模型文件。
             -   --out：输出路径。
-            -   -bs：输入模型的batch size。
+            -   --batch_size：输入模型的batch size。
             -   --show: 是否展示d2h和h2d的耗时，默认为False 
 
     3. 性能验证。

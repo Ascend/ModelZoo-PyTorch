@@ -1,4 +1,4 @@
-torch==1.8.0
+ torch==1.8.0
 torchvision==0.9.0
 onnx==1.7.0
 onnxruntime
@@ -12,5 +12,4 @@ sympy
 iopath
 pandas
 joblib
-
-
+onnx-simplifier==0.4.1

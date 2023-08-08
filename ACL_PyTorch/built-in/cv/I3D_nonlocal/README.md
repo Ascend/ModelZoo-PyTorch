@@ -30,7 +30,7 @@ url=https://github.com/open-mmlab/mmaction2
 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | input    | FLOAT32 | batchsize x 3 x 256 x 256 | NCHW         |
+  | input    | FLOAT32 | batch x 10 x 3 x 32 x 256 x 256 | batch x clip x channel x time x height x width         |
 
    若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件
 
@@ -75,6 +75,7 @@ url=https://github.com/open-mmlab/mmaction2
 
     然后在仓库中创建目录。
     ```sh
+    cd mmaction2
     mkdir -p data/kinetics400
     cd ..
     ```
@@ -82,14 +83,14 @@ url=https://github.com/open-mmlab/mmaction2
 2. 安装依赖，测试环境时可能已经安装其中的一些不同版本的库，故手动测试时不推荐使用该命令安装
 
    ```
-   pip3.7 install -r requirements.txt
+   pip3 install -r requirements.txt
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
 1. 获取原始数据集：运行仓库中的tools/data/kinetics/download_backup_annotations.sh.将会在data/kinetics400目录下创建annotations目录。
 
-    ```shell
-    cd ./mmaction2tools/data/kinetics
+    ```
+    cd ./mmaction2/tools/data/kinetics
     bash download_backup_annotations.sh kinetics400
     cd ../../..
     ```
@@ -118,9 +119,8 @@ url=https://github.com/open-mmlab/mmaction2
     运行该脚本获取验证所需要的验证文件。将生成kinetics400_label.txt和kinetics400_val_list_rawframes.txt。kinetics400_val_list_rawframes.txt即为验证时需要的文件。
 
     ```sh
+    python3 data/kinetics400/generate_labels.py
     cd ..
-    python3 generate_labels.py
-
     ```
 
 
@@ -153,6 +153,11 @@ url=https://github.com/open-mmlab/mmaction2
             -   --show：显示模型计算图，默认为false。
             -   --output：输出onnx模型文件名。
 
+        2. 使用onnxsimplifier对模型进行简化
+           ```
+           python3 -m onnxsim i3d.onnx i3d_sim.onnx
+           ```
+
     3. 使用ATC工具将onnx模型转为om模型
 
         1. 配置环境变量
@@ -183,7 +188,7 @@ url=https://github.com/open-mmlab/mmaction2
 
             本节采用的模型输入为:1x10x3x32x256x256.（`$batch $clip $channel $time $height $width` ）。实验证明，若想提高模型精度，可增加`$clip`的值，但性能会相应降低。若想使用其他维度大小的输入，请修改i3d_pth2onnx.sh和i3d_onnx2om.sh文件。由于本模型较大，选择Ascend310的话batch_size只能设置为1，若大于1则会因为 Ascend310 内存不足而报错；选择Ascend310P3的话batch_size可以设置为1，4，8。
             ```
-            atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d.onnx --input_shape="0:1,10,3,32,256,256"
+            atc --framework=5 --output=./i3d_bs1  --input_format=NCHW  --soc_version=Ascend${chip_name} --model=./i3d_sim.onnx --input_shape="0:1,10,3,32,256,256"
             ```
 
             - 参数说明：
@@ -206,9 +211,8 @@ url=https://github.com/open-mmlab/mmaction2
 
         调用脚本i3d_infer.sh，即可获取top1_acc，top5_acc和mean_acc。
         ```
-        mv i3d_inference.py mmaction2/tools
-        cd mmaction2/tools
-        python i3d_inference.py ../configs/recognition/i3d/i3d_nl_dot_product_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --bs 1 --model ../../i3d_bs1.om --device_id 0
+        mv ../i3d_inference.py ./
+        python i3d_inference.py ./configs/recognition/i3d/i3d_nl_dot_product_r50_32x2x1_100e_kinetics400_rgb.py --eval top_k_accuracy mean_class_accuracy --out result.json --batch_size 1 --model ./i3d_bs1.om --device_id 0
         ```
 
     3. 性能验证。
@@ -216,15 +220,16 @@ url=https://github.com/open-mmlab/mmaction2
         可使用ais_bench推理工具的纯推理模型验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-        python3.7 -m ais_bench --model=i3d.om
+        cd ..
+        python3 -m ais_bench --model=i3d_bs1.om
         ```
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用ACL接口推理计算，性能参考下列数据，由于本模型较大，310P3只测试batch_size为1，4，8情况下的精度与性能，主仓精度TOP1：73.92，TOP5：91.59
+调用ACL接口推理计算，性能参考下列数据，由于本模型较大，310P3只测试batch_size为1，4，8情况下的精度与性能
 
 | 芯片型号 | Batch Size | 数据集|  精度TOP1 | 精度TOP5 | 性能|
 | --------- | ----| ----------| ------     |---------|---------|
-| 310P3 |  1       | ImageNet |   71.2     |   90.2  |   18.07      |
-| 310P3 |  4       | ImageNet |   71.2     |   90.2  |    18.13      |
-| 310P3 |  8       | ImageNet |   71.2     |   90.2  |  18.10     |
+| 310P3 |  1       | ImageNet |   70.03     |  89.51  |  14.39     |
+| 310P3 |  4       | ImageNet |   70.03    |   89.51 |  14.28     |
+| 310P3 |  8       | ImageNet |   70.03    |   89.51 |  14.15   |
