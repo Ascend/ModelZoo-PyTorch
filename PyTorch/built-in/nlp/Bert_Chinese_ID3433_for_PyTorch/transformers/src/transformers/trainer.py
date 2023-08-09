@@ -1418,7 +1418,7 @@ class Trainer:
                               profile_type=os.getenv('PROFILE_TYPE'))
             for step, inputs in enumerate(epoch_iterator):
                 # 1p skip over first 5 time compile time
-                if epoch == 0 and step > 4 and once_flag and not self.use_combine_ddp:
+                if epoch == 0 and step > 4 and once_flag and not self.args.use_combine_ddp:
                     start_time = time.time()
                     once_flag = False
                 # Skip past any already trained steps if resuming training
