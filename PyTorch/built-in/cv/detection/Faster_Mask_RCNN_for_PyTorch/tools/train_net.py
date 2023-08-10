@@ -197,6 +197,8 @@ if __name__ == "__main__":
         torch.npu.matmul.allow_hf32 = False
     # FP32模式下BoundingBoxDecode和NMSwithMask有功能问题，添加变量允许走fp16
     option = {'ACL_PRECISION_MODE': 'allow_fp32_to_fp16'}
+    if os.getenv('ALLOW_HF32', False):
+        option = {'ACL_PRECISION_MODE': 'must_keep_origin_dtype'}
     # LogSoftmaxV2算子在二进制下有精度问题，添加至黑名单规避
     option['NPU_FUZZY_COMPILE_BLACKLIST'] = 'LogSoftmaxV2'
     torch_npu.npu.set_option(option)
