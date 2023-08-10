@@ -13,68 +13,125 @@
 # limitations under the License.
 
 import os
-import torch
-import shutil
+import argparse
+from argparse import Namespace
 
+import torch
 from diffusers import StableDiffusionPipeline
 
 
-def main():
-    clip_path = "./models/clip"
-    unet_path = "./models/unet"
-    vae_path = "./models/vae"
-    
-    if os.path.exists("./models"):
-        shutil.rmtree("./models")
-    
-    os.makedirs(clip_path)
-    os.makedirs(unet_path)
-    os.makedirs(vae_path)
+def parse_arguments() -> Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-o",
+        "--output_dir",
+        type=str,
+        default="./models",
+        help="Path of directory to save ONNX models.",
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        type=str,
+        default="stabilityai/stable-diffusion-2-1-base",
+        help="Path or name of the pre-trained model.",
+    )
 
-    model_id = "runwayml/stable-diffusion-v1-5"
-    pipe = StableDiffusionPipeline.from_pretrained(model_id)
-    pipe = pipe.to("cpu")
-    
-    # export clip
+    return parser.parse_args()
+
+
+def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
+    print("Exporting the text encoder...")
+    clip_path = os.path.join(save_dir, "clip")
+    if not os.path.exists(clip_path):
+        os.makedirs(clip_path, mode=0o744)
+
+    clip_model = sd_pipeline.text_encoder
+
+    max_position_embeddings = clip_model.config.max_position_embeddings
+    dummy_input = torch.ones([1, max_position_embeddings], dtype=torch.int64)
+
     torch.onnx.export(
-        pipe.text_encoder,
-        (torch.ones([1, 77], dtype = torch.int64)),
-        f"{clip_path}/clip.onnx",
+        clip_model,
+        dummy_input,
+        os.path.join(clip_path, "clip.onnx"),
         input_names=["prompt"],
         output_names=["text_embeddings"],
         opset_version=11,
-        verbose=False,
     )
-    print("[info] export clip onnx success!")
-    
-    # export unet
-    torch.onnx.export(
-        pipe.unet,
-        (
-            torch.ones([2, 4, 64, 64], dtype = torch.float32),
-            torch.ones([1], dtype = torch.int64),
-            torch.ones([2, 77, 768], dtype = torch.float32)
+
+
+def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
+    print("Exporting the image information creater...")
+    unet_path = os.path.join(save_dir, "unet")
+    if not os.path.exists(unet_path):
+        os.makedirs(unet_path, mode=0o744)
+
+    unet_model = sd_pipeline.unet
+    clip_model = sd_pipeline.text_encoder
+
+    sample_size = unet_model.config.sample_size
+    in_channels = unet_model.config.in_channels
+    encoder_hidden_size = clip_model.config.hidden_size
+    max_position_embeddings = clip_model.config.max_position_embeddings
+
+    dummy_input = (
+        torch.ones([2, in_channels, sample_size, sample_size], dtype=torch.float32),
+        torch.ones([1], dtype=torch.int64),
+        torch.ones(
+            [2, max_position_embeddings, encoder_hidden_size], dtype=torch.float32
         ),
-        f"{unet_path}/unet.onnx",
+    )
+
+    torch.onnx.export(
+        unet_model,
+        dummy_input,
+        os.path.join(unet_path, "unet.onnx"),
         input_names=["latent_model_input", "t", "encoder_hidden_states"],
         output_names=["sample"],
         opset_version=11,
-        verbose=False,
     )
-    print("[info] export unet onnx success!")
-    
-    # export vae
+
+
+def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
+    print("Exporting the image decoder...")
+
+    vae_path = os.path.join(save_dir, "vae")
+    if not os.path.exists(vae_path):
+        os.makedirs(vae_path, mode=0o744)
+
+    vae_model = sd_pipeline.vae
+    unet_model = sd_pipeline.unet
+
+    sample_size = unet_model.config.sample_size
+    in_channels = unet_model.config.out_channels
+
+    dummy_input = torch.ones([1, in_channels, sample_size, sample_size])
+
     torch.onnx.export(
-        pipe.vae.decoder,
-        (torch.ones([1, 4, 64, 64])),
-        f"{vae_path}/vae.onnx",
+        vae_model.decoder,
+        dummy_input,
+        os.path.join(vae_path, "vae.onnx"),
         input_names=["latents"],
         output_names=["image"],
         opset_version=11,
-        verbose=False,
     )
-    print("[info] export vae onnx success!")
 
 
-if __name__ == '__main__':
+def export_onnx(model_path: str, save_dir: str) -> None:
+    pipeline = StableDiffusionPipeline.from_pretrained(model_path).to("cpu")
+
+    export_clip(pipeline, save_dir)
+    export_unet(pipeline, save_dir)
+    export_vae(pipeline, save_dir)
+
+    print("Done.")
+
+
+def main():
+    args = parse_arguments()
+    export_onnx(args.model, args.output_dir)
+
+
+if __name__ == "__main__":
     main()

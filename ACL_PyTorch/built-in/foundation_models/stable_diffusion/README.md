@@ -21,8 +21,12 @@
    stable-diffusion是一种文本到图像的扩散模型，能够在给定任何文本输入的情况下生成照片逼真的图像。有关稳定扩散函数的更多信息，请查看[Stable Diffusion blog](https://huggingface.co/blog/stable_diffusion)。
 
 - 参考实现：
-  ```
-  url=https://huggingface.co/runwayml/stable-diffusion-v1-5
+  ```bash
+   # StableDiffusion v1.5
+   https://huggingface.co/runwayml/stable-diffusion-v1-5
+
+   # StableDiffusion v2.1
+   https://huggingface.co/stabilityai/stable-diffusion-2-1-base
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -57,18 +61,15 @@
 ## 获取源码<a name="section4622531142816"></a>
 
 1. 安装依赖。
-   ```
+   ```bash
    pip3 install -r requirements.txt
    ```
 
-2. 安装ais_bench推理工具。
-   请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据README文档进行工具安装。
-
-3. 代码修改
+2. 代码修改
 
    执行命令：
    
-   ```
+   ```bash
    python3 stable_diffusion_clip_patch.py
    ```
    
@@ -82,16 +83,51 @@
 
 1. 模型转换。
    使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+
+   0. 获取权重（可选）
+
+      可提前下载权重，以避免执行后面步骤时可能会出现下载失败。
+
+      ```bash
+      # 需要使用 git-lfs (https://git-lfs.com)
+      git lfs install
+
+      # v1.5
+      git clone https://huggingface.co/runwayml/stable-diffusion-v1-5
+
+      # v2.1
+      git clone https://huggingface.co/stabilityai/stable-diffusion-2-1-base
+      ```
+
    1. 导出ONNX模型
+
+      设置模型名称或路径
+      ```bash
+      # v1.5 (执行时下载权重)
+      model_base="runwayml/stable-diffusion-v1-5"
+
+      # v1.5 (使用上一步下载的权重)
+      model_base="./stable-diffusion-v1-5"
+
+      # v2.1 (执行时下载权重)
+      model_base="stabilityai/stable-diffusion-2-1-base"
+
+      # v2.1 (使用上一步下载的权重)
+      model_base="./stable-diffusion-2-1-base"
+      ```
+
 
       执行命令：
 
+      ```bash
+      python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models
       ```
-      python3 stable_diffusion_2_onnx.py
-      ```
+
+      参数说明：
+      - --model：模型名称或本地模型目录的路径
+      - --output_dir: ONNX模型输出目录
       
-      执行成功后生成onnx模型列表：  
-   
+      执行成功后生成onnx模型：  
          - models/clip/clip.onnx  
          - models/unet/unet.onnx
          - models/vae/vae.onnx  
@@ -100,7 +136,7 @@
 
       1. 配置环境变量。
 
-         ```
+         ```bash
          source /usr/local/Ascend/ascend-toolkit/set_env.sh
          ```
 
@@ -127,7 +163,15 @@
 
       3. 执行ATC命令。此模型当前仅支持batch_size=1。
 
+         ```bash
+         # v1.5
+         encoder_hidden_size=768
+
+         # v2.1
+         encoder_hidden_size=1024
+
          ```
+         ```bash
          # clip
          atc --framework=5 \
              --model=./models/clip/clip.onnx \
@@ -143,7 +187,7 @@
              --model=./unet.onnx \
              --output=./unet \
              --input_format=NCHW \
-             --input_shape="latent_model_input:2,4,64,64;t:1;encoder_hidden_states:2,77,768" \
+             --input_shape="latent_model_input:2,4,64,64;t:1;encoder_hidden_states:2,77,${encoder_hidden_size}" \
              --log=error \
              --soc_version=Ascend${chip_name}
          cd ../../
@@ -158,7 +202,14 @@
              --soc_version=Ascend${chip_name}
          ```
       
-      参数说明：使用`atc -h`命令查看参数说明
+      参数说明：
+      - --model：为ONNX模型文件。
+      - --output：输出的OM模型。
+      - --framework：5代表ONNX模型。
+      - --log：日志级别。
+      - --soc_version：处理器型号。
+      - --input_shape: 模型的输入shape信息。
+
 
       执行成功后生成om模型列表：  
 
@@ -167,11 +218,31 @@
          - models/vae/vae.om  
    
 2. 开始推理验证。
-   1. 执行推理脚本。
+   
+   1. 安装昇腾统一推理工具（AIT）
 
+      请访问[AIT代码仓](https://gitee.com/ascend/ait/tree/master/ait#ait)，根据readme文档进行工具安装。
+
+      安装AIT时，可只安装需要的组件：benchmark，其他组件为可选安装。
+
+   2. 执行推理脚本。
+      ```bash
+      python3 stable_diffusion_ascend_infer.py \
+              --model ${model_base} \
+              --model_dir ./models \
+              --prompt_file ./prompts.txt \
+              --device 0 \
+              --save_dir ./results \
+              --steps 50
       ```
-      python3 stable_diffusion_ascend_infer.py
-      ```
+
+      参数说明：
+      - --model：模型名称或本地模型目录的路径。
+      - --model_dir：存放导出模型的目录。
+      - --prompt_file：输入文本文件，按行分割。
+      - --save_dir：生成图片的存放目录。
+      - --steps：生成图片推理次数。
+      - --device：推理设备ID。
       
       执行完成后在`./results`目录下生成推理图片。并在终端显示推理时间，参考如下：
 
@@ -179,7 +250,7 @@
       [info] infer number: 16; use time: 292.648s; average time: 18.290s
       ```
    
-   2. 测试推理图片展示在`./test_results`目录下，注：每次生成的图像不同。部分测试结果如下：
+   3. 测试推理图片展示在`./test_results`目录下，注：每次生成的图像不同。部分测试结果如下：
 
       ![](./test_results/illustration_0.png)  
       Prompt: "Beautiful illustration of The ocean. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper"
@@ -190,19 +261,35 @@
       ![](./test_results/illustration_2.png)  
       Prompt: "Beautiful illustration of Seaports in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper"
 
-   3. 性能验证。
-       可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
-       ```
-       python3 -m ais_bench --model=${om_model} --loop=20 --batchsize=1
-       ```
-       - 参数说明：使用`python3 -m ais_bench -h`命令查看。
+   4. 性能验证。
+      可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
+      ```bash
+      ait benchmark --om-model ${om_model} --loop 20 --device 0
+      ```
+      
+      参数说明：
+
+      - --om-model: om模型路径
+      - --loop：纯推理次数
+      - --device：推理设备ID
+
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | 模型 | Batch Size   | 数据集 | 精度 | 性能| 耗时 |
-| --------- | ------ | ---------- | ---------- | ---------- | ------- | -------- |
-| 310P3     | clip | 1 | -  | - | 380.604 fps | 2.627 ms |
-| 310P3     | unet | 1 | -  | - | 3.191 fps | 313.285 ms |
-| 310P3     | vae  | 1 | -  | - | 7.682 fps | 130.160ms |
+### StableDiffusion v1.5
+
+| 芯片型号 | 模型 | Batch Size | 性能        | 耗时       |
+| :------: | :--: | :--------: | :---------: | :--------: |
+| 310P3    | clip | 1          | 380.604 fps | 2.627 ms   |
+| 310P3    | unet | 1          | 6.302 fps   | 317.376 ms |
+| 310P3    | vae  | 1          | 7.682 fps   | 130.160 ms  |
+
+### StableDiffusion v2.1
+
+| 芯片型号 | 模型 | Batch Size | 性能        | 耗时       |
+| :------: | :--: | :--------: | :---------: | :--------: |
+| 310P3    | clip | 1          | 157.562 fps | 6.347 ms   |
+| 310P3    | unet | 1          | 7.351 fps   | 272.074 ms |
+| 310P3    | vae  | 1          | 7.629 fps   | 131.076 ms  |

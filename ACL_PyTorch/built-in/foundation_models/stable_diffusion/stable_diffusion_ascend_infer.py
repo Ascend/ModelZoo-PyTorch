@@ -14,18 +14,24 @@
 
 import os
 import time
-import tqdm
-import torch
-import shutil
-
-from diffusers import StableDiffusionPipeline
+import argparse
 from typing import Callable, List, Optional, Union
+
+import torch
+from diffusers import StableDiffusionPipeline
 from ais_bench.infer.interface import InferSession
 
 
 class AscendStableDiffusionPipeline(StableDiffusionPipeline):
-
-    def _encode_prompt(self, prompt, device, num_images_per_prompt, do_classifier_free_guidance, negative_prompt, clip_session):
+    def _encode_prompt(
+        self,
+        prompt,
+        device,
+        num_images_per_prompt,
+        do_classifier_free_guidance,
+        negative_prompt,
+        clip_session,
+    ):
         r"""
         Encodes the prompt into text encoder hidden states.
 
@@ -44,31 +50,31 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
         """
         batch_size = len(prompt) if isinstance(prompt, list) else 1
 
-        text_inputs = self.tokenizer(
-            prompt,
-            padding="max_length",
-            max_length=self.tokenizer.model_max_length,
-            truncation=True,
-            return_tensors="pt",
-        )
+        text_inputs = self.tokenizer(prompt,
+                                     padding="max_length",
+                                     max_length=self.tokenizer.model_max_length,
+                                     truncation=True,
+                                     return_tensors="pt")
         text_input_ids = text_inputs.input_ids
         untruncated_ids = self.tokenizer(prompt, padding="max_length", return_tensors="pt").input_ids
 
         if not torch.equal(text_input_ids, untruncated_ids):
             removed_text = self.tokenizer.batch_decode(untruncated_ids[:, self.tokenizer.model_max_length - 1 : -1])
-            print(
-                "[warning] The following part of your input was truncated because CLIP can only handle sequences up to"
-                f" {self.tokenizer.model_max_length} tokens: {removed_text}"
-            )
+            print("[warning] The following part of your input was truncated"
+                  " because CLIP can only handle sequences up to"
+                  f" {self.tokenizer.model_max_length} tokens: {removed_text}")
 
-        if hasattr(self.text_encoder.config, "use_attention_mask") and self.text_encoder.config.use_attention_mask:
+        if (
+            hasattr(self.text_encoder.config, "use_attention_mask")
+            and self.text_encoder.config.use_attention_mask
+        ):
             attention_mask = text_inputs.attention_mask.to(device)
         else:
             attention_mask = None
-        
+
         text_embeddings = clip_session([text_input_ids.numpy()])
         text_embeddings = [torch.from_numpy(text) for text in text_embeddings]
-        
+
         text_embeddings = text_embeddings[0]
 
         # duplicate text embeddings for each generation per prompt, using mps friendly method
@@ -82,31 +88,26 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
             if negative_prompt is None:
                 uncond_tokens = [""] * batch_size
             elif type(prompt) is not type(negative_prompt):
-                raise TypeError(
-                    f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !="
-                    f" {type(prompt)}."
-                )
+                raise TypeError(f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !="
+                                f" {type(prompt)}.")
             elif isinstance(negative_prompt, str):
                 uncond_tokens = [negative_prompt]
             elif batch_size != len(negative_prompt):
-                raise ValueError(
-                    f"`negative_prompt`: {negative_prompt} has batch size {len(negative_prompt)}, but `prompt`:"
-                    f" {prompt} has batch size {batch_size}. Please make sure that passed `negative_prompt` matches"
-                    " the batch size of `prompt`."
-                )
+                raise ValueError(f"`negative_prompt`: {negative_prompt} has batch size {len(negative_prompt)}, but `prompt`:"
+                                 f" {prompt} has batch size {batch_size}. Please make sure that passed `negative_prompt` matches"
+                                 " the batch size of `prompt`.")
             else:
                 uncond_tokens = negative_prompt
 
             max_length = text_input_ids.shape[-1]
-            uncond_input = self.tokenizer(
-                uncond_tokens,
-                padding="max_length",
-                max_length=max_length,
-                truncation=True,
-                return_tensors="pt",
-            )
+            uncond_input = self.tokenizer(uncond_tokens, 
+                                          padding="max_length",
+                                          max_length=max_length, 
+                                          truncation=True, 
+                                          return_tensors="pt")
 
-            if hasattr(self.text_encoder.config, "use_attention_mask") and self.text_encoder.config.use_attention_mask:
+            if (hasattr(self.text_encoder.config, "use_attention_mask")
+                and self.text_encoder.config.use_attention_mask):
                 attention_mask = uncond_input.attention_mask.to(device)
             else:
                 attention_mask = None
@@ -128,7 +129,7 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
             text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
 
         return text_embeddings
-    
+
     @torch.no_grad()
     def ascend_infer(
         self,
@@ -222,9 +223,12 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
         do_classifier_free_guidance = guidance_scale > 1.0
 
         # 3. Encode input prompt
-        text_embeddings = self._encode_prompt(
-            prompt, device, num_images_per_prompt, do_classifier_free_guidance, negative_prompt, clip_session
-        )
+        text_embeddings = self._encode_prompt(prompt,
+                                              device,
+                                              num_images_per_prompt,
+                                              do_classifier_free_guidance,
+                                              negative_prompt,
+                                              clip_session)
 
         # 4. Prepare timesteps
         self.scheduler.set_timesteps(num_inference_steps, device=device)
@@ -232,16 +236,14 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.in_channels
-        latents = self.prepare_latents(
-            batch_size * num_images_per_prompt,
-            num_channels_latents,
-            height,
-            width,
-            text_embeddings.dtype,
-            device,
-            generator,
-            latents,
-        )
+        latents = self.prepare_latents(batch_size * num_images_per_prompt,
+                                       num_channels_latents,
+                                       height,
+                                       width,
+                                       text_embeddings.dtype,
+                                       device,
+                                       generator,
+                                       latents)
 
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
@@ -251,11 +253,17 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
-            
+
             # predict the noise residual
             # noise_pred = self.unet(latent_model_input, t[None], encoder_hidden_states=text_embeddings).sample
             noise_pred = torch.from_numpy(
-                unet_session([latent_model_input.numpy(), t[None].numpy(), text_embeddings.numpy()])[0]
+                unet_session(
+                    [
+                        latent_model_input.numpy(),
+                        t[None].numpy(),
+                        text_embeddings.numpy(),
+                    ]
+                )[0]
             )
 
             # perform guidance
@@ -272,19 +280,21 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
 
         # 8. Post-processing
         # image = self.decode_latents(latents)
-        
-        latents = 1 / 0.18215 * latents
+
+        latents = 1 / self.vae.config.scaling_factor * latents
 
         latents = self.vae.post_quant_conv(latents)
         image = torch.from_numpy(vae_session([latents.numpy()])[0])
-     
+
         image = (image / 2 + 0.5).clamp(0, 1)
-        
+
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloa16
         image = image.cpu().permute(0, 2, 3, 1).float().numpy()
 
         # 9. Run safety checker
-        image, has_nsfw_concept = self.run_safety_checker(image, device, text_embeddings.dtype)
+        image, has_nsfw_concept = self.run_safety_checker(image, 
+                                                          device, 
+                                                          text_embeddings.dtype)
 
         # 10. Convert to PIL
         if output_type == "pil":
@@ -293,48 +303,83 @@ class AscendStableDiffusionPipeline(StableDiffusionPipeline):
         return (image, has_nsfw_concept)
 
 
-def main():
-    model_id = "runwayml/stable-diffusion-v1-5"
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m",
+        "--model",
+        type=str,
+        default="stabilityai/stable-diffusion-2-1-base",
+        help="Path or name of the pre-trained model.",
+    )
+    parser.add_argument(
+        "--prompt_file",
+        type=str,
+        required=True,
+        help="A text file of prompts for generating images.",
+    )
+    parser.add_argument(
+        "--model_dir",
+        type=str,
+        default="./models",
+        help="Base path of om models.",
+    )
+    parser.add_argument(
+        "--save_dir", 
+        type=str, 
+        default="./results", 
+        help="Path to save result images.",
+    )
+    parser.add_argument(
+        "--steps", 
+        type=int, 
+        default=50, 
+        help="Number of inference steps.",
+    )
+    parser.add_argument("--device", type=int, default=0, help="Device id.")
 
-    pipe = AscendStableDiffusionPipeline.from_pretrained(model_id)
-    pipe = pipe.to("cpu")
-    
-    prompts = [
-        "Beautiful illustration of The ocean. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Islands in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Seaports in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of The waves. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Grassland. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Wheat. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Hut Tong. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of The boat. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Pine trees. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Bamboo. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of The temple. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Cloud in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Sun in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Spring. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Lotus. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",
-        "Beautiful illustration of Snow piles. in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper",       
-    ]
-    
-    clip_session = InferSession(0, "models/clip/clip.om").infer
-    unet_session = InferSession(0, "models/unet/unet.om").infer
-    vae_session = InferSession(0, "models/vae/vae.om").infer
+    return parser.parse_args()
+
+
+def main():
+    args = parse_arguments()
+    save_dir = args.save_dir
+
+    pipe = AscendStableDiffusionPipeline.from_pretrained(args.model).to("cpu")
+
+    with os.fdopen(os.open(args.prompt_file, os.O_RDONLY), "r") as f:
+        prompts = [line.strip() for line in f]
+
+    clip_om = os.path.join(args.model_dir, "clip", "clip.om")
+    unet_om = os.path.join(args.model_dir, "unet", "unet.om")
+    vae_om = os.path.join(args.model_dir, "vae", "vae.om")
+
+    clip_session = InferSession(args.device, clip_om).infer
+    unet_session = InferSession(args.device, unet_om).infer
+    vae_session = InferSession(args.device, vae_om).infer
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir, mode=0o744)
 
     infer_num = len(prompts)
     start_time = time.time()
     for i, prompt in enumerate(prompts):
-        image = pipe.ascend_infer(prompt, clip_session, unet_session, vae_session)
+        image = pipe.ascend_infer(
+            prompt,
+            clip_session,
+            unet_session,
+            vae_session,
+            num_inference_steps=args.steps,
+        )
         image = image[0][0]
-        image.save(f"./results/illustration_{i}.png")
-    
+        image.save(os.path.join(save_dir, f"illustration_{i}.png"))
+
     use_time = time.time() - start_time
-    print("[info] infer number: {}; use time: {:.3f}s; average time: {:.3f}s".format(infer_num, use_time, use_time/infer_num))
+    print(
+        f"[info] infer number: {infer_num}; use time: {use_time:.3f}s; "
+        f"average time: {use_time/infer_num:.3f}s"
+    )
 
 
-if __name__ == '__main__':
-    if not os.path.exists("./results"):
-        os.makedirs("./results")
-    
+if __name__ == "__main__":
     main()
