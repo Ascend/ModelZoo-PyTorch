@@ -68,7 +68,7 @@ class IBasicBlock(nn.Module):
         out = self.bn1(x)
         out = self.conv1(out)
         out = self.bn2(out)
-        out = self.prelu(out)
+        out = self.prelu(out.float())
         out = self.conv2(out)
         out = self.bn3(out)
         if self.downsample is not None:
@@ -169,7 +169,7 @@ class IResNet(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.prelu(x)
+        x = self.prelu(x.float())
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)

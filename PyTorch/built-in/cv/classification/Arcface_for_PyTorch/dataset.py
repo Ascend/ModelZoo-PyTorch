@@ -135,7 +135,7 @@ class DataLoaderX(DataLoader):
             return None
         with torch.npu.stream(self.stream):
             for k in range(len(self.batch)):
-                self.batch[k] = self.batch[k].to(device=self.local_rank, non_blocking=True)
+                self.batch[k] = self.batch[k].to(device=torch.device(f"npu:{self.local_rank}"), non_blocking=True)
 
     def __next__(self):
         torch.npu.current_stream().wait_stream(self.stream)
