@@ -122,10 +122,10 @@ data2vec 是首个适用于多模态的高性能自监督算法。Meta AI 将 da
 
 **表 2**  训练结果展示表
 
-|  Name  | wer  | FPS | Epochs | AMP_Type | Torch_Version |
+|  Name  | wer  | UPS | Iters | AMP_Type | Torch_Version |
 | :----: | :---: | :--: |:----: | :---: | :--: |
-| 1P-竞品V |   -   | -  | - | - | 1.8 |
-| 1P-NPU |   -   | -  | - | - | 1.8 |
+| 1P-竞品V |   -   | 10.88  | 1000000 | fp16 | 1.8 |
+| 1P-NPU |   -   | 5.18  | 1000000 | fp16 | 1.8 |
 
 # 版本说明
 
