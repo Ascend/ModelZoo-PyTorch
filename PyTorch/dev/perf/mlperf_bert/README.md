@@ -149,4 +149,6 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 - Q: 8卡训练完毕后主进程不退出。
    > PyTorch 1.8 上该模型源码也存在同样的问题，不影响训练和最终结果输出。 请在训练完毕后手动kill主进程。
- 
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
