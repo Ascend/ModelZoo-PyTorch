@@ -81,6 +81,25 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
          ├──train.json
          ├──dev.json
    ```
+2. 预处理数据集。
+为了方便启动训练后，不用再每次重复加载处理数据集，故提前进行处理。也可以下载提前处理好的[数据集](https://pan.baidu.com/s/1hA9yfqJkKi1Ae5FB-AkJcQq)，提取码7s5i
+```shell
+bash preprocess.sh
+```
+处理好的数据集位于同目录下的train_datasets文件夹下，参考目录如下
+```
+   ├── train_datasets
+         ├──data-00000-of-00008.arrow
+         ├──data-00001-of-00008.arrow
+         ├──data-00002-of-00008.arrow
+         ├──data-00003-of-00008.arrow
+         ├──data-00004-of-00008.arrow
+         ├──data-00005-of-00008.arrow
+         ├──data-00006-of-00008.arrow
+         ├──data-00007-of-00008.arrow
+         ├──dataset_info.json
+         ├──state.json
+   ```
 
 
 ## 准备模型权重
@@ -138,7 +157,7 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
    - 全参数finetune
 
      启动8卡微调。
-     可以用deepspeed.json配置deepspeed参数，目前默认使用zero1
+     可以用deepspeed.json配置deepspeed参数，目前默认使用zero2
 
      ```
      bash ptuning/ds_train_fintune.sh 
@@ -159,7 +178,16 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
    --learning_rate                           //学习率
    ```
    训练完成后，权重文件保存在当前路径下，并输出模型训练相关信息。
-   
+
+## 验证模型
+
+1. 全参数finetune验证
+
+    运行以下命令
+    ```
+     bash ptuning/evaluate_fintune.sh 
+    ```
+    生成结果在屏幕上显示
 
 # 训练结果展示
 
@@ -168,10 +196,21 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
 
 |     NAME      | SamplesPerSec | Iterations  | DataType  | Torch_Version | Card |
 |:-------------:|:-------------:|:-:|:-:|:-:|:----:|
-| Finetune -NPU |     1804      | 5000   | fp16  | 1.11  | A100 |
-| Finetune -GPU |     2027      | 5000   | fp16  | 1.11  | 910B |
+| Finetune -NPU |     1951      | 5000   | fp16  | 1.11  | 910B |
+| Finetune -GPU |     2048      | 5000   | fp16  | 1.11  | A800 |
 
-说明：P-Tuning v2性能待补充
+说明：P-Tuning 仅打通功能，无性能优化。
+
+**表 2**  评估结果展示表
+
+|   评估项   |   NPU   |   GPU   | 
+|:-------:|:-------:|:-------:|
+| BLEU-4  | 7.9662  | 7.8422  |
+| ROUGE-1 | 31.5563 | 31.2764 |
+| ROUGE-2 | 7.3841  | 7.1679  |
+| ROUGE-l | 25.0371 | 25.0371 |
+
+说明：该结果是step=1000的验证结果。
 
 # 版本说明
 
@@ -215,8 +254,22 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
    ```
 5. 单卡阶段报embedding_dense_grad算子错误
    ```
-   enbedding当前版本，不支持动静合一，静态有部分shape不支持
+   enbedding当前版本，不支持动静合一，静态有部分shape不支持,新版本已修复
    # 若遇到该报错
    修改main.py文件
    torch.npu.set_compile_mode(jit_compile=False)
+   ```
+6. 提示so文件错误
+   ``` 
+   提示so文件找不到
+   # 若遇到该报错
+   全局搜索so的位置，然后导入环境变量
+   export LD_LIBRARY_PATH=/usr/:$LD_LIBRARY_PATH
+   ```
+7. eval提示scaledsoftmax报错
+    ``` 
+   算子shape泛化性还有问题
+   # 若遇到该报错
+   搜索output文件夹生成的modeling_chatglm.py文件，
+   self.scale_mask_softmax 设置为false
    ```

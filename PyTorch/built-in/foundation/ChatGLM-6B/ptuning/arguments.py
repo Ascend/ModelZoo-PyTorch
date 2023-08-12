@@ -124,6 +124,9 @@ class DataTrainingArguments:
             )
         },
     )
+    enable_process: bool = field(
+        default=True, metadata={"help": "enable process datasets"}
+    )
     test_file: Optional[str] = field(
         default=None,
         metadata={

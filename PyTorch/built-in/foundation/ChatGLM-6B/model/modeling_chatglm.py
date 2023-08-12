@@ -192,7 +192,7 @@ def gelu(x):
 class RotaryEmbedding(torch.nn.Module):
     def __init__(self, dim, base=10000, precision=torch.half, learnable=False):
         super().__init__()
-        inv_freq = 1. / (base ** (torch.arange(0, dim, 2).float() / dim))
+        inv_freq = 1. / (base ** (torch.arange(0, dim, 2).double() / dim)).float()
         inv_freq = inv_freq.half()
         self.learnable = learnable
         if learnable:
@@ -241,7 +241,7 @@ class RotaryEmbedding(torch.nn.Module):
 
 
 def rotate_half(x):
-    x1, x2 = x[..., :x.shape[-1] // 2], x[..., x.shape[-1] // 2:]
+    x1, x2 = torch.chunk(x, 2, dim=-1)
     return torch.cat((-x2, x1), dim=x1.ndim - 1)  # dim=-1 triggers a bug in earlier torch versions
 
 
@@ -305,7 +305,9 @@ def attention_fn(
         attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask,
                                                               query_key_layer_scaling_coeff, False)
     else:
-        attention_scores.masked_fill_(attention_mask, -10000.0)
+        if not (attention_mask == 0).all():
+            # if auto-regressive, skip
+            attention_scores.masked_fill_(attention_mask, -10000.0)
         dtype = attention_scores.dtype
         attention_scores = attention_scores.float()
         attention_scores = attention_scores * query_key_layer_scaling_coeff
@@ -377,7 +379,10 @@ class SelfAttention(torch.nn.Module):
             learnable=False,
         )
 
-        self.scale_mask_softmax = True
+        if int(os.environ.get('TRAIN_STATE')):
+            self.scale_mask_softmax = True
+        else:
+            self.scale_mask_softmax = False
 
         if hidden_size_per_attention_head is None:
             self.hidden_size_per_attention_head = hidden_size // num_attention_heads
@@ -459,7 +464,8 @@ class SelfAttention(torch.nn.Module):
         if self.position_encoding_2d:
             q1, q2 = query_layer.chunk(2, dim=(query_layer.ndim - 1))
             k1, k2 = key_layer.chunk(2, dim=(key_layer.ndim - 1))
-            cos, sin = self.rotary_emb(q1, seq_len=position_ids.max() + 1)
+            q1, q2, k1, k2 = q1.contiguous(), q2.contiguous(), k1.contiguous(), k2.contiguous()
+            cos, sin = self.rotary_emb(q1, seq_len=2048)
             position_ids, block_position_ids = position_ids[:, 0, :].transpose(0, 1).contiguous(), \
                 position_ids[:, 1, :].transpose(0, 1).contiguous()
             q1, k1 = apply_rotary_pos_emb_index(q1, k1, cos, sin, position_ids)
@@ -948,7 +954,6 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
                     device=input_ids.device
                 )
 
-
             if position_ids is None:
                 MASK, gMASK = self.config.mask_token_id, self.config.gmask_token_id
                 seqs = input_ids.tolist()
@@ -1077,11 +1082,11 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         self.lm_head = new_embeddings
 
     def _update_model_kwargs_for_generation(
-        self,
-        outputs: ModelOutput,
-        model_kwargs: Dict[str, Any],
-        is_encoder_decoder: bool = False,
-        standardize_cache_format: bool = False,
+            self,
+            outputs: ModelOutput,
+            model_kwargs: Dict[str, Any],
+            is_encoder_decoder: bool = False,
+            standardize_cache_format: bool = False,
     ) -> Dict[str, Any]:
         # update past_key_values
         model_kwargs["past_key_values"] = self._extract_past_from_model_output(

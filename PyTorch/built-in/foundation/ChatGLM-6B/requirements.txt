@@ -9,4 +9,9 @@ datasets==2.13.0
 rouge_chinese
 nltk
 jieba
+decorator
+sympy
+attrs
+scipy
+
 
