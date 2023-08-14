@@ -374,6 +374,9 @@ python test_infer/unconditional-image-generation.py
 
 修改prompt等操作需要对代码进行修改
 
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
+
 # 版本说明
 
 ## 变更
