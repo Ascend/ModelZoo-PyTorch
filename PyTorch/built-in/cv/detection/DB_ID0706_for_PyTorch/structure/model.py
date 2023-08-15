@@ -43,7 +43,7 @@ def parallelize(model, distributed, local_rank):
             output_device=[local_rank],
             find_unused_parameters=True)
     else:
-        return model
+        return nn.DataParallel(model)
 
 class SegDetectorModel(nn.Module):
     def __init__(self, args, device, distributed: bool = False, local_rank: int = 0):
