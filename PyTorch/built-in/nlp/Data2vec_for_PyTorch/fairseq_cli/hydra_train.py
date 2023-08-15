@@ -33,6 +33,7 @@ def hydra_main(cfg: FairseqConfig) -> float:
 
 def _hydra_main(cfg: FairseqConfig, **kwargs) -> float:
     add_defaults(cfg)
+    os.chdir(hydra.utils.get_original_cwd())
 
     if cfg.common.reset_logging:
         reset_logging()  # Hydra hijacks logging, fix that
