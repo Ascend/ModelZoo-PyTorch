@@ -28,11 +28,11 @@ import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
 import transformers
-from accelerate import Accelerator
+from accelerate import Accelerator, GradScalerKwargs
 from accelerate.logging import get_logger
 from accelerate.state import AcceleratorState
 from accelerate.utils import ProjectConfiguration, set_seed
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from huggingface_hub import create_repo, upload_folder
 from packaging import version
 from PIL import Image
@@ -51,6 +51,12 @@ from diffusers.utils.import_utils import is_xformers_available
 
 if is_wandb_available():
     import wandb
+
+# Adapter to NPU
+import time
+import torch_npu
+from torch_npu.optim import NpuFusedAdamW
+from torch_npu.contrib import transfer_to_npu
 
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
@@ -482,6 +488,9 @@ def parse_args():
             " more information see https://huggingface.co/docs/accelerate/v0.17.0/en/package_reference/accelerator#accelerate.Accelerator"
         ),
     )
+    parser.add_argument("--use_npu_fuse_adamW", action="store_true", help="Whether to use NpuFusedAdamW")
+    parser.add_argument("--use_clip_grad_norm_fused", action="store_true", help="Whether to use clip_grad_norm_fused")
+    parser.add_argument("--use_megatron_npu_adamW", action="store_true", help="Whether to use megatron_npu_adamW")
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -685,7 +694,12 @@ def main():
         )
 
     # Initialize the optimizer
-    if args.use_8bit_adam:
+    if args.use_megatron_npu_adamW:
+        from megatron_npu.adaptor_optimizer_optimizer import AdamW
+        optimizer_cls = AdamW
+    elif args.use_npu_fuse_adamW:
+        optimizer_cls = NpuFusedAdamW
+    elif args.use_8bit_adam:
         try:
             import bitsandbytes as bnb
         except ImportError:
@@ -710,6 +724,9 @@ def main():
 
     # In distributed training, the load_dataset function guarantees that only one local process can concurrently
     # download the dataset.
+    if args.local_data_dir:
+        dataset = load_from_disk(args.local_data_dir)
+    
     if args.dataset_name is not None:
         # Downloading and loading a dataset from the hub.
         dataset = load_dataset(
@@ -905,6 +922,7 @@ def main():
         unet.train()
         train_loss = 0.0
         for step, batch in enumerate(train_dataloader):
+            start_time = time.time()
             # Skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
                 if step % args.gradient_accumulation_steps == 0:
@@ -971,18 +989,30 @@ def main():
                     loss = F.mse_loss(model_pred.float(), target.float(), reduction="none")
                     loss = loss.mean(dim=list(range(1, len(loss.shape)))) * mse_loss_weights
                     loss = loss.mean()
-
-                # Gather the losses across all processes for logging (if we use distributed training).
-                avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
-                train_loss += avg_loss.item() / args.gradient_accumulation_steps
-
+                
                 # Backpropagate
                 accelerator.backward(loss)
+
                 if accelerator.sync_gradients:
-                    accelerator.clip_grad_norm_(unet.parameters(), args.max_grad_norm)
+                    if args.use_npu_fuse_adamW and args.use_clip_grad_norm_fused:
+                        optimizer.optimizer.clip_grad_norm_fused_(args.max_grad_norm)
+                    else:
+                        accelerator.clip_grad_norm_(unet.parameters(), args.max_grad_norm)
+                
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
+
+               
+                end_time = time.time()
+
+                logger.info(f"train_samples_per_second "
+                            f"{args.train_batch_size * accelerator.num_processes/(end_time - start_time)}")
+               
+                
+                # Gather the losses across all processes for logging (if we use distributed training).
+                avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
+                train_loss += avg_loss.item() / args.gradient_accumulation_steps
 
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:

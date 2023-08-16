@@ -118,7 +118,7 @@ class Encoder(nn.Module):
                 return custom_forward
 
             # down
-            if is_torch_version(">=", "1.11.0"):
+            if is_torch_version(">=", "1.13.0"):
                 for down_block in self.down_blocks:
                     sample = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(down_block), sample, use_reentrant=False
@@ -238,7 +238,7 @@ class Decoder(nn.Module):
 
                 return custom_forward
 
-            if is_torch_version(">=", "1.11.0"):
+            if is_torch_version(">=", "1.13.0"):
                 # middle
                 sample = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(self.mid_block), sample, latent_embeds, use_reentrant=False
