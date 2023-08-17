@@ -56,7 +56,10 @@
 - 修改三方库代码：
 
   ```shell
-  # 1. 修改${python路径}/python3.7/site-packages/accelerate/accelerator.py的432行为：
+  # 1. 在${python路径}/python3.7/site-packages/accelerate/accelerator.py中找到：
+  self.scaler = torch.cuda.amp.GradScaler(**kwargs)
+  修改为：
+  import torch_npu
   self.scaler = torch.npu.amp.GradScaler(**kwargs)
   
   # 2. 修改${python路径}/python3.7/site-packages/accelerate/utils/dataclasses.py，给类GradScalerKwargs添加属性：

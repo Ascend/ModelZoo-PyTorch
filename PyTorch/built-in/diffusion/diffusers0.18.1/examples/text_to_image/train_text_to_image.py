@@ -254,6 +254,14 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--local_data_dir",
+        type=str,
+        default=None,
+        help=(
+            "Load data from local disk"
+        ),
+    )
+    parser.add_argument(
         "--image_column", type=str, default="image", help="The column of the dataset containing an image."
     )
     parser.add_argument(
@@ -524,11 +532,13 @@ def main():
 
     accelerator_project_config = ProjectConfiguration(project_dir=args.output_dir, logging_dir=logging_dir)
 
+    grad_kwargs = GradScalerKwargs(dynamic = False)
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
         log_with=args.report_to,
         project_config=accelerator_project_config,
+        kwargs_handlers = [grad_kwargs]
     )
 
     # Make one log on every process with the configuration for debugging.

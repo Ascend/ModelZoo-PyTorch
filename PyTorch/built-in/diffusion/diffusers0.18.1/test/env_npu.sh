@@ -21,8 +21,8 @@ msnpureport -g error -d 5
 msnpureport -g error -d 6
 msnpureport -g error -d 7
 
-#设置INF模式，910B系列开启，910A不支持，默认关闭,0-关闭/1-开启
-export INF_NAN_MODE_ENABLE=0
+#设置INF模式，910B系列开启，910A不支持,0-关闭/1-开启
+export INF_NAN_MODE_ENABLE=1
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #设置默认日志级别,0-debug/1-info/2-warning/3-error

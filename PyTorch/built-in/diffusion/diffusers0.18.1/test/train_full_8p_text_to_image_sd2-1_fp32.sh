@@ -3,7 +3,7 @@ Network="diffusers"
 
 # 预训练模型
 model_name="stabilityai/stable-diffusion-2-1"
-batch_size=1
+batch_size=4
 max_train_steps=15000
 mixed_precision="no"
 resolution=768
