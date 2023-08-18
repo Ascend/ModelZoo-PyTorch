@@ -61,7 +61,7 @@ mkdir -p ${output_path}
 start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
-python -m torch.distributed.launch --nproc_per_node 8 --use_env \
+python3 -m torch.distributed.launch --nproc_per_node 8 --use_env \
   examples/text_to_image/train_text_to_image.py \
   --pretrained_model_name_or_path=$model_name \
   --dataset_name=$dataset_name \
@@ -91,7 +91,7 @@ e2e_time=$(($end_time - $start_time))
 echo "------------------ Final result ------------------"
 
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "train_samples_per_second " ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
+FPS=$(grep "FPS: " ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
 
 #获取性能数据，不需要修改
 #吞吐量
