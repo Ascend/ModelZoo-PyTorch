@@ -153,9 +153,9 @@ stabilityai/stable-diffusion-2-1
    ```shell
    train_text_to_image.py：
    --max_train_steps                   //训练步数
-   --local_data_dir                    //本地数据集路径
    --pretrained_model_name_or_path     //预训练模型名称或者地址
-   --dataset_name                      //数据集名称
+   --dataset_name                      //加载数据集的方式一，从官网或者本地cache中读取数据
+   --local_data_dir                    //加载数据集的方式二，从本地磁盘中读取数据（官方数据类型经过dick处理）
    --dataset_config_name               //数据集配置     
    --train_data_dir                    //符合huggingface结构的训练数据集
    --train_batch_size                  //设置batch_size

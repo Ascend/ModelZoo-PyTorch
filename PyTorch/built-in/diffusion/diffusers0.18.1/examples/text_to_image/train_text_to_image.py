@@ -506,7 +506,7 @@ def parse_args():
         args.local_rank = env_local_rank
 
     # Sanity checks
-    if args.dataset_name is None and args.train_data_dir is None:
+    if args.dataset_name is None and args.train_data_dir is None and args.local_data_dir is None:
         raise ValueError("Need either a dataset name or a training folder.")
 
     # default to using the same revision for the non-ema model if not specified
@@ -734,8 +734,6 @@ def main():
 
     # In distributed training, the load_dataset function guarantees that only one local process can concurrently
     # download the dataset.
-    if args.local_data_dir:
-        dataset = load_from_disk(args.local_data_dir)
     
     if args.dataset_name is not None:
         # Downloading and loading a dataset from the hub.
@@ -744,6 +742,8 @@ def main():
             args.dataset_config_name,
             cache_dir=args.cache_dir,
         )
+    elif args.local_data_dir is not None:
+        dataset = load_from_disk(args.local_data_dir)
     else:
         data_files = {}
         if args.train_data_dir is not None:
@@ -931,8 +931,10 @@ def main():
     for epoch in range(first_epoch, args.num_train_epochs):
         unet.train()
         train_loss = 0.0
+        step_end_time = time.time()
         for step, batch in enumerate(train_dataloader):
-            start_time = time.time()
+            step_data_time = time.time() - step_end_time
+
             # Skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
                 if step % args.gradient_accumulation_steps == 0:
@@ -1013,13 +1015,6 @@ def main():
                 lr_scheduler.step()
                 optimizer.zero_grad()
 
-               
-                end_time = time.time()
-
-                logger.info(f"train_samples_per_second "
-                            f"{args.train_batch_size * accelerator.num_processes/(end_time - start_time)}")
-               
-                
                 # Gather the losses across all processes for logging (if we use distributed training).
                 avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
                 train_loss += avg_loss.item() / args.gradient_accumulation_steps
@@ -1064,6 +1059,16 @@ def main():
 
             if global_step >= args.max_train_steps:
                 break
+            
+            step_total_time = time.time() - step_end_time
+        
+            logger.info(f"step_train_time: {step_total_time}")
+            logger.info(f"step_data_time: {step_data_time}")
+            logger.info(f"FPS: {args.train_batch_size * accelerator.num_processes/step_total_time}")
+            
+            step_end_time = time.time()
+
+            
 
         if accelerator.is_main_process:
             if args.validation_prompts is not None and epoch % args.validation_epochs == 0:
