@@ -206,7 +206,7 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
    2. 执行推理。
 
         ```
-      python3.7 -m ais_bench --model=DG-net_bs${bs}.om --input="./bin_path2,./bin_path1" --batchsize=${batch_size}  
+      python3.7 -m ais_bench --model=DG-net_bs${bs}.om --input="./bin_path2,./bin_path1" --batchsize=${batch_size} --output=./results
         ```
 
         -   参数说明：
@@ -221,7 +221,7 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
       调用脚本对推理数据进行可视化处理
 
       ```
-      python3 DGnet_postprocess.py --result_folder=./{time_line} --output_folder=./off-gan_id/ --output_folder=./off-gan_bg/
+      python3 DGnet_postprocess.py --result_folder=./results/{time_line} --output_folder=./off-gan_id/ --output_folder2=./off-gan_bg/
       ```
 
       - 参数说明：
@@ -232,7 +232,7 @@ DG-Net有机地将GAN和re-id backbone结合来解决行人重识别问题（per
         - output_folder：可视化数据保存路径1
 
 
-        - output_folder：可视化数据保存路径2
+        - output_folder2：可视化数据保存路径2
 
       利用[TTUR](https://github.com/layumi/TTUR)源码仓工具计算生成数据集的FID值
       ```
