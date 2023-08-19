@@ -1,5 +1,7 @@
 contexttimer
-einops==0.6.1
+decord
+diffusers<=0.16.0
+einops>=0.4.1
 fairscale==0.4.4
 ftfy
 iopath
@@ -19,10 +21,9 @@ sentencepiece
 spacy
 streamlit
 timm==0.4.12
-torch==1.11.0
-torchvision==0.12.0
+torch>=1.10.0
+torchvision
 tqdm
-transformers==4.29.2
-fschat
+transformers>=4.28.0
 webdataset
 wheel

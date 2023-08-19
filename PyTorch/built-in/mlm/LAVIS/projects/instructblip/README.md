@@ -1,119 +1,109 @@
-# InstructBLIP for PyTorch
+## InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning
+This is the official implementation of InstructBLIP [paper](http://arxiv.org/abs/2305.06500). 
+InstructBLIP proposes a new vision-language instruction-tuning framework using BLIP-2 models, achieving state-of-the-art zero-shot generalization performance on a wide range of vision-language tasks.
 
--   [概述](#概述)
--   [准备环境](#准备环境)
--   [视觉问答(VQA)任务推理](#视觉问答(VQA)任务推理)
--   [版本说明](#版本说明)
--   [公网地址说明](#公网地址说明)
+<img src="showcase.png" width="1000">
 
-
-
-# 概述
-
-## 简述
-
-InstructBLIP是从BLIP2模型微调而来的模型。InstructBLIP模型更擅长「看」、「推理」和「说」，即能够对复杂图像进行理解、推理、描述，还支持多轮对话等。最重要的是，InstructBLIP在多个任务上实现了最先进的性能，甚至在图片解释和推理上表现优于GPT4。
-
-- 参考实现：
-
-  ```
-  url=https://github.com/salesforce/LAVIS
-  commit_id=f3212e7d57bf3bb6635f8ae0461f167103cee2b4
-  ```
-
-- 适配昇腾 AI 处理器的实现：
-
-  ```
-  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
-  code_path=PyTorch/built-in/mlm
-  ```
+### Install from source:
+```
+git clone https://github.com/salesforce/LAVIS.git
+cd LAVIS
+pip install -e .
+```
+We will soon support installing InstructBLIP with PyPI
 
 
-# 准备环境
+### InstructBLIP Model Zoo 
+```python
+# ==================================================
+# Architectures                  Types
+# ==================================================
+# blip2_vicuna_instruct          vicuna7b, vicuna13b
+# blip2_t5_instruct              flant5xl, flant5xxl
+```
 
-## 准备环境
-
-- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
-
-  **表 1**  版本支持表
-
-  | Torch_Version      | 三方库依赖版本                                 |
-  | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.11 | torchvision==0.12.0 |
-  
-- 环境准备指导。
-
-  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-  
-- 安装依赖。
-
-  在模型源码包根目录下执行命令，安装模型需要的依赖。
-  ```
-  pip install -r requirements.txt
-  python3 setup.py install
-  ```
-
-# 视觉问答(VQA)任务推理
-
-1. 获取Vicuna-7B权重：
-
-   通过以下链接获取Hugging Face格式的原始LLaMA权重(https://huggingface.co/docs/transformers/main/model_doc/llama)
-   
-   通过以下链接获取应用了delta的vicuna权重。(https://huggingface.co/lmsys/vicuna-7b-delta-v1.1/tree/main)
-   
-   在模型根目录下使用以下转换脚本将delta权重应用于原始Llama权重，需要30GB cpu内存，如果cpu内存小于32GB，大于16GB，可在命令后加--low-cpu-mem，转换后的权重放在模型根目录下
-   ```
-   python3 -m fastchat.model.apply_delta \
-    --base-model-path /path/to/llama-7b \  
-    --target-model-path vicuna-7b \
-    --delta-path lmsys/vicuna-7b-delta-v1.1
-   ```
-   参数说明如下：
-   ```
-   base-model-path：原始Llama权重路径
-   target-model-path：转换后的vicuna权重存放路径
-   delta-path：应用了delta的vicuna权重路径
-   ```
-
-2. 获取instruct_blip_vicuna7b_trimmed权重放在模型根目录下(https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/InstructBLIP/instruct_blip_vicuna7b_trimmed.pth)
-
-3. 获取bert-base-uncased放在模型根目录下(https://huggingface.co/bert-base-uncased/tree/main)
-
-4. source环境变量：
-
-   ```shell
-   source ./test/env_npu.sh
-   ```
-
-5. 在模型根目录下运行推理脚本。
-  
-   ```
-   python run_scripts/instructblip/infer/infer.py --img_path xxx --prompt xxx
-   
-   # 或者使用shell脚本启动：
-   bash ./test/run_infer_full_1p.sh  #单卡推理，请将脚本里的img_path更换成实际的路径,prompt更换为需要推理的prompt
-   ```
-
-   模型推理脚本参数说明如下。
-   
-   ```
-   公共参数：
-   --img_path                             //待推理图片路径
-   --prompt                               //推理prompt
-   ```
+### Prepare Vicuna Weights
+InstructBLIP uses frozen Vicuna 7B and 13B models. Please first follow the [instructions](https://github.com/lm-sys/FastChat) to prepare Vicuna v1.1 weights. 
+Then modify the ```llm_model``` in the [Model Config](https://github.com/salesforce/LAVIS/blob/main/lavis/configs/models/blip2/blip2_instruct_vicuna7b.yaml) to the folder that contains Vicuna weights.
 
 
+### Instruction-following Image-to-text Generation 
+We first load a sample image from local.
+```python
+import torch
+from PIL import Image
+# setup device to use
+device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
+# load sample image
+raw_image = Image.open("../../docs/_static/Confusing-Pictures.jpg").convert("RGB")
+display(raw_image.resize((596, 437)))
+```
+<img src="../../docs/_static/Confusing-Pictures.jpg" width="350">
 
-# 版本说明
+Then we load a InstructBLIP model with its preprocessors (transforms).
+```python
+from lavis.models import load_model_and_preprocess
+# loads InstructBLIP model
+model, vis_processors, _ = load_model_and_preprocess(name="blip2_vicuna_instruct", model_type="vicuna7b", is_eval=True, device=device)
+# prepare the image
+image = vis_processors["eval"](raw_image).unsqueeze(0).to(device)
+```
 
-## 变更
+Given the image and an instruction prompt, ask the model to generate the response.
+```python
+model.generate({"image": image, "prompt": "What is unusual about this image?"})
+```
+```
+Output: "The unusual aspect of this image is that a man is ironing clothes on the back of a yellow SUV, which is parked in the middle of a busy city street. This is an unconventional approach to ironing clothes, as it requires the man to balance himself and his ironing equipment on top of the vehicle while navigating through traffic. Additionally, the presence of taxis and other vehicles in the scene further emphasizes the unusual nature of this situation. In general, ironing clothes is typically done in a more traditional setting, such as a laundry room or a designated ironing area at home or in a commercial laundry facility."
+```
 
-2023.07.17：首次发布。
+Generate a short description.
+```python
+model.generate({"image": image, "prompt": "Write a short description for the image."})
+```
+```
+Output: "a man in a yellow shirt is standing on top of a car"
+```
 
-## FAQ
+Generate a long description.
+```python
+model.generate({"image": image, "prompt": "Write a detailed description."})
+```
+```
+Output: "A man in a yellow shirt is standing on the back of a yellow SUV parked on a busy city street. He is holding an ironing board and appears to be ironing clothes while standing on the vehicle's tailgate. There are several other cars and trucks visible in the background, adding to the bustling atmosphere of the scene. The man's presence on the back of the SUV creates a unique and creative way for him to do his laundry while commuting to work or running errands in the city."
+```
 
-1. 目前只支持InstructBLIP的推理功能。
+Use nucleus sampling instead of beam search.
+```python
+model.generate({"image": image, "prompt":"Describe the image in details."}, use_nucleus_sampling=True, top_p=0.9, temperature=1)
+```
+```
+Output: "In the city street, a man in a yellow shirt is ironing clothes on top of his car, which is parked on the side of the road. He is surrounded by other vehicles, including a taxi cab and a truck, adding to the bustling atmosphere of the urban environment. The man's task requires him to balance precariously on the back of his car as he works on his laundry, highlighting the creativity and resourcefulness of New Yorkers in their daily lives."
+```
 
-2. `requests.exceptions.SSLError:HttpSConnectionPool(host='huggingface.co', port=443)`错误
+### Demo
+Run Gradio Demo locally with ```python run_demo.py```
 
-   可以修改当前环境的`requests`包下的sessions.py文件的684行，增加`kwargs["verify"] = False`，一般路径在`conda_path/envs/conda_name/lib/python*/site-packages/requests/sessions.py`，查看`requests`包的所在路径可以通过`pip show requests`查看
+### Instruction-Tuning
+In order to train the model with instruction data, prepare the dataset where each sample contains three items: "image", "text_input", and "text_output". Follow LAVIS documentation for running model training.
+
+### Qualitative Comparison with Concurrent Multimodal Models (e.g., GPT-4)
+
+The response from InstructBLIP is more comprehensive than GPT-4, more visually-grounded than LLaVA, and more logical than MiniGPT-4. The responses of GPT-4 and LLaVA
+are obtained from their respective papers, while the official demo is used for MiniGPT-4.
+
+<img src="comparison.png" width="600">
+
+### BibTeX
+```
+@misc{instructblip,
+      title={InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning}, 
+      author={Wenliang Dai and Junnan Li and Dongxu Li and Anthony Meng Huat Tiong and Junqi Zhao and Weisheng Wang and Boyang Li and Pascale Fung and Steven Hoi},
+      year={2023},
+      eprint={2305.06500},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+### Usage and License: 
+The model is intended and licensed for research use only. InstructBLIP w/ Vicuna models are restricted to uses that follow the license agreement of LLaMA and Vicuna. The models have been trained on the [LLaVA](https://llava-vl.github.io/) dataset which is CC BY NC 4.0 (allowing only non-commercial use).

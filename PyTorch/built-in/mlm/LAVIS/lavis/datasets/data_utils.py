@@ -1,8 +1,6 @@
 """
- BSD 3-Clause License
  Copyright (c) 2022, salesforce.com, inc.
  All rights reserved.
- opyright 2023 Huawei Technologies Co., Ltd
  SPDX-License-Identifier: BSD-3-Clause
  For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
@@ -10,17 +8,45 @@
 import gzip
 import logging
 import os
+import random as rnd
 import tarfile
 import zipfile
 
-import torch
+import decord
 import webdataset as wds
+import numpy as np
+import torch
+from torch.utils.data.dataset import IterableDataset, ChainDataset
+from decord import VideoReader
 from lavis.common.registry import registry
 from lavis.datasets.datasets.base_dataset import ConcatDataset
-from torch.utils.data.dataset import IterableDataset, ChainDataset
 from tqdm import tqdm
 
+decord.bridge.set_bridge("torch")
 MAX_INT = registry.get("MAX_INT")
+
+
+def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, sampling="uniform"):
+    vr = VideoReader(uri=video_path, height=height, width=width)
+
+    vlen = len(vr)
+    start, end = 0, vlen
+
+    n_frms = min(n_frms, vlen)
+
+    if sampling == "uniform":
+        indices = np.arange(start, end, vlen / n_frms).astype(int)
+    elif sampling == "headtail":
+        indices_h = sorted(rnd.sample(range(vlen // 2), n_frms // 2))
+        indices_t = sorted(rnd.sample(range(vlen // 2, vlen), n_frms // 2))
+        indices = indices_h + indices_t
+    else:
+        raise NotImplementedError
+
+    # get_batch -> T, H, W, C
+    frms = vr.get_batch(indices).permute(3, 0, 1, 2).float()  # (C, T, H, W)
+
+    return frms
 
 
 def apply_to_sample(f, sample):
@@ -51,6 +77,8 @@ def prepare_sample(samples, cuda_enabled=True):
     if cuda_enabled:
         samples = move_to_cuda(samples)
 
+    # TODO fp16 support
+
     return samples
 
 
@@ -64,6 +92,9 @@ def reorg_datasets_by_split(datasets):
     Returns:
         Dict of datasets by split {split_name: List[Datasets]}.
     """
+    # if len(datasets) == 1:
+    #     return datasets[list(datasets.keys())[0]]
+    # else:
     reorg_datasets = dict()
 
     # reorganize by split
@@ -105,14 +136,16 @@ def concat_datasets(datasets):
         if split_name != "train":
             assert (
                 len(datasets[split_name]) == 1
-            ), ("Do not support multiple %s datasets.", split_name)
+            ), "Do not support multiple {} datasets.".format(split_name)
             datasets[split_name] = datasets[split_name][0]
         else:
             iterable_datasets, map_datasets = [], []
             for dataset in datasets[split_name]:
                 if isinstance(dataset, wds.DataPipeline):
                     logging.info(
-                        "Dataset %s is IterableDataset, can't be concatenated.", dataset
+                        "Dataset {} is IterableDataset, can't be concatenated.".format(
+                            dataset
+                        )
                     )
                     iterable_datasets.append(dataset)
                 elif isinstance(dataset, IterableDataset):
@@ -127,11 +160,11 @@ def concat_datasets(datasets):
             chained_datasets = (
                 ChainDataset(iterable_datasets) if len(iterable_datasets) > 0 else None
             )
-            concat_datasets_local = (
+            concat_datasets = (
                 ConcatDataset(map_datasets) if len(map_datasets) > 0 else None
             )
 
-            train_datasets = concat_datasets_local, chained_datasets
+            train_datasets = concat_datasets, chained_datasets
             train_datasets = tuple([x for x in train_datasets if x is not None])
             train_datasets = (
                 train_datasets[0] if len(train_datasets) == 1 else train_datasets
@@ -170,7 +203,7 @@ def extract_archive(from_path, to_path=None, overwrite=False):
         to_path = os.path.dirname(from_path)
 
     if from_path.endswith((".tar.gz", ".tgz")):
-        logging.info("Opening tar file %s to %s.", from_path, to_path)
+        logging.info("Opening tar file {} to {}.".format(from_path, to_path))
         with tarfile.open(from_path, "r") as tar:
             files = []
             for file_ in tqdm(tar):
@@ -178,32 +211,32 @@ def extract_archive(from_path, to_path=None, overwrite=False):
                 if file_.isfile():
                     files.append(file_path)
                     if os.path.exists(file_path):
-                        logging.info("%s already extracted.", file_path)
+                        logging.info("{} already extracted.".format(file_path))
                         if not overwrite:
                             continue
                 tar.extract(file_, to_path)
-            logging.info("Finished extracting tar file %s.", from_path)
+            logging.info("Finished extracting tar file {}.".format(from_path))
             return files
 
     elif from_path.endswith(".zip"):
         assert zipfile.is_zipfile(from_path), from_path
-        logging.info("Opening zip file %s to %s.", from_path, to_path)
+        logging.info("Opening zip file {} to {}.".format(from_path, to_path))
         with zipfile.ZipFile(from_path, "r") as zfile:
             files = []
             for file_ in tqdm(zfile.namelist()):
                 file_path = os.path.join(to_path, file_)
                 files.append(file_path)
                 if os.path.exists(file_path):
-                    logging.info("%s already extracted.", file_path)
+                    logging.info("{} already extracted.".format(file_path))
                     if not overwrite:
                         continue
                 zfile.extract(file_, to_path)
         files = [f for f in files if os.path.isfile(f)]
-        logging.info("Finished extracting zip file %s.", from_path)
+        logging.info("Finished extracting zip file {}.".format(from_path))
         return files
 
     elif from_path.endswith(".gz"):
-        logging.info("Opening gz file %s to %s.", from_path, to_path)
+        logging.info("Opening gz file {} to {}.".format(from_path, to_path))
         default_block_size = 65536
         filename = from_path[:-3]
         files = [filename]
@@ -215,7 +248,7 @@ def extract_archive(from_path, to_path=None, overwrite=False):
                 else:
                     d_file.write(block)
             d_file.write(block)
-        logging.info("Finished extracting gz file %s.", from_path)
+        logging.info("Finished extracting gz file {}.".format(from_path))
         return files
 
     else:
@@ -225,6 +258,7 @@ def extract_archive(from_path, to_path=None, overwrite=False):
 
 
 def save_frames_grid(img_array, out_path):
+    import torch
     from PIL import Image
     from torchvision.utils import make_grid
 

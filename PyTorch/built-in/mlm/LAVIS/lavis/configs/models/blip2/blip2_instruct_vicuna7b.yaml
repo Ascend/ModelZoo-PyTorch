@@ -1,8 +1,5 @@
- # BSD 3-Clause License
- #
  # Copyright (c) 2022, salesforce.com, inc.
  # All rights reserved.
- # Copyright 2023 Huawei Technologies Co., Ltd
  # SPDX-License-Identifier: BSD-3-Clause
  # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
@@ -11,7 +8,7 @@ model:
   load_finetuned: False
   load_pretrained: True
 
-  pretrained: "instruct_blip_vicuna7b_trimmed.pth"
+  pretrained: "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/InstructBLIP/instruct_blip_vicuna7b_trimmed.pth"
   finetuned: ""
 
   # vit encoder
@@ -25,7 +22,7 @@ model:
   num_query_token: 32
 
   # path to Vicuna checkpoint
-  llm_model: "vicuna-7b"
+  llm_model: "./llm/vicuna-7b"
 
   # generation configs
   prompt: ""
