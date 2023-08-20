@@ -33,7 +33,7 @@ from lavis.datasets.datasets.dataloader_utils import (
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, DistributedSampler
 from torch.utils.data.dataset import ChainDataset
-
+from megatron_npu.adaptor_optimizer_optimizer import AdamW
 
 @registry.register_runner("runner_base")
 class RunnerBase:
@@ -112,7 +112,7 @@ class RunnerBase:
                   
             beta2 = self.config.run_cfg.get("beta2", 0.999)
 
-            self._optimizer = torch.optim.AdamW(
+            self._optimizer = AdamW(
                 optim_params,
                 lr=float(self.config.run_cfg.init_lr),
                 betas=(0.9, beta2),

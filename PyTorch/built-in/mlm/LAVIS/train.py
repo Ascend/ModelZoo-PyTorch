@@ -11,6 +11,7 @@ import random
 
 import numpy as np
 import torch
+import torch_npu
 import torch.backends.cudnn as cudnn
 
 import lavis.tasks as tasks
@@ -30,6 +31,7 @@ from lavis.models import *
 from lavis.processors import *
 from lavis.runners import *
 from lavis.tasks import *
+from torch_npu.contrib import transfer_to_npu
 
 
 def parse_args():
@@ -90,6 +92,7 @@ def main():
     cfg.pretty_print()
 
     task = tasks.setup_task(cfg)
+    task.setup_info(cfg)
     datasets = task.build_datasets(cfg)
     model = task.build_model(cfg)
 
