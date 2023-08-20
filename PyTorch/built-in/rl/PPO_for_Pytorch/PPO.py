@@ -1,4 +1,5 @@
 import torch
+import torch_npu
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
@@ -43,7 +44,7 @@ class ActorCritic(nn.Module):
         
         if has_continuous_action_space:
             self.action_dim = action_dim
-            self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(device)
+            self.action_var = torch.full((action_dim,), action_std_init * action_std_init)
         # actor
         if has_continuous_action_space :
             self.actor = nn.Sequential(
@@ -74,7 +75,7 @@ class ActorCritic(nn.Module):
         
     def set_action_std(self, new_action_std):
         if self.has_continuous_action_space:
-            self.action_var = torch.full((self.action_dim,), new_action_std * new_action_std).to(device)
+            self.action_var = torch.full((self.action_dim,), new_action_std * new_action_std)
         else:
             print("--------------------------------------------------------------------------------------------")
             print("WARNING : Calling ActorCritic::set_action_std() on discrete action space policy")
@@ -88,7 +89,7 @@ class ActorCritic(nn.Module):
         if self.has_continuous_action_space:
             action_mean = self.actor(state)
             cov_mat = torch.diag(self.action_var).unsqueeze(dim=0)
-            dist = MultivariateNormal(action_mean, cov_mat)
+            dist = MultivariateNormal(action_mean.cpu(), cov_mat)
         else:
             action_probs = self.actor(state)
             dist = Categorical(action_probs)
@@ -105,8 +106,8 @@ class ActorCritic(nn.Module):
             action_mean = self.actor(state)
             
             action_var = self.action_var.expand_as(action_mean)
-            cov_mat = torch.diag_embed(action_var).to(device)
-            dist = MultivariateNormal(action_mean, cov_mat)
+            cov_mat = torch.diag_embed(action_var)
+            dist = MultivariateNormal(action_mean.cpu(), cov_mat)
             
             # For Single Action Environments.
             if self.action_dim == 1:
@@ -213,8 +214,8 @@ class PPO:
 
         # convert list to tensor
         old_states = torch.squeeze(torch.stack(self.buffer.states, dim=0)).detach().to(device)
-        old_actions = torch.squeeze(torch.stack(self.buffer.actions, dim=0)).detach().to(device)
-        old_logprobs = torch.squeeze(torch.stack(self.buffer.logprobs, dim=0)).detach().to(device)
+        old_actions = torch.squeeze(torch.stack(self.buffer.actions, dim=0)).detach()
+        old_logprobs = torch.squeeze(torch.stack(self.buffer.logprobs, dim=0)).detach()
         old_state_values = torch.squeeze(torch.stack(self.buffer.state_values, dim=0)).detach().to(device)
 
         # calculate advantages
@@ -230,14 +231,14 @@ class PPO:
             state_values = torch.squeeze(state_values)
             
             # Finding the ratio (pi_theta / pi_theta__old)
-            ratios = torch.exp(logprobs - old_logprobs.detach())
+            ratios = torch.exp(logprobs - old_logprobs.detach()).to(device)
 
             # Finding Surrogate Loss  
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
 
             # final loss of clipped objective PPO
-            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
+            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy.to(device)
             
             # take gradient step
             self.optimizer.zero_grad()

@@ -1,113 +1,117 @@
-# PPO-PyTorch
+# PPO for Pytorch
 
-### UPDATE [April 2021] : 
-
-- merged discrete and continuous algorithms
-- added linear decaying for the continuous action space `action_std`; to make training more stable for complex environments
-- added different learning rates for actor and critic
-- episodes, timesteps and rewards are now logged in `.csv` files
-- utils to plot graphs from log files
-- utils to test and make gifs from preTrained networks
-- `PPO_colab.ipynb` combining all the files to train / test / plot graphs / make gifs on google colab in a convenient jupyter-notebook
-
-#### [Open `PPO_colab.ipynb` in Google Colab](https://colab.research.google.com/github/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_colab.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_colab.ipynb)
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
 
-## Introduction
 
-This repository provides a Minimal PyTorch implementation of Proximal Policy Optimization (PPO) with clipped objective for OpenAI gym environments. It is primarily intended for beginners in [Reinforcement Learning](https://en.wikipedia.org/wiki/Reinforcement_learning) for understanding the PPO algorithm. It can still be used for complex environments but may require some hyperparameter-tuning or changes in the code.
+# 概述
 
-To keep the training procedure simple : 
-  - It has a **constant standard deviation** for the output action distribution (**multivariate normal with diagonal covariance matrix**) for the continuous environments, i.e. it is a hyperparameter and NOT a trainable parameter. However, it is **linearly decayed**. (action_std significantly affects performance)
-  - It uses simple **monte-carlo estimate** for calculating advantages and NOT Generalized Advantage Estimate (check out the OpenAI spinning up implementation for that).
-  - It is a **single threaded implementation**, i.e. only one worker collects experience. [One of the older forks](https://github.com/rhklite/Parallel-PPO-PyTorch) of this repository has been modified to have Parallel workers
+## 简述
 
-A concise explaination of PPO algorithm can be found [here](https://stackoverflow.com/questions/46422845/what-is-the-way-to-understand-proximal-policy-optimization-algorithm-in-rl)
+近端策略优化算法（Proximal Policy Optimization， PPO）是一种新型的Policy Gradient算法。为解决Policy Gradient算法中步长难以确定的问题，PPO提出了新的目标函数可以在多个训练步骤实现小批量的更新，是目前强化学习领域适用性最广的算法之一。
 
 
-## Usage
+- 参考实现：
 
-- To train a new network : run `train.py`
-- To test a preTrained network : run `test.py`
-- To plot graphs using log files : run `plot_graph.py`
-- To save images for gif and make gif using a preTrained network : run `make_gif.py`
-- All parameters and hyperparamters to control training / testing / graphs / gifs are in their respective `.py` file
-- `PPO_colab.ipynb` combines all the files in a jupyter-notebook
-- All the **hyperparameters used for training (preTrained) policies are listed** in the [`README.md` in PPO_preTrained directory](https://github.com/nikhilbarhate99/PPO-PyTorch/tree/master/PPO_preTrained)
+  ```
+  url=https://github.com/nikhilbarhate99/PPO-PyTorch
+  commit_id=6d05b5e3da80fcb9d3f4b10f6f9bc84a111d81e3
+  ```
 
-#### Note :
-  - if the environment runs on CPU, use CPU as device for faster training. Box-2d and Roboschool run on CPU and training them on GPU device will be significantly slower because the data will be moved between CPU and GPU often
+- 适配昇腾 AI 处理器的实现：
 
-## Citing 
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/rl/
+  ```
 
-Please use this bibtex if you want to cite this repository in your publications :
+# 准备训练环境
 
-    @misc{pytorch_minimal_ppo,
-        author = {Barhate, Nikhil},
-        title = {Minimal PyTorch Implementation of Proximal Policy Optimization},
-        year = {2021},
-        publisher = {GitHub},
-        journal = {GitHub repository},
-        howpublished = {\url{https://github.com/nikhilbarhate99/PPO-PyTorch}},
-    }
+## 准备环境
 
-## Results
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-| PPO Continuous RoboschoolHalfCheetah-v1  | PPO Continuous RoboschoolHalfCheetah-v1 |
-| :-------------------------:|:-------------------------: |
-| ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_gifs/RoboschoolHalfCheetah-v1/PPO_RoboschoolHalfCheetah-v1_gif_0.gif) |  ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_figs/RoboschoolHalfCheetah-v1/PPO_RoboschoolHalfCheetah-v1_fig_0.png) |
+  **表 1**  版本支持表
 
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.11 | Box2D==2.3.2 Box2D-kengz==2.3.3 gym==0.15.4 |
+  
+- 环境准备指导。
 
-| PPO Continuous RoboschoolHopper-v1  | PPO Continuous RoboschoolHopper-v1 |
-| :-------------------------:|:-------------------------: |
-| ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_gifs/RoboschoolHopper-v1/PPO_RoboschoolHopper-v1_gif_0.gif) |  ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_figs/RoboschoolHopper-v1/PPO_RoboschoolHopper-v1_fig_0.png) |
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》搭建torch环境。
+  
+- 安装依赖。
 
-
-| PPO Continuous RoboschoolWalker2d-v1  | PPO Continuous RoboschoolWalker2d-v1 |
-| :-------------------------:|:-------------------------: |
-| ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_gifs/RoboschoolWalker2d-v1/PPO_RoboschoolWalker2d-v1_gif_0.gif) |  ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_figs/RoboschoolWalker2d-v1/PPO_RoboschoolWalker2d-v1_fig_0.png) |
+  在模型根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  ```shell
+  pip install -r requirements.txt  
+  ```
 
 
-| PPO Continuous BipedalWalker-v2  | PPO Continuous BipedalWalker-v2 |
-| :-------------------------:|:-------------------------: |
-| ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_gifs/BipedalWalker-v2/PPO_BipedalWalker-v2_gif_0.gif) |  ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_figs/BipedalWalker-v2/PPO_BipedalWalker-v2_fig_0.png) |
+## 准备数据集
+
+无。
 
 
-| PPO Discrete CartPole-v1  | PPO Discrete CartPole-v1 |
-| :-------------------------:|:-------------------------: |
-| ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_gifs/CartPole-v1/PPO_CartPole-v1_gif_0.gif) |  ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_figs/CartPole-v1/PPO_CartPole-v1_fig_0.png) |
+## 获取预训练模型
+
+无。
+
+# 开始训练
+
+## 训练模型
+
+本文以BipedalWalker-v2场景为例，展示训练方法，其余场景需要根据场景替换启动脚本中的超参等配置。
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练和单机8卡训练。
+
+   - 单机单卡训练
+
+     ```shell
+     bash test/train_full_1p.sh  # 单卡训练
+     ```
+     
+   - 单机单卡性能
+   
+     ```shell
+     bash test/train_performance_1p.sh  # 单卡性能
+     ```
+   
+   训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME        | FPS    | MAX Training TimeSteps | Average Reward |
+| ----------- | ------ | ---------------------- | -------------- |
+| 1p-竞品V    | 581.82 | 3000000                 | 198.66         |
+| 1p-NPU-910B | 232.74 | 3000000                | 235.22         |
 
 
-| PPO Discrete LunarLander-v2  | PPO Discrete LunarLander-v2 |
-| :-------------------------:|:-------------------------: |
-| ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_gifs/LunarLander-v2/PPO_LunarLander-v2_gif_0.gif) |  ![](https://github.com/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_figs/LunarLander-v2/PPO_LunarLander-v2_fig_0.png) |
+# 公网地址说明
+无。
 
+# 版本说明
 
-## Dependencies
-Trained and Tested on:
-```
-Python 3
-PyTorch
-NumPy
-gym
-```
-Training Environments 
-```
-Box-2d
-Roboschool
-pybullet
-```
-Graphs and gifs
-```
-pandas
-matplotlib
-Pillow
-```
+## 变更
 
+2023.08.20：首次发布。
 
-## References
+## FAQ
 
-- [PPO paper](https://arxiv.org/abs/1707.06347)
-- [OpenAI Spinning up](https://spinningup.openai.com/en/latest/)
-
-
+无。
+   
