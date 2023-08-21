@@ -1,54 +1,58 @@
+import argparse
 import os
 import glob
 import time
 from datetime import datetime
 
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 import numpy as np
 
 import gym
-import roboschool
 
 from PPO import PPO
 
+def get_args_parser():
+    parser = argparse.ArgumentParser(description = "Test Config")
+    parser.add_argument("--env-name", type=str, default="RoboschoolWalker2d-v1", help="env name")
+    parser.add_argument("--has-continuous-action-space", action="store_true", default=False, help="action space is continuous or discrete")
+    parser.add_argument("--max-ep-len", type=int, default=1000, help="max timesteps in one episode")
+    parser.add_argument("--action-std", type=float, default=0.1, help="set same std for action distribution which was used while saving")
+    parser.add_argument('--render', action='store_true', default=False, help='render environment on screen')
+    parser.add_argument('--frame-delay', type=int, default=0, help='add delay b/w frames')
+    parser.add_argument('--total-test-episodes', type=int, default=10, help='total num of testing episodes')
+    parser.add_argument("--K-epochs", type=int, default=80, help="update policy for K epochs")
+    parser.add_argument("--eps-clip", type=float, default=0.2, help="clip parameter for PPO")
+    parser.add_argument("--gamma", type=float, default=0.99, help="discount factor")
+    parser.add_argument("--lr-actor", type=float, default=0.0003, help="learning rate for actor network")
+    parser.add_argument("--lr-critic", type=float, default=0.001, help="learning rate for critic network")
+    parser.add_argument("--random-seed", type=int, default=0, help="set random seed if required")
+    parser.add_argument('--ckpt-path', type=str, default='', help='path of checkpoint')
+    args = parser.parse_args()
+    return args
 
 #################################### Testing ###################################
 def test():
-    print("============================================================================================")
-
+    args = get_args_parser()
     ################## hyperparameters ##################
 
-    # env_name = "CartPole-v1"
-    # has_continuous_action_space = False
-    # max_ep_len = 400
-    # action_std = None
+    env_name = args.env_name
+    has_continuous_action_space = args.has_continuous_action_space
+    max_ep_len = args.max_ep_len                        # max timesteps in one episode
+    action_std = args.action_std                        # set same std for action distribution which was used while saving
 
-    # env_name = "LunarLander-v2"
-    # has_continuous_action_space = False
-    # max_ep_len = 300
-    # action_std = None
+    render = args.render                                # render environment on screen
+    frame_delay = args.frame_delay                      # if required; add delay b/w frames
 
-    # env_name = "BipedalWalker-v2"
-    # has_continuous_action_space = True
-    # max_ep_len = 1500           # max timesteps in one episode
-    # action_std = 0.1            # set same std for action distribution which was used while saving
+    total_test_episodes = args.total_test_episodes      # total num of testing episodes
 
-    env_name = "RoboschoolWalker2d-v1"
-    has_continuous_action_space = True
-    max_ep_len = 1000           # max timesteps in one episode
-    action_std = 0.1            # set same std for action distribution which was used while saving
+    K_epochs = args.K_epochs                            # update policy for K epochs
+    eps_clip = args.eps_clip                            # clip parameter for PPO
+    gamma = args.gamma                                  # discount factor
 
-    render = True              # render environment on screen
-    frame_delay = 0             # if required; add delay b/w frames
-
-    total_test_episodes = 10    # total num of testing episodes
-
-    K_epochs = 80               # update policy for K epochs
-    eps_clip = 0.2              # clip parameter for PPO
-    gamma = 0.99                # discount factor
-
-    lr_actor = 0.0003           # learning rate for actor
-    lr_critic = 0.001           # learning rate for critic
+    lr_actor = args.lr_actor                            # learning rate for actor
+    lr_critic = args.lr_critic                          # learning rate for critic
 
     #####################################################
 
@@ -68,11 +72,10 @@ def test():
 
     # preTrained weights directory
 
-    random_seed = 0             #### set this to load a particular checkpoint trained on random seed
-    run_num_pretrained = 0      #### set this to load a particular checkpoint num
+    random_seed = args.random_seed
+    env.seed(random_seed)
 
-    directory = "PPO_preTrained" + '/' + env_name + '/'
-    checkpoint_path = directory + "PPO_{}_{}_{}.pth".format(env_name, random_seed, run_num_pretrained)
+    checkpoint_path = args.ckpt_path
     print("loading network from : " + checkpoint_path)
 
     ppo_agent.load(checkpoint_path)
@@ -116,5 +119,5 @@ def test():
 
 
 if __name__ == '__main__':
-
+    torch.npu.set_compile_mode(jit_compile=False)
     test()
