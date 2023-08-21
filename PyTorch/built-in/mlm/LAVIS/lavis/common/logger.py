@@ -80,7 +80,8 @@ class SmoothedValue(object):
 
 
 class MetricLogger(object):
-    def __init__(self, delimiter="\t"):
+    def __init__(self, batch_size, delimiter="\t"):
+        self.batch_size = batch_size
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
 
@@ -128,6 +129,8 @@ class MetricLogger(object):
         iter_time = SmoothedValue(fmt="{avg:.4f}")
         data_time = SmoothedValue(fmt="{avg:.4f}")
         space_fmt = ":" + str(len(str(len(iterable)))) + "d"
+        fps = 0
+        world_size = torch.distributed.get_world_size() if torch.distributed.is_initialized() else 1
         log_msg = [
             header,
             "[{0" + space_fmt + "}/{1}]",
@@ -135,6 +138,7 @@ class MetricLogger(object):
             "{meters}",
             "time: {time}",
             "data: {data}",
+            "fps: {fps:.4f}"
         ]
         if torch.cuda.is_available():
             log_msg.append("max mem: {memory:.0f}")
@@ -148,6 +152,7 @@ class MetricLogger(object):
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
                 if torch.cuda.is_available():
+                    fps = (1 / float(str(iter_time))) * self.batch_size * world_size
                     print(
                         log_msg.format(
                             i,
@@ -156,6 +161,7 @@ class MetricLogger(object):
                             meters=str(self),
                             time=str(iter_time),
                             data=str(data_time),
+                            fps=fps,
                             memory=torch.cuda.max_memory_allocated() / MB,
                         )
                     )

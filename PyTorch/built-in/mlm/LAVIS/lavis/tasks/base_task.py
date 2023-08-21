@@ -19,12 +19,21 @@ from lavis.datasets.data_utils import prepare_sample
 class BaseTask:
     def __init__(self, **kwargs):
         super().__init__()
-
         self.inst_id_key = "instance_id"
+        self.batch_size_train = 0
+        self.batch_size_eval = 0
+        self.test_performance = False
+        self.test_performance_steps = 0
 
     @classmethod
     def setup_task(cls, **kwargs):
         return cls()
+
+    def setup_info(self, cfg):
+        self.batch_size_train = cfg.run_cfg.batch_size_train
+        self.batch_size_eval = cfg.run_cfg.batch_size_eval
+        self.test_performance = cfg.run_cfg.get("test_performance", False)
+        self.test_performance_steps = cfg.run_cfg.get("test_performance_steps", 300)
 
     def build_model(self, cfg):
         model_config = cfg.model_cfg
@@ -84,7 +93,7 @@ class BaseTask:
         raise NotImplementedError
 
     def evaluation(self, model, data_loader, cuda_enabled=True):
-        metric_logger = MetricLogger(delimiter="  ")
+        metric_logger = MetricLogger(self.batch_size_eval, delimiter="  ")
         header = "Evaluation"
         # TODO make it configurable
         print_freq = 10
@@ -181,7 +190,7 @@ class BaseTask:
             # convert to iterator if not already
             data_loader = iter(data_loader)
 
-        metric_logger = MetricLogger(delimiter="  ")
+        metric_logger = MetricLogger(self.batch_size_train, delimiter="  ")
         metric_logger.add_meter("lr", SmoothedValue(window_size=1, fmt="{value:.6f}"))
         metric_logger.add_meter("loss", SmoothedValue(window_size=1, fmt="{value:.4f}"))
 
@@ -204,6 +213,9 @@ class BaseTask:
             # if using iter-based runner, we stop after iters_per_epoch iterations.
             if i >= iters_per_epoch:
                 break
+            if self.test_performance and i > self.test_performance_steps:
+                print("Test model performance, stop training.")
+                exit(0)
 
             samples = next(data_loader)
 

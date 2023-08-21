@@ -10,6 +10,7 @@ import random
 
 import numpy as np
 import torch
+import torch_npu
 import torch.backends.cudnn as cudnn
 
 import lavis.tasks as tasks
@@ -28,6 +29,7 @@ from lavis.models import *
 from lavis.processors import *
 from lavis.runners.runner_base import RunnerBase
 from lavis.tasks import *
+from torch_npu.contrib import transfer_to_npu
 
 
 def parse_args():

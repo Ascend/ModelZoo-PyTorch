@@ -12,17 +12,17 @@ import random as rnd
 import tarfile
 import zipfile
 
-import decord
+# import decord
 import webdataset as wds
 import numpy as np
 import torch
 from torch.utils.data.dataset import IterableDataset, ChainDataset
-from decord import VideoReader
+# from decord import VideoReader
 from lavis.common.registry import registry
 from lavis.datasets.datasets.base_dataset import ConcatDataset
 from tqdm import tqdm
 
-decord.bridge.set_bridge("torch")
+# decord.bridge.set_bridge("torch")
 MAX_INT = registry.get("MAX_INT")
 
 
