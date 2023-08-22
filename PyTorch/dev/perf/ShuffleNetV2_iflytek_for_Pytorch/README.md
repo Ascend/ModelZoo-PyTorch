@@ -104,12 +104,20 @@ ShuffleNetV2是一个改进ShuffleNetV1的轻量级的网络，为了解决在�
      ```
      bash ./test/train_full_1p.sh <path-to-dataset>
      ```
+   - 单机单卡性能看护
+     ```
+     bash ./test/train_performance_1p.sh <path-to-dataset>
+     ```
    - 单机8卡卡训练
 
      启动8卡训练。
 
      ```
      bash ./test/train_full_8p.sh <path-to-dataset>
+     ```
+   - 单机8卡卡性能看护
+     ```
+     bash ./test/train_performance_8p.sh <path-to-dataset>
      ```
 
    path-to-dataset表示imagenet的数据集路径，需填写到数据集的一级目录。
