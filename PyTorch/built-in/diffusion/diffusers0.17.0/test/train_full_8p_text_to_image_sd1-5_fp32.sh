@@ -3,7 +3,7 @@ Network="diffusers"
 
 # 预训练模型
 model_name="runwayml/stable-diffusion-v1-5"
-batch_size=1
+batch_size=6
 max_train_steps=15000
 mixed_precision="no"
 resolution=512
