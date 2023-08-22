@@ -159,7 +159,7 @@ do
     PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
     taskset -c 0-96 python3 -m torch.distributed.launch  --nproc_per_node=$RANK_SIZE \
         ${cur_path}/tools/train.py configs/retinanet/retinanet_r50_fpn_1x_coco.py --launcher pytorch --cfg-options data.samples_per_gpu=${batch_size} optimizer.lr=0.04 --seed 0 \
-        --gpu-ids 0 --no-validate --opt-level O1 \
+        --gpu-ids 0 --no-validate --opt-level O1 --performance \
         > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1
 done
 wait
