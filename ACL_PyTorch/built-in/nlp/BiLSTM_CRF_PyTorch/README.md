@@ -46,7 +46,7 @@ CLUENER 细粒度命名实体识别
     | --------- | ------- | ---------- |
     | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
     | CANN      | 6.0.1   | -          |
-    | Python    | 3.8.16  | -          |
+    | Python    | 3.7.5   | -          |
     
     说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
 
@@ -72,7 +72,7 @@ CLUENER 细粒度命名实体识别
     cd CLUENER2020
     git checkout master
     git reset --hard 2e8fccd1b8cde6b471fe440b9d766e920fb418ab
-    export PYTHONPATH=`pwd`:$PYTHONPATH
+    export PYTHONPATH=`pwd`/bilstm_crf_pytorch:$PYTHONPATH
     cd ..
     ```
 

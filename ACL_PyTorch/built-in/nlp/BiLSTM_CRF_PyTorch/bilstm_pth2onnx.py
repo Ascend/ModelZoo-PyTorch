@@ -22,7 +22,7 @@ import numpy as np
 
 import config
 from model import NERModel
-from preprocess import Preprocessor
+from bilstm_preprocess import Preprocessor
 from common import load_model
 
 
