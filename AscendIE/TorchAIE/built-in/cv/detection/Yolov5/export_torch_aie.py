@@ -26,7 +26,7 @@ def export_torch_aie(model_path, batch_size, save_path="./"):
     torchaie_model = torch_aie.compile(
         trace_model,
         inputs=input_info,
-        allow_tensor_replace_int=False,
+        allow_tensor_replace_int=True,  # expect full compilation except tupleConstruct
         precision_policy=_enums.PrecisionPolicy.FP16
         )
     suffix = os.path.splitext(model_path)[-1]
