@@ -105,10 +105,10 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
 2. 数据预处理，将原始数据集转换为模型输入的数据。
 
-   执行ResNeSt_preprocess.py脚本，完成预处理。
+   执行resnest_preprocess.py脚本，完成预处理。
 
    ```
-   python ResNeSt_preprocess.py ./imagenet/val ./prep_dataset
+   python resnest_preprocess.py ./imagenet/val ./prep_dataset
    ```
    - 参数说明：
 
@@ -137,13 +137,13 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
          运行resnest_pth2onnx.py脚本。
 
          ```
-         python resnest_pth2onnx.py --source="./resnest50.pth" --target="resnest50.onnx"
+         python resnest_pth2onnx.py --source="./resnest50-528c19ca.pth" --target="resnest50.onnx"
          ```
 
          获得resnest50.onnx文件。
       2. 使用onnxsim简化模型
          ```
-         python3 -m onnxsim --input-shape="1,3,224,224" --dynamic-input_shape resnest50.onnx resnest50_sim.onnx
+         python3 -m onnxsim --input-shape="1,3,224,224" resnest50.onnx resnest50_sim.onnx
          ```
 
 
@@ -178,12 +178,11 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
          ```
          atc --framework=5 \
-             --model=./resnest50)_sim.onnx \
+             --model=./resnest50_sim.onnx \
              --output=resnest50_bs${bs} \
              --input_format=NCHW \
              --input_shape="actual_input_1:${bs},3,224,224" \
-             --soc_version=Ascend${chip_name} \
-             --input_fp16_nodes="actual_input_1" 
+             --soc_version=Ascend${chip_name} 
          ```
 
          - 参数说明：
@@ -254,11 +253,11 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
+| 芯片型号 | Batch Size   | 数据集 | 精度(top1) | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|    Ascend310P3       |         1         |    imagenet        |    81%        |       435          |
-|    Ascend310P3       |         4         |    imagenet        |    81%        |       1704          |
-|    Ascend310P3       |         8         |    imagenet        |    81%        |        1630         |
-|    Ascend310P3       |         16         |    imagenet        |    81%        |       1326          |
-|    Ascend310P3       |         32         |    imagenet        |    81%        |       1161          |
-|    Ascend310P3       |         64         |    imagenet        |    81%        |        1107         |
+|    Ascend310P3       |         1         |    imagenet        |    80.7%        |       435          |
+|    Ascend310P3       |         4         |    imagenet        |    80.7%        |       1704          |
+|    Ascend310P3       |         8         |    imagenet        |    80.7%        |        1630         |
+|    Ascend310P3       |         16         |    imagenet        |    80.7%        |       1326          |
+|    Ascend310P3       |         32         |    imagenet        |    80.7%        |       1161          |
+|    Ascend310P3       |         64         |    imagenet        |    80.7%        |        1107         |
