@@ -48,7 +48,7 @@ CV-classfication
     </tr>
     <tr>
         <td>
-        <a href="https://github.com/pytorch/examples/tree/main/imagenet">  ResNet50 </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/classification/ResNet50">  ResNet50 </a>
         </td>
         <td>ImageNet</td>
 	<td>76.16%</td>
@@ -67,18 +67,55 @@ CV-detection
     <tr>
     <th rowspan=2>Name</th>
 	<th rowspan=2>Dataset</th>
-    <th align="center" colspan=3>精度</th>
+    <th align="center" colspan=3 rowspan=2>精度</th>
 	<th rowspan=2>310P最优性能(对应bs)</th>
 	<th rowspan=2>输入shape</th>
     </tr>
     <tr>
-	<td>AP</td>
-        <td>mAP<sup>val<br>50</td>
-        <td>mAP<sup>val<br>50-95</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+	<td>precision</td>
+        <td>recall</td>
+        <td>fmeasure</td>
+    <td></td>
+	<td></td>
     </tr>
     <tr>
         <td>
-        <a href="git clone https://github.com/ultralytics/yolov5.git">  Yolov5s </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/DBNet_MhLiao">  DBNet_MhLiao </a>
+        </td>
+        <td>ICDAR2015</td>
+	<td> 0.887 </td>
+        <td>0.804</td>
+        <td>0.843</td>
+    <td> 10.94(bs1)</td>
+	<td> 1 x 3 x 736 x 1280 </td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/DBNet_r50_OpenMMLab">  DBNet_r50_OpenMMLab </a>
+        </td>
+        <td>ICDAR2015</td>
+	<td></td>
+        <td></td>
+        <td></td>
+    <td> 5.88(all) </td>
+	<td> bs x 3 x 1024 x 1728 </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+	<td>AP</td>
+        <td>mAP<sup>val<br>50</td>
+        <td>mAP<sup>val<br>50-95</td>
+    <td></td>
+	<td></td>
+    </tr>
+    <tr>
+        <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/Yolov5">  Yolov5s </a>
         </td>
         <td>coco2017</td>
 	<td></td>
@@ -89,7 +126,7 @@ CV-detection
     </tr>
         <tr>
         <td>
-        <a href="git clone https://github.com/ultralytics/yolov5.git">  Yolov5m </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/Yolov5">  Yolov5m </a>
         </td>
         <td>coco2017</td>
 	<td></td>
@@ -118,7 +155,7 @@ CV-recognition
     </tr>
     <tr>
         <td>
-        <a href="https://github.com/open-mmlab/mmocr">  CRNN </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/recognition/CRNN_OpenMMlab">  CRNN </a>
         </td>
         <td>svt</td>
 	<td></td>
@@ -128,7 +165,7 @@ CV-recognition
 	<td>1 x 1 x 32 x wSize</td>
     <tr>
         <td>
-        <a href="https://github.com/open-mmlab/mmocr">  ABINet </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/recognition/ABINet_MMOCR">  ABINet </a>
         </td>
         <td>svt</td>
 	<td></td>

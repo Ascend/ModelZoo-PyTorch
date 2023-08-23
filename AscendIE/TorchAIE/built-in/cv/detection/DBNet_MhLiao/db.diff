@@ -40,9 +40,7 @@ index 50d15d1..1a31c5a 100644
 +        
 +        offset = torch.cat((offset_x, offset_y), 1)
 +
-+        torch.ops.load_library(
-+            "/opt/buildtools/Python-3.9.11/lib/python3.9/site-packages/torch_aie/lib/libplaceholder.so")
-+        modulated_deform_conv = torch.ops.aie_cust.modulated_deform_conv
++        modulated_deform_conv = torch.ops.aie.modulated_deform_conv
 +        if not self.with_bias:
 +            return modulated_deform_conv(x, offset, mask, self.weight, x.new_empty(1),
 +                                     self.stride, self.padding, self.dilation,

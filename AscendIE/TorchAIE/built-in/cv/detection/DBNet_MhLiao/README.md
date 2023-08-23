@@ -129,4 +129,4 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
 ## 模型推理性能&精度 <a name="INFER_PERFORM"></a>
 | 芯片型号 | Batch Size | 数据集    | 性能 | 精度 |
 |---------|------------|-----------|------|------|
-| 310P3   | 1          | ICDAR2015 | 10.94qps | 8.88 |
+| 310P3   | 1          | ICDAR2015 | 10.94qps | 0.887 |
