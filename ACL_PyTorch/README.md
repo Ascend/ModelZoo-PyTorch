@@ -170,7 +170,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ResNeSt50">  ResNeSt50 </a>
         </td>
         <td>ImageNet</td>
-    <td>81%</td>
+    <td>80.98%</td>
         <td></td>
     <td></td>
     <td>1704(bs4)</td>

@@ -255,9 +255,9 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
 
 | 芯片型号 | Batch Size   | 数据集 | 精度(top1) | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|    Ascend310P3       |         1         |    imagenet        |    80.7%        |       435          |
-|    Ascend310P3       |         4         |    imagenet        |    80.7%        |       1704          |
-|    Ascend310P3       |         8         |    imagenet        |    80.7%        |        1630         |
-|    Ascend310P3       |         16         |    imagenet        |    80.7%        |       1326          |
-|    Ascend310P3       |         32         |    imagenet        |    80.7%        |       1161          |
-|    Ascend310P3       |         64         |    imagenet        |    80.7%        |        1107         |
+|    Ascend310P3       |         1         |    imagenet        |    80.98%        |       435          |
+|    Ascend310P3       |         4         |    imagenet        |    80.98%        |       1704          |
+|    Ascend310P3       |         8         |    imagenet        |    80.98%        |        1630         |
+|    Ascend310P3       |         16         |    imagenet        |    80.98%        |       1326          |
+|    Ascend310P3       |         32         |    imagenet        |    80.98%        |       1161          |
+|    Ascend310P3       |         64         |    imagenet        |    80.98%        |        1107         |
