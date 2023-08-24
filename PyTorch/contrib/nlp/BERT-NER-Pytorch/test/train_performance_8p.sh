@@ -9,7 +9,7 @@ TASK_NAME="cluener"
 export MASTER_ADDR=127.0.0.1
 export MASTER_PORT=12355
 export TASK_QUEUE_ENABLE=2
-
+export ASCEND_DEVICE_ID=0
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
 cur_path=`pwd`
@@ -20,6 +20,14 @@ if [ x"${cur_path_last_dirname}" == x"test" ];then
     cur_path=`pwd`
 else
     test_path_dir=${cur_path}/test
+fi
+
+#################创建日志输出目录，不需要修改#################
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 
 python -m torch.distributed.launch --nproc_per_node 8 \
@@ -42,12 +50,12 @@ python -m torch.distributed.launch --nproc_per_node 8 \
   --save_steps=-1 \
   --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \
   --overwrite_output_dir \
-  --seed=42 > ${test_path_dir}/train.log 2>&1
+  --seed=42 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log 2>&1
 end_time=$(data +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 echo "------------------------Final result---------------------------"
-lines=$(cat $(test_path_dir)/train.log | grep -P "\[Training\] \d+/\d+.*ms/step")
+lines=$(cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log | grep -P "\[Training\] \d+/\d+.*ms/step")
 nlines=$(($(($(echo "${lines}" | wc -l) / 4)) * 3))
 use_lines=$(echo "${lines}" | tail -n ${nlines})
 perfs=$(echo "${use_lines}" | sed -E 's/.*\[Training\].*\[=+\] ([0-9]+\.[0-9]+)ms.*/\1/')
@@ -55,7 +63,7 @@ sum=$(echo "${perfs}" | tr '\n' '+' | sed -E 's/(.*)\+$/\1/')
 sum=$(echo "${sum}" | bc -l)
 avg=$(echo "${sum} / $(nlines)" | bc -l)
 echo "Final performance WPS: $avg"
-line=$(cat ${test_path_dir}/train.log | grep -P "f1:" | head -n 1)
+line=$(cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log | grep -P "f1:" | head -n 1)
 acc=$(echo "${line}" | grep -P ".*acc.*recall.*f1.*" | sed -E 's/.*f1: ([0-9]+\.[0-9]+).*/\1/')
 echo "Final Best Acc (F1 score): $acc"
 echo "E2E training duration sec: $e2e_time"
