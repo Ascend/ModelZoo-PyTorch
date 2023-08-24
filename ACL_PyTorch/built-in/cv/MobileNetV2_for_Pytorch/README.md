@@ -147,7 +147,14 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
 
       3. 执行ATC命令。
          ```
-         bash atc.sh --model mobilenet_v2 --bs 4 --soc Ascend310P3
+         atc --model=${output_dir}/${model}.onnx \
+            --framework=5 \
+            --output=${output_dir}/${model}_bs${bs} \
+            --input_format=NCHW \
+            --input_shape="actual_input_1:${bs},3,224,224" \
+            --log=error \
+            --soc_version=${soc} \
+            --insert_op_conf=aipp_TorchVision.config
          ```
 
          - 参数说明：
@@ -165,6 +172,8 @@ mobileNetV2是对mobileNetV1的改进，是一种轻量级的神经网络。mobi
            --log：日志级别
 
            --soc_version：处理器型号
+           
+           --insert_op_conf: aipp预处理算子配置文件
 
            运行成功后在output文件夹下生成**om**模型文件。
 
