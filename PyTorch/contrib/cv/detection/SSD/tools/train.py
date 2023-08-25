@@ -81,6 +81,7 @@ def parse_args():
         default='none',
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--max_steps', default=0, type=int)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -125,6 +126,8 @@ def main():
         torch.npu.set_device(args.gpu_ids[0])
     else:
         cfg.gpu_ids = range(1) if args.gpus is None else range(args.gpus)
+
+    cfg.max_steps = args.max_steps
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':

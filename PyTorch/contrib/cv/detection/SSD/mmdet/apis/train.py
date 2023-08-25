@@ -53,6 +53,9 @@ def train(self, data_loader, **kwargs):
     profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
                       profile_type=os.getenv('PROFILE_TYPE'))
     for i, data_batch in enumerate(self.data_loader):
+        # Reduce performance training time
+        if kwargs["max_steps"] and i > kwargs["max_steps"]:
+            break
         self._inner_iter = i
         profile.start()
         self.call_hook('before_train_iter')
@@ -203,4 +206,5 @@ def train_detector(model,
         runner.resume(cfg.resume_from)
     elif cfg.load_from:
         runner.load_checkpoint(cfg.load_from)
-    runner.run(data_loaders, cfg.workflow, cfg.total_epochs)
+    kwargs = {"max_steps": cfg.max_steps}
+    runner.run(data_loaders, cfg.workflow, cfg.total_epochs, **kwargs)

@@ -250,6 +250,8 @@ def update_config(config, args):
     # set local rank for distributed training
     config.LOCAL_RANK = args.local_rank
 
+    config.TRAIN.MAX_STEPS = args.max_steps
+
     # output folder
     config.OUTPUT = os.path.join(config.OUTPUT, config.MODEL.NAME, config.TAG)
 

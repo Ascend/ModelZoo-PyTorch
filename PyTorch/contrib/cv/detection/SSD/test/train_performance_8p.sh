@@ -76,7 +76,7 @@ if [ x"${etp_flag}" != x"true" ];then
     source ${test_path_dir}/env_npu.sh
 fi
 
-PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+PORT=29500 tools/dist_train.sh configs/ssd/ssd300_coco_npu_8p.py 8 --cfg-options total_epochs=${train_epochs} data.samples_per_gpu=${batch_size} --max_steps=1000 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 

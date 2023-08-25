@@ -78,6 +78,7 @@ def parse_option():
 
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    parser.add_argument("--max_steps", default=0, type=int, help='train steps')
 
     args = parser.parse_args()
 
@@ -158,6 +159,9 @@ def train_one_epoch(config, model, data_loader, optimizer, epoch, lr_scheduler):
     profile = Profile(start_step=int(os.getenv('PROFILE_START_STEP', 10)),
                       profile_type=os.getenv('PROFILE_TYPE'))
     for idx, (img, mask, _) in enumerate(data_loader):
+        # Reduce performance training time
+        if config.TRAIN.MAX_STEPS and idx > config.TRAIN.MAX_STEPS:
+            break
         img = img.npu(non_blocking=True)
         mask = mask.npu(non_blocking=True)
 

@@ -84,6 +84,7 @@ nohup taskset -c 0-24 python3 main_simmim.py  \
     --amp-opt-level O1 \
     --local_rank $local_rank \
     --output $output_dir \
+    --max_steps 500 \
     --data-path $data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
