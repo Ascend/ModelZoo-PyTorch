@@ -1897,7 +1897,7 @@ class Trainer:
                 rng_to_sync = True
 
             step = -1
-            start_time = time.time()
+            step_start_time = time.time()
             for step, inputs in enumerate(epoch_iterator):
                 total_batched_samples += 1
                 if rng_to_sync:
@@ -2012,8 +2012,8 @@ class Trainer:
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
                 if torch.distributed.get_rank() == 0:
-                    print("time cost: {}".format(time.time() - start_time))
-                    start_time = time.time()
+                    print("time cost: {}".format(time.time() - step_start_time))
+                    step_start_time = time.time()
             if step < 0:
                 logger.warning(
                     "There seems to be not a single sample in your epoch_iterator, stopping training at step"
