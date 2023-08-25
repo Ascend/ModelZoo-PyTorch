@@ -65,7 +65,7 @@ SlowFast 是用于视频理解的双流框架的卷积神经网络，该网络�
     git clone https://github.com/open-mmlab/mmaction2.git
     cd mmaction2
     git checkout 92e5517f1b3cbf937078d66c0dc5c4ba7abf7a08
-    git am --signoff < ../slowfast.patch
+    git apply ../slowfast.patch
     pip install -v -e .
     cd ..
     ```
