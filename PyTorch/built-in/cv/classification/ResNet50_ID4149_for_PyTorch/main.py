@@ -482,15 +482,16 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, lr_sch
 def validate(val_loader, model, criterion, args):
 
     def run_validate(loader, base_progress=0):
+        device = torch.device(f"npu:{args.gpu}")
         with torch.no_grad():
-            mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).view(1, 3, 1, 1).to(args.gpu, non_blocking=True)
-            std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1).to(args.gpu, non_blocking=True)
+            mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255]).view(1, 3, 1, 1).to(device, non_blocking=True)
+            std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255]).view(1, 3, 1, 1).to(device, non_blocking=True)
             end = time.time()
             for i, (images, target) in enumerate(loader):
                 i = base_progress + i
                 if args.gpu is not None and torch.npu.is_available():
-                    images = images.to(args.gpu, non_blocking=True).to(torch.float).sub(mean).div(std)
-                    target = target.to(args.gpu, non_blocking=True)
+                    images = images.to(device, non_blocking=True).to(torch.float).sub(mean).div(std)
+                    target = target.to(device, non_blocking=True)
                 elif torch.backends.mps.is_available():
                     images = images.to('mps')
                     target = target.to('mps')
