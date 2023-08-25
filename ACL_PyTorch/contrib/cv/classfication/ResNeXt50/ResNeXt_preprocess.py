@@ -30,7 +30,7 @@ def center_crop(img, output_size):
     return img.crop((crop_left, crop_top, crop_left + crop_width, crop_top + crop_height))
 
 
-def resize(img, size, interpolation=Image.BILINEAR):
+def resize(img, size, interpolation):
     if isinstance(size, int):
         w, h = img.size
 
@@ -51,13 +51,13 @@ def resize(img, size, interpolation=Image.BILINEAR):
 
 
 def gen_input_bin(_file_batch, _batches, _save_paths):
-    for file in tqdm(_file_batch[_batches]):
+    for files in tqdm(_file_batch[_batches]):
         # RGBA to RGB
-        image = Image.open(file[1]).convert('RGB')
-        image = resize(image, 256) # Resize
-        image = center_crop(image, 244) # CenterCrop
+        image = Image.open(files[1]).convert('RGB')
+        image = resize(image, 256, Image.BILINEAR) # Resize
+        image = center_crop(image, 224) # CenterCrop
         img = np.array(image).astype(np.int8)
-        img.tofile(os.path.join(_save_paths, file[0].split('.')[0] + ".bin"))
+        img.tofile(os.path.join(_save_paths, files[0].split('.')[0] + ".bin"))
 
 
 def preprocess(src_path, save_path):
@@ -72,7 +72,7 @@ def preprocess(src_path, save_path):
             image_infos.append((file_name, file_path))
     image_infos.sort()
     if len(image_infos) < 500:
-        file_batches = [image_infos[0 : len(image_infos)]]
+        file_batches = [image_infos[0: len(image_infos)]]
     else:
         file_batches = [image_infos[i:i + 500] for i in range(0, len(image_infos), 500) if image_infos[i:i + 500] != []]
     thread_pool = multiprocessing.Pool(len(file_batches))
@@ -80,8 +80,7 @@ def preprocess(src_path, save_path):
         thread_pool.apply_async(gen_input_bin, args=(file_batches, batch, save_path))
     thread_pool.close()
     thread_pool.join()
-    print("in thread, except will not report! please ensure bin files generated.")
-
+    
 
 if __name__ == '__main__':
     src_paths = sys.argv[1]
@@ -91,3 +90,4 @@ if __name__ == '__main__':
     if not os.path.isdir(save_paths):
         os.makedirs(os.path.realpath(save_paths))
     preprocess(src_paths, save_paths)
+    
