@@ -15,7 +15,7 @@ LAVIS 是一个多模态模型套件，包含CLIP、ALBEF、BLIP、BLIP2、Instr
 - 参考实现：
 
   ```
-  url=https://github.com/huggingface/diffusers
+  url=https://github.com/salesforce/LAVIS
   commit_id=f982acc73288408bceda2d35471a8fcf55aa04ca
   ```
 
@@ -143,7 +143,7 @@ bert-base-uncased
 |    NAME     | FPS  | Epoch | batch_size | Bleu@4 | CIDEr |
 | :---------: | :--: | :---: | :--------: | :----: | :---: |
 |  8p-竞品A   |   102.28   |   5   |     16     |    0.423    |    1.439   |
-| 8p-NPU-910B |   61.95   |   5   |     16     |    0.423    |    1.442   |
+| 8p-NPU-910B |   61.95   |   5   |     16     |    0.421    |    1.432   |
 
 #### 常见问题
 
