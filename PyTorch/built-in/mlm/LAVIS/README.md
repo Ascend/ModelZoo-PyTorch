@@ -58,7 +58,7 @@ LAVIS 是一个多模态模型套件，包含CLIP、ALBEF、BLIP、BLIP2、Instr
 
 | 任务             | 支持模型 | 支持数据集 |
 | ---------------- | -------- | ---------- |
-| Image Captioning | BLIP2    | COCO2017   |
+| Image Captioning | BLIP2    | COCO2014   |
 
 ## BLIP2
 
