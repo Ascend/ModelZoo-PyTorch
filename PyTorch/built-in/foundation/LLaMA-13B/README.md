@@ -54,7 +54,7 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
   ```
   pip3 install --upgrade pip
-  pip3 install einops sympy regex decorator scipy setuptools scm prompt toolkit
+  pip3 install einops sympy regex decorator scipy setuptools-scm prompt-toolkit
   ```
 - 编译安装fschat
 
@@ -117,7 +117,7 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
    该任务以基于gpt3问答的数据集进行finetuning训练。
 
-   以alpaca-data-conversation数据集为例，数据集结构参考如下所示。
+   以[alpaca-data-conversation](https://github.com/lm-sys/FastChat/blob/v0.1.10/playground/data/alpaca-data-conversation.json)数据集为例，数据集结构参考如下所示。
 
    ```
    [
