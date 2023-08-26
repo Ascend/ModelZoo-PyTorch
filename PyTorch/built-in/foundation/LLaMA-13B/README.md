@@ -73,21 +73,6 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   git clone https://gitee.com/ascend/DeepSpeed.git
   cd DeepSpeed
   python setup.py develop
-  ```
-  使用whereis命令查看deepspeed安装路径/path/to/deepspeed/bin/deepspeed
-  ，并将deepspeed_npu包导入。  
-
-  打开"/path/to/deepspeed/bin/deepspeed"文件。
-  
-  ```
-  vim /path/to/deepspeed/bin/deepspeed
-  ```
-  按“i”进入编辑模式，在“/path/to/deepspeed/bin/deepspeed”中增加以下内容。
-  ```
-  import deepspeed_npu
-  
-  ```
-  按“ESC”键，输入:wq!，按“Enter”保存并退出编辑。
 
 - 替换transformers库中相关文件
   
