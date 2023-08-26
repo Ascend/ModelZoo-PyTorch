@@ -316,50 +316,14 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100012
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_BuiltIn_for_Pytorch">  CRNN </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_BuiltIn_for_Pytorch">  CRNN-BuildIn </a>
         </td>
         <td>IIIT5K_lmdb</td>
     <td>74.87%</td>
         <td></td>
         <td></td>
-    <td>19075(bs64)</td>
+    <td>17815(bs64)</td>
     <td>bs x 1 x 32 x 100</td>
-    </tr>
-    <tr>
-        <td> 100013
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_meijieru_for_Pytorch">  CRNN-Meijieru </a>
-        </td>
-        <td>demo文件</td>
-    <td></td>
-        <td></td>
-        <td></td>
-    <td>19374(bs64)</td>
-    <td>bs x 1 x 32 x 100</td>
-    </tr>
-    <tr>
-        <td> 100081
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_Dynamic_for_PyTorch">  CRNN-Dynamic </a>
-        </td>
-        <td>IIIT5K_lmdb</td>
-    <td>66.8%</td>
-        <td></td>
-        <td></td>
-    <td>5.9~6.1s(E2E)</td>
-    <td>bs x 1 x 32 x len</td>
-    </tr>
-    <tr>
-        <td> 100082
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/CRNN/CRNN_Sierkinhane_for_Pytorch"> CRNN-Sierkinhane </a>
-        </td>
-        <td>GitHub 仓库提供的 360 万数据集</td>
-        <td>78.37%</td>
-        <td></td>
-        <td></td>
-        <td>6011(bs64)</td>
-        <td>bs x 1 x 32 x 160</td>
     </tr>
     <tr>
         <td> 100083
@@ -543,28 +507,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td>Acc</td>
         <td>mAP</td>
-    </tr>
-    <tr>
-        <td> 100087
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DB_for_PyTorch"> DB </a>
-        </td>
-        <td>icdar2015</td>
-        <td></td>
-    <td>88%</td>
-    <td>19(bs16)</td>
-    <td>bs x 3 x 736 x 1280</td>
-    </tr>
-    <tr>
-        <td> 100014
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/DB_Dynamic_for_PyTorch"> DB-Dynamic </a>
-        </td>
-        <td>icdar2015</td>
-        <td></td>
-    <td></td>
-    <td>E2E: 9.3s</td>
-    <td>1 x 3 x h x w</td>
     </tr>
     <tr>
         <td> 100016
@@ -988,16 +930,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td nowrap="nowrap">bs x 3 x 896 x 1536</td>
 </tr>
     <tr>
-        <td> 100097
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/PPOCRV2.5_det_db_mv3">  PPOCRV2.5-det-db </a>
-        </td>
-        <td>icdar2015</td>
-        <td>75%</td>
-    <td>172(bs24)</td>
-    <td nowrap="nowrap">24 x 3 x 736 x 1280</td>
-    </tr>
-    <tr>
         <td> 100006
         </td><td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/BiLSTM_CRF_PyTorch">  BiLSTM-CRF </a></td>
@@ -1007,6 +939,52 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td> ids:bs,50;mask:bs,50 </td>
     </tr>
 </table>
+
+<p>OCR</p>
+<table align="center">
+<tr>
+        <th rowspan=2>ID</th>
+        <th rowspan=2>Name</th>
+    <th rowspan=2>Dataset</th>
+        <th align="center" colspan=3>精度</th>
+    <th colspan=2>最优性能（对应bs）</th>
+    <th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+    <td>Top1Acc</td>
+    <td>Top5Acc</td>
+        <td>mAP</td>
+        <td>310P</td>
+        <td>310</td>
+    </tr>
+    <tr>
+        <td> 100082
+        </td><td>
+        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/CRNN/CRNN_Sierkinhane_for_Pytorch"> CRNN-ocr </a>
+        </td>
+        <td>原仓自带的数据集</td>
+    <td>62.2%</td>
+    <td></td>
+        <td></td>
+    <td>6011(bs64)</td>
+        <td></td>
+    <td>bs x 1 x 32 x 160</td>
+    </tr>
+    <tr>
+        <td> 100087
+        </td><td>
+        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/DBNET"> DBNET-ocr </a>
+        </td>
+        <td>icdar2015</td>
+    <td></td>
+    <td></td>
+        <td>88%</td>
+    <td>19(bs16)</td>
+        <td></td>
+    <td>bs x 3 x 736 x 1280</td>
+    </tr>
+</table>
+
 
 <h2>生态贡献模型</h2>
 <p>CV-classfication</p>
@@ -1222,6 +1200,18 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
+        <td> 100013
+        </td><td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/CRNN_meijieru_for_Pytorch">  CRNN-Meijieru </a>
+        </td>
+        <td>demo文件</td>
+    <td></td>
+        <td></td>
+        <td></td>
+    <td>19374(bs64)</td>
+    <td>bs x 1 x 32 x 100</td>
+    </tr>
+    <tr>
         <td> 100113
         </td><td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Efficient-3DCNNs">   Efficient-3DCNNs </a>
@@ -1233,19 +1223,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>1245.1167(bs4)</td>
         <td></td>
     <td>bs x 3 x 16 x 112 x 112</td>
-    </tr>
-    <tr>
-        <td> 100024
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/EfficientNet-B0">    EfficientNet-B0 </a>
-        </td>
-        <td>ImageNet</td>
-    <td>75.088%</td>
-    <td>91.194%</td>
-        <td></td>
-    <td>2489.11(bs8)</td>
-        <td></td>
-    <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
         <td> 100114
