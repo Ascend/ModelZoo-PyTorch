@@ -108,7 +108,7 @@ class Blip2OPT(Blip2Base):
         image = samples["image"]
         with self.maybe_autocast():
             image_embeds = self.ln_vision(self.visual_encoder(image))
-        image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long, device=torch.device("cuda"))
+        image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long, device=image.device)
 
         query_tokens = self.query_tokens.expand(image_embeds.shape[0], -1, -1)
         query_output = self.Qformer.bert(
@@ -119,7 +119,7 @@ class Blip2OPT(Blip2Base):
         )
 
         inputs_opt = self.opt_proj(query_output.last_hidden_state)
-        atts_opt = torch.ones(inputs_opt.size()[:-1], dtype=torch.long, device=torch.device("cuda"))
+        atts_opt = torch.ones(inputs_opt.size()[:-1], dtype=torch.long, device=image.device)
 
         self.opt_tokenizer.padding_side = "right"
 
@@ -131,10 +131,7 @@ class Blip2OPT(Blip2Base):
             padding="longest",
             truncation=True,
             max_length=self.max_txt_len,
-        )
-
-        opt_tokens.input_ids = opt_tokens.input_ids.int().cuda()
-        opt_tokens.attention_mask = opt_tokens.attention_mask.int().cuda()
+        ).to(image.device)
 
         targets = opt_tokens.input_ids.masked_fill(
             opt_tokens.input_ids == self.opt_tokenizer.pad_token_id, -100
@@ -143,7 +140,7 @@ class Blip2OPT(Blip2Base):
             targets[:, : self.prompt_length] = -100  # do not apply loss to the prompt
 
         empty_targets = (
-            torch.ones(atts_opt.size(), dtype=torch.long, device=torch.device("cuda")).fill_(-100)
+            torch.ones(atts_opt.size(), dtype=torch.long, device=image.device).fill_(-100)
         )
         targets = torch.cat([empty_targets, targets], dim=1)
 
