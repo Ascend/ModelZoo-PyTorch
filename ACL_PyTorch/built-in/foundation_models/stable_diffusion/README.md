@@ -72,6 +72,12 @@
    ```bash
    python3 stable_diffusion_clip_patch.py
    ```
+
+3. 安装昇腾统一推理工具（AIT）
+
+   请访问[AIT代码仓](https://gitee.com/ascend/ait/tree/master/ait#ait)，根据readme文档进行工具安装。
+
+   安装AIT时，可只安装需要的组件：benchmark和debug，其他组件为可选安装。
    
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -116,11 +122,15 @@
       model_base="./stable-diffusion-2-1-base"
       ```
 
+      注意：若条件允许，该模型可以双芯片并行的方式进行推理，从而获得更短的端到端耗时。具体指令的差异之处会在后面的步骤中单独说明，请留意。
 
       执行命令：
 
       ```bash
       python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models
+
+      # 使用并行方案
+      python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models --parallel
       ```
 
       参数说明：
@@ -129,7 +139,8 @@
       
       执行成功后生成onnx模型：  
          - models/clip/clip.onnx  
-         - models/unet/unet.onnx
+         - models/unet/unet_bs2.onnx（普通方式）
+         - models/unet/unet_bs1.onnx（并行方式）
          - models/vae/vae.onnx  
    
    2. 使用ATC工具将ONNX模型转OM模型。
@@ -183,13 +194,29 @@
          
          # unet
          cd ./models/unet/
+
+         # 普通方式
          atc --framework=5 \
-             --model=./unet.onnx \
-             --output=./unet \
+             --model=./unet_bs2.onnx \
+             --output=./unet_bs2 \
              --input_format=NCHW \
              --input_shape="latent_model_input:2,4,64,64;t:1;encoder_hidden_states:2,77,${encoder_hidden_size}" \
              --log=error \
+             --optypelist_for_implmode="Gelu,Sigmoid" \
+             --op_select_implmode=high_performance \
              --soc_version=Ascend${chip_name}
+
+         # 并行方式
+         atc --framework=5 \
+             --model=./unet_bs1.onnx \
+             --output=./unet_bs1 \
+             --input_format=NCHW \
+             --input_shape="latent_model_input:1,4,64,64;t:1;encoder_hidden_states:1,77,${encoder_hidden_size}" \
+             --log=error \
+             --optypelist_for_implmode="Gelu,Sigmoid" \
+             --op_select_implmode=high_performance \
+             --soc_version=Ascend${chip_name}
+
          cd ../../
 
          # vae
@@ -214,24 +241,29 @@
       执行成功后生成om模型列表：  
 
          - models/clip/clip.om  
-         - models/unet/unet.om  
+         - models/unet/unet_bs2.om （普通方式）
+         - models/unet/unet_bs1.om （并行方式）
          - models/vae/vae.om  
    
 2. 开始推理验证。
-   
-   1. 安装昇腾统一推理工具（AIT）
-
-      请访问[AIT代码仓](https://gitee.com/ascend/ait/tree/master/ait#ait)，根据readme文档进行工具安装。
-
-      安装AIT时，可只安装需要的组件：benchmark，其他组件为可选安装。
 
    2. 执行推理脚本。
       ```bash
+      # 普通方式
       python3 stable_diffusion_ascend_infer.py \
               --model ${model_base} \
               --model_dir ./models \
               --prompt_file ./prompts.txt \
               --device 0 \
+              --save_dir ./results \
+              --steps 50
+
+      # 并行方式
+      python3 stable_diffusion_ascend_infer.py \
+              --model ${model_base} \
+              --model_dir ./models \
+              --prompt_file ./prompts.txt \
+              --device 0,1 \
               --save_dir ./results \
               --steps 50
       ```
@@ -241,8 +273,8 @@
       - --model_dir：存放导出模型的目录。
       - --prompt_file：输入文本文件，按行分割。
       - --save_dir：生成图片的存放目录。
-      - --steps：生成图片推理次数。
-      - --device：推理设备ID。
+      - --steps：生成图片迭代次数。
+      - --device：推理设备ID；可用逗号分割传入两个设备ID，此时会使用并行方式进行推理。
       
       执行完成后在`./results`目录下生成推理图片。并在终端显示推理时间，参考如下：
 

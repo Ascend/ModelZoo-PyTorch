@@ -36,6 +36,12 @@ def parse_arguments() -> Namespace:
         default="stabilityai/stable-diffusion-2-1-base",
         help="Path or name of the pre-trained model.",
     )
+    parser.add_argument(
+        "-p",
+        "--parallel",
+        action="store_true",
+        help="Export the unet of bs=1 for parallel inferencing.",
+    )
 
     return parser.parse_args()
 
@@ -61,7 +67,7 @@ def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     )
 
 
-def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
+def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size: int = 2) -> None:
     print("Exporting the image information creater...")
     unet_path = os.path.join(save_dir, "unet")
     if not os.path.exists(unet_path):
@@ -76,17 +82,17 @@ def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     max_position_embeddings = clip_model.config.max_position_embeddings
 
     dummy_input = (
-        torch.ones([2, in_channels, sample_size, sample_size], dtype=torch.float32),
+        torch.ones([batch_size, in_channels, sample_size, sample_size], dtype=torch.float32),
         torch.ones([1], dtype=torch.int64),
         torch.ones(
-            [2, max_position_embeddings, encoder_hidden_size], dtype=torch.float32
+            [batch_size, max_position_embeddings, encoder_hidden_size], dtype=torch.float32
         ),
     )
 
     torch.onnx.export(
         unet_model,
         dummy_input,
-        os.path.join(unet_path, "unet.onnx"),
+        os.path.join(unet_path, f"unet_bs{batch_size}.onnx"),
         input_names=["latent_model_input", "t", "encoder_hidden_states"],
         output_names=["sample"],
         opset_version=11,
@@ -118,11 +124,14 @@ def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     )
 
 
-def export_onnx(model_path: str, save_dir: str) -> None:
+def export_onnx(model_path: str, save_dir: str, parallel: bool=False) -> None:
     pipeline = StableDiffusionPipeline.from_pretrained(model_path).to("cpu")
 
     export_clip(pipeline, save_dir)
-    export_unet(pipeline, save_dir)
+
+    unet_batch_size = 1 if parallel else 2
+    export_unet(pipeline, save_dir, unet_batch_size)
+
     export_vae(pipeline, save_dir)
 
     print("Done.")
@@ -130,7 +139,7 @@ def export_onnx(model_path: str, save_dir: str) -> None:
 
 def main():
     args = parse_arguments()
-    export_onnx(args.model, args.output_dir)
+    export_onnx(args.model, args.output_dir, args.parallel)
 
 
 if __name__ == "__main__":
