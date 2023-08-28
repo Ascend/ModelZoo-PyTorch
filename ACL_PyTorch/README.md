@@ -949,11 +949,22 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td> ids:bs,50;mask:bs,50 </td>
     </tr>
     <tr>
+        <td> 100348
+        </td>
         <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Uie_for_Pytorch">  Uie_for_PyTorch </a></td>
         <td> doccano(paddle) </td>
         <td> f1=100% </td>
         <td> 173.97(bs32)</td>
         <td> input_ids:bsx512;token_type_ids:bsx512;position_ids:bsx512;attention_mask:bsx512 </td>
+    </tr>
+    <tr>
+        <td> 100349
+        </td>
+        <td><a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Pet_for_Pytorch">  Pet_for_PyTorch </a></td>
+        <td> eprstmt </td>
+        <td> f1=88.5% </td>
+        <td> 342.79(bs8)</td>
+        <td> bs x 128;bs x 128;bs x 128;bs x 1 x 1 x 128 </td>
     </tr>
 </table>
 
