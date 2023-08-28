@@ -117,11 +117,7 @@ def main():
 
     clip_om = os.path.join(args.model_dir, "clip", "clip.om")
     vae_om = os.path.join(args.model_dir, "vae", "vae.om")
-
-    if device_2:
-        unet_om = os.path.join(args.model_dir, "unet", "unet_bs1.om")
-    else:
-        unet_om = os.path.join(args.model_dir, "unet", "unet_bs2.om")
+    unet_om = os.path.join(args.model_dir, "unet", "unet.om")
 
     clip_session = InferSession(device, clip_om)
     vae_session = InferSession(device, vae_om)

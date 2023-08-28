@@ -92,7 +92,7 @@ def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size:
     torch.onnx.export(
         unet_model,
         dummy_input,
-        os.path.join(unet_path, f"unet_bs{batch_size}.onnx"),
+        os.path.join(unet_path, f"unet.onnx"),
         input_names=["latent_model_input", "t", "encoder_hidden_states"],
         output_names=["sample"],
         opset_version=11,

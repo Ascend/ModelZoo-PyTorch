@@ -139,11 +139,21 @@
       
       执行成功后生成onnx模型：  
          - models/clip/clip.onnx  
-         - models/unet/unet_bs2.onnx（普通方式）
-         - models/unet/unet_bs1.onnx（并行方式）
-         - models/vae/vae.onnx  
+         - models/unet/unet.onnx
+         - models/vae/vae.onnx
+
+   2. 优化onnx模型
+      
+      FlashAttention算子需区分硬件形态，支持Atlas 300I Duo和Atlas 300I A2，请根据使用的硬件形态执行命令：
+      ```bash
+      # 硬件形态为Duo或PRO
+      python3 modify_onnx.py models/unet/unet.onnx models/unet/unet_fa.onnx Duo
+
+      # 硬件形态为A2
+      python3 modify_onnx.py models/unet/unet.onnx models/unet/unet_fa.onnx A2
+      ```
    
-   2. 使用ATC工具将ONNX模型转OM模型。
+   3. 使用ATC工具将ONNX模型转OM模型。
 
       1. 配置环境变量。
 
@@ -172,7 +182,7 @@
          +===================+=================+======================================================+
          ```
 
-      3. 执行ATC命令。此模型当前仅支持batch_size=1。
+      3. 执行ATC命令。此模型当前仅支持单张图片推理。
 
          ```bash
          # v1.5
@@ -195,23 +205,10 @@
          # unet
          cd ./models/unet/
 
-         # 普通方式
          atc --framework=5 \
-             --model=./unet_bs2.onnx \
-             --output=./unet_bs2 \
+             --model=./unet_fla.onnx \
+             --output=./unet \
              --input_format=NCHW \
-             --input_shape="latent_model_input:2,4,64,64;t:1;encoder_hidden_states:2,77,${encoder_hidden_size}" \
-             --log=error \
-             --optypelist_for_implmode="Gelu,Sigmoid" \
-             --op_select_implmode=high_performance \
-             --soc_version=Ascend${chip_name}
-
-         # 并行方式
-         atc --framework=5 \
-             --model=./unet_bs1.onnx \
-             --output=./unet_bs1 \
-             --input_format=NCHW \
-             --input_shape="latent_model_input:1,4,64,64;t:1;encoder_hidden_states:1,77,${encoder_hidden_size}" \
              --log=error \
              --optypelist_for_implmode="Gelu,Sigmoid" \
              --op_select_implmode=high_performance \
@@ -220,6 +217,18 @@
          cd ../../
 
          # vae
+
+         # 硬件形态为A2
+         atc --framework=5 \
+             --model=./models/vae/vae.onnx \
+             --output=./models/vae/vae \
+             --input_format=NCHW \
+             --input_shape="latents:1,4,64,64" \
+             --log=error \
+             --soc_version=Ascend${chip_name} \
+             --customize_dtypes custom_precision.cfg
+             
+         # 硬件形态为Duo
          atc --framework=5 \
              --model=./models/vae/vae.onnx \
              --output=./models/vae/vae \
@@ -241,8 +250,7 @@
       执行成功后生成om模型列表：  
 
          - models/clip/clip.om  
-         - models/unet/unet_bs2.om （普通方式）
-         - models/unet/unet_bs1.om （并行方式）
+         - models/unet/unet.om
          - models/vae/vae.om  
    
 2. 开始推理验证。
@@ -293,35 +301,14 @@
       ![](./test_results/illustration_2.png)  
       Prompt: "Beautiful illustration of Seaports in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper"
 
-   4. 性能验证。
-      可使用ais_bench推理工具的纯推理模式验证om模型的性能，参考命令如下：
-      ```bash
-      ait benchmark --om-model ${om_model} --loop 20 --device 0
-      ```
-      
-      参数说明：
-
-      - --om-model: om模型路径
-      - --loop：纯推理次数
-      - --device：推理设备ID
-
 
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
 
-### StableDiffusion v1.5
-
-| 芯片型号 | 模型 | Batch Size | 性能        | 耗时       |
-| :------: | :--: | :--------: | :---------: | :--------: |
-| 310P3    | clip | 1          | 380.604 fps | 2.627 ms   |
-| 310P3    | unet | 1          | 6.302 fps   | 317.376 ms |
-| 310P3    | vae  | 1          | 7.682 fps   | 130.160 ms  |
-
 ### StableDiffusion v2.1
 
-| 芯片型号 | 模型 | Batch Size | 性能        | 耗时       |
-| :------: | :--: | :--------: | :---------: | :--------: |
-| 310P3    | clip | 1          | 157.562 fps | 6.347 ms   |
-| 310P3    | unet | 1          | 7.351 fps   | 272.074 ms |
-| 310P3    | vae  | 1          | 7.629 fps   | 131.076 ms  |
+| 硬件形态 | 迭代次数 | 平均耗时    |
+| :------: | :--: | :--------: |
+| Duo并行  |  20  |  1.322s   |
+| A2     |  20  |  0.811s   | 
