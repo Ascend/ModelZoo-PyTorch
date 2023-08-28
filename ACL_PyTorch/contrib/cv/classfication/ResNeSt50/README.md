@@ -224,7 +224,7 @@ ResNeSt 的全称是：Split-Attention Networks，引入了Split-Attention模块
       调用脚本与数据集标签val\_label.txt比对，可以获得Accuracy数据。
 
       ```
-       python ResNeSt_postprocess.py --result_path=result_summary.json --gt_path=./imagenet/val_label.txt
+       python resnest_postprocess.py --result_path=result_summary.json --gt_path=./imagenet/val_label.txt
       ```
 
       - 参数说明：
