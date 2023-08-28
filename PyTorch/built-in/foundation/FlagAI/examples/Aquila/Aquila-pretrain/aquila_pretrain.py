@@ -13,13 +13,16 @@ from flagai.env_args import EnvArgs
 from flagai.env_trainer_v1 import EnvTrainer
 from flagai.model.aquila_model import AQUILAModel
 from flagai.data.dataset.indexed_dataset.build_index_mappings import _build_train_valid_test_datasets, _build_train_valid_test_weighted_datasets
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import deepspeed_npu
+import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+device = torch.device("npu")
 
 # You can input all parameters by the command line.
 # For example: python train_env_trainer.py --epochs=300 --batch_size=4 --env_type=pytorch
 env_args = EnvArgs(
-    env_type="bmtrain",
+    env_type="deepspeed",
     experiment_name="aquila",
     batch_size=1,
     gradient_accumulation_steps=1,
@@ -38,8 +41,8 @@ env_args = EnvArgs(
     training_script=__file__,
 )
 env_args = env_args.parse_args()
-#env_args.wandb = False
-
+env_args.wandb = False
+torch.npu.set_compile_mode(jit_compile=True)
 # overwrite
 if env_args.yaml_config:
     import yaml
@@ -95,7 +98,7 @@ data_prefix = '../../indexed_dataset/data/demo_text_document'
 data_impl = 'mmap'
 splits_string = '90,10'
 train_valid_test_num_samples = [90, 10]
-seq_length = 1024
+seq_length = 2048
 seed = 2023
 skip_warmup = True
 

@@ -165,8 +165,8 @@ class AQUILAModel(BaseModel):
         
         mask = None
         if seqlen > 1:
-            mask = torch.full((1, 1, seqlen, seqlen), float("-inf"), device=input_ids.device)
-            mask = torch.triu(mask, diagonal=start_pos + 1).type_as(h)
+            mask = torch.full((1, 1, seqlen, seqlen), True, device=input_ids.device)
+            mask = ~torch.tril(mask, diagonal=0)
         self.start_pos = start_pos
         if self.config.checkpoint_activations:
             for layer in self.layers:

@@ -51,13 +51,17 @@ elif os.getenv('ENV_TYPE') == 'bmtrain':
     pass
 
 from flagai.model.layers.linear import CPM3Linear
+import torch_npu
 
 ## cis x = cos x + i sin x
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
+    import numpy as np
+    freqs = 1.0 / (theta ** (np.arange(0, dim, 2)[: (dim // 2)].astype(np.float32) / dim))
+    freqs = torch.from_numpy(freqs)
     t = torch.arange(end, device=freqs.device)
     freqs = torch.outer(t, freqs).float()
     freqs_cis = torch.polar(torch.ones_like(freqs), freqs)
+    freqs_cis = torch.view_as_real(freqs_cis)
     return freqs_cis
 
 
@@ -69,17 +73,12 @@ def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
     return freqs_cis.view(*shape)
 
 
-def apply_rotary_pos_emb(
-    xq: torch.Tensor,
-    xk: torch.Tensor,
-    freqs_cis: torch.Tensor,
-) :
-    xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
-    xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
-    freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
-    xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
-    xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
-    return xq_out.type_as(xq), xk_out.type_as(xk) 
+def apply_rotary_pos_emb(xq_real: torch.Tensor, xq_img: torch.Tensor, xk_real: torch.Tensor, xk_img: torch.Tensor, freqs_cis: torch.Tensor):
+    freq_real = reshape_for_broadcast(freqs_cis[..., 0].squeeze(-1), xq_real).contiguous()
+    freq_img = reshape_for_broadcast(freqs_cis[..., 1].squeeze(-1), xq_img).contiguous()
+    xq_out = torch.stack([xq_real * freq_real - xq_img * freq_img, xq_real * freq_img + xq_img * freq_real], dim=-1)
+    xk_out = torch.stack([xk_real * freq_real - xk_img * freq_img, xk_real * freq_img + xk_img * freq_real], dim=-1)
+    return xq_out.flatten(3).type_as(xq_real), xk_out.flatten(3).type_as(xk_real)
 
 class AQUILAAttention(nn.Module):
     def __init__(self, config):
@@ -164,13 +163,16 @@ class AQUILAAttention(nn.Module):
             qkv = einops.rearrange(qkv, '... (three h d) -> ... three h d', three=3, d=self.head_dim)
             qkv = self.rotary_emb(qkv)
         else:
-            xq = self.wq(x)
             xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
-            xq = xq.view(bsz, seqlen, self.n_local_heads, self.head_dim)
-            xk = xk.view(bsz, seqlen, self.n_local_heads, self.head_dim)
             xv = xv.view(bsz, seqlen, self.n_local_heads, self.head_dim)
+            xq = xq.view(1, -1, 2).transpose(2, 1).contiguous()
+            xk = xk.view(1, -1, 2).transpose(2, 1).contiguous()
+            xq_real = xq[:, 0].view(bsz, seqlen, self.n_local_heads, self.head_dim // 2)
+            xq_img = xq[:, 1].view(bsz, seqlen, self.n_local_heads, self.head_dim // 2)
+            xk_real = xk[:, 0].view(bsz, seqlen, self.n_local_heads, self.head_dim // 2)
+            xk_img = xk[:, 1].view(bsz, seqlen, self.n_local_heads, self.head_dim // 2)
 
-            xq, xk = apply_rotary_pos_emb(xq, xk, freqs_cis=freqs_cis)
+            xq, xk = apply_rotary_pos_emb(xq_real, xq_img, xk_real, xk_img, freqs_cis=freqs_cis)
 
             if use_cache:
                 self.cache_k = self.cache_k.to(xq)
@@ -200,15 +202,13 @@ class AQUILAAttention(nn.Module):
                 self.config.flash_atten_pdrop if self.training else 0.0, causal=True)
             output = einops.rearrange(output, '(b s) h d -> b s (h d)', b=bsz)
         else:
-            xq = xq.transpose(1, 2)
-            keys = keys.transpose(1, 2)
-            values = values.transpose(1, 2)
+            xq = xq.transpose(1, 2).contiguous()
+            keys = keys.transpose(1, 2).contiguous()
+            values = values.transpose(1, 2).contiguous()
             scores = torch.matmul(xq, keys.transpose(2, 3)) / math.sqrt(self.head_dim)
             ## for corner cases, especially in the last layer and dtype of fp16
             scores = torch.clamp(scores, min=-1024., max=1024.)
-            if mask is not None:
-                scores = scores + mask  # (bs, n_local_heads, slen, cache_len + slen)
-            scores = F.softmax(scores.float(), dim=-1).type_as(xq)
+            scores = torch_npu.npu_scaled_masked_softmax(scores, mask, 1.0)
             output = torch.matmul(scores, values)  # (bs, n_local_heads, slen, head_dim)
             output = output.transpose(
                 1, 2

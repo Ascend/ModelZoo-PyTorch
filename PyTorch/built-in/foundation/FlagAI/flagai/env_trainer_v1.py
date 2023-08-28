@@ -156,9 +156,7 @@ class EnvTrainer():
             training_paras = get_args_list(env_args)
             self.rank = int(os.environ.get('RANK', 0))
             self.world_size = int(os.environ.get('WORLD_SIZE', 1))
-            # self.local_rank = env_args.local_rank
-            print(os.environ['LOCAL_RANK'])
-            self.local_rank = int(os.environ['LOCAL_RANK'])
+            self.local_rank = env_args.local_rank
 
             log_dist("not_call_launch: {}".format(self.not_call_launch))
             # Implement for AutoLaunch
@@ -199,7 +197,7 @@ class EnvTrainer():
             device = self.rank % torch.cuda.device_count()
             if self.local_rank is not None:
                 device = self.local_rank
-            torch.cuda.set_device(int(device))
+            torch.cuda.set_device(device)
             # Call the init process
             init_method = 'tcp://'
             self.master_ip = os.getenv('MASTER_ADDR', 'localhost')
@@ -215,6 +213,14 @@ class EnvTrainer():
                     seed=self.seed,
                     init_method=init_method)
             else:
+                cpus_this_worker = None
+                all_available_cpus = sorted(list(os.sched_getaffinity(0)))
+                cpus_per_worker = len(all_available_cpus) // 8
+                cpus_this_worker = all_available_cpus[self.rank * cpus_per_worker: (self.rank + 1) * cpus_per_worker]
+                os.sched_setaffinity(0, cpus_this_worker)
+                torch.set_num_threads(len(cpus_this_worker))
+                print("============Initialization=============")
+                print("rank: ", self.rank, "cpus", cpus_this_worker)
                 torch.distributed.init_process_group(
                     backend='nccl',  # gloo
                     world_size=self.world_size,
@@ -695,7 +701,7 @@ class EnvTrainer():
 
             # Checkpointing at the end of each epoch.
             # self.iteration-1 as the exact iteration
-            if self.save_dir and (self.iteration-1) != best_iteration:
+            if self.save_dir and (self.iteration-1) != best_iteration and (self.iteration + 1) % self.save_interval == 0:
                 if self.adapter_save:
                     self.model.save_pretrained(save_directory=self.save_dir)
                 else:

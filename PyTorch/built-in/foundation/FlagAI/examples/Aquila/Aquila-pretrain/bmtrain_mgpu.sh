@@ -1,7 +1,23 @@
 # Defined by User
 export TRIGGER_FILE=bmtrain_mgpu.sh
 export SCRIPT_FILE=aquila_pretrain.py
+msnpureport -g error -d 0
+msnpureport -g error -d 1
+msnpureport -g error -d 2
+msnpureport -g error -d 3
+msnpureport -g error -d 4
+msnpureport -g error -d 5
+msnpureport -g error -d 6
+msnpureport -g error -d 7
+export ASCEND_SLOG_PRINT_TO_STDOUT=0
 
+export ASCEND_GLOBAL_LOG_LEVEL=3
+
+export ASCEND_GLOBAL_EVENT_ENABLE=0
+
+export COMBINED_ENABLE=1
+export HCCL_OP_BASE_FFTS_MODE_ENABLE=TRUE
+export INF_NAN_MODE_ENABLE=1
 # ENVS
 export PROJ_HOME=$PWD
 export PRE_LOAD_DIR=$PROJ_HOME/checkpoints_in
@@ -80,7 +96,7 @@ OPTS=" --batch_size $BATCH_SIZE \
 ## Trigger job on Each Node when bmt or ddp.
 
 mkdir -p $PRE_LOAD_DIR
-torchrun \
+python -m torch.distributed.launch \
        --nproc_per_node $GPU_NUM_PER_NODE \
        --nnodes $NODES_NUM \
        --node_rank $RANK \

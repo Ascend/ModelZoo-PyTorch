@@ -146,7 +146,7 @@ class EnvArgs:
         self.parser.add_argument('--num_nodes', default=num_nodes, type=int, help='start training from saved checkpoint')
         self.parser.add_argument('--num_gpus', default=num_gpus, type=int, help='start training from saved checkpoint')
         self.parser.add_argument('--not_call_launch', action="store_true", help='start training from saved checkpoint')
-        self.parser.add_argument('--local-rank', default=0, type=int, help='start training from saved checkpoint')
+        self.parser.add_argument('--local_rank', default=0, type=int, help='start training from saved checkpoint')
 
         self.parser.add_argument('--wandb', default=wandb, type=str2bool, help='whether to use wandb')
         self.parser.add_argument('--wandb_dir', default=wandb_dir, type=str, help='wandb directory')
