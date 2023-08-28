@@ -727,7 +727,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100092
         </td><td>
-        <a href=https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/TSM_sthv2_for_Pytorch> TSM-Sthv2 </a>
+        <a href=https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/TSM_sthv2_for_Pytorch> TSM-SthV2 </a>
         </td>
         <td>sthv2</td>
     <td>61.87%</td>
@@ -878,6 +878,16 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>77.94%</td>
     <td>254(bs8)</td>
     <td nowrap="nowrap">bs x 384</td>
+    </tr>
+    <tr>
+        <td> 100340
+        </td><td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/textcnn">   TextCNN </a>
+        </td>
+        <td>THUCNews</td>
+        <td>90.47%</td>
+    <td>29237(bs64)</td>
+    <td nowrap="nowrap">bs x 32</td>
     </tr>
     <tr>
         <td> 100095
@@ -1053,7 +1063,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100101
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/baseline_dino_resnet50"> Baseline-dino-ResNet50 </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/baseline_dino_resnet50"> Dino-ResNet50-baseline </a>
         </td>
         <td>ImageNet</td>
     <td>75.28%</td>
@@ -1559,7 +1569,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100138
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Pointnetplus/Pointnetplus">  PointNetplus </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/Pointnetplus/Pointnetplus">  PointNet+ </a>
         </td>
         <td>modelnet40</td>
     <td>88.4%</td>
@@ -3742,7 +3752,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100264
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/YOLACT_plus">   YOLACT-plus </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/segmentation/YOLACT_plus">   YOLACT++ </a>
         </td>
         <td>coco</td>
     <td></td>
@@ -5008,21 +5018,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td></td>
     <td>2617(bs64)</td>
     <td nowrap="nowrap">bs x 3 x 32 x 100</td>
-    </tr>
-    <tr>
-        <td> 100340
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/TextCNN">   TextCNN </a>
-        </td>
-        <td>THUCNews</td>
-        <td>90.47%</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    <td>29237(bs64)</td>
-    <td nowrap="nowrap">bs x 32</td>
     </tr>
     <tr>
         <td> 100341
