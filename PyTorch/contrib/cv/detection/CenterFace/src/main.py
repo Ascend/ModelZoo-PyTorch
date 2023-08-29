@@ -79,7 +79,7 @@ def main(opt, qtepoch=[0,]):
 
   optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), opt.lr)
   if not opt.use_fp32:
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0，combine_grad=True)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0,combine_grad=True)
   start_epoch = 0
   if opt.load_model != '':
     model, optimizer, start_epoch = load_model(
