@@ -34,7 +34,7 @@ from test_widerface import remove_prefix
 from models.retinaface import RetinaFace
 from multi_epochs_dataloader import MultiEpochsDataLoader
 from apex import amp
-
+import apex
 parser = argparse.ArgumentParser(description='Retinaface Training')
 parser.add_argument('--data', default='train/label.txt',
                     help='Training dataset directory')
