@@ -198,7 +198,6 @@
              --model=./models/clip/clip.onnx \
              --output=./models/clip/clip \
              --input_format=ND \
-             --input_shape="prompt:1,77" \
              --log=error \
              --soc_version=Ascend${chip_name}
          
@@ -206,7 +205,7 @@
          cd ./models/unet/
 
          atc --framework=5 \
-             --model=./unet_fla.onnx \
+             --model=./unet_fa.onnx \
              --output=./unet \
              --input_format=NCHW \
              --log=error \
@@ -223,7 +222,6 @@
              --model=./models/vae/vae.onnx \
              --output=./models/vae/vae \
              --input_format=NCHW \
-             --input_shape="latents:1,4,64,64" \
              --log=error \
              --soc_version=Ascend${chip_name} \
              --customize_dtypes custom_precision.cfg
@@ -233,7 +231,6 @@
              --model=./models/vae/vae.onnx \
              --output=./models/vae/vae \
              --input_format=NCHW \
-             --input_shape="latents:1,4,64,64" \
              --log=error \
              --soc_version=Ascend${chip_name}
          ```
@@ -255,7 +252,7 @@
    
 2. 开始推理验证。
 
-   2. 执行推理脚本。
+   1. 执行推理脚本。
       ```bash
       # 普通方式
       python3 stable_diffusion_ascend_infer.py \
@@ -301,7 +298,89 @@
       ![](./test_results/illustration_2.png)  
       Prompt: "Beautiful illustration of Seaports in a serene landscape, magic realism, narrative realism, beautiful matte painting, heavenly lighting, retrowave, 4 k hd wallpaper"
 
+## 精度验证<a name="section741711594518"></a>
 
+   由于生成的图片存在随机性，所以精度验证将使用CLIP-score来评估图片和输入文本的相关性，分数的取值范围为[-1, 1]，越高越好。
+
+   注意，由于要生成的图片数量较多，进行完整的精度验证需要耗费很长的时间。
+
+   1. 下载Parti数据集
+
+      ```bash
+      wget https://raw.githubusercontent.com/google-research/parti/main/PartiPrompts.tsv --no-check-certificate
+      ```
+
+   2. 下载Clip模型权重
+
+      ```bash
+      GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K
+      cd ./CLIP-ViT-H-14-laion2B-s32B-b79K
+
+      # 用 git-lfs 下载
+      git lfs pull
+
+      # 或者访问https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/blob/main/open_clip_pytorch_model.bin，将权重下载并放到这个目录下
+      ```
+
+   2. 使用推理脚本读取Parti数据集，生成图片
+      ```bash
+      # 普通方式
+      python3 stable_diffusion_ascend_infer.py \
+              --model ${model_base} \
+              --model_dir ./models \
+              --prompt_file ./PartiPrompts.tsv \
+              --prompt_file_type parti \
+              --num_images_per_prompt 4 \
+              --max_num_prompts 0 \
+              --device 0 \
+              --save_dir ./results \
+              --steps 50
+
+      # 并行方式
+      python3 stable_diffusion_ascend_infer.py \
+              --model ${model_base} \
+              --model_dir ./models \
+              --prompt_file ./PartiPrompts.tsv \
+              --prompt_file_type parti \
+              --num_images_per_prompt 4 \
+              --max_num_prompts 0 \
+              --device 0,1 \
+              --save_dir ./results \
+              --steps 50
+      ```
+
+      参数说明：
+      - --model：模型名称或本地模型目录的路径。
+      - --model_dir：存放导出模型的目录。
+      - --prompt_file：输入文本文件，按行分割。
+      - --prompt_file_type: prompt文件类型，用于指定读取方式。
+      - --num_images_per_prompt: 每个prompt生成的图片数量。
+      - --max_num_prompts：限制prompt数量为前X个，0表示不限制。
+      - --save_dir：生成图片的存放目录。
+      - --steps：生成图片迭代次数。
+      - --device：推理设备ID；可用逗号分割传入两个设备ID，此时会使用并行方式进行推理。
+
+      执行完成后会在`./results`目录下生成推理图片，并且会在当前目录生成一个`image_info.json`文件，记录着图片和prompt的对应关系。
+
+   4. 计算CLIP-score
+
+      ```bash
+      python clip_score.py \
+             --device=cpu \
+             --image_info="image_info.json" \
+             --model_name="ViT-H-14" \
+             --model_weights_path="./CLIP-ViT-H-14-laion2B-s32B-b79K/open_clip_pytorch_model.bin"
+      ```
+
+      参数说明：
+      - --device: 推理设备。
+      - --image_info: 上一步生成的`image_info.json`文件。
+      - --model_name: Clip模型名称。
+      - --model_weights_path: Clip模型权重文件路径。
+
+      执行完成后会在屏幕打印出精度计算结果。
+
+   
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用ACL接口推理计算，性能参考下列数据。
@@ -312,3 +391,22 @@
 | :------: | :--: | :--------: |
 | Duo并行  |  20  |  1.322s   |
 | A2     |  20  |  0.811s   | 
+
+迭代20次的参考精度结果如下：
+
+   ```
+   average score: 0.379
+   category average scores:
+   [Abstract], average score: 0.294
+   [Vehicles], average score: 0.379
+   [Illustrations], average score: 0.378
+   [Arts], average score: 0.417
+   [World Knowledge], average score: 0.387
+   [People], average score: 0.385
+   [Animals], average score: 0.386
+   [Artifacts], average score: 0.372
+   [Food & Beverage], average score: 0.369
+   [Produce & Plants], average score: 0.374
+   [Outdoor Scenes], average score: 0.370
+   [Indoor Scenes], average score: 0.387
+   ```

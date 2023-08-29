@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import os
+import csv
 import time
+import json
 import argparse
 
 from ais_bench.infer.interface import InferSession
@@ -56,7 +58,13 @@ def parse_arguments():
         "--prompt_file",
         type=str,
         required=True,
-        help="A text file of prompts for generating images.",
+        help="A prompt file used to generate images.",
+    )
+    parser.add_argument(
+        "--prompt_file_type", 
+        choices=["normal", "parti"],
+        default="normal", 
+        help="Type of prompt file.",
     )
     parser.add_argument(
         "--model_dir",
@@ -71,10 +79,28 @@ def parse_arguments():
         help="Path to save result images.",
     )
     parser.add_argument(
+        "--info_file_save_path", 
+        type=str, 
+        default="./image_info.json", 
+        help="Path to save image information file.",
+    )
+    parser.add_argument(
         "--steps", 
         type=int, 
         default=50, 
         help="Number of inference steps.",
+    )
+    parser.add_argument(
+        "--num_images_per_prompt",
+        default=1,
+        type=int,
+        help="Number of images generated for each prompt.",
+    )
+    parser.add_argument(
+        "--max_num_prompts",
+        default=0,
+        type=int,
+        help="Limit the number of prompts (0: no limit).",
     )
     parser.add_argument(
         "--scheduler", 
@@ -112,8 +138,26 @@ def main():
     if args.scheduler == "DPM":
         pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
 
+    prompts = []
+    catagories = []
     with os.fdopen(os.open(args.prompt_file, os.O_RDONLY), "r") as f:
-        prompts = [line.strip() for line in f]
+        if args.prompt_file_type == "normal":
+            prompts = [line.strip() for line in f]
+            if args.max_num_prompts > 0:
+                prompts = prompts[:args.max_num_prompts]
+
+            catagories = ["Not_specified"] * len(prompts)
+
+        elif args.prompt_file_type == "parti":
+            # Skip the first line
+            next(f)
+            tsv_file = csv.reader(f, delimiter="\t")
+            for i, line in enumerate(tsv_file):
+                if args.max_num_prompts > 0 and i == args.max_num_prompts:
+                    break
+
+                prompts.append(line[0])
+                catagories.append(line[1])
 
     clip_om = os.path.join(args.model_dir, "clip", "clip.om")
     vae_om = os.path.join(args.model_dir, "vae", "vae.om")
@@ -130,24 +174,39 @@ def main():
     if not os.path.exists(save_dir):
         os.makedirs(save_dir, mode=0o744)
 
-    infer_num = len(prompts)
+    infer_num = len(prompts) * args.num_images_per_prompt
+    image_info = []
     use_time = 0
-    for i, prompt in enumerate(prompts):
-        start_time = time.time()
-        image = pipe.ascend_infer(
-            prompt,
-            clip_session,
-            [unet_session, unet_session_bg],
-            vae_session,
-            num_inference_steps=args.steps,
-            guidance_scale=7.5,
-        )
-        use_time += time.time() - start_time
-        image = image[0][0]
-        image.save(os.path.join(save_dir, f"illustration_{i}.png"))
+    for i, (prompt, category) in enumerate(zip(prompts, catagories)):
+        images = []
+        print(f"[{i+1}/{len(prompts)}]: {prompt}")
+        for j in range(args.num_images_per_prompt):
+            image_save_path = os.path.join(save_dir, f"{i}_{j}.png")
+            start_time = time.time()
+            image = pipe.ascend_infer(
+                prompt,
+                clip_session,
+                [unet_session, unet_session_bg],
+                vae_session,
+                num_inference_steps=args.steps,
+                guidance_scale=7.5,
+            )
+            use_time += time.time() - start_time
+            image = image[0][0]
+            image.save(image_save_path)
+            images.append(image_save_path)
+
+        image_info.append({'images': images, 'prompt': prompt, 'category': category})
 
     if unet_session_bg:
         unet_session_bg.stop()
+
+    # Save image information to a json file
+    if os.path.exists(args.info_file_save_path):
+        os.remove(args.info_file_save_path)
+        
+    with os.fdopen(os.open(args.info_file_save_path, os.O_RDWR|os.O_CREAT, 0o644), "w") as f:
+        json.dump(image_info, f)
 
     print(
         f"[info] infer number: {infer_num}; use time: {use_time:.3f}s; "

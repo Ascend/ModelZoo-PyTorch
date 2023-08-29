@@ -33,21 +33,25 @@ def add_flash_attention(fa_name, soc_type):
         else:
             flag = 'attn1' in name
         if flag:
-            # move mul to q
             matmul = model[name[:-3] + 'to_q/MatMul']
             reshape = model[name[:-3] + 'Reshape']
             if soc_type == 2 and model[reshape.inputs[1]].value[1] != 4096:
                 continue
             softmax_node = model.get_next_nodes(node.outputs[0])[0]
-            softmax_node.inputs[0] = node.inputs[0]
-            node.inputs[0] = matmul.outputs[0]
-            reshape.inputs[0] = node.outputs[0]
+            if soc_type == 1:
+                # move mul to q
+                softmax_node.inputs[0] = node.inputs[0]
+                node.inputs[0] = matmul.outputs[0]
+                reshape.inputs[0] = node.outputs[0]
 
             # add flashattention
             new_node = model.add_node(name[:-3] + fa_name, fa_name)
             inputs = [None, None, None]
             # input 0: q
-            matmul_node = model.get_prev_node(softmax_node.inputs[0])
+            if soc_type == 1:
+                matmul_node = model.get_prev_node(softmax_node.inputs[0])
+            if soc_type == 2:
+                matmul_node = model.get_prev_node(node.inputs[0])
             inputs[0] = matmul_node.inputs[0]
             # input 1: k
             transpose_node = model.get_prev_node(matmul_node.inputs[1])
@@ -114,7 +118,7 @@ if __name__ == '__main__':
     soc = sys.argv[3]
     del_add()
     if soc == 'Duo':
-        add_flash_attention(fa_name='FlashAttention', soc_type=1)
+        add_flash_attention(fa_name='FlashAttentionTik', soc_type=1)
     elif soc == 'A2':
         add_flash_attention(fa_name='UnpadFlashAttentionMix', soc_type=2)
     change_input_type()
