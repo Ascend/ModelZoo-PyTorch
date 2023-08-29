@@ -1055,6 +1055,10 @@ def main():
 
     model.qa_outputs.bias.data = model.qa_outputs.bias.data.float() # for ascend910 special
 
+    if os.getenv("ALLOW_FP32") or os.getenv("ALLOW_HF32"):
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+                                                          broadcast_buffers=False, find_unused_parameters=True)
+
     global_step = 0
     if args.do_train:
         print("Doing train...")
@@ -1310,10 +1314,11 @@ if __name__ == "__main__":
     elif os.getenv('ALLOW_FP32', False):
         torch.npu.conv.allow_hf32 = False
         torch.npu.matmul.allow_hf32 = False
-    option = {}
-    option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
-    option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
-    option["MM_BMM_ND_ENABLE"] = 'disable'
-    torch.npu.set_option(option)
+    if not os.getenv("ALLOW_FP32") and not os.getenv("ALLOW_HF32"):
+        option = {}
+        option["ACL_OP_SELECT_IMPL_MODE"] = "high_performance"
+        option["ACL_OPTYPELIST_FOR_IMPLMODE"] = "LayerNorm"
+        option["MM_BMM_ND_ENABLE"] = 'disable'
+        torch.npu.set_option(option)
     main()
     dllogger.flush()
