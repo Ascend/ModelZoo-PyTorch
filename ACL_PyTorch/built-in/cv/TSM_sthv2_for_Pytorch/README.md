@@ -54,6 +54,7 @@ TSM是一种通用且有效的时间偏移模块，它具有高效率和高性�
 
 1. 获取源码
 
+   本模型依赖decord，仅支持x86安装
     ```shell
     git clone https://github.com/open-mmlab/mmaction2.git
     cd mmaction2

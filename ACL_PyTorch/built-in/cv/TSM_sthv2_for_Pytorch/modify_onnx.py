@@ -80,14 +80,13 @@ def change_reshape(model):
 
 
 def modify(input_model, output_model, batch_size):
-    model = OnnxGraph.parse(input_model)
+    model = OnnxGraph.parse(input_model).simplify()
     model = delete_sub(model, batch_size)
     model = merge_slice(model)
     model = change_reshape(model)
     model.update_map()
     model.remove_unused_nodes()
     model.save(output_model)
-    print('successfully saved!')
 
 
 if __name__ == '__main__':
@@ -97,7 +96,4 @@ if __name__ == '__main__':
     parser.add_argument('-bs', '--batch_size', required=True, type=int, help='batch size of the model input')
     args = parser.parse_args()
 
-    input_name = args.input_name
-    output_name = args.output_name
-    batch_size = args.batch_size
-    modify(input_name, output_name, batch_size)
+    modify(args.input_name, args.output_name, args.batch_size)
