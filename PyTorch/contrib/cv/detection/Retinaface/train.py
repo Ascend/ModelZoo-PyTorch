@@ -223,11 +223,11 @@ def main_worker(gpu, ngpus_per_node, args):
     with torch.no_grad():
         priors = priorbox.forward()
     priors = priors.to(loc)
-    optimizer = optim.SGD(net.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
+    optimizer = apex.optimizers.NpuFusedSGD(net.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
     criterion = MultiBoxLoss(num_classes, 0.35, True, 0, True, 7, 0.35, False)
     if args.amp:
         print("---use amp---")
-        net, optimizer = amp.initialize(net, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale)
+        net, optimizer = amp.initialize(net, optimizer, opt_level=args.opt_level, loss_scale=args.loss_scale,combine_grad=True)
 
     if args.distributed:
         print("---use distributed")
