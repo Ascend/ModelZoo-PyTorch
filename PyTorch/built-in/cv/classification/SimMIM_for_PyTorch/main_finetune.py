@@ -83,6 +83,7 @@ def parse_option():
 
     # distributed training
     parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    parser.add_argument("--max_steps", default=0, type=int, help='train steps')
 
     args = parser.parse_args()
 
