@@ -110,29 +110,27 @@ AscendIE通过二进制动态共享库提供，其依赖组件为driver驱动包
 
 
 ### 安装推理引擎AscendIE包
-* 步骤1：
-（1）安装之前确保已经完成上一步中的安装CANN依赖。
-（2）确保已经执行以下命令，使得环境变量生效,确保cann包的属主和当前属主一致，否则会安装失败。
-&emsp;\# 若以root用户安装toolkit包
-&emsp; ```/usr/local/Ascend/ascend-toolkit/set_env.sh```
-&emsp;\# 若以非root用户安装toolkit包
-&emsp; ```$HOME/Ascend/ascend-toolkit/set_env.sh```
-（3）将软件包上传到安装环境的任意路径下（如：“/home/package”）并进入软件包所在路径。
-* 步骤2：
-增加对软件包的可执行权限。
-```chmod +x Ascend-cann-aie_{version}_linux-{arch}.run```
-
-* 步骤3：
-安装软件包。
-```./Ascend-cann-aie_{version}_linux-{arch} --install```
-（默认生成Ascend-cann-aie文件夹，然后安装到该文件夹）或者
-
-```./Ascend-cann-aie_{version}_linux-{arch} --install-path=your_path```
-
-（安装到your_path/aie文件夹下）
-
+* 步骤1：<br />
+（1）安装之前确保已经完成上一步中的安装CANN依赖。<br />
+（2）确保已经执行以下命令，使得环境变量生效，确保cann包的属主和当前属主一致，否则会安装失败。<br />
+&emsp;&emsp; 若以root用户安装toolkit包<br />
+&emsp;&emsp; ```source /usr/local/Ascend/ascend-toolkit/set_env.sh``` <br />
+&emsp;&emsp; 若以非root用户安装toolkit包 <br />
+&emsp;&emsp; ```source $HOME/Ascend/ascend-toolkit/set_env.sh``` <br />
+（3）将软件包上传到安装环境的任意路径下（如：“/home/package”）并进入软件包所在路径。<br />
+* 步骤2：<br />
+增加对软件包的可执行权限。<br />
+&emsp;&emsp; ```chmod +x Ascend-cann-aie_{version}_linux-{arch}.run``` <br />
+* 步骤3：<br />
+（1）默认路径安装：<br />
+&emsp;&emsp; ```./Ascend-cann-aie_{version}_linux-{arch}.run --install``` <br />
+&emsp;&emsp; 如果是root用户安装，会在安装到/usr/local/Ascend/aie下，安装完成后，添加环境变量 ```source /usr/local/Ascend/aie/set_env.sh```<br />
+&emsp;&emsp; 如果是个人用户(如：zhangsan)安装，会安装到/home/zhangsan/Ascend/aie下，安装完成后，添加环境变量 ```source /home/zhangsan/Ascend/aie/set_env.sh```<br />
+（2）指定路径安装：<br />
+&emsp;&emsp; ```./Ascend-cann-aie_{version}_linux-{arch}.run --install-path={your_path}```<br />
+&emsp;&emsp; 会安装到/{your_path}/aie文件夹下，your_path必须是绝对路径，安装完成后，添加环境变量 ```source /{your_path}/aie/set_env.sh```<br />
 ### 卸载
-卸载脚本安装在~/Ascend-cann-aie/scripts/uninstall.sh, 运行``` bash uninstall.sh```
+卸载脚本在对应安装路径/{your_install_path}/aie/latest/scripts/uninstall.sh, 运行``` bash uninstall.sh```卸载
 
 
 ## AscendIE工作原理
