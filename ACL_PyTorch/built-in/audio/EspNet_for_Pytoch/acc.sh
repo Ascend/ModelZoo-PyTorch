@@ -231,7 +231,7 @@ fi
 
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "stage 5: Decoding"
-    nj=8
+    nj=1
 #    if [[ $(get_yaml.py ${train_config} model-module) = *transformer* ]] || \
 #           [[ $(get_yaml.py ${train_config} model-module) = *conformer* ]] || \
 #           [[ $(get_yaml.py ${train_config} etype) = custom ]] || \
@@ -254,8 +254,6 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
         recog_v2_opts="--ngram-model ${ngramexpdir}/${n_gram}gram.bin --api v2"
     fi
 
-    pids=() # initialize pids
-    for rtask in ${recog_set}; do
     (
         decode_dir=decode_${rtask}_$(basename ${decode_config%.*})_${lmtag}_${ngramtag}
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
@@ -265,15 +263,14 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
 
         #### use CPU for decoding
         ngpu=0
-        echo "decode_cmd" ${decode_cmd}
-        ${decode_cmd} JOB=1:${nj} ${expdir}/${decode_dir}/log/decode.JOB.log \
-            asr_recog.py \
+
+        python3   "../../../espnet/bin/asr_recog.py" \
             --config ${decode_config} \
             --ngpu ${ngpu} \
             --backend ${backend} \
             --batchsize 0 \
-            --recog-json ${feat_recog_dir}/split${nj}utt/data.JOB.json \
-            --result-label ${expdir}/${decode_dir}/data.JOB.json \
+            --recog-json ${feat_recog_dir}/split${nj}utt/data.1.json \
+            --result-label ${expdir}/${decode_dir}/data.1.json \
             --model ${expdir}/results/${recog_model}  \
             --rnnlm ${lmexpdir}/rnnlm.model.best \
             ${recog_v2_opts}
@@ -281,9 +278,4 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
         score_sclite.sh ${expdir}/${decode_dir} ${dict}
 
     ) &
-    pids+=($!) # store background pids
-    done
-    i=0; for pid in "${pids[@]}"; do wait ${pid} || ((++i)); done
-    [ ${i} -gt 0 ] && echo "$0: ${i} background jobs are failed." && false
-    echo "Finished"
 fi
