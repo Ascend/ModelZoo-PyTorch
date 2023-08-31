@@ -14,8 +14,7 @@ on:
 
 jobs:
   docs:
-    runs-on: ubuntu-lates
-    t
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
