@@ -12,7 +12,7 @@ elif os.getenv('ENV_TYPE') == 'deepspeed':
     from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
 else:
     from torch.utils.checkpoint import checkpoint
-import os 
+import os
 from flagai.model.base_model import BaseModel
 
 class AQUILAConfig(dict):
@@ -32,7 +32,7 @@ class AQUILAConfig(dict):
         #hidden_act="silu",
         initializer_range=0.02,
         checkpoint_activations=False,
- 
+        ckpoint_layer=-1,
         norm_eps=1e-6,
         use_cache=False,
         flash_atten=False,
@@ -65,6 +65,7 @@ class AQUILAConfig(dict):
 
         self.norm_eps = norm_eps
         self.use_cache = use_cache
+        self.ckpoint_layer = ckpoint_layer if ckpoint_layer >= 0 else n_layers
 
         self.flash_atten = flash_atten
         self.flash_atten_pdrop = flash_atten_pdrop
@@ -101,6 +102,7 @@ class AQUILAModel(BaseModel):
         print("***************use cache", self.use_cache)
         self.vocab_size = config.vocab_size
         self.n_layers = config.n_layers
+        self.ckpoint_layer = config.ckpoint_layer
 
         if os.getenv("ENV_TYPE") == 'deepspeed+mpu':
             self.tok_embeddings = ParallelEmbedding(
@@ -169,10 +171,16 @@ class AQUILAModel(BaseModel):
             mask = ~torch.tril(mask, diagonal=0)
         self.start_pos = start_pos
         if self.config.checkpoint_activations:
+            num = 0
             for layer in self.layers:
+                num = num + 1
                 layer.use_cache = self.use_cache
                 layer.start_pos = start_pos
-                h = checkpoint(create_custom_forward(layer), h, freqs_cis, mask)
+                if num > self.ckpoint_layer:
+                    h = layer(h, freqs_cis, mask)
+                else:
+                    h = checkpoint(create_custom_forward(layer), h, freqs_cis, mask)
+
         elif os.getenv("ENV_TYPE") == "bmtrain" and self.config.bmt_comm_overlap:
             # to overlap communication with computation
             for layer in self.layers:
