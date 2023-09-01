@@ -37,6 +37,13 @@ def parse_arguments() -> Namespace:
         help="Path or name of the pre-trained model.",
     )
     parser.add_argument(
+        "-bs",
+        "--batch_size", 
+        type=int, 
+        default=1, 
+        help="Batch size."
+    )
+    parser.add_argument(
         "-p",
         "--parallel",
         action="store_true",
@@ -46,7 +53,7 @@ def parse_arguments() -> Namespace:
     return parser.parse_args()
 
 
-def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
+def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size:int) -> None:
     print("Exporting the text encoder...")
     clip_path = os.path.join(save_dir, "clip")
     if not os.path.exists(clip_path):
@@ -55,7 +62,7 @@ def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     clip_model = sd_pipeline.text_encoder
 
     max_position_embeddings = clip_model.config.max_position_embeddings
-    dummy_input = torch.ones([1, max_position_embeddings], dtype=torch.int64)
+    dummy_input = torch.ones([batch_size, max_position_embeddings], dtype=torch.int64)
 
     torch.onnx.export(
         clip_model,
@@ -67,7 +74,7 @@ def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     )
 
 
-def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size: int = 2) -> None:
+def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size: int) -> None:
     print("Exporting the image information creater...")
     unet_path = os.path.join(save_dir, "unet")
     if not os.path.exists(unet_path):
@@ -99,7 +106,7 @@ def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size:
     )
 
 
-def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
+def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size: int) -> None:
     print("Exporting the image decoder...")
 
     vae_path = os.path.join(save_dir, "vae")
@@ -112,7 +119,7 @@ def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     sample_size = unet_model.config.sample_size
     in_channels = unet_model.config.out_channels
 
-    dummy_input = torch.ones([1, in_channels, sample_size, sample_size])
+    dummy_input = torch.ones([batch_size, in_channels, sample_size, sample_size])
 
     torch.onnx.export(
         vae_model.decoder,
@@ -124,22 +131,23 @@ def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str) -> None:
     )
 
 
-def export_onnx(model_path: str, save_dir: str, parallel: bool=False) -> None:
+def export_onnx(model_path: str, save_dir: str, batch_size:int, parallel: bool=False) -> None:
     pipeline = StableDiffusionPipeline.from_pretrained(model_path).to("cpu")
 
     export_clip(pipeline, save_dir)
 
-    unet_batch_size = 1 if parallel else 2
-    export_unet(pipeline, save_dir, unet_batch_size)
+    if parallel:
+        export_unet(pipeline, save_dir, batch_size)
+    else:
+        export_unet(pipeline, save_dir, batch_size * 2)
 
     export_vae(pipeline, save_dir)
-
-    print("Done.")
 
 
 def main():
     args = parse_arguments()
-    export_onnx(args.model, args.output_dir, args.parallel)
+    export_onnx(args.model, args.output_dir, args.batch_size, args.parallel)
+    print("Done.")
 
 
 if __name__ == "__main__":

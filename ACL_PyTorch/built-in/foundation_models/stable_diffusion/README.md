@@ -127,30 +127,35 @@
       执行命令：
 
       ```bash
-      python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models
+      # 设置模型的batch size
+      bs=1
+
+      python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models_bs${bs} --batch_size ${bs}
 
       # 使用并行方案
-      python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models --parallel
+      python3 stable_diffusion_2_onnx.py --model ${model_base} --output_dir ./models_bs${bs} --batch_size ${bs} --parallel
       ```
 
       参数说明：
       - --model：模型名称或本地模型目录的路径
       - --output_dir: ONNX模型输出目录
+      - --batch_size：模型batch size
+      - --parallel：导出适用于并行方案的模型
       
       执行成功后生成onnx模型：  
-         - models/clip/clip.onnx  
-         - models/unet/unet.onnx
-         - models/vae/vae.onnx
+         - models_bs${bs}/clip/clip.onnx  
+         - models_bs${bs}/unet/unet.onnx
+         - models_bs${bs}/vae/vae.onnx
 
    2. 优化onnx模型
       
       FlashAttention算子需区分硬件形态，支持Atlas 300I Duo和Atlas 300I A2，请根据使用的硬件形态执行命令：
       ```bash
       # 硬件形态为Duo或PRO
-      python3 modify_onnx.py models/unet/unet.onnx models/unet/unet_fa.onnx Duo
+      python3 modify_onnx.py models_bs${bs}/unet/unet.onnx models_bs${bs}/unet/unet_fa.onnx Duo
 
       # 硬件形态为A2
-      python3 modify_onnx.py models/unet/unet.onnx models/unet/unet_fa.onnx A2
+      python3 modify_onnx.py models_bs${bs}/unet/unet.onnx models_bs${bs}/unet/unet_fa.onnx A2
       ```
    
    3. 使用ATC工具将ONNX模型转OM模型。
@@ -182,27 +187,19 @@
          +===================+=================+======================================================+
          ```
 
-      3. 执行ATC命令。此模型当前仅支持单张图片推理。
+      3. 执行ATC命令。
 
-         ```bash
-         # v1.5
-         encoder_hidden_size=768
-
-         # v2.1
-         encoder_hidden_size=1024
-
-         ```
          ```bash
          # clip
          atc --framework=5 \
-             --model=./models/clip/clip.onnx \
-             --output=./models/clip/clip \
+             --model=./models_bs${bs}/clip/clip.onnx \
+             --output=./models_bs${bs}/clip/clip \
              --input_format=ND \
              --log=error \
              --soc_version=Ascend${chip_name}
          
          # unet
-         cd ./models/unet/
+         cd ./models_bs${bs}/unet/
 
          atc --framework=5 \
              --model=./unet_fa.onnx \
@@ -219,8 +216,8 @@
 
          # 硬件形态为A2
          atc --framework=5 \
-             --model=./models/vae/vae.onnx \
-             --output=./models/vae/vae \
+             --model=./models_bs${bs}/vae/vae.onnx \
+             --output=./models_bs${bs}/vae/vae \
              --input_format=NCHW \
              --log=error \
              --soc_version=Ascend${chip_name} \
@@ -228,8 +225,8 @@
              
          # 硬件形态为Duo
          atc --framework=5 \
-             --model=./models/vae/vae.onnx \
-             --output=./models/vae/vae \
+             --model=./models_bs${bs}/vae/vae.onnx \
+             --output=./models_bs${bs}/vae/vae \
              --input_format=NCHW \
              --log=error \
              --soc_version=Ascend${chip_name}
@@ -246,9 +243,9 @@
 
       执行成功后生成om模型列表：  
 
-         - models/clip/clip.om  
-         - models/unet/unet.om
-         - models/vae/vae.om  
+         - models_bs${bs}/clip/clip.om  
+         - models_bs${bs}/unet/unet.om
+         - models_bs${bs}/vae/vae.om  
    
 2. 开始推理验证。
 
@@ -257,19 +254,21 @@
       # 普通方式
       python3 stable_diffusion_ascend_infer.py \
               --model ${model_base} \
-              --model_dir ./models \
+              --model_dir ./models_bs${bs} \
               --prompt_file ./prompts.txt \
               --device 0 \
               --save_dir ./results \
+              --batch_size ${bs} \
               --steps 50
 
       # 并行方式
       python3 stable_diffusion_ascend_infer.py \
               --model ${model_base} \
-              --model_dir ./models \
+              --model_dir ./models_bs${bs} \
               --prompt_file ./prompts.txt \
               --device 0,1 \
               --save_dir ./results \
+              --batch_size ${bs} \
               --steps 50
       ```
 
@@ -278,6 +277,7 @@
       - --model_dir：存放导出模型的目录。
       - --prompt_file：输入文本文件，按行分割。
       - --save_dir：生成图片的存放目录。
+      - --batch_size：模型batch size。
       - --steps：生成图片迭代次数。
       - --device：推理设备ID；可用逗号分割传入两个设备ID，此时会使用并行方式进行推理。
       
@@ -327,25 +327,27 @@
       # 普通方式
       python3 stable_diffusion_ascend_infer.py \
               --model ${model_base} \
-              --model_dir ./models \
+              --model_dir ./models_bs${bs} \
               --prompt_file ./PartiPrompts.tsv \
               --prompt_file_type parti \
               --num_images_per_prompt 4 \
               --max_num_prompts 0 \
               --device 0 \
               --save_dir ./results \
+              --batch_size ${bs} \
               --steps 50
 
       # 并行方式
       python3 stable_diffusion_ascend_infer.py \
               --model ${model_base} \
-              --model_dir ./models \
+              --model_dir ./models_bs${bs} \
               --prompt_file ./PartiPrompts.tsv \
               --prompt_file_type parti \
               --num_images_per_prompt 4 \
               --max_num_prompts 0 \
               --device 0,1 \
               --save_dir ./results \
+              --batch_size ${bs} \
               --steps 50
       ```
 
@@ -357,6 +359,7 @@
       - --num_images_per_prompt: 每个prompt生成的图片数量。
       - --max_num_prompts：限制prompt数量为前X个，0表示不限制。
       - --save_dir：生成图片的存放目录。
+      - --batch_size：模型batch size。
       - --steps：生成图片迭代次数。
       - --device：推理设备ID；可用逗号分割传入两个设备ID，此时会使用并行方式进行推理。
 
