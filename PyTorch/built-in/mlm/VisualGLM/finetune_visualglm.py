@@ -8,6 +8,13 @@ from model import VisualGLMModel
 from sat.model.finetune import PTuningV2Mixin
 from lora_mixin import LoraMixin
 
+# 适配npu的代码
+import deepspeed_npu
+import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+##
+
 class FineTuneVisualGLMModel(VisualGLMModel):
     def __init__(self, args, transformer=None, parallel_output=True, **kw_args):
         super().__init__(args, transformer=transformer, parallel_output=parallel_output, **kw_args)
@@ -173,7 +180,7 @@ if __name__ == '__main__':
     known, args_list = py_parser.parse_known_args()
     args = get_args(args_list)
     args = argparse.Namespace(**vars(args), **vars(known))
-    args.device = 'cpu'
+    args.device = 'npu'
 
     model_type = 'visualglm-6b'
     model, args = FineTuneVisualGLMModel.from_pretrained(model_type, args)
