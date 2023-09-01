@@ -1,0 +1,25 @@
+diff --git a/examples/few_shot/pet/data.py b/examples/few_shot/pet/data.py
+index ba2cca68..8deb1a7a 100644
+--- a/examples/few_shot/pet/data.py
++++ b/examples/few_shot/pet/data.py
+@@ -135,7 +135,7 @@ def convert_ids_to_words(example, token_ids):
+     the length of which should coincide with that of `mask` in prompt.
+     """
+     if "label_ids" in example:
+-        labels = paddle.index_select(token_ids, paddle.to_tensor(example.pop("label_ids")), axis=0).squeeze(0)
++        labels = paddle.index_select(token_ids, paddle.to_tensor([example.pop("label_ids")]), axis=0).squeeze(0)
+         example["labels"] = labels
+     return example
+ 
+diff --git a/examples/few_shot/pet/run_train.py b/examples/few_shot/pet/run_train.py
+index 3bab91cf..51d7fb63 100644
+--- a/examples/few_shot/pet/run_train.py
++++ b/examples/few_shot/pet/run_train.py
+@@ -160,7 +160,6 @@ def main():
+             InputSpec(shape=[None, None], dtype="int64"),  # token_type_ids
+             InputSpec(shape=[None, None], dtype="int64"),  # position_ids
+             InputSpec(shape=[None, None, None, None], dtype="float32"),  # attention_mask
+-            InputSpec(shape=[None], dtype="int64"),  # masked_positions
+         ]
+         export_path = os.path.join(training_args.output_dir, "export")
+         trainer.export_model(export_path, input_spec=input_spec, export_type=model_args.export_type)
