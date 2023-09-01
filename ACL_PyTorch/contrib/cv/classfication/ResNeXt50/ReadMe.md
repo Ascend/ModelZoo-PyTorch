@@ -239,9 +239,9 @@ ResNeXt50是一种用于图像分类的卷积神经网络，这个模型的默�
 
 | 芯片型号 | Batch Size   | 数据集 | 精度(top1) | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-|     Ascend310P3      |       1           |     imagenet       |      77.61%      |       1612          |
-|     Ascend310P3      |       4           |     imagenet       |      77.61%      |       3221          |
-|     Ascend310P3      |       8           |     imagenet       |      77.61%      |       3704          |
-|     Ascend310P3      |       16           |     imagenet       |      77.61%      |      2342           |
-|     Ascend310P3      |       32           |     imagenet       |      77.61%      |      3985           |
-|     Ascend310P3      |       64           |     imagenet       |      77.61%      |      2188           |
+|     Ascend310P3      |       1           |     imagenet       |      77.61%      |       1490          |
+|     Ascend310P3      |       4           |     imagenet       |      77.61%      |       3066          |
+|     Ascend310P3      |       8           |     imagenet       |      77.61%      |       3560          |
+|     Ascend310P3      |       16           |     imagenet       |      77.61%      |      3695           |
+|     Ascend310P3      |       32           |     imagenet       |      77.61%      |      3749           |
+|     Ascend310P3      |       64           |     imagenet       |      77.61%      |     2188           |
