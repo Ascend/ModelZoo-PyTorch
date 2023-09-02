@@ -321,6 +321,12 @@ def parse_args(args):
         help="Options are ['wandb', 'tensorboard', 'wandb,tensorboard']"
     )
     parser.add_argument(
+        "--loss-scale",
+        default='512',
+        type=str,
+        help="loss scale value, 'dynamic' or a number"
+    )
+    parser.add_argument(
         "--wandb-notes",
         default='',
         type=str,

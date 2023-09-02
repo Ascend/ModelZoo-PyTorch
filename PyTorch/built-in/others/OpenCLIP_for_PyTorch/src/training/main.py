@@ -327,7 +327,7 @@ def main(args):
             hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
         scaler = GradScaler() if args.precision == "amp" else None
-        model, optimizer = apex.amp.initialize(model, optimizer, opt_level='O2', combine_grad=True)
+        model, optimizer = apex.amp.initialize(model, optimizer, opt_level='O2', combine_grad=True, loss_scale=args.loss_scale)
 
     if args.distributed and not args.horovod:
         if args.use_bn_sync:

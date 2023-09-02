@@ -64,7 +64,7 @@ python -m training.main \
     --batch-size 320 \
     --workers 8 \
     --warmup 1000 \
-    --epochs 10 \
+    --epochs 5 \
     --log-every-n-steps 1 \
     --model ViT-B-32 \
     >$cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
@@ -88,9 +88,9 @@ FPS=`echo "$BatchSize / $avg_time" |bc`
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
-train_accuracy=$(grep -a "Eval" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log  |tail -1|awk -F "image_to_text_R@5: " '{print $2}' | awk -F "image_to_text_R" '{print $1}')
+train_loss=`grep -a 'Train Epoch' ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log  |tail -1| awk -F "Loss: " '{print $2}'|awk -F "(" '{print $2}' | awk -F ")" '{print $1}'`
 # 打印，不需要修改
-echo "Final Train Accuracy : ${train_accuracy}"
+echo "Train loss : ${train_loss}"
 echo "E2E Training Duration sec : $e2e_time"
 
 
@@ -113,7 +113,7 @@ echo "RankSize = ${WORLD_SIZE}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${Ca
 echo "BatchSize = ${BatchSize}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "DeviceType = ${DeviceType}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainLoss = ${train_loss}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
 echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
