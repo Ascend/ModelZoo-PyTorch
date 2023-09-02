@@ -362,6 +362,18 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>bs x 3 x 512 x 512</td>
     </tr>
     <tr>
+        <td> 100024
+        </td><td>
+        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/EfficientNet_for_Pytorch">   EfficientNet-B0 </a>
+        </td>
+        <td>ImageNet</td>
+    <td></td>
+        <td></td>
+        <td>75.088%(top1)</td>
+    <td>2489(bs8)</td>
+    <td>bs x 3 x 224 x 224</td>
+    </tr>
+    <tr>
         <td> 100042
         </td><td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/OpenPose"> OpenPose </a>
@@ -2347,7 +2359,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100186
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/classfication/ch_PP-OCRv3_det">  CH-PPOCRV3-det</a>
+        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/ch_PP-OCRv3_det">  CH-PPOCRV3-det</a>
         </td>
         <td>PaddleOCR</td>
     <td></td>
@@ -2887,40 +2899,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>2923(bs4)</td>
         <td></td>
         <td>bs x 3 x 300 x 300</td>
-    </tr>
-    <tr>
-        <td> 100216
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/SSD_resnet34">  SSD-ResNet34 </a>
-        </td>
-        <td>coco</td>
-    <td></td>
-        <td>20%</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    <td>37(bs1)</td>
-        <td></td>
-        <td>bs x 3 x 1200 x 1200</td>
-    </tr>
-    <tr>
-        <td> 100217
-        </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/swin_transformer">   SwinTransformer </a>
-        </td>
-        <td>coco</td>
-    <td>47.9%</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    <td>5.9(bs8)</td>
-        <td></td>
-        <td>bs x 3 x 800 x 1216</td>
     </tr>
     <tr>
         <td> 100218
