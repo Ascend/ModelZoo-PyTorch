@@ -87,7 +87,8 @@ def load_data(data_dir, batch=1):
 def align_data(data_list, target_batch, sample_data):
     batch_num = len(data_list) // target_batch
     left_num = len(data_list) - batch_num * target_batch
-    data_list += sample_data * (target_batch - left_num)
+    if left_num:
+        data_list += sample_data * (target_batch - left_num)
 
 
 def generate_batch_data(data_list, map_names, batch_num, device_ids, num_process,

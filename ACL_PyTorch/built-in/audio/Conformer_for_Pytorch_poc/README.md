@@ -175,9 +175,6 @@ Conformer是将CNN用于增强Transformer来做ASR的结构
    | lm          | model_path  |  ${HOME}/.cache/espnet_onnx/asr_train_asr_qkv/full/transformer_lm_{os}_{arch}.om |
    |             | output_size |                                                                           5000000 |
    | beam_search | beam_size   |                                                                                  2 |
-   | weights     | ctc         |                                                                                0.3 |
-   |             | decoder     |                                                                                0.7 |
-   |             | lm          |                                                                                0.3 |
 
    说明：{os}_{arch}为对应系统/架构名，如：{linux}_{aarch64}
 
