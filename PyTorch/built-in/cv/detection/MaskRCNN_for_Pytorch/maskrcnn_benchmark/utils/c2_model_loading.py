@@ -145,7 +145,9 @@ def _rename_weights_for_resnet(weights, stage_names):
 
 def _load_c2_pickled_weights(file_path):
     with open(file_path, "rb") as f:
-        if torch._six.PY37:
+        import sys
+        PY37 = sys.version_info[0] == 3 and sys.version_info[1] >= 7
+        if PY37:
             data = pickle.load(f, encoding="latin1")
         else:
             data = pickle.load(f)

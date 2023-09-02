@@ -1,241 +1,147 @@
-# Faster R-CNN and Mask R-CNN in PyTorch 1.0
+# MaskRCNN for Pytorch
 
-This project aims at providing the necessary building blocks for easily
-creating detection and segmentation models using PyTorch 1.0.
-
-![alt text](demo/demo_e2e_mask_rcnn_X_101_32x8d_FPN_1x.png "from http://cocodataset.org/#explore?id=345434")
-
-## Highlights
-- **PyTorch 1.0:** RPN, Faster R-CNN and Mask R-CNN implementations that matches or exceeds Detectron accuracies
-- **Very fast**: up to **2x** faster than [Detectron](https://github.com/facebookresearch/Detectron) and **30%** faster than [mmdetection](https://github.com/open-mmlab/mmdetection) during training. See [MODEL_ZOO.md](MODEL_ZOO.md) for more details.
-- **Memory efficient:** uses roughly 500MB less GPU memory than mmdetection during training
-- **Multi-GPU training and inference**
-- **Batched inference:** can perform inference using multiple images per batch per GPU
-- **CPU support for inference:** runs on CPU in inference time. See our [webcam demo](demo) for an example
-- Provides pre-trained models for almost all reference Mask R-CNN and Faster R-CNN configurations with 1x schedule.
-
-## Webcam and Jupyter notebook demo
-
-We provide a simple webcam demo that illustrates how you can use `maskrcnn_benchmark` for inference:
-```bash
-cd demo
-# by default, it runs on the GPU
-# for best results, use min-image-size 800
-python webcam.py --min-image-size 800
-# can also run it on the CPU
-python webcam.py --min-image-size 300 MODEL.DEVICE cpu
-# or change the model that you want to use
-python webcam.py --config-file ../configs/caffe2/e2e_mask_rcnn_R_101_FPN_1x_caffe2.yaml --min-image-size 300 MODEL.DEVICE cpu
-# in order to see the probability heatmaps, pass --show-mask-heatmaps
-python webcam.py --min-image-size 300 --show-mask-heatmaps MODEL.DEVICE cpu
-# for the keypoint demo
-python webcam.py --config-file ../configs/caffe2/e2e_keypoint_rcnn_R_50_FPN_1x_caffe2.yaml --min-image-size 300 MODEL.DEVICE cpu
-```
-
-A notebook with the demo can be found in [demo/Mask_R-CNN_demo.ipynb](demo/Mask_R-CNN_demo.ipynb).
-
-## Installation
-
-Check [INSTALL.md](INSTALL.md) for installation instructions.
-
-
-## Model Zoo and Baselines
-
-Pre-trained models, baselines and comparison with Detectron and mmdetection
-can be found in [MODEL_ZOO.md](MODEL_ZOO.md)
-
-## Inference in a few lines
-We provide a helper class to simplify writing inference pipelines using pre-trained models.
-Here is how we would do it. Run this from the `demo` folder:
-```python
-from maskrcnn_benchmark.config import cfg
-from predictor import COCODemo
-
-config_file = "../configs/caffe2/e2e_mask_rcnn_R_50_FPN_1x_caffe2.yaml"
-
-# update the config options with the config file
-cfg.merge_from_file(config_file)
-# manual override some options
-cfg.merge_from_list(["MODEL.DEVICE", "cpu"])
-
-coco_demo = COCODemo(
-    cfg,
-    min_image_size=800,
-    confidence_threshold=0.7,
-)
-# load image and then run prediction
-image = ...
-predictions = coco_demo.run_on_opencv_image(image)
-```
-
-## Perform training on COCO dataset
-
-For the following examples to work, you need to first install `maskrcnn_benchmark`.
-
-You will also need to download the COCO dataset.
-We recommend to symlink the path to the coco dataset to `datasets/` as follows
-
-We use `minival` and `valminusminival` sets from [Detectron](https://github.com/facebookresearch/Detectron/blob/master/detectron/datasets/data/README.md#coco-minival-annotations)
-
-```bash
-# symlink the coco dataset
-cd ~/github/maskrcnn-benchmark
-mkdir -p datasets/coco
-ln -s /path_to_coco_dataset/annotations datasets/coco/annotations
-ln -s /path_to_coco_dataset/train2014 datasets/coco/train2014
-ln -s /path_to_coco_dataset/test2014 datasets/coco/test2014
-ln -s /path_to_coco_dataset/val2014 datasets/coco/val2014
-# or use COCO 2017 version
-ln -s /path_to_coco_dataset/annotations datasets/coco/annotations
-ln -s /path_to_coco_dataset/train2017 datasets/coco/train2017
-ln -s /path_to_coco_dataset/test2017 datasets/coco/test2017
-ln -s /path_to_coco_dataset/val2017 datasets/coco/val2017
-
-# for pascal voc dataset:
-ln -s /path_to_VOCdevkit_dir datasets/voc
-```
-
-P.S. `COCO_2017_train` = `COCO_2014_train` + `valminusminival` , `COCO_2017_val` = `minival`
-      
-
-You can also configure your own paths to the datasets.
-For that, all you need to do is to modify `maskrcnn_benchmark/config/paths_catalog.py` to
-point to the location where your dataset is stored.
-You can also create a new `paths_catalog.py` file which implements the same two classes,
-and pass it as a config argument `PATHS_CATALOG` during training.
-
-### Single GPU training
-
-Most of the configuration files that we provide assume that we are running on 8 GPUs.
-In order to be able to run it on fewer GPUs, there are a few possibilities:
-
-**1. Run the following without modifications**
-
-```bash
-python /path_to_maskrcnn_benchmark/tools/train_net.py --config-file "/path/to/config/file.yaml"
-```
-This should work out of the box and is very similar to what we should do for multi-GPU training.
-But the drawback is that it will use much more GPU memory. The reason is that we set in the
-configuration files a global batch size that is divided over the number of GPUs. So if we only
-have a single GPU, this means that the batch size for that GPU will be 8x larger, which might lead
-to out-of-memory errors.
-
-If you have a lot of memory available, this is the easiest solution.
-
-**2. Modify the cfg parameters**
-
-If you experience out-of-memory errors, you can reduce the global batch size. But this means that
-you'll also need to change the learning rate, the number of iterations and the learning rate schedule.
-
-Here is an example for Mask R-CNN R-50 FPN with the 1x schedule:
-```bash
-python tools/train_net.py --config-file "configs/e2e_mask_rcnn_R_50_FPN_1x.yaml" SOLVER.IMS_PER_BATCH 2 SOLVER.BASE_LR 0.0025 SOLVER.MAX_ITER 720000 SOLVER.STEPS "(480000, 640000)" TEST.IMS_PER_BATCH 1
-```
-This follows the [scheduling rules from Detectron.](https://github.com/facebookresearch/Detectron/blob/master/configs/getting_started/tutorial_1gpu_e2e_faster_rcnn_R-50-FPN.yaml#L14-L30)
-Note that we have multiplied the number of iterations by 8x (as well as the learning rate schedules),
-and we have divided the learning rate by 8x.
-
-We also changed the batch size during testing, but that is generally not necessary because testing
-requires much less memory than training.
-
-
-### Multi-GPU training
-We use internally `torch.distributed.launch` in order to launch
-multi-gpu training. This utility function from PyTorch spawns as many
-Python processes as the number of GPUs we want to use, and each Python
-process will only use a single GPU.
-
-```bash
-export NGPUS=8
-python -m torch.distributed.launch --nproc_per_node=$NGPUS /path_to_maskrcnn_benchmark/tools/train_net.py --config-file "path/to/config/file.yaml"
-```
-
-## Abstractions
-For more information on some of the main abstractions in our implementation, see [ABSTRACTIONS.md](ABSTRACTIONS.md).
-
-## Adding your own dataset
-
-This implementation adds support for COCO-style datasets.
-But adding support for training on a new dataset can be done as follows:
-```python
-from maskrcnn_benchmark.structures.bounding_box import BoxList
-
-class MyDataset(object):
-    def __init__(self, ...):
-        # as you would do normally
-
-    def __getitem__(self, idx):
-        # load the image as a PIL Image
-        image = ...
-
-        # load the bounding boxes as a list of list of boxes
-        # in this case, for illustrative purposes, we use
-        # x1, y1, x2, y2 order.
-        boxes = [[0, 0, 10, 10], [10, 20, 50, 50]]
-        # and labels
-        labels = torch.tensor([10, 20])
-
-        # create a BoxList from the boxes
-        boxlist = BoxList(boxes, image.size, mode="xyxy")
-        # add the labels to the boxlist
-        boxlist.add_field("labels", labels)
-
-        if self.transforms:
-            image, boxlist = self.transforms(image, boxlist)
-
-        # return the image, the boxlist and the idx in your dataset
-        return image, boxlist, idx
-
-    def get_img_info(self, idx):
-        # get img_height and img_width. This is used if
-        # we want to split the batches according to the aspect ratio
-        # of the image, as it can be more efficient than loading the
-        # image from disk
-        return {"height": img_height, "width": img_width}
-```
-That's it. You can also add extra fields to the boxlist, such as segmentation masks
-(using `structures.segmentation_mask.SegmentationMask`), or even your own instance type.
-
-For a full example of how the `COCODataset` is implemented, check [`maskrcnn_benchmark/data/datasets/coco.py`](maskrcnn_benchmark/data/datasets/coco.py).
-
-### Note:
-While the aforementioned example should work for training, we leverage the
-cocoApi for computing the accuracies during testing. Thus, test datasets
-should currently follow the cocoApi for now.
-
-## Finetuning from Detectron weights on custom datasets
-Create a script `tools/trim_detectron_model.py` like [here](https://gist.github.com/wangg12/aea194aa6ab6a4de088f14ee193fd968).
-You can decide which keys to be removed and which keys to be kept by modifying the script.
-
-Then you can simply point the converted model path in the config file by changing `MODEL.WEIGHT`.
-
-For further information, please refer to [#15](https://github.com/facebookresearch/maskrcnn-benchmark/issues/15).
-
-## Troubleshooting
-If you have issues running or compiling this code, we have compiled a list of common issues in
-[TROUBLESHOOTING.md](TROUBLESHOOTING.md). If your issue is not present there, please feel
-free to open a new issue.
-
-## Citations
-Please consider citing this project in your publications if it helps your research. The following is a BibTeX reference. The BibTeX entry requires the `url` LaTeX package.
-```
-@misc{massa2018mrcnn,
-author = {Massa, Francisco and Girshick, Ross},
-title = {{maskrnn-benchmark: Fast, modular reference implementation of Instance Segmentation and Object Detection algorithms in PyTorch}},
-year = {2018},
-howpublished = {\url{https://github.com/facebookresearch/maskrcnn-benchmark}},
-note = {Accessed: [Insert date here]}
-}
-```
-
-## Projects using maskrcnn-benchmark
-
-- [RetinaMask: Learning to predict masks improves state-of-the-art single-shot detection for free](https://arxiv.org/abs/1901.03353). 
-  Cheng-Yang Fu, Mykhailo Shvets, and Alexander C. Berg.
-  Tech report, arXiv,1901.03353.
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
 
 
-## License
+# 概述
 
-maskrcnn-benchmark is released under the MIT license. See [LICENSE](LICENSE) for additional details.
+## 简述
+
+MaskRCNN是一个实例分割（Instance segmentation）框架，通过增加不同的分支可以完成目标分类，目标检测，语义分割，实例分割，人体姿态估计等多种任务。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/mlcommons/training
+  commit_id=2f4a93fb4888180755a8ef55f4b977ef8f60a89e
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/cv/detection/
+  ```
+
+# 准备训练环境
+
+## 准备环境
+
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
+
+  **表 1**  版本支持表
+
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.11 | cocoapi torchvision==0.12.0 torchvision_npu==0.12.0|
+  
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》搭建torch环境。
+  
+- 安装依赖。
+
+  在模型根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  ```shell
+  pip install -r requirements.txt  
+  ```
+- 编译安装 `cocoapi`。
+  ```shell
+  git clone https://github.com/cocodataset/cocoapi.git
+  cd cocoapi/PythonAPI
+  python setup.py build_ext install
+  ```
+- 安装`torchvision`及`torchvision_npu`。
+
+  请参考《[Torchvision Adapter](https://gitee.com/ascend/vision/tree/v0.12.0-dev/)》编译安装Torchvision及Torchvision Adapter插件（即torchvision_npu）。
+
+- 编译安装`maskrcnn`。
+  ```shell
+  cd MaskRCNN_for_Pytorch
+  python setup.py build develop
+  ```
+  
+
+## 准备数据集
+
+1. 获取数据集。
+
+   用户自行获取原始 `COCO` 数据集，将数据集上传到服务器任意路径下并解压。
+
+   数据集目录结构参考如下所示。
+
+   ```
+    ├── coco2017
+    │   ├── annotations
+    │          ├── instances_train2017.json
+    │          ├── instances_val2017.json
+    │          ├── ......   
+    │   ├── train2017
+    │          ├── 000000000009.jpg
+    │          ├── 000000000025.jpg
+    │          ├── ......
+    │   ├── val2017
+    │          ├── 000000000139.jpg
+    │          ├── 000000000285.jpg
+    │          ├── ......             
+   ```
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+
+
+## 获取预训练模型
+
+模型脚本会自动下载预训练权重文件。若下载失败，请自行准备 `R-50.pkl` 权重文件，并修改`configs/e2e_mask_rcnn_R_50_FPN_1x.yaml`中的`MODEL.WEIGHT`的值为权重路径。
+
+# 开始训练
+
+## 训练模型
+
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机8卡训练。
+
+   - 单机8卡训练
+   
+     ```shell
+     bash test/train_full_8p.sh  --data_path=/data/xxx/ # 8卡精度
+     ```
+   --data_path参数填写数据集路径，需写到数据集的一级目录。
+
+   训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+| NAME        | FPS    | Box mAP | Segm mAP |
+| ----------- | ------ | ---------------------- | -------------- |
+ 8p-竞品V | 56 | 0.378                | 0.343        |
+ 8p-NPU-910 | 43 | 0.377                | 0.342        |
+
+
+# 公网地址说明
+无。
+
+# 版本说明
+
+## 变更
+
+2023.09.02：首次发布。
+
+## FAQ
+
+无。
+   

@@ -1,0 +1,8 @@
+ninja
+yacs
+cython
+matplotlib
+pandas
+tqdm
+sympy
+opencv-python-headless==4.6.0.66

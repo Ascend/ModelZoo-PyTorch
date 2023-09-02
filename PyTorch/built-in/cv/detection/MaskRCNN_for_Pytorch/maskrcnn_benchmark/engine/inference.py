@@ -27,6 +27,9 @@ from ..utils.comm import synchronize
 
 
 def compute_on_dataset(model, data_loader, device):
+    logger = logging.getLogger("maskrcnn_benchmark.inference")
+    all_step_eval_time = 0
+
     model.eval()
     results_dict = {}
     cpu_device = torch.device("cpu")
@@ -34,11 +37,15 @@ def compute_on_dataset(model, data_loader, device):
         images, targets, image_ids = batch
         images = images.to(device)
         with torch.no_grad():
+            one_step_eval_start_time = time.time()
             output = model(images)
+            all_step_eval_time += (time.time() - one_step_eval_start_time)
             output = [o.to(cpu_device) for o in output]
         results_dict.update(
             {img_id: result for img_id, result in zip(image_ids, output)}
         )
+    
+    logger.info("all_step_eval_time: {}".format(all_step_eval_time))
     return results_dict
 
 
