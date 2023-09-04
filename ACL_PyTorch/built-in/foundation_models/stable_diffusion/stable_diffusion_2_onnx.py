@@ -134,14 +134,14 @@ def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size: 
 def export_onnx(model_path: str, save_dir: str, batch_size:int, parallel: bool=False) -> None:
     pipeline = StableDiffusionPipeline.from_pretrained(model_path).to("cpu")
 
-    export_clip(pipeline, save_dir)
+    export_clip(pipeline, save_dir, batch_size)
 
     if parallel:
         export_unet(pipeline, save_dir, batch_size)
     else:
         export_unet(pipeline, save_dir, batch_size * 2)
 
-    export_vae(pipeline, save_dir)
+    export_vae(pipeline, save_dir, batch_size)
 
 
 def main():
