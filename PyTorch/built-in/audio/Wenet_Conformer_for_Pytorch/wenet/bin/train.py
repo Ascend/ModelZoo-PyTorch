@@ -18,11 +18,14 @@ import argparse
 import copy
 import logging
 import os
+import time
 
 import torch
+import torch_npu
 import torch.distributed as dist
 import torch.optim as optim
 import yaml
+from torch_npu.contrib import transfer_to_npu
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader
 
@@ -66,8 +69,8 @@ def get_args():
                         distributed training''')
     parser.add_argument('--ddp.dist_backend',
                         dest='dist_backend',
-                        default='nccl',
-                        choices=['nccl', 'gloo'],
+                        default='hccl',
+                        choices=['hccl'],
                         help='distributed backend')
     parser.add_argument('--ddp.init_method',
                         dest='init_method',
@@ -120,16 +123,22 @@ def get_args():
                         default='',
                         required=False,
                         help='LF-MMI dir')
+    parser.add_argument('--performence_epoch',
+                        type=int,
+                        default=-1,
+                        required=False,
+                        help='Estimated epoch')
 
     args = parser.parse_args()
     return args
 
 
 def main():
+    e2e_start_time = time.time()
     args = get_args()
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)s %(message)s')
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+    torch_npu.npu.set_device(args.gpu)
 
     # Set random seed
     torch.manual_seed(777)
@@ -206,10 +215,7 @@ def main():
     # !!!IMPORTANT!!!
     # Try to export the model by script, if fails, we should refine
     # the code to satisfy the script export requirements
-    if args.rank == 0:
-        script_model = torch.jit.script(model)
-        script_model.save(os.path.join(args.model_dir, 'init.zip'))
-    executor = Executor()
+    executor = Executor(global_start_time=e2e_start_time)
     # If specify checkpoint, load some info from checkpoint
     if args.checkpoint is not None:
         infos = load_checkpoint(model, args.checkpoint)
@@ -231,12 +237,12 @@ def main():
         writer = SummaryWriter(os.path.join(args.tensorboard_dir, exp_id))
 
     if distributed:
-        assert (torch.cuda.is_available())
         # cuda model is required for nn.parallel.DistributedDataParallel
-        model.cuda()
+        assert torch_npu.npu.is_available()
+        model.npu(args.gpu)
         model = torch.nn.parallel.DistributedDataParallel(
             model, find_unused_parameters=True)
-        device = torch.device("cuda")
+        device = torch.device("npu", args.gpu)
         if args.fp16_grad_sync:
             from torch.distributed.algorithms.ddp_comm_hooks import (
                 default as comm_hooks,
@@ -302,6 +308,8 @@ def main():
             writer.add_scalar('epoch/cv_loss', cv_loss, epoch)
             writer.add_scalar('epoch/lr', lr, epoch)
         final_epoch = epoch
+        if args.performence_epoch != -1 and args.performence == epoch:
+            break
 
     if final_epoch is not None and args.rank == 0:
         final_model_path = os.path.join(model_dir, 'final.pt')
@@ -311,4 +319,5 @@ def main():
 
 
 if __name__ == '__main__':
+    torch_npu.npu.set_compile_mode(jit_compile=False)
     main()

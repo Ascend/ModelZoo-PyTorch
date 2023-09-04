@@ -1,68 +1,140 @@
-# WeNet
+# Wenet Conformer for PyTorch
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python-Version](https://img.shields.io/badge/Python-3.7%7C3.8-brightgreen)](https://github.com/wenet-e2e/wenet)
+- [概述](#概述)
+- [准备训练环境](#准备训练环境)
+- [开始训练](#开始训练)
+- [训练结果展示](#训练结果展示)
+- [版本说明](#版本说明)
 
-[**Roadmap**](https://github.com/wenet-e2e/wenet/issues/1683)
-| [**Docs**](https://wenet-e2e.github.io/wenet)
-| [**Papers**](https://wenet-e2e.github.io/wenet/papers.html)
-| [**Runtime**](https://github.com/wenet-e2e/wenet/tree/main/runtime)
-| [**Pretrained Models**](docs/pretrained_models.md)
-| [**HuggingFace**](https://huggingface.co/spaces/wenet/wenet_demo)
-
-**We** share **Net** together.
-
-## News :fire:
-
-* 2022.12: Horizon X3 pi BPU, see https://github.com/wenet-e2e/wenet/pull/1597, Kunlun Core XPU, see https://github.com/wenet-e2e/wenet/pull/1455, Raspberry Pi, see https://github.com/wenet-e2e/wenet/pull/1477, IOS, see https://github.com/wenet-e2e/wenet/pull/1549.
-* 2022.11: TrimTail paper released, see https://arxiv.org/pdf/2211.00522.pdf
-
-## Highlights
-
-* **Production first and production ready**: The core design principle, WeNet provides full stack production solutions for speech recognition.
-* **Accurate**: WeNet achieves SOTA results on a lot of public speech datasets.
-* **Light weight**: WeNet is easy to install, easy to use, well designed, and well documented.
+# 概述
+Wenet是一款开源的、面向工业落地应用的语音识别工具包，主要特点是小而精，它不仅采用了现阶段最先进的网络设计Conformer，还用到了U2结构实现流式与非流式框架的统一。
 
 
-## Install
-please refer [doc](docs/install.md) for install.
+
+- 参考实现：
+
+  ```
+  url=https://github.com/wenet-e2e/wenet.git
+  commit_id=ac9a2612e8245ac473a17f64eea600dd7afbeb20
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/audio
+  ```
 
 
-## Discussion & Communication
+# 准备训练环境
 
-You can directly discuss on [Github Issues](https://github.com/wenet-e2e/wenet/issues).
+## 准备环境
 
-For Chinese users, you can aslo scan the QR code on the left to follow our offical account of WeNet.
-We created a WeChat group for better discussion and quicker response.
-Please scan the personal QR code on the right, and the guy is responsible for inviting you to the chat group.
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-| <img src="https://github.com/robin1001/qr/blob/master/wenet.jpeg" width="250px"> | <img src="https://github.com/robin1001/qr/blob/master/binbin.jpeg" width="250px"> |
-| ---- | ---- |
+  **表 1**  版本支持表
+
+  | Torch_Version |   三方库依赖版本    |
+  | :-----------: | :-----------------: |
+  | PyTorch 1.11  | torch_audio==0.11.0 |
+
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+
+- 安装依赖。
+
+  在模型源码包根目录下执行命令。
+
+  ```
+  pip3 install -r requirements.txt
+  ```
 
 
-## Acknowledge
+## 准备数据集
 
-1. We borrowed a lot of code from [ESPnet](https://github.com/espnet/espnet) for transformer based modeling.
-2. We borrowed a lot of code from [Kaldi](http://kaldi-asr.org/) for WFST based decoding for LM integration.
-3. We referred [EESEN](https://github.com/srvk/eesen) for building TLG based graph for LM integration.
-4. We referred to [OpenTransformer](https://github.com/ZhengkunTian/OpenTransformer/) for python batch inference of e2e models.
+1. 获取数据集。
 
-## Citations
+   用户自行下载 `aishell-1` 数据集，并将下载好的数据集放置服务器的任意目录下。该数据集包含由 400 位说话人录制的超过 170 小时的语音。数据集目录结构参考如下所示。
 
-``` bibtex
-@inproceedings{yao2021wenet,
-  title={WeNet: Production oriented Streaming and Non-streaming End-to-End Speech Recognition Toolkit},
-  author={Yao, Zhuoyuan and Wu, Di and Wang, Xiong and Zhang, Binbin and Yu, Fan and Yang, Chao and Peng, Zhendong and Chen, Xiaoyu and Xie, Lei and Lei, Xin},
-  booktitle={Proc. Interspeech},
-  year={2021},
-  address={Brno, Czech Republic },
-  organization={IEEE}
-}
+   ```
+    aishell-1
+       ├── data_aishell.tgz
+       |
+       └── resource_aishell.tgz
+   ```
 
-@article{zhang2022wenet,
-  title={WeNet 2.0: More Productive End-to-End Speech Recognition Toolkit},
-  author={Zhang, Binbin and Wu, Di and Peng, Zhendong and Song, Xingchen and Yao, Zhuoyuan and Lv, Hang and Xie, Lei and Yang, Chao and Pan, Fuping and Niu, Jianwei},
-  journal={arXiv preprint arXiv:2203.15455},
-  year={2022}
-}
-```
+   > **说明：** 
+   > 该数据集的训练过程脚本只作为一种参考示例。
+
+
+# 开始训练
+
+## 训练模型
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机8卡训练。
+   - 单机8卡训练
+
+     启动8卡训练。
+
+     ```
+     cd examples/aishell/s0/test
+     bash train_full_8p.sh --stage=起始stage --stop_stage=终止stage --data_path=/data/xxx/  # 8卡精度
+     bash train_performance_8p.sh --data_path=/data/xxx/  # 8卡性能
+     ```
+
+   模型训练脚本参数说明如下。
+
+   ```shell
+   --stage              //模型训练的起始阶段，默认为-1，即从数据下载开始启动训练。若之前数据下载、准备、特征生成等阶段已完成，可配置--stage=4开始训练。
+   --stop_stage         //模型训练的终止阶段
+   --data_path          //数据集路径
+   ```
+
+   > **说明：**
+   > 
+   > --stage <-1 ~ 5>、--stop_stage <-1 ~ 5>：控制模型训练的起始、终止阶段。模型包含 -1 ~ 5 训练阶段，其中 -1 ~ 3 为数据下载、准备、特征生成等阶段，4为模型训练，5为ASR任务评估。首次运行时请从 -1 开始，-1 ~ 3 阶段执行过一次之后，后续可以从stage 4 开始训练。
+   > 
+   > --data_path参数填写数据集路径，需要写到数据集的一级目录。
+
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
+
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+|   NAME   | Error | FPS(iters/sec) | Epochs | AMP_Type | Torch_Version |
+| :------: | :---: |:--------------:| :----: | :------: | :-----------: |
+| 8p-竞品A |   -   |     800.44     |   -    |    -     |      1.11      |
+| 8p-NPU  |   -   |     526.34     |   -    |    -     |      1.11      |
+
+**表 3** conformer result
+* Feature info: using fbank feature, dither, cmvn, online speed perturb
+* Training info: lr 0.002, batch size 18, 4 gpu, acc_grad 4, 240 epochs, dither 0.1
+* Decoding info: ctc_weight 0.5, average_num 20
+
+| decoding mode             | WER  |
+|:------:|:----:|
+| ctc greedy search        | 4.96 |
+
+# 版本说明
+
+## 变更
+
+2023.09.01：首次发布。
+
+## FAQ
+
+
+## 代码涉及公网地址
+
+代码涉及公网地址参考[public_address_statement.md](./public_address_statement.md)

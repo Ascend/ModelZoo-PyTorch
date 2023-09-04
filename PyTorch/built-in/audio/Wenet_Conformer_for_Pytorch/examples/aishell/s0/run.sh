@@ -11,8 +11,8 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
 # https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html
 # export NCCL_SOCKET_IFNAME=ens4f1
 export NCCL_DEBUG=INFO
-stage=0 # start from 0 if you need to start from data preparation
-stop_stage=5
+stage=$2 # start from 0 if you need to start from data preparation
+stop_stage=$4
 
 # The num of machines(nodes) for multi-machine training, 1 is for one machine.
 # NFS is required if num_nodes > 1.
@@ -24,7 +24,7 @@ num_nodes=1
 node_rank=0
 # The aishell dataset location, please change this to your own path
 # make sure of using absolute path. DO-NOT-USE relatvie path!
-data=/export/data/asr-data/OpenSLR/33/
+data=$6
 data_url=www.openslr.org/resources/33
 
 nj=16
@@ -48,14 +48,16 @@ train_config=conf/train_conformer.yaml
 cmvn=true
 dir=exp/conformer
 checkpoint=
+test_output_dir=$8
+performence_epoch=${10}
 
 # use average_checkpoint will get better result
 average_checkpoint=true
 decode_checkpoint=$dir/final.pt
 average_num=30
-decode_modes="ctc_greedy_search ctc_prefix_beam_search attention attention_rescoring"
+decode_modes="ctc_greedy_search"
 
-. tools/parse_options.sh || exit 1;
+. ../../../tools/parse_options.sh || exit 1;
 
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
   echo "stage -1: Data Download"
@@ -80,7 +82,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     rm data/${x}/text.org
   done
 
-  tools/compute_cmvn_stats.py --num_workers 16 --train_config $train_config \
+  ../../../tools/compute_cmvn_stats.py --num_workers 16 --train_config $train_config \
     --in_scp data/${train_set}/wav.scp \
     --out_cmvn data/$train_set/global_cmvn
 fi
@@ -90,7 +92,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
   mkdir -p $(dirname $dict)
   echo "<blank> 0" > ${dict}  # 0 is for "blank" in CTC
   echo "<unk> 1"  >> ${dict}  # <unk> must be 1
-  tools/text2token.py -s 1 -n 1 data/train/text | cut -f 2- -d" " \
+  ../../../tools/text2token.py -s 1 -n 1 data/train/text | cut -f 2- -d" " \
     | tr " " "\n" | sort | uniq | grep -a -v -e '^\s*$' | \
     awk '{print $0 " " NR+1}' >> ${dict}
   num_token=$(cat $dict | wc -l)
@@ -101,11 +103,11 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
   echo "Prepare data, prepare required format"
   for x in dev test ${train_set}; do
     if [ $data_type == "shard" ]; then
-      tools/make_shard_list.py --num_utts_per_shard $num_utts_per_shard \
+      ../../../tools/make_shard_list.py --num_utts_per_shard $num_utts_per_shard \
         --num_threads 16 data/$x/wav.scp data/$x/text \
         $(realpath data/$x/shards) data/$x/data.list
     else
-      tools/make_raw_list.py data/$x/wav.scp data/$x/text \
+      ../../../tools/make_raw_list.py data/$x/wav.scp data/$x/text \
         data/$x/data.list
     fi
   done
@@ -120,7 +122,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
   echo "$0: init method is $init_method"
   num_gpus=$(echo $CUDA_VISIBLE_DEVICES | awk -F "," '{print NF}')
   # Use "nccl" if it works, otherwise use "gloo"
-  dist_backend="gloo"
+  dist_backend="hccl"
   world_size=`expr $num_gpus \* $num_nodes`
   echo "total gpus is: $world_size"
   cmvn_opts=
@@ -136,7 +138,9 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     # Rank of each gpu/process used for knowing whether it is
     # the master of a worker.
     rank=`expr $node_rank \* $num_gpus + $i`
-    python wenet/bin/train.py --gpu $gpu_id \
+    p_start=$((0+24*gpu_id))
+    p_end=$((23+24*gpu_id))
+    taskset -c $p_start-$p_end python ../../../wenet/bin/train.py --gpu $gpu_id \
       --config $train_config \
       --data_type $data_type \
       --symbol_table $dict \
@@ -148,9 +152,10 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
       --ddp.world_size $world_size \
       --ddp.rank $rank \
       --ddp.dist_backend $dist_backend \
-      --num_workers 1 \
+      --num_workers 8 \
+      --performence_epoch $performence_epoch \
       $cmvn_opts \
-      --pin_memory
+      --pin_memory > $test_output_dir/0/train_$gpu_id.log 2>&1
   } &
   done
   wait
@@ -161,7 +166,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
   if [ ${average_checkpoint} == true ]; then
     decode_checkpoint=$dir/avg_${average_num}.pt
     echo "do model average and final checkpoint is $decode_checkpoint"
-    python wenet/bin/average_model.py \
+    python ../../../wenet/bin/average_model.py \
       --dst_model $decode_checkpoint \
       --src_path $dir  \
       --num ${average_num} \
@@ -177,7 +182,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
   {
     test_dir=$dir/test_${mode}
     mkdir -p $test_dir
-    python wenet/bin/recognize.py --gpu 0 \
+    python ../../../wenet/bin/recognize.py --gpu 0 \
       --mode $mode \
       --config $dir/train.yaml \
       --data_type $data_type \
@@ -191,7 +196,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
       --reverse_weight $reverse_weight \
       --result_file $test_dir/text \
       ${decoding_chunk_size:+--decoding_chunk_size $decoding_chunk_size}
-    python tools/compute-wer.py --char=1 --v=1 \
+    python ../../../tools/compute-wer.py --char=1 --v=1 \
       data/test/text $test_dir/text > $test_dir/wer
   } &
   done
@@ -201,7 +206,7 @@ fi
 
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
   # Export the best model you want
-  python wenet/bin/export_jit.py \
+  python ../../../wenet/bin/export_jit.py \
     --config $dir/train.yaml \
     --checkpoint $dir/avg_${average_num}.pt \
     --output_file $dir/final.zip \
@@ -214,21 +219,21 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ]; then
   unit_file=$dict
   mkdir -p data/local/dict
   cp $unit_file data/local/dict/units.txt
-  tools/fst/prepare_dict.py $unit_file ${data}/resource_aishell/lexicon.txt \
+  ../../../tools/fst/prepare_dict.py $unit_file ${data}/resource_aishell/lexicon.txt \
     data/local/dict/lexicon.txt
   # 7.2 Train lm
   lm=data/local/lm
   mkdir -p $lm
-  tools/filter_scp.pl data/train/text \
+  ../../../tools/filter_scp.pl data/train/text \
     $data/data_aishell/transcript/aishell_transcript_v0.8.txt > $lm/text
   local/aishell_train_lms.sh
   # 7.3 Build decoding TLG
-  tools/fst/compile_lexicon_token_fst.sh \
+  ../../../tools/fst/compile_lexicon_token_fst.sh \
     data/local/dict data/local/tmp data/local/lang
-  tools/fst/make_tlg.sh data/local/lm data/local/lang data/lang_test || exit 1;
+  ../../../tools/fst/make_tlg.sh data/local/lm data/local/lang data/lang_test || exit 1;
   # 7.4 Decoding with runtime
   chunk_size=-1
-  ./tools/decode.sh --nj 16 \
+  ../../../tools/decode.sh --nj 16 \
     --beam 15.0 --lattice_beam 7.5 --max_active 7000 \
     --blank_skip_thresh 0.98 --ctc_weight 0.5 --rescoring_weight 1.0 \
     --chunk_size $chunk_size \
@@ -249,7 +254,7 @@ if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ]; then
   required="data/local/hlg/HLG.pt data/local/hlg/words.txt"
   for f in $required; do
     if [ ! -f $f ]; then
-      tools/k2/make_hlg.sh data/local/dict/ data/local/lm/ data/local/hlg
+      ../../../tools/k2/make_hlg.sh data/local/dict/ data/local/lm/ data/local/hlg
       break
     fi
   done
@@ -263,7 +268,7 @@ if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ]; then
   {
     test_dir=$dir/test_${mode}
     mkdir -p $test_dir
-    python wenet/bin/recognize.py --gpu 0 \
+    python ../../../wenet/bin/recognize.py --gpu 0 \
       --mode $mode \
       --config $dir/train.yaml \
       --data_type $data_type \
@@ -280,7 +285,7 @@ if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ]; then
       --r_decoder_scale $r_decoder_scale \
       --result_file $test_dir/text \
       ${decoding_chunk_size:+--decoding_chunk_size $decoding_chunk_size}
-    python tools/compute-wer.py --char=1 --v=1 \
+    python ../../../tools/compute-wer.py --char=1 --v=1 \
       data/test/text $test_dir/text > $test_dir/wer
   }
   done
@@ -292,7 +297,7 @@ fi
 # Actually, you can achieve even lower cer by tuning lm_scale/decoder_scale/r_decoder_scale
 if [ ${stage} -le 9 ] && [ ${stop_stage} -ge 9 ]; then
   # 9.1 Build token level bigram fst for LF-MMI training
-  tools/k2/prepare_mmi.sh data/train/ data/dev data/local/lfmmi
+  ../../../tools/k2/prepare_mmi.sh data/train/ data/dev data/local/lfmmi
 
   # 9.2 Run LF-MMI training from stage 4, with below new args
   # --lfmmi_dir data/local/lfmmi
