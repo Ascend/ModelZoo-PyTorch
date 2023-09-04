@@ -922,7 +922,7 @@ class Trainer(object):
                         sample["target"], device=self.last_device
                     )
             else:
-                sample = utils.move_to_cuda(sample, self.device)
+                sample = utils.move_to_cuda(sample, torch.npu.current_device())
 
         def apply_half(t):
             if t.dtype is torch.float32:
