@@ -148,7 +148,6 @@ do
 	    --weight-decay 0.0001 \
 	    --source-lang de \
 	    --target-lang en \
-        --batch-size 32 \
 	    --decoder-attention-heads 4 \
 	    --decoder-ffn-embed-dim 1024 \
 	    --encoder-attention-heads 4 \
