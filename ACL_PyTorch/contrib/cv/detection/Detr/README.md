@@ -287,7 +287,10 @@ DETR是将目标检测视为一个集合预测问题（集合其实和anchors的
 - Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.626
 - Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.805
 
-  map=41.6>42.0*0.99
+|   Model   |   数据集    |  精度(MAP) |
+| --------- | --------------- |  --------------  |
+|   Detr    |        coco        |     41.6      |
+  
 
 # 公网地址说明
 代码涉及公网地址参考 public_address_statement.md

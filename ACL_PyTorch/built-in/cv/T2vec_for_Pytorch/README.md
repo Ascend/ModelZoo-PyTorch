@@ -102,7 +102,7 @@ t2vec是一种基于深度表征学习的轨迹相似性计算方法，通过学
 
 1. 获取原始数据集。
 
-   该模型使用Porto数据集进行测试。该步骤会生成预处理步骤所需要的h5文件和参数文件：
+   该模型使用Proto数据集进行测试。该步骤会生成预处理步骤所需要的h5文件和参数文件：
 
    ```
    wget http://archive.ics.uci.edu/ml/machine-learning-databases/00339/train.csv.zip

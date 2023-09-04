@@ -62,10 +62,10 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/Densenet121_Pytorch_Infer">   DenseNet121 </a>
         </td>
         <td>ImageNet</td>
-    <td>71.43%</td>
+    <td>74.43%</td>
         <td>91.96%</td>
     <td></td>
-    <td>2368(bs8)</td>
+    <td>2195(bs8)</td>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -89,7 +89,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>77.31%</td>
     <td>93.46%</td>
         <td></td>
-    <td>2736(bs8)</td>
+    <td>2388(bs8)</td>
     <td>bs x 3 x 299 x2 99</td>
     </tr>
     <tr>
@@ -100,8 +100,8 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>coco</td>
         <td></td>
         <td></td>
-        <td>32.739%</td>
-        <td>13(bs1)</td>
+        <td>53.7149%</td>
+        <td>22.06(bs1)</td>
         <td>1 x 3 x 1344 x 1344</td>
     </tr>
     <tr>
@@ -113,7 +113,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>69.52%</td>
         <td>89.05%</td>
     <td></td>
-    <td>16124.099(bs32)</td>
+    <td>13990(bs32)</td>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -197,7 +197,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>80.34%</td>
         <td></td>
     <td></td>
-    <td>2094(bs4)</td>
+    <td>2135(bs4)</td>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -209,7 +209,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>67.71%</td>
         <td></td>
     <td></td>
-    <td>8747(bs16)</td>
+    <td>7847(bs16)</td>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -221,7 +221,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>69.33%</td>
         <td>88.34%</td>
     <td></td>
-    <td>7765(bs32)</td>
+    <td>7736(bs32)</td>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -245,7 +245,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>71.28%</td>
         <td>90.38%</td>
     <td></td>
-    <td>1508(bs16)</td>
+    <td>1424(bs16)</td>
     <td>bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -296,7 +296,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>WIDER_FACE</td>
     <td></td>
-        <td>91.02%</td>
+        <td>hard:74.55%<br>easy:92.24%<br>Medium:91.02%</td>
         <td></td>
     <td>439.9(bs1)</td>
     <td>bs x 3 x 800 x 800</td>
@@ -382,7 +382,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>40.4%</td>
         <td></td>
         <td></td>
-    <td>945.99(bs32)</td>
+    <td>887.45(bs4)</td>
     <td>bs x 3 x 368 x 6406</td>
     </tr>
     <tr>
@@ -393,7 +393,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>ICDAR2015</td>
     <td></td>
         <td></td>
-        <td>80.5%</td>
+        <td>acc:80.5%<br>recall:63.9%</td>
     <td>70(bs1)</td>
     <td>bs x 3 x 704 x 1216</td>
     </tr>
@@ -442,7 +442,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td></td>
         <td>23%</td>
         <td></td>
-    <td>1550(bs8)</td>
+    <td>1324(bs8)</td>
     <td>bs x 3 x 300 x 300</td>
     </tr>
     <tr>
@@ -452,7 +452,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>coco</td>
     <td></td>
-        <td>63.3%</td>
+        <td>63.30%</td>
         <td></td>
     <td>219(bs4)</td>
     <td>bs x 3 x 640 x 640</td>
@@ -466,7 +466,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td></td>
         <td>60.3%</td>
         <td></td>
-    <td>178(bs4)</td>
+    <td>171.15(bs8)</td>
     <td>bs x 3 x 416 x 416</td>
     </tr>
     <tr>
@@ -539,7 +539,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>coco</td>
     <td>34%</td>
         <td></td>
-    <td>17(bs1)</td>
+    <td>22(bs1)</td>
     <td>1 x 3 x 800 x 1216</td>
     </tr>
     <tr>
@@ -550,7 +550,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>carvana</td>
     <td>98.6%</td>
         <td></td>
-    <td>78(bs1)</td>
+    <td>75(bs1)</td>
     <td>bs x 3 x 572 x 572</td>
 </table>
 
@@ -575,7 +575,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>celeba</td>
         <td></td>
-    <td>1281(bs8)</td>
+    <td>1186(bs8)</td>
         <td></td>
     <td nowrap="nowrap">bs x 3 x 128 x 128 <br> bs x 5</td>
     </tr>
@@ -586,8 +586,8 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>代码仓提供</td>
         <td></td>
-    <td></td>
-        <td>19(bs1)</td>
+    <td>39.81(bs1)</td>
+        <td></td>
     <td nowrap="nowrap">1 x 512</td>
 </table>
 
@@ -611,9 +611,9 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/pose_estimation/HRNet"> HRNet </a>
         </td>
         <td>ImageNet</td>
-    <td>76.45%</td>
+    <td>76.46%</td>
         <td>93.14%</td>
-    <td>1673(bs16)</td>
+    <td>2036(bs16)</td>
     <td nowrap="nowrap">bs x 3 x 224 x 224</td>
     </tr>
     <tr>
@@ -681,8 +681,8 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/tracking/Deepsort_for_Pytorch">  Deepsort </a>
         </td>
         <td>MOT16</td>
-    <td>30.1%</td>
-    <td>yolov3:467(bs1) <br> deep:2950(bs1)</td>
+    <td>30.0%</td>
+    <td>yolov3:464.29(bs1) <br> deep:2950(bs1)</td>
     <td nowrap="nowrap">bs x 3 x 416 x 416</td>
     </tr>
     <tr>
@@ -691,7 +691,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/T2vec_for_Pytorch">  T2Vec </a>
         </td>
         <td>Proto</td>
-    <td>/</td>
+    <td>(精度数据参考链接)</td>
     <td>9.85ms</td>
     <td nowrap="nowrap">动态输入</td>
 </table>
@@ -718,7 +718,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>YFCC100M</td>
     <td>75.04%</td>
         <td>97.85%</td>
-    <td>31.10s(e2e)</td>
+    <td>5.75s(e2e)</td>
     <td nowrap="nowrap">1 x 1 x 1200 x 1600</td>
 </table>
 
@@ -744,7 +744,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>sthv2</td>
     <td>61.87%</td>
         <td>87.21%</td>
-    <td>20(bs1)</td>
+    <td>20.77(bs1)</td>
     <td nowrap="nowrap">bs x 48 x 3 x 256 x 256</td>
 </table>
 
@@ -826,7 +826,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100064
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/TDNN_for_Pytorch">  TDNN </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/audio/TDNN_for_Pytorch">  TDNN-buildin </a>
         </td>
         <td>Mini Librispeech</td>
     <td></td>
@@ -868,7 +868,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>SST-2</td>
         <td>92.8%</td>
-    <td>1327(bs8)</td>
+    <td>1350(bs16)</td>
     <td nowrap="nowrap">bs x 128</td>
     </tr>
     <tr>
@@ -897,7 +897,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/textcnn">   TextCNN </a>
         </td>
         <td>THUCNews</td>
-        <td>90.47%</td>
+        <td>top1acc:90.47%<br>top5acc:99.35%</td>
     <td>29237(bs64)</td>
     <td nowrap="nowrap">bs x 32</td>
     </tr>
@@ -907,7 +907,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/Bert_Uncased_Huggingface">  Bert-Uncased-Huggingface </a>
         </td>
         <td>SQuAD 1.1</td>
-        <td>88.2%</td>
+        <td>F1:88.2%<br>EM:80.84%</td>
     <td>328.64(bs4)</td>
     <td nowrap="nowrap">bs x 384</td>
     </tr>
@@ -928,7 +928,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>sacrebleu</td>
         <td></td>
-    <td>35(bs1)</td>
+    <td>encoder:224.376(bs1)<br>der_first_step:82.827(bs1)<br>decoder:223.848(bs1)</td>
     <td nowrap="nowrap">1 x 90</td>
     </tr>
     <tr>
@@ -937,8 +937,8 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/nlp/roberta">  RoBERTa </a>
         </td>
         <td>SST-2</td>
-        <td>94.7%</td>
-    <td>996(bs64)</td>
+        <td>94.8%</td>
+    <td>1473(bs32)</td>
     <td nowrap="nowrap">bs x 70</td>
     </tr>
     <tr>
@@ -956,7 +956,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td><td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/nlp/BiLSTM_CRF_PyTorch">  BiLSTM-CRF </a></td>
         <td> CLUE_NER </td>
-        <td> f1=0.714 </td>
+        <td> acc=73.5%<br>recall=69.3%<br>f1=71.4%</td>
         <td> 961(bs32)</td>
         <td> ids:bs,50;mask:bs,50 </td>
     </tr>
@@ -1003,10 +1003,10 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/CRNN/CRNN_Sierkinhane_for_Pytorch"> CRNN-ocr </a>
         </td>
         <td>原仓自带的数据集</td>
-    <td>62.2%</td>
+    <td>78.37%</td>
     <td></td>
         <td></td>
-    <td>6011(bs64)</td>
+    <td>7969(bs64)</td>
         <td></td>
     <td>bs x 1 x 32 x 160</td>
     </tr>
@@ -2556,7 +2556,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td></td>
         <td></td>
         <td></td>
-    <td>15(bs1)</td>
+    <td>14.84(bs1)</td>
         <td></td>
     <td>1 x 3 x 1216 x 1216</td>
     </tr>
@@ -4433,14 +4433,14 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100307
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/video_understanding/I3D_Nonlocal">  I3D-Nonlocal </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/I3D_nonlocal">  I3D-Nonlocal </a>
         </td>
         <td>kinetics400</td>
         <td></td>
         <td></td>
-        <td>70.07%</td>
-        <td></td>
-    <td>14(bs1)</td>
+        <td>70.03%</td>
+        <td>89.51%</td>
+    <td>14.39(bs1)</td>
     <td nowrap="nowrap">bs x 10 x 3 x 32 x 256 x 256</td>
     </tr>
     <tr>
@@ -4642,7 +4642,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100319
         </td><td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/tdnn">  TDNN </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/audio/tdnn">  TDNN-contrib </a>
         </td>
         <td>librispeech</td>
         <td></td>
