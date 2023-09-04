@@ -85,6 +85,10 @@ class AQUILAAttention(nn.Module):
         super().__init__()
 
         self.config = config 
+        self.use_triangle_attn = self.config.use_triangle_attn
+        self.block_size = 512
+        self.mask_tmp_initialed = False
+        self.mask_tmp_groups = []
         if os.getenv("ENV_TYPE") == 'deepspeed+mpu':
             self.n_local_heads = config.n_heads // get_model_parallel_world_size()
             self.head_dim = config.dim // config.n_heads
@@ -205,6 +209,54 @@ class AQUILAAttention(nn.Module):
             xq = xq.transpose(1, 2).contiguous()
             keys = keys.transpose(1, 2).contiguous()
             values = values.transpose(1, 2).contiguous()
+            if self.use_triangle_attn:
+                output_size = (values.size(0), values.size(1), values.size(2), values.size(3))
+                np = values.size(1)
+                bsz, head_num, sequence_len, head_dim = keys.shape
+                assert self.block_size <= sequence_len
+                sparse_groups = sequence_len // self.block_size
+                context_layer = None
+                alpha = 1 / math.sqrt(self.head_dim)
+                xq *= alpha
+                q_tmp_layers_tuple = torch.chunk(xq, sparse_groups, 2)
+                q_tmp_layers = []
+                for i in range(sparse_groups):
+                    q_tmp_layers.append(q_tmp_layers_tuple[i].view(q_tmp_layers_tuple[i].size(0) * q_tmp_layers_tuple[i].size(1), q_tmp_layers_tuple[
+                                                                       i].size(2), -1))
+                keys = keys.view(keys.size(0) * keys.size(1),  keys.size(2), -1).transpose(1,2).contiguous()
+                values = values.view(values.size(0) * values.size(1) , values.size(2), -1)
+                list_tmp = []
+                for i in range(sparse_groups):
+                    q_begin = i * self.block_size
+                    q_end = (i + 1) * self.block_size
+                    kv_begin = 0
+                    kv_end = (i + 1) * self.block_size
+                    q_tmp = q_tmp_layers[i]
+                    if i == sparse_groups - 1:
+                        k_tmp = keys
+                        v_tmp = values
+                    else:
+                        k_tmp = keys[ :, :, kv_begin:kv_end].contiguous()
+                        v_tmp = values[ :, kv_begin:kv_end, :].contiguous()
+                    cur_sim = torch.bmm(q_tmp, k_tmp)
+                    if not self.mask_tmp_initialed:
+                        mask_tmp = mask[:, :, q_begin:q_end, kv_begin:kv_end]
+                        self.mask_tmp_groups.append(mask_tmp.contiguous())
+                    else:
+                        mask_tmp = self.mask_tmp_groups[i]
+                    attention_scores = cur_sim.view(bsz, np, cur_sim.size(1), -1)
+                    attention_scores = torch.clamp(attention_scores, min=-1024., max=1024.)
+                    probs = torch_npu.npu_scaled_masked_softmax(attention_scores, mask_tmp, 1.0)
+                    probs = probs.view(bsz * np, probs.size(2), -1)
+                    context_layer_tmp = torch.bmm(probs, v_tmp)
+                    list_tmp.append(context_layer_tmp)
+                context_layer = torch.cat(list_tmp, 1)
+                context_layer = context_layer.view(*output_size)
+                context_layer = context_layer.transpose(1, 2).contiguous().view(bsz, seqlen, -1)
+
+                self.mask_tmp_initialed = True
+
+                return self.wo(context_layer)
             scores = torch.matmul(xq, keys.transpose(2, 3)) / math.sqrt(self.head_dim)
             ## for corner cases, especially in the last layer and dtype of fp16
             scores = torch.clamp(scores, min=-1024., max=1024.)

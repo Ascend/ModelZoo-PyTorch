@@ -12,7 +12,7 @@ elif os.getenv('ENV_TYPE') == 'deepspeed':
     from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
 else:
     from torch.utils.checkpoint import checkpoint
-import os
+import os 
 from flagai.model.base_model import BaseModel
 
 class AQUILAConfig(dict):
@@ -33,6 +33,7 @@ class AQUILAConfig(dict):
         initializer_range=0.02,
         checkpoint_activations=False,
         ckpoint_layer=-1,
+        use_triangle_attn=False,
         norm_eps=1e-6,
         use_cache=False,
         flash_atten=False,
@@ -62,6 +63,7 @@ class AQUILAConfig(dict):
 
         self.initializer_range = initializer_range
         self.checkpoint_activations = checkpoint_activations
+        self.use_triangle_attn = use_triangle_attn
 
         self.norm_eps = norm_eps
         self.use_cache = use_cache
