@@ -31,6 +31,7 @@ from datasets.dataset_factory import get_dataset
 from trains.train_factory import train_factory
 from datasets.sample.multi_pose import Multiposebatch
 from apex import amp
+import apex
 import torch.npu
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -76,9 +77,9 @@ def main(opt, qtepoch=[0,]):
           checkpoint['state_dict'] = {k.replace('module.', ''): v for k, v in checkpoint['state_dict'].items()}
       model.load_state_dict(checkpoint['state_dict'], strict=False)
 
-  optimizer = torch.optim.Adam(model.parameters(), opt.lr)
+  optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), opt.lr)
   if not opt.use_fp32:
-    model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0)
+    model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0,combine_grad=True)
   start_epoch = 0
   if opt.load_model != '':
     model, optimizer, start_epoch = load_model(
