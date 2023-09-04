@@ -179,6 +179,7 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0, ran
         data_loader = torch.utils.data.DataLoader(
             dataset,
             num_workers=num_workers,
+            pin_memory=True,
             batch_sampler=batch_sampler,
             collate_fn=collator,
         )
@@ -187,5 +188,5 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0, ran
         # during training, a single (possibly concatenated) data_loader is returned
         assert len(data_loaders) == 1
         iterations_per_epoch = epoch_size // images_per_batch + 1
-        return data_loaders[0], iterations_per_epoch
+        return data_loaders[0]
     return data_loaders

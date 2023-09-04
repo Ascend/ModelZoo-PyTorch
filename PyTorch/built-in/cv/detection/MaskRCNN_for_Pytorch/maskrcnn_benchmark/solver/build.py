@@ -13,6 +13,8 @@
 # limitations under the License.
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
+import torch_npu
+import apex
 
 from .lr_scheduler import WarmupMultiStepLR
 
@@ -29,7 +31,7 @@ def make_optimizer(cfg, model):
             weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
         params += [{"params": [value], "lr": lr, "weight_decay": weight_decay}]
 
-    optimizer = torch.optim.SGD(params, lr, momentum=cfg.SOLVER.MOMENTUM)
+    optimizer = apex.optimizers.NpuFusedSGD(params, lr, momentum=cfg.SOLVER.MOMENTUM)
     return optimizer
 
 

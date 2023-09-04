@@ -22,8 +22,14 @@ from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:sk
 
 import argparse
 import os
+import time
 
 import torch
+import torch_npu
+import apex
+torch.npu.set_compile_mode(jit_compile=False)
+torch.npu.config.allow_internal_format = False
+from torch_npu.contrib import transfer_to_npu
 from maskrcnn_benchmark.config import cfg
 from maskrcnn_benchmark.data import make_data_loader
 from maskrcnn_benchmark.solver import make_lr_scheduler
@@ -47,6 +53,9 @@ def train(cfg, local_rank, distributed):
     optimizer = make_optimizer(cfg, model)
     scheduler = make_lr_scheduler(cfg, optimizer)
 
+    if cfg.MODEL.DEVICE != "cpu":
+        model, optimizer = apex.amp.initialize(model, optimizer, loss_scale=1024, opt_level="O1")
+
     if distributed:
         model = torch.nn.parallel.DistributedDataParallel(
             model, device_ids=[local_rank], output_device=local_rank,
@@ -56,6 +65,7 @@ def train(cfg, local_rank, distributed):
 
     arguments = {}
     arguments["iteration"] = 0
+    arguments["save_checkpoints"] = cfg.SAVE_CHECKPOINTS
 
     output_dir = cfg.OUTPUT_DIR
 
@@ -122,6 +132,8 @@ def test(cfg, model, distributed):
 
 
 def main():
+    e2e_start_time = time.time()
+
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
     parser.add_argument(
         "--config-file",
@@ -177,11 +189,20 @@ def main():
         logger.info(config_str)
     logger.info("Running with config:\n{}".format(cfg))
 
+    all_step_train_eval_start_time = time.time()
     model = train(cfg, args.local_rank, args.distributed)
 
     if not args.skip_test:
         test(cfg, model, args.distributed)
+    all_step_train_eval_time = time.time() - all_step_train_eval_start_time
+    e2e_total_time = time.time() - e2e_start_time
+    total_training_samples = cfg.SOLVER.MAX_ITER * (cfg.SOLVER.IMS_PER_BATCH // num_gpus)
 
+    logger.info("==========================================")
+    logger.info("all_step_train_eval_time: {:.6f}".format(all_step_train_eval_time))
+    logger.info("all_step_train_eval_time_fps: {:.6f}".format(total_training_samples / all_step_train_eval_time))
+    logger.info("E2E time: {:.6f}".format(e2e_total_time))
+    logger.info("==========================================")
 
 if __name__ == "__main__":
     main()

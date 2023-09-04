@@ -17,8 +17,9 @@ import logging
 import time
 
 import torch
+import torch_npu
 import torch.distributed as dist
-
+from apex import amp
 from maskrcnn_benchmark.utils.comm import get_world_size, is_main_process
 from maskrcnn_benchmark.utils.metric_logger import MetricLogger
 
@@ -74,8 +75,12 @@ def do_train(
     start_training_time = time.time()
     end = time.time()
 
-    for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
+    all_train_samples = 0
+    all_step_train_time = 0
+    one_step_train_start_time = time.time()
 
+    for iteration, (images, targets, _) in enumerate(data_loader, start_iter):
+        batch_size = len(targets)
         if per_iter_start_callback_fn is not None:
             per_iter_start_callback_fn(iteration=iteration)
 
@@ -97,10 +102,18 @@ def do_train(
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
         meters.update(loss=losses_reduced, **loss_dict_reduced)
 
-        losses.backward()
+        with amp.scale_loss(losses, optimizer) as scaled_losses:
+            scaled_losses.backward()
 
         optimizer.step()
         optimizer.zero_grad()
+
+        one_step_train_cost_time = time.time() - one_step_train_start_time
+        all_train_samples += batch_size
+        all_step_train_time += one_step_train_cost_time
+        cur_step_train_fps = batch_size / one_step_train_cost_time
+        average_train_fps = all_train_samples / all_step_train_time
+        one_step_train_start_time = time.time()
 
         batch_time = time.time() - end
         end = time.time()
@@ -118,6 +131,9 @@ def do_train(
                         "{meters}",
                         "lr: {lr:.6f}",
                         "max mem: {memory:.0f}",
+                        "all_step_train_time: {all_step_train_time:.6f}",
+                        "cur_step_train_fps: {cur_step_train_fps:.6f}",
+                        "average_train_fps: {average_train_fps:.6f}"
                     ]
                 ).format(
                     eta=eta_string,
@@ -125,6 +141,9 @@ def do_train(
                     meters=str(meters),
                     lr=optimizer.param_groups[0]["lr"],
                     memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                    all_step_train_time=all_step_train_time,
+                    cur_step_train_fps=cur_step_train_fps,
+                    average_train_fps=average_train_fps
                 )
             )
         if iteration % checkpoint_period == 0 and arguments["save_checkpoints"]:

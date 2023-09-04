@@ -16,7 +16,10 @@ import torch
 
 from .bounding_box import BoxList
 
-from maskrcnn_benchmark.layers import nms as _box_nms
+import torchvision
+import torchvision_npu
+from torchvision.ops import nms as _box_nms
+import torch_npu
 
 
 def boxlist_nms(boxlist, nms_thresh, max_proposals=-1, score_field="scores"):
@@ -81,23 +84,11 @@ def boxlist_iou(boxlist1, boxlist2):
         raise RuntimeError(
                 "boxlists should have same image size, got {}, {}".format(boxlist1, boxlist2))
 
-    N = len(boxlist1)
-    M = len(boxlist2)
-
-    area1 = boxlist1.area()
-    area2 = boxlist2.area()
-
-    box1, box2 = boxlist1.bbox, boxlist2.bbox
-
-    lt = torch.max(box1[:, None, :2], box2[:, :2])  # [N,M,2]
-    rb = torch.min(box1[:, None, 2:], box2[:, 2:])  # [N,M,2]
-
+    box1, box2 = boxlist1.bbox.clone(), boxlist2.bbox.clone()
     TO_REMOVE = 1
-
-    wh = (rb - lt + TO_REMOVE).clamp(min=0)  # [N,M,2]
-    inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
-
-    iou = inter / (area1[:, None] + area2 - inter)
+    box2[:, 2:] += TO_REMOVE
+    box1[:, 2:] += TO_REMOVE
+    iou = torch_npu.npu_ptiou(box2.float(), box1.float())
     return iou
 
 

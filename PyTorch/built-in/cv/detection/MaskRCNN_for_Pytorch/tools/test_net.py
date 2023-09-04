@@ -20,6 +20,11 @@ import argparse
 import os
 
 import torch
+import torch_npu
+import apex
+torch.npu.set_compile_mode(jit_compile=False)
+torch.npu.config.allow_internal_format = False
+from torch_npu.contrib import transfer_to_npu
 from maskrcnn_benchmark.config import cfg
 from maskrcnn_benchmark.data import make_data_loader
 from maskrcnn_benchmark.engine.inference import inference
