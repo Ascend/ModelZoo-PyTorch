@@ -57,6 +57,7 @@ from torch_npu.optim import NpuFusedAdamW
 from torch_npu.contrib import transfer_to_npu
 from megatron_npu.adaptor_optimizer_optimizer import AdamW
 
+
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.17.0")
 
@@ -65,6 +66,7 @@ logger = get_logger(__name__, log_level="INFO")
 DATASET_NAME_MAPPING = {
     "lambdalabs/pokemon-blip-captions": ("image", "text"),
 }
+
 
 
 def log_validation(vae, text_encoder, tokenizer, unet, args, accelerator, weight_dtype, epoch):
@@ -453,7 +455,8 @@ def main():
 
     if args.without_jit:
         torch_npu.npu.set_compile_mode(jit_compile=False)
-
+    else:
+        torch_npu.npu.set_compile_mode(jit_compile=True)
 
     if args.non_ema_revision is not None:
         deprecate(
