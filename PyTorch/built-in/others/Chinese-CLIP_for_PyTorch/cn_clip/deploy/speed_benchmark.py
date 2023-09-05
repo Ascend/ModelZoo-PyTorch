@@ -5,6 +5,10 @@ This script runs to compare the inference speed between Pytorch (CPU/GPU), ONNX 
 
 import argparse
 import torch
+
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from PIL import Image
 import cn_clip.clip as clip
 from cn_clip.clip.utils import create_model, _MODEL_INFO, image_transform
