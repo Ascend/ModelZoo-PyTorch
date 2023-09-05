@@ -11,6 +11,10 @@ import json
 import numpy as np
 import torch
 
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
