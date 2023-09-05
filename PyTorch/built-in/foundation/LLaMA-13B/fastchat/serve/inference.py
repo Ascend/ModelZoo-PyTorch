@@ -19,6 +19,7 @@ from typing import Optional
 import warnings
 
 import torch
+import torch_npu
 
 try:
     from transformers import (
