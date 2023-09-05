@@ -1,4 +1,16 @@
-    
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import time
 import wandb
 import os
@@ -24,6 +36,7 @@ class MPERunner(Runner):
         episodes = int(self.num_env_steps) // self.episode_length // self.n_rollout_threads
 
         for episode in range(episodes):
+            ep_start = time.time()
             if self.use_linear_lr_decay:
                 for agent_id in range(self.num_agents):
                     self.trainer[agent_id].policy.lr_decay(episode, episodes)
@@ -46,7 +59,8 @@ class MPERunner(Runner):
             
             # post process
             total_num_steps = (episode + 1) * self.episode_length * self.n_rollout_threads
-            
+            current_num_steps = self.episode_length * self.n_rollout_threads
+
             # save model
             if (episode % self.save_interval == 0 or episode == episodes - 1):
                 self.save()
@@ -54,15 +68,19 @@ class MPERunner(Runner):
             # log information
             if episode % self.log_interval == 0:
                 end = time.time()
-                print("\n Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}.\n"
-                        .format(self.all_args.scenario_name,
+                time_stamp = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(end))
+                print("\n{} Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}, current FPS {}.\n"
+                        .format(time_stamp,
+                                self.all_args.scenario_name,
                                 self.algorithm_name,
                                 self.experiment_name,
                                 episode,
                                 episodes,
                                 total_num_steps,
                                 self.num_env_steps,
-                                int(total_num_steps / (end - start))))
+                                int(total_num_steps / (end - start)),
+                                int(current_num_steps / (end - ep_start))
+                                ))
 
                 if self.env_name == "MPE":
                     for agent_id in range(self.num_agents):
@@ -77,7 +95,27 @@ class MPERunner(Runner):
 
             # eval
             if episode % self.eval_interval == 0 and self.use_eval:
-                self.eval(total_num_steps)
+                _ = self.eval(total_num_steps)
+
+            if episode == episodes-1:
+                end = time.time()
+                time_stamp = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(end))
+                print("\n{} Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}, current FPS {}.\n"
+                      .format(time_stamp,
+                              self.all_args.scenario_name,
+                              self.algorithm_name,
+                              self.experiment_name,
+                              episode,
+                              episodes,
+                              total_num_steps,
+                              self.num_env_steps,
+                              int(total_num_steps / (end - start)),
+                              int(current_num_steps / (end - ep_start))
+                              ))
+                print('total Elapsed time: ', end - start)
+                if self.use_eval:
+                    eval_infos = self.eval(total_num_steps)
+                    print("Eval average episode rewards of agent: " + str(eval_infos[-1]['eval_average_episode_rewards']))
 
     def warmup(self):
         # reset env
@@ -232,9 +270,11 @@ class MPERunner(Runner):
         for agent_id in range(self.num_agents):
             eval_average_episode_rewards = np.mean(np.sum(eval_episode_rewards[:, :, agent_id], axis=0))
             eval_train_infos.append({'eval_average_episode_rewards': eval_average_episode_rewards})
-            print("eval average episode rewards of agent%i: " % agent_id + str(eval_average_episode_rewards))
+            time_stamp = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
+            print(f"{time_stamp} eval average episode rewards of agent{agent_id}: " + str(eval_average_episode_rewards))
 
-        self.log_train(eval_train_infos, total_num_steps)  
+        self.log_train(eval_train_infos, total_num_steps)
+        return eval_train_infos
 
     @torch.no_grad()
     def render(self):        

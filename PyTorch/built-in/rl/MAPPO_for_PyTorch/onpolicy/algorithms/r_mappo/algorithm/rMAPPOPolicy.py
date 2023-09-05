@@ -1,4 +1,18 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import torch
+import torch_npu
 from onpolicy.algorithms.r_mappo.algorithm.r_actor_critic import R_Actor, R_Critic
 from onpolicy.utils.util import update_linear_schedule
 
@@ -28,13 +42,13 @@ class R_MAPPOPolicy:
         self.actor = R_Actor(args, self.obs_space, self.act_space, self.device)
         self.critic = R_Critic(args, self.share_obs_space, self.device)
 
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),
-                                                lr=self.lr, eps=self.opti_eps,
-                                                weight_decay=self.weight_decay)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(),
-                                                 lr=self.critic_lr,
-                                                 eps=self.opti_eps,
-                                                 weight_decay=self.weight_decay)
+        self.actor_optimizer = torch_npu.optim.NpuFusedAdam(self.actor.parameters(),
+                                                            lr=self.lr, eps=self.opti_eps,
+                                                            weight_decay=self.weight_decay)
+        self.critic_optimizer = torch_npu.optim.NpuFusedAdam(self.critic.parameters(),
+                                                             lr=self.critic_lr,
+                                                             eps=self.opti_eps,
+                                                             weight_decay=self.weight_decay)
 
     def lr_decay(self, episode, episodes):
         """
