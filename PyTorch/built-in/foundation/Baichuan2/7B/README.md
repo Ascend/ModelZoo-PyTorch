@@ -45,7 +45,7 @@ Baichuan2-7B 是由百川智能开发的一个开源可商用的大规模预训�
 - 安装依赖
 
   ```shell
-pip3 install --upgrade pip
+  pip3 install --upgrade pip
   pip3 install einops sympy regex decorator scipy setuptools-scm prompt-toolkit attrs accelerate sentencepiece transformers==4.28.1
   ```
   
