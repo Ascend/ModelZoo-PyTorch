@@ -271,8 +271,9 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 执行下列命令以完成模型推理（基于单NPU，推理13B模型大约需要28GB显存，推理7B模型大约需要14G显存）。
 
   ```
-  python3 -m fastchat.serve.cli --model-path path/to/FastChat/7B-vicuna --num-gpus 1
-  python3 -m fastchat.serve.cli --model-path path/to/FastChat/13B-vicuna --num-gpus 1
+  source /usr/local/Ascend/ascend_toolkit/set_env.sh
+  python3 -m fastchat.serve.cli --model-path path/to/FastChat/7B-vicuna --num-gpus 1 --conv-template conv_one_shot
+  python3 -m fastchat.serve.cli --model-path path/to/FastChat/13B-vicuna --num-gpus 1 --conv-template conv_one_shot
   ```
 
 # 版本说明

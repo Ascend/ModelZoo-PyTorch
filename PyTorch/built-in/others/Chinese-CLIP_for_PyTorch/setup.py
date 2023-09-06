@@ -4,7 +4,7 @@ import pkg_resources
 from setuptools import setup, find_packages
 
 packages = find_packages(exclude=["tests*"])
-with open('README_En.md', 'r', encoding='utf-8') as fp:
+with open('README.md', 'r', encoding='utf-8') as fp:
     long_description = fp.read()
 setup(
     name="cn_clip",

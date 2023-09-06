@@ -8,6 +8,10 @@ from time import gmtime, strftime
 import importlib.util
 
 import torch
+
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from torch import optim
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -131,8 +135,8 @@ def main():
 
     # To make compatible with torch version <= 1.8.0, set find_unused_parameters to True
     # In other cases, set find_unused_parameters to False
-    find_unused_parameters = torch_version_str_compare_lessequal(torch.__version__, "1.8.0")
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_device_rank], find_unused_parameters=find_unused_parameters)
+    # find_unused_parameters = torch_version_str_compare_lessequal(torch.__version__, "1.8.0")
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_device_rank], find_unused_parameters=False)
     # Have to set this when activating grad checkpointing in Pytorch >= 2.0.0
     if args.grad_checkpointing and not torch_version_str_compare_lessequal(torch.__version__, "1.14.0"):
         model._set_static_graph()
@@ -155,7 +159,8 @@ def main():
         optimizer = None
         scheduler = None
     else:
-        optimizer = optim.AdamW(
+        # optimizer = optim.AdamW(
+        optimizer = torch_npu.optim.NpuFusedAdamW(
             [
                 {"params": gain_or_bias_params, "weight_decay": 0.},
                 {"params": rest_params, "weight_decay": args.wd},

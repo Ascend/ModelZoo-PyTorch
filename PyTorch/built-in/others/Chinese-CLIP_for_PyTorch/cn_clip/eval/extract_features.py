@@ -10,6 +10,10 @@ from pathlib import Path
 import json
 
 import torch
+
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from tqdm import tqdm
 
 from cn_clip.clip.model import convert_weights, CLIP
