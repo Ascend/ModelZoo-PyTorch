@@ -98,11 +98,11 @@
 
      启动8卡训练。
      ```
-     bash test/flickr30k_finetune_vit-b-16_rbt-base_full_1p.sh .        # 8卡训练 vit-b
-     bash test/flickr30k_finetune_vit-h-14_rbt-large_full_1p.sh .       # 8卡训练 vit-h
+     bash test/flickr30k_finetune_vit-b-16_rbt-base_full_8p.sh .        # 8卡训练 vit-b
+     bash test/flickr30k_finetune_vit-h-14_rbt-large_full_8p.sh .       # 8卡训练 vit-h
      
-     bash test/flickr30k_finetune_vit-b-16_rbt-base_performance_1p.sh .        # 8卡性能 vit-b
-     bash test/flickr30k_finetune_vit-h-14_rbt-large_performance_1p.sh .       # 8卡性能 vit-h
+     bash test/flickr30k_finetune_vit-b-16_rbt-base_performance_8p.sh .        # 8卡性能 vit-b
+     bash test/flickr30k_finetune_vit-h-14_rbt-large_performance_8p.sh .       # 8卡性能 vit-h
      ```
      
   
@@ -119,7 +119,7 @@
       ```
    
 2. 支持zeroshot
-   - 进行speed_benchmark测试
+   - 进行zeroshot测试
       ```
       bash test/zeroshot_eval.sh .        # zeroshot测试
       ```
