@@ -1,0 +1,6 @@
+transformers==4.29.2
+sentencepiece==0.1.99
+accelerate==0.20.3
+torchvision==0.12.0
+attrs==23.1.0
+colorama
