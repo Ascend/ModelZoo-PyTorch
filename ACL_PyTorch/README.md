@@ -3,9 +3,10 @@
 <h2>如何贡献</h2>
 <p>在开始贡献之前，请先阅读<a href="https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md">CONTRIBUTING</a>。
 谢谢！</p>
+<p>目前ACL_PyTorch仓库已有模型<strong>397</strong>个</p>
 <blockquote>
 <p><strong>注意：</strong> <br />
-<strong>在提交新模型时，请加上模型ID用于区分，为防止重复提交模型，请执行脚本get_modelID.py，该脚本会自动检索ACL_PyTorch仓库中所有与您提交模型相关的已有模型，请自行查看脚本给出的链接，如果均不同，则可以输入1或true用于获取模型ID。由于该脚本使用正则匹配，后续新模型刷新到主页需要添加README内容时，格式请参考其余模型。脚本执行方式如下：</strong><br />
+<strong>在提交新模型时，请加上模型ID用于区分，为防止重复提交模型，请执行脚本get_modelID.py，该脚本会自动检索ACL_PyTorch仓库中所有与您提交模型相关的已有模型，请自行查看脚本给出的链接，如果均不同，则可以输入1或true用于获取模型ID。由于该脚本使用正则匹配，后续新模型刷新到主页需要添加README内容时，格式请参考其余模型，并且同步刷新上文模型数量。脚本执行方式如下：</strong><br />
 python3 get_modelID.py --model your_model_name</strong><br /></p>
 <p><strong>参数说明：</strong><br />
 --model：请输入您所需提交新模型的简称，比如Conformer-base模型，您可以输入conformer用于检索所有相关模型（大小写不敏感）</p>
