@@ -11,6 +11,9 @@ from tqdm import tqdm
 
 import torch
 
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
 from cn_clip.clip.model import convert_weights, CLIP
 from cn_clip.clip import tokenize
 from cn_clip.training.main import convert_models_to_fp32

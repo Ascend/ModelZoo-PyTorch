@@ -36,9 +36,9 @@
 
   **表 1**  版本支持表
 
-  | Torch_Version   | 三方库依赖版本   |
-  | :--------: | :-----: |
-  | PyTorch 1.11 | - |
+|    Torch_Version     | 三方库依赖版本 | 
+|:--------------------:|:-------:|
+|   PyTorch 1.11       |    -    |
   
 - 环境准备指导。
 
@@ -61,8 +61,9 @@
 
 ## 准备数据集
 
-- 参考实现中提供了处理好的Flickr30K-CN数据集的下载链接：
+- 参考实现中提供了处理好的Flickr30K-CN数据集与zeroshot使用的cifar-100的下载链接：
 - Flickr30K-CN：https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/datasets/Flickr30k-CN.zip
+- cifar-100: http://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/datasets/cifar-100.zip
 - 下载好的预训练模型放在datasets路径下
 
 
@@ -108,6 +109,20 @@
    
    训练完成后，权重文件保存在./experiments下，并输出模型训练精度和性能信息。
 
+## 模型推理
+
+1. 支持speed_benchmark
+
+   - 进行speed_benchmark测试
+      ```
+      bash test/speed_benchmark_eval.sh .        # speed_benchmark测试
+      ```
+   
+2. 支持zeroshot
+   - 进行speed_benchmark测试
+      ```
+      bash test/zeroshot_eval.sh .        # zeroshot测试
+      ```
 
 # 训练结果展示
 
@@ -121,13 +136,23 @@
   |     vit-h      | 8p-NPU |       95.18       |       98.7        | 316.07  |   3    |     32     |
   |     vit-h      | 8p-竞品V |       95.34       |       99.4        | 348.13  |   3    |     32     |
 
+  **表 3**  zeroshot结果展示表
+
+|     NAME     | zeroshot-top1 | 
+|:------------:|:-------------:|
+| NPU |     64.44     |
+| 竞品V |     64.32     |
+
 
 # 版本说明
 
 ## 变更
 
 2023.08.29：首次提交。
+
 2023.09.04：适配NPU，新增训练和性能脚本。
+
+2023.09.05：新增推理测试脚本。
 
 ## FAQ
 
