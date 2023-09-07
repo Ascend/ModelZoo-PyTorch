@@ -1,5 +1,19 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import torch
 import torch.nn as nn
+import numpy as np
 from onpolicy.algorithms.utils.util import init, check
 from onpolicy.algorithms.utils.cnn import CNNBase
 from onpolicy.algorithms.utils.mlp import MLPBase
@@ -83,15 +97,16 @@ class R_Actor(nn.Module):
         :return action_log_probs: (torch.Tensor) log probabilities of the input actions.
         :return dist_entropy: (torch.Tensor) action distribution entropy for the given inputs.
         """
-        obs = check(obs).to(**self.tpdv)
-        rnn_states = check(rnn_states).to(**self.tpdv)
-        action = check(action).to(**self.tpdv)
-        masks = check(masks).to(**self.tpdv)
-        if available_actions is not None:
-            available_actions = check(available_actions).to(**self.tpdv)
+        if type(obs) == np.ndarray:
+            obs = check(obs).to(**self.tpdv, non_blocking=True)
+            rnn_states = check(rnn_states).to(**self.tpdv, non_blocking=True)
+            action = check(action).to(**self.tpdv, non_blocking=True)
+            masks = check(masks).to(**self.tpdv, non_blocking=True)
+            if available_actions is not None:
+                available_actions = check(available_actions).to(**self.tpdv, non_blocking=True)
 
-        if active_masks is not None:
-            active_masks = check(active_masks).to(**self.tpdv)
+            if active_masks is not None:
+                active_masks = check(active_masks).to(**self.tpdv, non_blocking=True)
 
         actor_features = self.base(obs)
 
@@ -153,9 +168,10 @@ class R_Critic(nn.Module):
         :return values: (torch.Tensor) value function predictions.
         :return rnn_states: (torch.Tensor) updated RNN hidden states.
         """
-        cent_obs = check(cent_obs).to(**self.tpdv)
-        rnn_states = check(rnn_states).to(**self.tpdv)
-        masks = check(masks).to(**self.tpdv)
+        if type(cent_obs) == np.ndarray:
+            cent_obs = check(cent_obs).to(**self.tpdv, non_blocking=True)
+            rnn_states = check(rnn_states).to(**self.tpdv, non_blocking=True)
+            masks = check(masks).to(**self.tpdv, non_blocking=True)
 
         critic_features = self.base(cent_obs)
         if self._use_naive_recurrent_policy or self._use_recurrent_policy:

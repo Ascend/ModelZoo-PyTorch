@@ -70,6 +70,8 @@ def parse_args(args, parser):
     parser.add_argument("--num_landmarks", type=int, default=3)
     parser.add_argument('--num_agents', type=int,
                         default=2, help="number of players")
+    parser.add_argument('--use_prefetch', type=bool,
+                        default=True, help="whether to use prefetch")
 
     all_args = parser.parse_known_args(args)[0]
 
