@@ -96,4 +96,4 @@ if __name__ == "__main__":
        image = cv2.imread(img_path)
        images, metas = detector.pre_process(image, 1.0, meta=None)
        ret = run(args.bin_data_path, ind, metas, img_info['file_name'])
-       np.savez(os.path.join('save',img_id),dic=ret)
+       np.savez(os.path.join('save', str(img_id)), dic=ret)
