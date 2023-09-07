@@ -19,7 +19,7 @@
 
 - 参考实现：
    ```bash
-   #Baichuan2
+   # Baichuan2
    https://github.com/baichuan-inc/Baichuan2
    ```
 
@@ -63,9 +63,9 @@
 
   **表 3** 硬件形态
 
-   | CPU    | Device |
-   |--------| --- |
-   | x86_64 | 310I DUO|
+   | CPU    | Device   |
+   |--------|----------|
+   | x86_64 | 300I DUO |
 
 # 快速上手
 
@@ -77,24 +77,24 @@
    1. 安装HDK   
    下载[固件与驱动](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-252764743/software/261159044?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743)，文件列表如下：
    ```bash
-   Ascend-hdk-310p-npu-driver_23.0.rc3.b021_linux-{arch}.run
-   Ascend-hdk-310p-npu-firmware_7.0.t4.0.b114.run
+   Ascend-hdk-310p-npu-driver_{version}_linux-{arch}.run
+   Ascend-hdk-310p-npu-firmware_{version}.run
    ```
    安装命令：
    ```bash
-   chmod +x Ascend-hdk-310p-npu-firmware_7.0.t4.0.b114.run
-   chmod +x Ascend-hdk-310p-npu-driver_23.0.rc3.b021_linux-{arch}.run
-   ./Ascend-hdk-310p-npu-firmware_7.0.t4.0.b114.run --install
-   ./Ascend-hdk-310p-npu-driver_23.0.rc3.b021_linux-{arch}.run --install
+   chmod +x Ascend-hdk-310p-npu-firmware_{version}.run
+   chmod +x Ascend-hdk-310p-npu-driver_{version}_linux-{arch}.run
+   ./Ascend-hdk-310p-npu-firmware_{version}.run --install
+   ./Ascend-hdk-310p-npu-driver_{version}_linux-{arch}.run --install
    ```
      
    2. 安装CANN   
    下载[CANN toolkit及kernel](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/261075821?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C251168373)，文件列表如下：
    ```bash
-   Ascend-cann-toolkit_7.0.T3_linux-{arch}.run
-   Ascend-cann-kernels-310p_7.0.T3_linux.run
+   Ascend-cann-toolkit_{version}_linux-{arch}.run
+   Ascend-cann-kernels-310p_{version}_linux.run
    ```
-   安装命令同上   
+   安装命令同HDK   
    
    3. 安装PytorchAdapter
    下载[PytorchAdapter](https://container-obsfs-filesystem.obs.cn-north-4.myhuaweicloud.com/package/ascend/pytorch/version_compile/202308/20230818_05/ubuntu_x86/torch_v1.11.0.tar.gz)，文件列表：
@@ -104,9 +104,9 @@
    安装命令：
    ```bash
    tar -zxvf pytorchv1.11.0.tar.gz #解压缩
-   pip3 install torch-1.11.0+cpu-cp37-cp37m-linux_{arch}.whl
-   pip3 install torch_npu-1.11.0.post1_20230818-cp37-cp37m-linux_{arch}.whl
-   pip3 install apex-0.1_ascend_20230727-cp37-cp37m-linux_{arch}.whl
+   pip3 install torch-{version}-linux_{arch}.whl
+   pip3 install torch_npu-{version}-linux_{arch}.whl
+   pip3 install apex-0.1_ascend_{version}-linux_{arch}.whl
    ```
   
    4. 安装依赖   
@@ -115,9 +115,9 @@
    pip3 install -r requirements.txt
    ```
 
-2. 下载模型权重
+2. 下载模型权重，放置到自定义`MODEL_PATH`
    ```bash
-   # Baichuan2 13b模型
+   # Baichuan2 13B模型
    https://huggingface.co/baichuan-inc/Baichuan2-13B-Chat
    # 放置模型到MODEL_PATH
    ```
@@ -134,7 +134,7 @@
 4. 代码修改
 
 - 拷贝`modeling_baichuan_ascend.py`到`MODEL_PATH`
-- 修改`config.json`为`modeling_baichuan_ascned.py`
+- 修改`config.json`为`modeling_baichuan_ascend.py`
   ```bash
   "auto_map": {
     "AutoConfig": "configuration_baichuan.BaichuanConfig",
