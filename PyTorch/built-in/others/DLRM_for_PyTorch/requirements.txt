@@ -2,9 +2,7 @@ future
 numpy
 onnx
 pydot
-torch
 torchviz
-scikit-learn
+scikit-learn==0.20.4
 tqdm
-torchrec-nightly
-torchx-nightly
+

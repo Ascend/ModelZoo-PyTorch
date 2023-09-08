@@ -1,3 +1,17 @@
+#!/usr/bin/python3
+#Copyright 2020 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 # This source code is licensed under the MIT license found in the
@@ -54,13 +68,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
-
+import os
 # miscellaneous
 import builtins
 import datetime
 import json
 import sys
 import time
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 
 # onnx
 # The onnx import causes deprecation warnings every time workers
@@ -262,7 +278,7 @@ class DLRM_Net(nn.Module):
                 ).astype(np.float32)
                 EE.embs.weight.data = torch.tensor(W, requires_grad=True)
             else:
-                EE = nn.EmbeddingBag(n, m, mode="sum", sparse=True)
+                EE = nn.Embedding(n, m)
                 # initialize embeddings
                 # nn.init.uniform_(EE.weight, a=-np.sqrt(1 / n), b=np.sqrt(1 / n))
                 W = np.random.uniform(
@@ -439,11 +455,7 @@ class DLRM_Net(nn.Module):
                 ly.append(QV)
             else:
                 E = emb_l[k]
-                V = E(
-                    sparse_index_group_batch,
-                    sparse_offset_group_batch,
-                    per_sample_weights=per_sample_weights,
-                )
+                V = E(sparse_index_group_batch)
 
                 ly.append(V)
 
@@ -1007,6 +1019,7 @@ def run():
     parser.add_argument("--lr-num-warmup-steps", type=int, default=0)
     parser.add_argument("--lr-decay-start-step", type=int, default=0)
     parser.add_argument("--lr-num-decay-steps", type=int, default=0)
+    parser.add_argument("--performance", action="store_true", default=False)
 
     global args
     global nbatches
@@ -1346,7 +1359,7 @@ def run():
                 },
             ]
         )
-        optimizer = opts[args.optimizer](parameters, lr=args.learning_rate)
+        optimizer = torch_npu.optim.NpuFusedSGD(parameters, lr=args.learning_rate)
         lr_scheduler = LRPolicyScheduler(
             optimizer,
             args.lr_num_warmup_steps,
@@ -1491,7 +1504,7 @@ def run():
 
     ext_dist.barrier()
     with torch.autograd.profiler.profile(
-        args.enable_profiling, use_cuda=use_gpu, record_shapes=True
+            args.enable_profiling, use_cuda=use_gpu, record_shapes=True
     ) as prof:
         if not args.inference_only:
             k = 0
@@ -1739,6 +1752,9 @@ def run():
                                 )
                             break
 
+                        if args.performance:
+                            break
+
                 if args.mlperf_logging:
                     mlperf_logger.barrier()
                     mlperf_logger.log_end(
@@ -1884,4 +1900,5 @@ def run():
 
 
 if __name__ == "__main__":
+    torch_npu.npu.set_compile_mode(jit_compile=True)
     run()
