@@ -292,7 +292,7 @@ def get_pytorch_loader(dataset, batch_size, workers=5, _worker_init_fn=None, dis
     dataloader_fn = MultiEpochsDataLoader
     train_loader = dataloader_fn(
         train_dataset, batch_size=batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, worker_init_fn=_worker_init_fn, pin_memory=False,
+        num_workers=args.workers, worker_init_fn=_worker_init_fn, pin_memory=True,
         sampler=train_sampler, collate_fn=detection_collate, drop_last=True)
     return train_loader, len(train_loader), train_sampler
 
