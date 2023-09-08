@@ -1,0 +1,17 @@
+einops
+shapely
+timm
+yacs
+tensorboardX
+ftfy
+prettytable
+pymongo
+mmcv-full==1.7.1
+transformers
+opencv-python
+pycocotools
+sympy
+scipy
+decorator
+attrs
+psutil

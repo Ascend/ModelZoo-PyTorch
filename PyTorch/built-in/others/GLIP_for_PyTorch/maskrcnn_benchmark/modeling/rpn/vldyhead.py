@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -138,6 +151,14 @@ class Conv3x3Norm(torch.nn.Module):
         return x
 
 
+def reorder(input_nchw, output_h, output_w):
+    n, c, h, w = input_nchw.shape
+    input_nchw = input_nchw.view(n, -1)
+    input_nchw = input_nchw[:, :c * output_h * output_w]
+    input_nchw = input_nchw.view(n, c, output_h, output_w)
+    return input_nchw
+
+
 class DyConv(torch.nn.Module):
     def __init__(self,
                  in_channels=256,
@@ -207,7 +228,13 @@ class DyConv(torch.nn.Module):
             if level > 0:
                 temp_fea.append(self.DyConv[2](visual_feats[level - 1], **conv_args))
             if level < len(visual_feats) - 1:
-                temp_fea.append(F.upsample_bilinear(self.DyConv[0](visual_feats[level + 1], **conv_args),
+                offset = conv_args.get('offset', None)
+                mask = conv_args.get('mask', None)
+                out_h, out_w = visual_feats[level + 1].shape[2:]
+                offset_nchw = reorder(offset, out_h, out_w)
+                mask_nchw = reorder(mask, out_h, out_w)
+                newconv_args = dict(offset=offset_nchw, mask=mask_nchw)
+                temp_fea.append(F.upsample_bilinear(self.DyConv[0](visual_feats[level + 1], **newconv_args),
                                                     size=[feature.size(2), feature.size(3)]))
             mean_fea = torch.mean(torch.stack(temp_fea), dim=0, keepdim=False)
 

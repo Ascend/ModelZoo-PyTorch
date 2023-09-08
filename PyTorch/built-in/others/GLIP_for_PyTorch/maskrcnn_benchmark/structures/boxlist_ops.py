@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
 
@@ -63,10 +76,24 @@ def boxlist_ml_nms(boxlist, nms_thresh, max_proposals=-1,
             scores_j = scores[inds]
             boxes_j = boxes[inds, :].view(-1, 4)
             keep_j = _box_nms(boxes_j, scores_j, nms_thresh)
+            keep_j = inds[keep_j].cpu().int().numpy().tolist()
 
             keep += keep_j
+        keep = torch.Tensor(keep).long()
     else:
-        keep = _box_ml_nms(boxes, scores, labels.float(), nms_thresh)
+        keep = []
+        unique_labels = torch.unique(labels)
+        print(unique_labels)
+        for j in unique_labels:
+            inds = (labels == j).nonzero().view(-1)
+
+            scores_j = scores[inds]
+            boxes_j = boxes[inds, :].view(-1, 4)
+            _, keep_j = _box_ml_nms(boxes_j, scores_j, nms_thresh)
+            keep_j = inds[keep_j].cpu().int().numpy().tolist()
+
+            keep += keep_j
+        keep = torch.Tensor(keep).long()
         
     if max_proposals > 0:
         keep = keep[: max_proposals]
