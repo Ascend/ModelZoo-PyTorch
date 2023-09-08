@@ -27,7 +27,7 @@ import os
 if __name__ == "__main__":
 
 
-    torch.npu.set_compile_mode(jit_compile=False)
+    torch.npu.set_compile_mode(jit_compile=True)
     option = {"NPU_FUZZY_COMPILE_BLACKLIST": "Tril,SoftmaxV2,LayerNormGrad", "MM_BMM_ND_ENABLE": 'enable'}
     torch.npu.set_option(option)
     neox_args = NeoXArgs.consume_neox_args()

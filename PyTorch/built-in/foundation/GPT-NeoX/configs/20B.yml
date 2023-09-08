@@ -13,8 +13,8 @@
 
   # parallelism settings ( you will want to change these based on your cluster setup, ideally scheduling pipeline stages
   # across the node boundaries )
-  "pipe-parallel-size": 4,
-  "model-parallel-size": 2,
+  "pipe-parallel-size": 2,
+  "model-parallel-size": 4,
 
   # model settings
   "num-layers": 44,
@@ -28,12 +28,14 @@
   "no-weight-tying": true,
   "gpt_j_residual": true,
   "output_layer_parallelism": "column",
-  "scaled-upper-triang-masked-softmax-fusion": true,
-  "bias-gelu-fusion": true,
+  "scaled-upper-triang-masked-softmax-fusion": false,
+  "bias-gelu-fusion": false,
 
   # init methods
   "init_method": "small_init",
   "output_layer_init_method": "wang_init",
+
+  "scaled_masked_softmax_fusion":true,
 
   # optimizer settings
   "optimizer": {
@@ -82,7 +84,7 @@
     "enabled": true,
     "loss_scale": 0,
     "loss_scale_window": 1000,
-    "initial_scale_power": 12,
+    "initial_scale_power": 32,
     "hysteresis": 2,
     "min_loss_scale": 1
     },
@@ -99,12 +101,12 @@
   "eval-iters": 10,
 
   # logging
-  "log-interval": 2,
-  "steps_per_print": 2,
+  "log-interval": 1,
+  "steps_per_print": 1,
   "wall_clock_breakdown": false,
 
   ### NEW DATA: ####
-  "tokenizer_type": "HFTokenizer",
+#  "tokenizer_type": "HFTokenizer",
   "tensorboard-dir": "./tensorboard",
   "log-dir": "./logs",
 

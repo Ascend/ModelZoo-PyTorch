@@ -186,7 +186,7 @@ class VocabParallelEmbedding(torch.nn.Module):
             )
             # Mask the input.
             masked_input = input_.clone() - self.vocab_start_index
-            masked_input[input_mask] = 0
+            masked_input *= ~input_mask
         else:
             masked_input = input_
             # Get the embeddings.
@@ -201,7 +201,7 @@ class VocabParallelEmbedding(torch.nn.Module):
         )
         # Mask the output embedding.
         if self.model_parallel_size > 1:
-            output_parallel[input_mask, :] = 0.0
+            output_parallel *= ~input_mask[..., None]
         # Reduce across all the model parallel GPUs.
         output = reduce_from_model_parallel_region(output_parallel)
         return output
