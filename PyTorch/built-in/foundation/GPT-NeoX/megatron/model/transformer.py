@@ -224,8 +224,7 @@ class ParallelSelfAttention(nn.Module):
             gather_output=False,
             init_method=init_method,
         )
-
-        coeff = None
+        coeff = 1
         self.norm_factor = math.sqrt(self.hidden_size_per_attention_head)
         if self.apply_query_key_layer_scaling:
             coeff = max(1, self.layer_number)
@@ -332,14 +331,6 @@ class ParallelSelfAttention(nn.Module):
         )
         key_layer = key_layer.view(output_size[3], output_size[0] * output_size[1], -1)
 
-        # preallocating result tensor: [b * np, sq, sk]
-        matmul_result = torch.empty(
-            output_size[0] * output_size[1],
-            output_size[2],
-            output_size[3],
-            dtype=query_layer.dtype,
-            device=torch.cuda.current_device(),
-        )
 
         '''
         ### Raw attention scores. [b * np, sq, sk]  # orig
@@ -544,6 +535,11 @@ class ParallelSelfAttention(nn.Module):
                 # full rotary
                 query_rot, key_rot = query_layer, key_layer
 
+            query_rot = query_rot.contiguous()
+            query_pass = query_pass.contiguous()
+            key_rot = key_rot.contiguous()
+            key_pass = key_pass.contiguous()
+
             apply_rotary_fn = (
                 apply_rotary_pos_emb_torch if self.bf16 else apply_rotary_pos_emb
             )
@@ -717,7 +713,7 @@ class ParallelTransformerLayer(nn.Module):
             with torch.enable_grad():
                 attention_output = bias_dropout_fn(
                     attention_output,
-                    bias=attention_bias.expand_as(attention_output),
+                    bias=attention_bias,
                     residual=None,
                     prob=self.hidden_dropout,
                 )
@@ -727,7 +723,7 @@ class ParallelTransformerLayer(nn.Module):
             with torch.enable_grad():
                 output = bias_dropout_fn(
                     mlp_output,
-                    bias=mlp_bias.expand_as(mlp_output),
+                    bias=mlp_bias,
                     residual=attention_output,
                     prob=self.hidden_dropout,
                 )

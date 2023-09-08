@@ -31,8 +31,8 @@ os.environ["TORCH_CUDA_ARCH_LIST"] = ""
 
 def load_fused_kernels():
     try:
-        import scaled_upper_triang_masked_softmax_cuda
-        import scaled_masked_softmax_cuda
+        import torch_npu
+        from torch_npu import npu_scaled_masked_softmax
     except (ImportError, ModuleNotFoundError):
         print("\n")
         print("=" * 100)

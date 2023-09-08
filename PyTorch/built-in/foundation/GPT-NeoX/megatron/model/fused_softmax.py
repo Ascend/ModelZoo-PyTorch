@@ -133,39 +133,26 @@ class FusedScaleMaskSoftmax(nn.Module):
         self.softmax_in_fp32 = softmax_in_fp32
         self.scale = scale
 
-        assert (
-            self.scale is None or softmax_in_fp32
-        ), "softmax should be in fp32 when scaled"
-
     def forward(self, input, mask):
         # [b, np, sq, sk]
         assert input.dim() == 4
         if self.is_kernel_available(mask, *input.size()):
-            return self.forward_fused_softmax(input, mask)
+            import torch_npu
+            return torch_npu.npu_scaled_masked_softmax(input, mask, self.scale, False)
         else:
             return self.forward_torch_softmax(input, mask)
 
+
     def is_kernel_available(self, mask, b, np, sq, sk):
-        attn_batches = b * np
+        return (
+                self.fusion  # user want to fuse
+                and self.input_in_float16  # input must be fp16
+                and 32 < sk <= 2048  # sk must be 32 ~ 2048
+                and sq % 16 == 0  # sq must be divisor of 16
+                and sk % 16 == 0  # sk must be divisor of 16
+        )
 
-        if (
-            self.fusion  # user wants to fuse
-            and self.input_in_float16  # input must be fp16
-            and mask is not None  # mask tensor must not be None
-            and 16 < sk <= 2048  # sk must be 16 ~ 2048
-            and sq % 4 == 0  # sq must be divisor of 4
-            and attn_batches % 4 == 0  # np * b must be divisor of 4
-        ):
-            if 0 <= sk <= 2048:
-                batch_per_block = self.get_batch_per_block(sq, sk, b, np)
 
-                if self.upper_triang_mask_fusion:
-                    if attn_batches % batch_per_block == 0:
-                        return True
-                else:
-                    if sq % batch_per_block == 0:
-                        return True
-        return False
 
     def forward_fused_softmax(self, input, mask):
         b, np, sq, sk = input.size()
