@@ -6,15 +6,17 @@ mkdir -p $1
 
 cd $1
 
+mose_http=$2
+iws_url=$3
 echo 'Cloning Moses github repository (for tokenization scripts)...'
-git clone https://github.com/moses-smt/mosesdecoder.git
+git clone $mose_http
 
 SCRIPTS=mosesdecoder/scripts
 TOKENIZER=$SCRIPTS/tokenizer/tokenizer.perl
 LC=$SCRIPTS/tokenizer/lowercase.perl
 CLEAN=$SCRIPTS/training/clean-corpus-n.perl
 
-URL="http://dl.fbaipublicfiles.com/fairseq/data/iwslt14/de-en.tgz"
+URL=$iws_url
 GZ=de-en.tgz
 
 if [ ! -d "$SCRIPTS" ]; then

@@ -1,184 +1,160 @@
-# [DeltaLM](https://arxiv.org/abs/2106.13736)
+# Deltalm for PyTorch
 
-**Encoder-Decoder Pre-training for Language Generation and Translation** 
+- [概述](概述.md)
 
-[DeltaLM: Encoder-Decoder Pre-training for Language Generation and Translation by Augmenting Pretrained Multilingual Encoders.](https://arxiv.org/abs/2106.13736) Shuming Ma, Li Dong, Shaohan Huang, Dongdong Zhang, Alexandre Muzio, Saksham Singhal, Hany Hassan Awadalla, Xia Song, Furu Wei. CoRR abs/2106.13736.
+- [准备训练环境](准备训练环境.md)
 
-[mT6: Multilingual Pretrained Text-to-Text Transformer with Translation Pairs.](https://arxiv.org/abs/2104.08692) Zewen Chi, Li Dong, Shuming Ma, Shaohan Huang, Xian-Ling Mao, Heyan Huang, and Furu Wei. In EMNLP 2021.
+- [开始训练](开始训练.md)
 
-- September 2021: DeltaLM ranks first on the [WMT21 multilingual translation task](http://www.statmt.org/wmt21/large-scale-multilingual-translation-task.html).
-- August 2021: release code and pretrained checkpoints.
+- [训练结果展示](训练结果展示.md)
 
----
-
-## Pretrained Models
-
-- [DeltaLM-base](https://deltalm.blob.core.windows.net/deltalm/deltalm-base.pt): #enc-dec=12-6; #hidden=768; #head=12; #FFN=3072 (#parameters: 360M)
-- [DeltaLM-large](https://deltalm.blob.core.windows.net/deltalm/deltalm-large.pt): #enc-dec=24-12; #hidden=1024; #head=16; #FFN=4096 (#parameters: 830M)
-- [Vocabulary](https://deltalm.blob.core.windows.net/deltalm/dict.txt) and [Sentencepiece-model](https://deltalm.blob.core.windows.net/deltalm/spm.model)
-- DeltaLM can be finetuned to support language generation and translation tasks for **100+ languages**
+- [版本说明](版本说明.md)
 
 
-## Cross-lingual Abstractive Summarization - [Wikilingua](https://arxiv.org/abs/2010.03093)
+# 概述
 
-We evaluate DeltaLM on cross-lingual abstractive summarization benchmark. We report the results by averaging the numbers in different languages. 
+## 简述
 
-|   Model   |   #Params   |  ROUGE-1  |  ROUGE-2  |  ROUGE-L  |
-|-----------|-------------|-----------|-----------|-----------|
-| [mBART](https://arxiv.org/abs/2001.08210)     | 610M        | 34.5      | 12.9      | **28.7**      |
-| [mT5](https://arxiv.org/abs/2010.11934)       | 300M        | 27.5      | 8.8       | 22.8      |
-| [mT5](https://arxiv.org/abs/2010.11934)       | 580M        | 31.8      | 11.5      | 26.0      |
-| DeltaLM   | 360M        | **35.3**      | **13.4**      | **28.7**      |
+Deltalm 模型是Fairseq套件中基于Transformer结构的翻译模型，在iwslt14 de2en数据集上训练和评估。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/microsoft/unilm/blob/master/deltalm
+  commit_id=eb1cc35e63988b2fe8c1fae348012a57da096e43
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/nlp
+  ```
 
 
-## Setup
+# 准备训练环境
 
-```bash
-git submodule update --init deltalm/fairseq
-cd deltalm/
-pip install --editable fairseq/
-```
+## 准备环境
 
-## Fine-tuning
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-1. Organize the raw data in the following structure:
-```
-.
-+-- /path/to/data/
-|   +-- train.src
-|   +-- train.tgt
-|   +-- valid.src
-|   +-- valid.tgt
-```
+  **表 1**  版本支持表
 
-*Examples (IWSLT14 German to English)*:
-```bash
-bash examples/prepare_iwslt14.sh /tmp/iwslt14
-```
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.8 | - |
 
-2. Tokenize the data using [Sentencepiece](https://github.com/google/sentencepiece):
+- 环境准备指导。
 
-```bash
-spm_encode --model=/path/to/checkpoint/spm.model --output_format=piece < train.src > train.spm.src
-spm_encode --model=/path/to/checkpoint/spm.model --output_format=piece < train.tgt > train.spm.tgt
-spm_encode --model=/path/to/checkpoint/spm.model --output_format=piece < valid.src > valid.spm.src
-spm_encode --model=/path/to/checkpoint/spm.model --output_format=piece < valid.tgt > valid.spm.tgt
-spm_encode --model=/path/to/checkpoint/spm.model --output_format=piece < test.src > test.spm.src
-spm_encode --model=/path/to/checkpoint/spm.model --output_format=piece < test.tgt > test.spm.tgt
-```
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
-*Examples (IWSLT14 German to English)*:
-```bash
-bash examples/binary_iwslt14.sh \
-     /tmp/iwslt14/iwslt14.tokenized.de-en \
-     /tmp/iwslt14/iwslt14.spm \
-     /path/to/checkpoint/spm.model
-```
+- 安装套件。
 
-3. Binary the data:
+  在模型源码包根目录下执行以下命令。
+  ```bash
+  pip3.7 install -e ./fairseq
+  ```
+  安装相应库
+  ```
+  pip install -r requirements.txt
+  ```
 
-```bash
-data_bin=/path/to/data-bin/
-python preprocess.py  \
-    --trainpref train.spm \
-    --validpref valid.spm \
-    --testpref test.spm \
-    --source-lang src --target-lang tgt \
-    --destdir $data_bin \
-    --srcdict /path/to/checkpoint/dict.txt \
-    --tgtdict /path/to/checkpoint/dict.txt \
-    --workers 40
-```
 
-*Examples (IWSLT14 German to English)*:
-```bash
-bash examples/binary_iwslt14.sh \
-     /tmp/iwslt14/iwslt14.spm \
-     /tmp/iwslt14/iwslt14.bin \
-     /path/to/checkpoint/dict.txt
-```
+## 准备数据集
 
-4. Fine-tuning:
+1. 获取数据集。
 
-```bash
-PRETRAINED_MODEL=/path/to/checkpoint/model.pt
-python train.py $data_bin \
-    --save-dir $save_dir \
-    --arch deltalm_base \
-    --pretrained-deltalm-checkpoint $PRETRAINED_MODEL \
-    --share-all-embeddings \
-    --max-source-positions 512 --max-target-positions 512 \
-    --criterion label_smoothed_cross_entropy \
-    --label-smoothing 0.1 \
-    --optimizer adam --adam-betas '(0.9, 0.98)' \
-    --lr-scheduler inverse_sqrt \
-    --lr $lr \
-    --warmup-init-lr 1e-07 \
-    --stop-min-lr 1e-09 \
-    --warmup-updates 4000 \
-    --max-update 400000 \
-    --max-epoch 100 \
-    --max-tokens $batch_size \
-    --update-freq 1 \
-    --seed 1 \
-    --log-format simple \
-    --skip-invalid-size-inputs-valid-test
-```
-**Note: 
-- For large checkpoint, please set `--arch deltalm_large`.
-- Please adjust the `max-tokens` and `update-freq` to suit in different experimental environments. Recommendation of the total batch size is `4096 * 128` tokens per step.
-- Use `--fp16` for more efficient training on the devices that have Tensor Cores.
+    1. 用户可参考源码GPU仓自行下载 `iwslt14` 数据集，并在预处理数据后，上传至到服务器任意目录中，如`/data-bin`
+    2. 或者使用一键式处理工具`auto-data.sh`，需提前准备：
+       1. tokenize模型："https://deltalm.blob.core.windows.net/deltalm/spm.model"
+       2. 准备数据词典："https://deltalm.blob.core.windows.net/deltalm/dict.txt"
+       3. 准备分词工具：参考"https://github.com/google/sentencepiece" readme操作安装`spm_encode `
+       4. 执行脚本`bash auto-data.sh $1 $2 $3 $4 $5 $6`
 
-*Examples (IWSLT14 German to English)*:
-```bash
-bash examples/train_iwslt14.sh \
-     /tmp/iwslt14/iwslt14.bin \
-     /tmp/iwslt14/checkpoints \
-     /path/to/checkpoint/model.pt
-```
+          $1：原始数据生成目录 `/tmp/iwslt14`
 
-5. Evaluation:
+          $2：最终处理数据目录 `/data-bin`
 
-```bash
-python generate.py $data_bin \
-    --path $save_dir/checkpoint_best.pt \
-    --batch-size 128 --beam 5 --remove-bpe=sentencepiece
-```
+          $3：tokenize模型路径
 
-*Examples (IWSLT14 German to English)*:
-```bash
-bash examples/evaluate_iwslt14.sh \
-     /tmp/iwslt14/iwslt14.bin \
-     /tmp/iwslt14/checkpoints
-```
+          $4：词典路径
+          
+          $5: 数据预处理工具下载链接: [mosesdecoder](https://github.com/moses-smt/mosesdecoder.git)
+          
+          $6: 原始数据下载链接: [iwslt14](http://dl.fbaipublicfiles.com/fairseq/data/iwslt14/de-en.tgz)
 
----
+2. 获取预训练模型
+  用户自行下载`deltalm-base`预训练模型权重，并放置于上面预处理数据目录下
+# 开始训练
 
-## Citation
+## 训练模型
 
-If you find this repository useful, please consider citing our work:
-```
-@article{deltalm,
-      title={{DeltaLM}: Encoder-Decoder Pre-training for Language Generation and Translation by Augmenting Pretrained Multilingual Encoders}, 
-      author={Shuming Ma and Li Dong and Shaohan Huang and Dongdong Zhang and Alexandre Muzio and Saksham Singhal and Hany Hassan Awadalla and Xia Song and Furu Wei},
-      year={2021},
-      eprint={2106.13736},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
-}
-```
+1. 进入源码包根目录。
 
-## Acknowledgement
+   ```bash
+   cd /${模型文件夹名称}
+   ```
 
-This repository is built using the [Fairseq](https://github.com/pytorch/fairseq) repository.
+2. 运行训练脚本。
 
-## License
-This project is licensed under the license found in the LICENSE file in the root directory of this source tree.
+    该模型支持单机单卡训练和单机8卡训练。
 
-[Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct)
+    - 单机单卡训练
 
-### Contact Information
+      启动单卡训练。
 
-For help or issues using DeltaLM models, please submit a GitHub issue.
+      ```bash
+      bash ./test/train_performance_1p.sh --data_path=/data-bin  # 单卡性能
+      ```
 
-For other communications related to DeltaLM, please contact Shuming Ma (`shumma@microsoft.com`), [Furu Wei](http://gitnlp.org/) (`fuwei@microsoft.com`).
+    - 单机8卡训练。
+
+      启动8卡训练。
+
+      ```bash
+      bash ./test/train_full_8p.sh --data_path=/data-bin  # 8卡精度
+      bash ./test/train_performance_8p.sh --data_path=/data-bin  # 8卡性能
+      ```
+
+      --data_path参数填写数据集路径，需写到数据集的一级目录。
+
+
+    模型训练脚本参数说明如下。
+
+    ```
+    公共参数：
+    --data_path                         //数据集路径
+    --arch                              //使用模型架构
+    --save-dir                          //权重文件保存路径
+    --max-epoch                         //重复迭代轮数
+    --max-tokens                        //最大token大小
+    --lr                                //学习率
+    --optimizer                         //使用哪种优化器
+    --eval-bleu                         //使用评估指标
+    --distributed-world-size            //是否进行分布式训练
+    ```
+
+    训练完成后，权重文件默认保存在当前路径的checkpoints目录下，test/out目录下并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 3**  en_de数据集训练结果展示表
+
+| NAME  | MODE | Bleu  | WPS  | Epochs | AMP_Type | Torch_Version |
+| :---: |------|:-----:|:----:| :---: | :---: | :---: |
+| 8p-竞品A | fp16 | 39.45 | 14401 | 100 | - | 1.8 |
+| 8p-NPU | fp16 | 39.37 | 16214 | 100 | - | 1.8 |
+
+> **说明：**
+   >由于该模型默认开启二进制，所以在性能测试时，需要安装二进制包，安装方式参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+
+
+# 版本说明
+
+## 变更
+
+2023.6.29：首次发布。
+
+## FAQ
+
+无。
