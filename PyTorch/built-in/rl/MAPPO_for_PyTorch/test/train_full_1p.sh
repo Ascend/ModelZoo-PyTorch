@@ -39,6 +39,7 @@ mkdir -p ${output_path}
 
 cd onpolicy/scripts/train_mpe_scripts
 chmod +x ./train_mpe_comm.sh
+#为确保性能，只允许同时运行一个mappo脚本，如有需要运行多任务请注释pkill代码
 pkill -9 mappo
 wait
 #训练开始时间，不需要修改
@@ -46,8 +47,11 @@ start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
 exps=$(seq 1 10)
-for exp in exps
+for exp in $exps
 do
+  #为确保性能，只允许同时运行一个mappo脚本，如有需要运行多任务请注释pkill代码
+  pkill -9 mappo
+  wait
   sh train_mpe_comm.sh >> ${output_path}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
   wait
 done
@@ -66,14 +70,14 @@ CaseName=${Network}_bs${BatchSize}_${WORLD_SIZE}'p'_'acc'
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 grep "total num timesteps " ${output_path}/train_${ASCEND_DEVICE_ID}.log | awk -F 'current FPS ' '{print $2}' | awk -F '.' '{print $1}' >${output_path}/train_${ASCEND_DEVICE_ID}_fps.log
-FPS=$(cat ${output_path}/train_${ASCEND_DEVICE_ID}_fps.log | sort -n | tail -500 | awk '{a+=$1} END {if (NR != 0) printf("%.3f", a/NR)}')
+FPS=$(cat ${output_path}/train_${ASCEND_DEVICE_ID}_fps.log | sort -n | tail -5000 | awk '{a+=$1} END {if (NR != 0) printf("%.2f", a/NR)}')
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
 # 输出训练精度,需要模型审视修改
 grep "Eval average episode rewards of agent: " ${output_path}/train_${ASCEND_DEVICE_ID}.log | awk -F "agent: " '{print $2}' &>${output_path}/train_${ASCEND_DEVICE_ID}_acc.log
-train_accuracy=$(cat ${output_path}/train_${ASCEND_DEVICE_ID}_acc.log | sort -n | tail -1 | awk 'printf("%.3f\n", $1)}')
-train_accuracy=$(echo $train_accuracy | awk '{printf ("%.2f\n",$1)}')
+train_accuracy=$(cat ${output_path}/train_${ASCEND_DEVICE_ID}_acc.log | sort -n | tail -8 | awk '{a+=$1} END {if (NR != 0) printf("%.3f", a/NR)}')
+train_accuracy=$(echo $train_accuracy | awk '{printf ("%.1f\n",$1)}')
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"

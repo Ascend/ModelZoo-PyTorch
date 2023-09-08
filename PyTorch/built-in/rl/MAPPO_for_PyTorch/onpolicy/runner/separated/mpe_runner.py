@@ -99,19 +99,20 @@ class MPERunner(Runner):
 
             if episode == episodes-1:
                 end = time.time()
-                time_stamp = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(end))
-                print("\n{} Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}, current FPS {}.\n"
-                      .format(time_stamp,
-                              self.all_args.scenario_name,
-                              self.algorithm_name,
-                              self.experiment_name,
-                              episode,
-                              episodes,
-                              total_num_steps,
-                              self.num_env_steps,
-                              int(total_num_steps / (end - start)),
-                              int(current_num_steps / (end - ep_start))
-                              ))
+                if episode % self.log_interval != 0:
+                    time_stamp = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(end))
+                    print("\n{} Scenario {} Algo {} Exp {} updates {}/{} episodes, total num timesteps {}/{}, FPS {}, current FPS {}.\n"
+                          .format(time_stamp,
+                                  self.all_args.scenario_name,
+                                  self.algorithm_name,
+                                  self.experiment_name,
+                                  episode,
+                                  episodes,
+                                  total_num_steps,
+                                  self.num_env_steps,
+                                  int(total_num_steps / (end - start)),
+                                  int(current_num_steps / (end - ep_start))
+                                  ))
                 print('total Elapsed time: ', end - start)
                 if self.use_eval:
                     eval_infos = self.eval(total_num_steps)

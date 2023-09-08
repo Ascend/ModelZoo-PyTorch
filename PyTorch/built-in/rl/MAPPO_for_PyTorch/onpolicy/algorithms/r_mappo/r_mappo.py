@@ -1,9 +1,53 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import numpy as np
 import torch
 import torch.nn as nn
 from onpolicy.utils.util import get_gard_norm, huber_loss, mse_loss
 from onpolicy.utils.valuenorm import ValueNorm
 from onpolicy.algorithms.utils.util import check
+
+
+class DataPrefetcher():
+    def __init__(self, func, tpdv, advantages, num_mini_batch, data_chunk_length):
+        self.func = func
+        self.tpdv = tpdv
+        self.advantages = advantages
+        self.num_mini_batch = num_mini_batch
+        self.data_chunk_length = data_chunk_length
+        self.stream = torch.npu.Stream()
+        self.iter = num_mini_batch
+        self.preload()
+
+    def preload(self):
+        if self.iter >= self.num_mini_batch:
+            self.loader = self.func(self.advantages, self.num_mini_batch, self.data_chunk_length)
+            self.iter = 0
+
+        self.batch = next(self.loader)
+        self.iter += 1
+        self.batch = list(self.batch)
+        with torch.npu.stream(self.stream):
+            for i in range(len(self.batch)):
+                self.batch[i] = check(self.batch[i]).to(**self.tpdv, non_blocking=True)
+
+    def next(self):
+        torch.npu.current_stream().wait_stream(self.stream)
+        batch = self.batch
+        self.preload()
+        return batch
+
 
 class R_MAPPO():
     """
@@ -39,6 +83,7 @@ class R_MAPPO():
         self._use_valuenorm = args.use_valuenorm
         self._use_value_active_masks = args.use_value_active_masks
         self._use_policy_active_masks = args.use_policy_active_masks
+        self.use_prefetch = args.use_prefetch
         
         assert (self._use_popart and self._use_valuenorm) == False, ("self._use_popart and self._use_valuenorm can not be set True simultaneously")
         
@@ -105,11 +150,12 @@ class R_MAPPO():
         value_preds_batch, return_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, \
         adv_targ, available_actions_batch = sample
 
-        old_action_log_probs_batch = check(old_action_log_probs_batch).to(**self.tpdv)
-        adv_targ = check(adv_targ).to(**self.tpdv)
-        value_preds_batch = check(value_preds_batch).to(**self.tpdv)
-        return_batch = check(return_batch).to(**self.tpdv)
-        active_masks_batch = check(active_masks_batch).to(**self.tpdv)
+        if not self.use_prefetch:
+            old_action_log_probs_batch = check(old_action_log_probs_batch).to(**self.tpdv)
+            adv_targ = check(adv_targ).to(**self.tpdv)
+            value_preds_batch = check(value_preds_batch).to(**self.tpdv)
+            return_batch = check(return_batch).to(**self.tpdv)
+            active_masks_batch = check(active_masks_batch).to(**self.tpdv)
 
         # Reshape to do in a single forward pass for all steps
         values, action_log_probs, dist_entropy = self.policy.evaluate_actions(share_obs_batch,
@@ -184,33 +230,50 @@ class R_MAPPO():
 
         train_info = {}
 
-        train_info['value_loss'] = 0
-        train_info['policy_loss'] = 0
-        train_info['dist_entropy'] = 0
+        train_info['value_loss'] = torch.tensor(0.0).npu()
+        train_info['policy_loss'] = torch.tensor(0.0).npu()
+        train_info['dist_entropy'] = torch.tensor(0.0).npu()
         train_info['actor_grad_norm'] = 0
         train_info['critic_grad_norm'] = 0
         train_info['ratio'] = 0
 
-        for _ in range(self.ppo_epoch):
-            if self._use_recurrent_policy:
-                data_generator = buffer.recurrent_generator(advantages, self.num_mini_batch, self.data_chunk_length)
-            elif self._use_naive_recurrent:
-                data_generator = buffer.naive_recurrent_generator(advantages, self.num_mini_batch)
-            else:
-                data_generator = buffer.feed_forward_generator(advantages, self.num_mini_batch)
-
-            for sample in data_generator:
-
+        if self.use_prefetch:
+            prefetcher = DataPrefetcher(buffer.recurrent_generator, self.tpdv, advantages, self.num_mini_batch, self.data_chunk_length)
+            sample = prefetcher.next()
+            for _ in range(self.ppo_epoch * self.num_mini_batch):
                 value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights \
                     = self.ppo_update(sample, update_actor)
-
-                train_info['value_loss'] += value_loss.item()
-                train_info['policy_loss'] += policy_loss.item()
-                train_info['dist_entropy'] += dist_entropy.item()
+                sample = prefetcher.next()
+                train_info['value_loss'] += value_loss
+                train_info['policy_loss'] += policy_loss
+                train_info['dist_entropy'] += dist_entropy
                 train_info['actor_grad_norm'] += actor_grad_norm
                 train_info['critic_grad_norm'] += critic_grad_norm
                 train_info['ratio'] += imp_weights.mean()
+        else:
+            for _ in range(self.ppo_epoch):
+                if self._use_recurrent_policy:
+                    data_generator = buffer.recurrent_generator(advantages, self.num_mini_batch, self.data_chunk_length)
+                elif self._use_naive_recurrent:
+                    data_generator = buffer.naive_recurrent_generator(advantages, self.num_mini_batch)
+                else:
+                    data_generator = buffer.feed_forward_generator(advantages, self.num_mini_batch)
 
+                for sample in data_generator:
+
+                    value_loss, critic_grad_norm, policy_loss, dist_entropy, actor_grad_norm, imp_weights \
+                        = self.ppo_update(sample, update_actor)
+
+                    train_info['value_loss'] += value_loss
+                    train_info['policy_loss'] += policy_loss
+                    train_info['dist_entropy'] += dist_entropy
+                    train_info['actor_grad_norm'] += actor_grad_norm
+                    train_info['critic_grad_norm'] += critic_grad_norm
+                    train_info['ratio'] += imp_weights.mean()
+
+        train_info['value_loss'] = train_info['value_loss'].item()
+        train_info['policy_loss'] = train_info['policy_loss'].item()
+        train_info['dist_entropy'] = train_info['dist_entropy'].item()
         num_updates = self.ppo_epoch * self.num_mini_batch
 
         for k in train_info.keys():
