@@ -62,14 +62,21 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
 
 - 安装Ascend DeepSpeed 
   
-  请参考 <https://gitee.com/ascend/DeepSpeed.git> 并完成安装
+  ```
+  cd GPT-2_for_PyTorch
+  pip3 install deepspeed==0.6.0  # 首先安装原生deepspeed
+  git clone -b adaptor https://gitee.com/ascend/DeepSpeed.git
+  cd ./DeepSpeed
+  pip3 install ./
+  cd -
+  ```
+
 
 - 克隆原始仓
 
   ```
   cd GPT-2_for_PyTorch
   git clone https://github.com/microsoft/Megatron-DeepSpeed.git
-  # 进入github上拉下来的Megatron-DeepSpeed
   cd ./Megatron-DeepSpeed
   git checkout b4d4a0e
   cd -
@@ -168,4 +175,3 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
    vim /usr/local/python3.8.10/lib/python3.8/site-packages/deepspeed/runtime/zero/stage3.py +19
    vim /home/xxx/GPT-2_for_PyTorch/Megatron-DeepSpeed/megatron/optimizer/clip_grads.py +19
    ```
-
