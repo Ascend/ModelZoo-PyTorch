@@ -49,7 +49,7 @@ cmvn=true
 dir=exp/conformer
 checkpoint=
 test_output_dir=$8
-performence_epoch=${10}
+performance_epoch=${10}
 
 # use average_checkpoint will get better result
 average_checkpoint=true
@@ -153,7 +153,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
       --ddp.rank $rank \
       --ddp.dist_backend $dist_backend \
       --num_workers 8 \
-      --performence_epoch $performence_epoch \
+      --performance_epoch $performance_epoch \
       $cmvn_opts \
       --pin_memory > $test_output_dir/0/train_$gpu_id.log 2>&1
   } &

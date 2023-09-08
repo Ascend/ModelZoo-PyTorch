@@ -123,7 +123,7 @@ def get_args():
                         default='',
                         required=False,
                         help='LF-MMI dir')
-    parser.add_argument('--performence_epoch',
+    parser.add_argument('--performance_epoch',
                         type=int,
                         default=-1,
                         required=False,
@@ -308,7 +308,7 @@ def main():
             writer.add_scalar('epoch/cv_loss', cv_loss, epoch)
             writer.add_scalar('epoch/lr', lr, epoch)
         final_epoch = epoch
-        if args.performence_epoch != -1 and args.performence == epoch:
+        if args.performance_epoch != -1 and args.performance_epoch == epoch:
             break
 
     if final_epoch is not None and args.rank == 0:
