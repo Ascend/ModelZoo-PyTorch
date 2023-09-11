@@ -75,7 +75,7 @@ nohup bash run.sh \
   --stop_stage ${stop_stage} \
   --data ${data_path} \
   --test_output_dir $test_path_dir/output \
-  --performence_epoch -1 &
+  --performance_epoch -1 &
 
 wait
 
