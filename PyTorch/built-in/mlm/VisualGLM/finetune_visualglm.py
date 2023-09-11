@@ -1,3 +1,18 @@
+# coding=utf-8
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import torch
 import argparse
@@ -159,13 +174,70 @@ class FewShotDataset(Dataset):
             "labels": self.labels[idx],
             "pre_image": self.pre_image
         }
+        
+
+class COCODataset(Dataset):
+    def __init__(self, path, processor, tokenizer, args):
+        # json path
+        json_path = os.path.join(args.train_data, "annotations/captions_train2017.json")
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)    
+        self.processor = self.processor
+        self.tokenizer = tokenizer
+        self.max_seq_length = args.max_source_length + args.max_target_length
+        self.images = []
+        self.images = []
+        self.args = args
+        self.const_prompt = "What's in the background of this image"
+        
+        for img, label in zip(data['image'], data['annotations']):
+            img_path = "".join([args.train_data, "train2017/", img['file_name']])
+            self.images.append(img_path)
+            self.labels.append(label)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image = self.processor(Image.open(self.images[idx]).convert('RGB'))
+        input0 = tokenizer.encode("<img>", add_special_tokens=False)
+        input1 = [tokenizer.pad_token_id] * args.image_length
+        input2 = tokenizer.encode("</img>Ask: "+ self.const_prompt +"\nAnswer: ", add_special_tokens=False)
+        a_ids = sum([input0, input1, input2], [])
+        b_ids = tokenizer.encode(text=self.labels[idx]['caption'], add_special_tokens=False)
+        if len(a_ids) > args.max_source_length - 1:
+            a_ids = a_ids[: args.max_source_length - 1]
+        if len(b_ids) > args.max_target_length - 2:
+            b_ids = b_ids[: args.max_target_length - 2]
+        pre_image = len(input0)
+        input_ids = tokenizer.build_inputs_with_special_tokens(a_ids, b_ids)
+
+        context_length = input_ids.index(tokenizer.bos_token_id)
+        mask_position = context_length - 1
+        labels = [-100] * context_length + input_ids[mask_position+1:]
+        
+        pad_len = self.max_seq_length - len(input_ids)
+        input_ids = input_ids + [tokenizer.pad_token_id] * pad_len
+        labels = labels + [tokenizer.pad_token_id] * pad_len
+        if args.ignore_pad_token_for_loss:
+            labels = [(l if l != tokenizer.pad_token_id else -100) for l in labels]
+        self.pre_image = pre_image
+        return {
+            "image": image,
+            "input_ids": input_ids,
+            "labels": labels,
+            "pre_image": self.pre_image
+        }
 
 
 def create_dataset_function(path, args):
     tokenizer = get_tokenizer(args)
     image_processor = BlipImageEvalProcessor(224)
-
-    dataset = FewShotDataset(path, image_processor, tokenizer, args)
+    
+    if "COCO" in args.train_data:
+        dataset = COCODataset(path, image_processor, tokenizer, args)
+    else:
+        dataset = FewShotDataset(path, image_processor, tokenizer, args)
     return dataset
 
 
@@ -176,13 +248,14 @@ if __name__ == '__main__':
     py_parser.add_argument('--ignore_pad_token_for_loss', type=bool, default=True)
     # py_parser.add_argument('--old_checkpoint', action="store_true")
     py_parser.add_argument('--source_prefix', type=str, default="")
+    py_parser.add_argument('--pretrain_model_path', type=str, default="")
     py_parser = FineTuneVisualGLMModel.add_model_specific_args(py_parser)
     known, args_list = py_parser.parse_known_args()
     args = get_args(args_list)
     args = argparse.Namespace(**vars(args), **vars(known))
     args.device = 'npu'
 
-    model_type = 'visualglm-6b'
+    model_type = args.pretrain_model_path
     model, args = FineTuneVisualGLMModel.from_pretrained(model_type, args)
     if torch.cuda.is_available():
         model = model.to('cuda')
