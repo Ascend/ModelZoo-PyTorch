@@ -13,7 +13,6 @@ MODEL_ARGS="--max_source_length 64 \
     --layer_range 0 14 \
     --pre_seq_len 4"
 
-# OPTIONS_SAT="SAT_HOME=$1" #"SAT_HOME=/raid/dm/sat_models"
 OPTIONS_NCCL="NCCL_DEBUG=info NCCL_IB_DISABLE=0 NCCL_NET_GDR_LEVEL=2"
 HOST_FILE_PATH="hostfile"
 HOST_FILE_PATH="hostfile_single"
