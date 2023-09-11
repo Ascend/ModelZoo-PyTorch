@@ -18,7 +18,7 @@ LOAD_FROM=""
 MODEL_TYPE="visualglm-6b"
 MODEL_ARGS="--max_source_length 64 \
     --max_target_length 256 \
-    --lora_rank 10 \ 
+    --lora_rank 10 \
     --layer_range 0 14 \
     --pre_seq_len 4"
 OPTIONS_NCCL="NCCL_DEBUG=info NCCL_IB_DISABLE=0 NCCL_NET_GDR_LEVEL=2"
@@ -36,28 +36,6 @@ export ASCEND_RT_VISIBLE_DEVICES=0  # 指定卡
 ASCEND_DEVICE_ID=0           # 与上一行数字相同，用于生成文件夹
 ##
 
-
-for para in $*
-do
-    if [[ $para == --device_id* ]];then
-        device_id=`echo ${para#*=}`
-    elif [[ $para == --data_path* ]];then
-        data_path=`echo ${para#*=}`
-    elif [[ $para == --pretrain_model* ]];then
-        pretrain_model=`echo ${para#*=}`
-    fi
-done
-
-# 校验是否传入data_path,不需要修改
-if [[ $data_path == "" ]];then
-    echo "[Error] para \"data_path\" must be confing"
-    exit 1
-fi
-
-if [[ $pretrain_model == "" ]];then
-    echo "[Error] para \"pretrain_model\" must be confing"
-    exit 1
-fi
 
 ###############指定训练脚本执行路径###############
 # cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
@@ -111,7 +89,7 @@ gpt_options=" \
        --batch-size $BATCH_SIZE \
        --skip-init \
        --fp16 \
-       --pretrain_model_path $PRETRAIN_MODEL_PATH\
+       --pretrain_model_path $PRETRAIN_MODEL_PATH \
        --use_lora >$cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 "
             

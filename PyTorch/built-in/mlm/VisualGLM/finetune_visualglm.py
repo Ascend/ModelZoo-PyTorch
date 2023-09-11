@@ -179,19 +179,19 @@ class FewShotDataset(Dataset):
 class COCODataset(Dataset):
     def __init__(self, path, processor, tokenizer, args):
         # json path
-        json_path = os.path.join(args.train_data, "annotations/captions_train2017.json")
+        json_path = os.path.join(args.train_data[0], "annotations/captions_train2017.json")
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)    
-        self.processor = self.processor
+        self.processor = processor
         self.tokenizer = tokenizer
         self.max_seq_length = args.max_source_length + args.max_target_length
         self.images = []
-        self.images = []
+        self.labels = []
         self.args = args
         self.const_prompt = "What's in the background of this image"
         
-        for img, label in zip(data['image'], data['annotations']):
-            img_path = "".join([args.train_data, "train2017/", img['file_name']])
+        for img, label in zip(data['images'], data['annotations']):
+            img_path = os.path.join(args.train_data[0], "train2017", img['file_name'])
             self.images.append(img_path)
             self.labels.append(label)
 
@@ -234,10 +234,8 @@ def create_dataset_function(path, args):
     tokenizer = get_tokenizer(args)
     image_processor = BlipImageEvalProcessor(224)
     
-    if "COCO" in args.train_data:
-        dataset = COCODataset(path, image_processor, tokenizer, args)
-    else:
-        dataset = FewShotDataset(path, image_processor, tokenizer, args)
+    dataset = COCODataset(path, image_processor, tokenizer, args)
+
     return dataset
 
 
@@ -255,7 +253,7 @@ if __name__ == '__main__':
     args = argparse.Namespace(**vars(args), **vars(known))
     args.device = 'npu'
 
-    model_type = args.pretrain_model_path
+    model_type = os.path.join(args.pretrain_model_path, "visualglm-6b")
     model, args = FineTuneVisualGLMModel.from_pretrained(model_type, args)
     if torch.cuda.is_available():
         model = model.to('cuda')
