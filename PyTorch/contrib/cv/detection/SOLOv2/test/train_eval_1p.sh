@@ -48,22 +48,35 @@ fi
 #训练开始时间，不需要修改
 start_time=$(date +%s)
 
-#创建DeviceID输出目录，不需要修改
-if [ -d ${cur_path}/output/${ASCEND_DEVICE_ID} ];then
-    rm -rf ${cur_path}/output/${ASCEND_DEVICE_ID}
-    mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID
+###############指定训练脚本执行路径###############
+# cd到与test文件夹同层级目录下执行脚本，提高兼容性；test_path_dir为包含test文件夹的路径
+cur_path=`pwd`
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ];then
+    test_path_dir=${cur_path}
+    cd ..
+    cur_path=`pwd`
 else
-    mkdir -p ${cur_path}/output/$ASCEND_DEVICE_ID
+    test_path_dir=${cur_path}/test
+fi
+
+
+#创建DeviceID输出目录，不需要修改
+if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
+    rm -rf ${test_path_dir}/output/${ASCEND_DEVICE_ID}
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
+else
+    mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
 # 非平台场景时source 环境变量
 
 check_etp_flag=`env | grep etp_running_flag`
 etp_flag=`echo ${check_etp_flag#*=}`
 if [ x"${etp_flag}" != x"true" ];then
-    source ${cur_path}/test/env_npu.sh
+    source ${test_path_dir}/env_npu.sh
 fi
 nohup python3 tools/test_ins.py configs/solov2/solov2_r50_fpn_8gpu_1x.py  $MODEL --show --out  results_solo.pkl --eval segm \
-      --batch_size=${batch_size} --gpu-ids ${device_id} --data_root=$data_path > ${cur_path}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
+      --batch_size=${batch_size} --gpu-ids ${device_id} --data_root=$data_path > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 ##################获取训练数据################
@@ -72,7 +85,7 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 # 输出训练精度,需要模型审视修改 # eval.log | awk -F ',' '{print $1}' | awk '{print $2}' | awk ' END {print}'
-train_accuracy=`grep -a 'maxDets' $cur_path/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $13}'|head -n 1`
+train_accuracy=`grep -a 'maxDets' $test_path_dir/output/${ASCEND_DEVICE_ID}/eval_${ASCEND_DEVICE_ID}.log|awk -F " " '{print $13}'|head -n 1`
 # 打印，不需要修改
 echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -84,10 +97,10 @@ DeviceType=`uname -m`
 CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'eval'
 
 # 关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" >  ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "RankSize = ${RANK_SIZE}" >>  ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >>  ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >>  ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "CaseName = ${CaseName}" >>  ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "TrainAccuracy = ${train_accuracy}" >> ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >>  ${cur_path}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "Network = ${Network}" >  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "RankSize = ${RANK_SIZE}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "CaseName = ${CaseName}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >>  ${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
