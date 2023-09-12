@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 """
 This file contains specific functions for computing losses on the RPN
@@ -1036,8 +1049,8 @@ class ATSSLossComputation(torch.nn.Module):
                 shallow_normalized_img_embs = []
                 if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.USE_BACKBONE_SHALLOW_CONTRASTIVE_LOSS:
                     # choice 1：use features from SWINT backbone layer (c4) before vl fusion
-                    from maskrcnn_benchmark.layers.roi_align import ROIAlignV2
-                    pooler = ROIAlignV2((1, 1), 1./16, 0)
+                    from maskrcnn_benchmark.layers import ROIAlign
+                    pooler = ROIAlign((1, 1), 1. / 16, 0)
                     # get positive features
                     for i in range(bs):
                         rois = convert_to_roi_format(cat_boxlist(anchors[i])[new_positive_indices[i]])
@@ -1189,7 +1202,7 @@ class ATSSLossComputation(torch.nn.Module):
             centerness_loss = self.centerness_loss_func(centerness_flatten, centerness_targets) / num_pos_avg_per_gpu
         else:
             reg_loss = box_regression_flatten.sum()
-            reduce_sum(centerness_flatten.new_tensor([0.0]))
+            reduce_sum(centerness_flatten.new_tensor(0.0))
             centerness_loss = centerness_flatten.sum()
 
         return cls_loss, reg_loss * self.cfg.MODEL.ATSS.REG_LOSS_WEIGHT, centerness_loss, \
