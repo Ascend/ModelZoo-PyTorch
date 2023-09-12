@@ -130,18 +130,18 @@ VisualGLM-6B 依靠来自于 CogView 数据集的30M高质量中文图文对，�
      启动单卡训练。
 
      ```
-     bash test/train_full_1p.sh --data_path=COCO2017数据路径 --pretrain_model=预训练模型路径       # 单卡训练
+     bash test/train_full_1p.sh  COCO2017数据路径  预训练模型路径       # 单卡训练
      
-     bash test/train_performance_1p.sh --data_path=COCO2017数据路径 --pretrain_model=预训练模型路径       # 单卡性能
+     bash test/train_performance_1p.sh  COCO2017数据路径  预训练模型路径       # 单卡性能
      ```
      
    - 单机8卡训练
 
      启动8卡训练。
      ```
-     bash test/train_full_8p.sh --data_path=COCO2017数据路径 --pretrain_model=预训练模型路径       # 8卡训练
+     bash test/train_full_8p.sh  COCO2017数据路径  预训练模型路径       # 8卡训练
      
-     bash test/train_performance_8p.sh --data_path=COCO2017数据路径 --pretrain_model=预训练模型路径       # 8卡性能
+     bash test/train_performance_8p.sh  COCO2017数据路径  预训练模型路径       # 8卡性能
      ```
      
      
@@ -153,6 +153,14 @@ VisualGLM-6B 依靠来自于 CogView 数据集的30M高质量中文图文对，�
    
    训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
+# 推理任务
+```
+python3 --english 
+--from_pretrained test/output/${ASCEND_DEVICE_ID}/checkpoints/ 
+--chatglm_path glm/chatglm 
+--prompt_en "What's in the image?"
+```
+--english使用英文输入，--from_pretrained是训练保存的checkpoints，chatglm_path加载预训练chatglm地址，在glm/chatlglm路径下。
 
 # 训练结果展示
 
