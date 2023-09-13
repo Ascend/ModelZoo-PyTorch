@@ -929,7 +929,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         </td>
         <td>sacrebleu</td>
         <td></td>
-    <td>encoder:224.376(bs1)<br>der_first_step:82.827(bs1)<br>decoder:223.848(bs1)</td>
+    <td>encoder:224.376(bs1)<br>der_first_step:82.827(bs1)<br>decoder:141.6(bs1)</td>
     <td nowrap="nowrap">1 x 90</td>
     </tr>
     <tr>
