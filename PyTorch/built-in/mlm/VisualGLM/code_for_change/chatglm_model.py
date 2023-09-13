@@ -20,12 +20,12 @@ from sat.model.base_model import BaseMixin, BaseModel
 import math
 from sat import mpu
 from sat.mpu.utils import split_tensor_along_last_dim
-from sat.transformer_defaults import attention_fn_default
 
 @torch.jit.script
 def gelu_impl(x):
     """OpenAI's gelu implementation."""
     return torch.fast_gelu(x)
+
 
 def gelu(x):
     return gelu_impl(x)
