@@ -24,15 +24,15 @@ lang=en-de
 prep=$OUTDIR
 tmp=$prep/tmp
 orig=orig
-dev=dev/newstest2013
 
 mkdir -p $tmp $prep
 
 CORPORA=(
     "training/europarl-v7.de-en"
-    "commoncrawl.de-en"
     "paracrawl-release1.en-de.zipporah0-dedup-clean"
-    "training/news-commentary-v12.de-en"
+    "commoncrawl.de-en"
+    "training-parallel-nc-v13/news-commentary-v13.de-en"
+    "rapid2016.de-en"
 )
 
 echo "pre-processing train data..."
@@ -53,7 +53,7 @@ for l in $src $tgt; do
     else
         t="ref"
     fi
-    grep '<seg id' $orig/test-full/newstest2014-deen-$t.$l.sgm | \
+    grep '<seg id' $orig/test/newstest2018-ende-$t.$l.sgm | \
         sed -e 's/<seg id="[0-9]*">\s*//g' | \
         sed -e 's/\s*<\/seg>\s*//g' | \
         sed -e "s/\’/\'/g" | \
