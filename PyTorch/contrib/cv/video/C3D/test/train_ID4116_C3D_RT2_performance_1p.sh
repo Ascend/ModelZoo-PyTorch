@@ -10,7 +10,7 @@ export ENABLE_RUNTIME_V2=1
 export NPU_CALCULATE_DEVICE=$ASCEND_DEVICE_ID
 
 #conda环境的名称
-conda_name=py1
+#conda_name=py1
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
@@ -32,16 +32,8 @@ do
         epochs=`echo ${para#*=}`
     elif [[ $para == --conda_name* ]];then
         conda_name=`echo ${para#*=}`
-        source set_conda.sh
-        i=`pip3 list | grep torch-npu|awk 'END {print $2}'`
-        j="1.8"
-        result=$(echo $i | grep "${j}")
-        if [[ "$result" != "" ]]
-        then
-            source activate $conda_name
-        else
-            source activate py2_1.11
-        fi
+        source set_conda.sh --conda_name=$conda_name
+        source activate $conda_name
     fi
 done
 
