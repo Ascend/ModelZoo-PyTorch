@@ -365,7 +365,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100024
         </td><td>
-        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/EfficientNet_for_Pytorch">   EfficientNet-B0 </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/EfficientNet_for_Pytorch">   EfficientNet-B0 </a>
         </td>
         <td>ImageNet</td>
     <td></td>
@@ -1001,7 +1001,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100082
         </td><td>
-        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/CRNN/CRNN_Sierkinhane_for_Pytorch"> CRNN-ocr </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/CRNN/CRNN_Sierkinhane_for_Pytorch"> CRNN-ocr </a>
         </td>
         <td>原仓自带的数据集</td>
     <td>78.37%</td>
@@ -1014,7 +1014,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100087
         </td><td>
-        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/DBNET"> DBNET-ocr </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/ocr/DBNET"> DBNET-ocr </a>
         </td>
         <td>icdar2015</td>
     <td></td>
@@ -1043,7 +1043,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100398 </td>
         <td>
-        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/foundation_models/OpenCLIP"> OpenCLIP </a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/foundation_models/OpenCLIP"> OpenCLIP </a>
         </td>
         <td> flickr30k </td>
         <td> image: 0.8841 <br> text: 0.9620 </td>
@@ -2386,7 +2386,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <tr>
         <td> 100186
         </td><td>
-        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/ch_PP-OCRv3_det">  CH-PPOCRV3-det</a>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/contrib/cv/detection/ch_PP-OCRv3_det">  CH-PPOCRV3-det</a>
         </td>
         <td>PaddleOCR</td>
     <td></td>
