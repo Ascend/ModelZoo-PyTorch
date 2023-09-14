@@ -59,12 +59,12 @@ def trans_data_format(model):
 
 
 def init_model(init_args):
-    tokenizer_path = os.path.join(init_args.load_path, '/tokenizer')
+    tokenizer_path = os.path.join(init_args.load_path, 'tokenizer')
     tokenizer_init = AutoTokenizer.from_pretrained(tokenizer_path, use_fast=False)
     tokenizer_init.add_special_tokens({'pad_token': '[PAD]'})  # pad or not
     print("load tokenizer success!")
 
-    part_model_path = os.path.join(init_args.load_path, '/part_model/', str(local_rank), '/')
+    part_model_path = os.path.join(init_args.load_path, 'part_model', str(local_rank))
     model_init = AutoModelForCausalLM.from_pretrained(part_model_path, torch_dtype=torch.float16).npu()
     model_init.resize_token_embeddings(len(tokenizer_init))  # pad or not
     print("load model success!")

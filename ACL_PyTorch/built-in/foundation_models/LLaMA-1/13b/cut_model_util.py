@@ -67,7 +67,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.world_size = int(args.world_size) 
     tokenizer = LlamaTokenizer.from_pretrained(args.input_path, use_fast=False)
-    tokenizer.save_pretrained(os.path.join(args.output_path, '/tokenizer'))
+    tokenizer.save_pretrained(os.path.join(args.output_path, 'tokenizer'))
     
     model = LlamaForCausalLM.from_pretrained(args.input_path, torch_dtype=torch.float16)
     state_dict_list = cut_weights(model, args.world_size, args.cut_row_keys, args.cut_col_keys)
@@ -97,6 +97,6 @@ if __name__ == "__main__":
     creat_model = LlamaForCausalLM(create_config)
     for i in range(args.world_size):
         creat_model.load_state_dict(state_dict_list[i]) # load the weights to the model
-        creat_model.save_pretrained(os.path.join(args.output_path, '/part_model/', str(i), '/')) # save model
+        creat_model.save_pretrained(os.path.join(args.output_path, 'part_model', str(i))) # save model
     print('save succcessfully')
 
