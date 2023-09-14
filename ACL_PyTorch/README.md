@@ -3,7 +3,7 @@
 <h2>如何贡献</h2>
 <p>在开始贡献之前，请先阅读<a href="https://gitee.com/ascend/modelzoo/blob/master/CONTRIBUTING.md">CONTRIBUTING</a>。
 谢谢！</p>
-<p>目前ACL_PyTorch仓库已有模型<strong>397</strong>个</p>
+<p>目前ACL_PyTorch仓库已有模型<strong>398</strong>个</p>
 <blockquote>
 <p><strong>注意：</strong> <br />
 <strong>在提交新模型时，请加上模型ID用于区分，为防止重复提交模型，请执行脚本get_modelID.py，该脚本会自动检索ACL_PyTorch仓库中所有与您提交模型相关的已有模型，请自行查看脚本给出的链接，如果均不同，则可以输入1或true用于获取模型ID。由于该脚本使用正则匹配，后续新模型刷新到主页需要添加README内容时，格式请参考其余模型，并且同步刷新上文模型数量。脚本执行方式如下：</strong><br />
@@ -1023,6 +1023,32 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>19(bs16)</td>
         <td></td>
     <td>bs x 3 x 736 x 1280</td>
+    </tr>
+</table>
+
+<p>foundation_models</p>
+<table align="center">
+    <tr>
+        <th rowspan=2>ID</th>
+        <th rowspan=2>Name</th>
+        <th rowspan=2>Dataset</th>
+        <th align="center" colspan=1>精度</th>
+        <th colspan=1>最优性能（对应bs）</th>
+        <th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+        <td>retrieval_recall@5</td>
+        <td>910B4</td>
+    </tr>
+    <tr>
+        <td> 100398 </td>
+        <td>
+        <a href="https://gitee.com/LoopNaga/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/foundation_models/OpenCLIP"> OpenCLIP </a>
+        </td>
+        <td> flickr30k </td>
+        <td> image: 0.8841 <br> text: 0.9620 </td>
+        <td> vision: 326(bs64)<br> text: 4502(bs64)</td>
+        <td> vision: bs x 3 x 224 x 224 <br> text: bs x 77 </td>
     </tr>
 </table>
 
