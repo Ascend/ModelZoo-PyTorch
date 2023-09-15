@@ -182,7 +182,7 @@ class PrefixEncoder(torch.nn.Module):
 @torch.jit.script
 def gelu_impl(x):
     """OpenAI's gelu implementation."""
-    return torch.fast_gelu(x)
+    return F.gelu(x)
 
 
 def gelu(x):
