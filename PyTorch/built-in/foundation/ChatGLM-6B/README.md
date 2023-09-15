@@ -41,9 +41,9 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
 
   **表 1**  版本支持表
 
-  | Torch_Version      | 三方库依赖版本                                 |
-  | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.11 | deepspeed 0.6.0 |
+  | Torch_Version      |    三方库依赖版本     |
+  |:--------------:| :----------------------------------------------------------: |
+  | PyTorch 1.11 | deepspeed 0.9.2 |
   
 - 环境准备指导。
 
@@ -61,11 +61,19 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
   2. 安装deepspeed_npu插件
 
   ```
-  # adaptor分支
+  # v0.9.2分支
   git clone https://gitee.com/ascend/DeepSpeed.git
   cd Deepspeed
   pip3 install ./
   ```
+  
+  3. 替换transformers依赖文件
+  ```
+   # 自动替换无法替换三方库中的文件。
+   pip show transformers
+   # 获取transformers的Location路径
+   # 使用fix文件夹下的tranining_args.py替换路径下transformers/tranining_args.py
+   ```
 
 
 ## 准备数据集
@@ -138,7 +146,7 @@ bash preprocess.sh
 1. 进入解压后的源码包根目录。
 
    ```
-   cd /${模型文件夹名称}
+   cd /${模型文件夹名称}/ptuning
    ```
    修改ptuning目录下的env_npu.sh，修改引用的环境变量位置。
 
@@ -151,7 +159,7 @@ bash preprocess.sh
      启动P-Tuning v2。
 
      ```
-     bash ptuning/train.sh
+     bash train.sh
      ```
 
    - 全参数finetune
@@ -160,7 +168,7 @@ bash preprocess.sh
      可以用deepspeed.json配置deepspeed参数，目前默认使用zero2
 
      ```
-     bash ptuning/ds_train_fintune.sh 
+     bash ds_train_fintune.sh 
      ```
 
     
@@ -185,7 +193,8 @@ bash preprocess.sh
 
     运行以下命令
     ```
-     bash ptuning/evaluate_fintune.sh 
+    cd /${模型文件夹名称}/ptuning
+    bash evaluate_fintune.sh 
     ```
     生成结果在屏幕上显示
 
@@ -196,7 +205,7 @@ bash preprocess.sh
 
 |     NAME      | SamplesPerSec | Iterations  | DataType  | Torch_Version | Card |
 |:-------------:|:-------------:|:-:|:-:|:-:|:----:|
-| Finetune -NPU |     1951      | 5000   | fp16  | 1.11  | 910B |
+| Finetune -NPU |     2213      | 5000   | fp16  | 1.11  | 910B |
 | Finetune -GPU |     2048      | 5000   | fp16  | 1.11  | A800 |
 
 说明：P-Tuning 仅打通功能，无性能优化。
@@ -205,12 +214,12 @@ bash preprocess.sh
 
 |   评估项   |   NPU   |   GPU   | 
 |:-------:|:-------:|:-------:|
-| BLEU-4  | 7.9662  | 7.8422  |
-| ROUGE-1 | 31.5563 | 31.2764 |
-| ROUGE-2 | 7.3841  | 7.1679  |
-| ROUGE-l | 25.0371 | 25.0371 |
+| BLEU-4  | 8.2853  | 8.1127  |
+| ROUGE-1 | 31.1898 | 30.7429 |
+| ROUGE-2 | 7.3583  | 7.1024  |
+| ROUGE-l | 24.9874 | 24.8157 |
 
-说明：该结果是step=1000的验证结果。
+说明：该结果是step=5000的验证结果。
 
 # 版本说明
 
@@ -222,21 +231,14 @@ bash preprocess.sh
 
 1. 报错提示deepspeed.py需要版本大于等于0.6.5
    ```
-   # 关闭版本检测。
+   # 关闭版本检测（如安装0.9.2版本无需此操作）
    # 若遇到该报错
    pip show transformers
    # 复制Location路径
    # 使用fix文件夹下的deepspeed.py替换路径下transformers/deepspeed.py
    ```
-2. 报错提示tranining_args.py没有cuda
-   ```
-   # 自动替换无法替换三方库中的文件。
-   # 若遇到该报错
-   pip show transformers
-   # 复制Location路径
-   # 使用fix文件夹下的tranining_args.py替换路径下transformers/tranining_args.py
-   ```
-3. 报错checkpoint.py
+
+2. 报错checkpoint.py
 
    ```
    # 1.11版本适配问题，新版本已修复。
@@ -246,27 +248,26 @@ bash preprocess.sh
    # 使用fix文件夹下的checkpoint.py替换路径下torch_npu/utils/checkpoint.py
    
    ```
-4. 加载参数阶段有卡死现象
+3. 加载参数阶段有卡死现象
     
    ```
    删除root下的cache目录，重新运行
-   
    ```
-5. 单卡阶段报embedding_dense_grad算子错误
+4. 单卡阶段报embedding_dense_grad算子错误
    ```
    enbedding当前版本，不支持动静合一，静态有部分shape不支持,新版本已修复
    # 若遇到该报错
    修改main.py文件
    torch.npu.set_compile_mode(jit_compile=False)
    ```
-6. 提示so文件错误
+5. 提示so文件错误
    ``` 
    提示so文件找不到
    # 若遇到该报错
    全局搜索so的位置，然后导入环境变量
    export LD_LIBRARY_PATH=/usr/:$LD_LIBRARY_PATH
    ```
-7. eval提示scaledsoftmax报错
+6. eval提示scaledsoftmax报错
     ``` 
    算子shape泛化性还有问题
    # 若遇到该报错
