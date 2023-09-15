@@ -100,6 +100,15 @@ def main():
     Eval(experiment, experiment_args, cmd=args, verbose=args['verbose']).eval(args['visualize'])
 
 
+def handle_state_dict_module(state_dict):
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        if (k[0:13] == "model.module."):
+            k = "model." + k[13:]
+        new_state_dict[k] = v
+    return new_state_dict
+
+
 class Eval:
     def __init__(self, experiment, args, cmd=dict(), verbose=False):
         self.experiment = experiment
@@ -134,6 +143,7 @@ class Eval:
         self.logger.info("Resuming from " + path)
         states = torch.load(
             path, map_location=self.device)
+        states = handle_state_dict_module(states)
         model.load_state_dict(states, strict=False)
         self.logger.info("Resumed from " + path)
 
