@@ -1,4 +1,4 @@
-# LLaMA-Adaptor（打架斗殴场景）模型-推理指导
+# LLaMA-Adaptor模型-推理指导
 
 - [概述](#概述)
 
@@ -49,7 +49,7 @@
 | CANN           | 7.0.T3   | [https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/261075821?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C251168373](https://gitee.com/link?target=https%3A%2F%2Fsupport.huawei.com%2Fenterprise%2Fzh%2Fascend-computing%2Fcann-pid-251168373%2Fsoftware%2F261075821%3FidAbsPath%3Dfixnode01%7C23710424%7C251366513%7C22892968%7C251168373) |
 |                |          |                                                              |
 | PytorchAdapter | 1.11.0   | -[https://container-obsfs-filesystem.obs.cn-north-4.myhuaweicloud.com/package/ascend/pytorch/version_compile/202308/20230818_05/centos_aarch64/torch_v1.11.0.tar.gz](https://gitee.com/link?target=https%3A%2F%2Fcontainer-obsfs-filesystem.obs.cn-north-4.myhuaweicloud.com%2Fpackage%2Fascend%2Fpytorch%2Fversion_compile%2F202308%2F20230818_05%2Fcentos_aarch64%2Ftorch_v1.11.0.tar.gz) |
-| 推理引擎           | -   |     [https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/261204646?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C251168373](https://gitee.com/link?target=https%3A%2F%2Fsupport.huawei.com%2Fenterprise%2Fzh%2Fascend-computing%2Fcann-pid-251168373%2Fsoftware%2F261204646%3FidAbsPath%3Dfixnode01%7C23710424%7C251366513%7C22892968%7C251168373)     |
+| 加速库           | -   |     https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/261249334?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C251168373     |
 | 基础镜像 | - | https://ascend-transformer-acceleration.obs.cn-north-4.myhuaweicloud.com/docker_file/chatglm6b/acltransformer_base.tar |
 | Python | 3.7.5 | - |
 
@@ -70,7 +70,7 @@
 
 - 基础镜像搭建 
 
-   [获取镜像]: https://ascend-transformer-acceleration.obs.cn-north-4.myhuaweicloud.com/docker_file/chatglm6b/acltransformer_base.tar
+   [获取镜像](https://ascend-transformer-acceleration.obs.cn-north-4.myhuaweicloud.com/docker_file/chatglm6b/acltransformer_base.tar)
 
    ```bash
    docker load < acltransformer_base.tar
@@ -96,14 +96,14 @@
    | 权重    | 下载地址                                                     |
    | ------- | ------------------------------------------------------------ |
    | llama1  | https://ai.meta.com/resources/models-and-libraries/llama-downloads/ |
-   | BIAS-7B | https://github.com/OpenGVLab/LLaMA-Adapter/releases/download/v.2.0.0/1bcbffc43484332672092e0024a8699a6eb5f558161aebf98a7c6b1db67224d1_LORA-BIAS-7B.pth |
+   | BIAS-7B | https://github.com/OpenGVLab/LLaMA-Adapter/releases/download/v.2.0.0/7fa55208379faf2dd862565284101b0e4a2a72114d6490a95e432cf9d9b6c813_BIAS-7B.pth |
    
 3. 安装加速库
    下载
    
-   [推理引擎文件]: https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/261204646?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C251168373
+   [加速库](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/261249334?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C251168373)
    
-   ，`ascend_acclib_llama_adapter.zip`
+   `ascend_acclib_llama_adapter.zip`
    
    ```bash
    # 解压
@@ -117,11 +117,13 @@
 **模型的推理及执行都需在docker中进行**
 
 1. 图像模型CLIP部分
+ 
+    权重涉及半精度float16，暂时只支持在gpu环境导出onnx。
 - 转onnx
    ```
-   pth2onnx.py https://github.com/OpenGVLab/LLaMA-Adapter/releases/download/v.2.0.0/7fa55208379faf2dd862565284101b0e4a2a72114d6490a95e432cf9d9b6c813_BIAS-7B.pth ${pth_path}
+   pth2onnx.py ${pth_path}
    ```
-   第一个参数是BIA-7B权重文件的下载链接，第二个参数是指定权重文件的下载路径。
+   参数是上文指定下载好的BIAS-7B权重文件路径。
    执行该脚本后得到clip.onnx.
 
 - 转om
