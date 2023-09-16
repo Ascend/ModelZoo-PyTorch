@@ -128,7 +128,7 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
          --output_dir $finetuned_model \
          --train_path data/train.txt \
          --dev_path data/dev.txt  \
-         --max_seq_length 512  \
+         --max_seq_length 128  \
          --per_device_eval_batch_size 16 \
          --per_device_train_batch_size  16 \
          --num_train_epochs 100 \
@@ -172,7 +172,7 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
 
       - `model_path_prefix`: 用于推理的Paddle模型文件路径，需加上文件前缀名称。例如模型文件路径为`./export/model.pdiparams`，则传入`./export/model`。
       - `position_prob`：模型对于span的起始位置/终止位置的结果概率 0~1 之间，返回结果去掉小于这个阈值的结果，默认为 0.5，span 的最终概率输出为起始位置概率和终止位置概率的乘积。
-      - `max_seq_len`: 文本最大切分长度，输入超过最大长度时会对输入文本进行自动切分，默认为 512。
+      - `max_seq_len`: 文本最大切分长度，输入超过最大长度时会对输入文本进行自动切分，默认为 128。
       - `batch_size`: 批处理大小，请结合机器情况进行调整，默认为 4。
       - `multilingual`：是否是跨语言模型，用 "uie-m-base", "uie-m-large" 等模型进微调得到的模型是多语言模型，需要设置为 True；默认为 False。
       - `device_id`: GPU 设备 ID，默认为 0。
@@ -206,17 +206,38 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
          +===================+=================+======================================================+
          ```
 
+      3. 优化onnx模型。
+         1. 执行onnxsim
+            ```
+            mkdir modified
+
+            python3 -m onnxsim model.onnx modified/uie_bs${bs}.onnx --overwrite-input-shape "input_ids:${bs},128" "token_type__ids:${bs},128" "position_ids:${bs},128" "attention_mask_ids:${bs},128"
+            ```
+
+            获得`uie_bs${bs}.onnx`文件
+
+         2. 改图
+            
+            使用auto-optimizer改图，获取安装使用请参考[这里](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)
+
+            ```
+            # 四个参数对应:
+            # 1.输入onnx路径 2.改图保存onnx路径 3.batch size 4.max_seq_len
+            python3 fix_onnx.py modified/uie_bs${bs}.onnx modified/uie_fix_bs${bs}.onnx ${bs} 128
+            ```
+            最终获得`uie_fix_bs${bs}.onnx`文件
+      
       3. 执行ATC命令。
 
          ```
-          atc --model=model.onnx \
+          atc --model=uie_fix_bs${bs}.onnx \
                --framework=5 \
                --output=uie_bs${batch_size} \
                --input_format=ND \
-               --input_shape="token_type_ids:${batch_size},512; \
-                              input_ids:${batch_size},512; \
-                              position_ids:${batch_size},512; \
-                              attention_mask:${batch_size},512"\
+               --input_shape="token_type_ids:${batch_size},128; \
+                              input_ids:${batch_size},128; \
+                              position_ids:${batch_size},128; \
+                              attention_mask:${batch_size},128"\
 
                --log=error \
                --soc_version=Ascend${chip_name} \
@@ -265,6 +286,7 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
       --test_path ./data/dev.txt \
       --batch_size ${batch_size} \
       --device_id 0 \
+      --max_seq_len 128 \
       --debug
       ```
       -   参数说明：
@@ -273,6 +295,7 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
              -   device_id：芯片ID
              -   batch_size：模型bs
              -   test_path: 测试数据集路径
+             -   max_seq_len: 最大输入序列长度
              -   debug: 开启显示各个class评估数据，关闭debug只显示总的评估数据
 
    3. 性能验证。
@@ -280,7 +303,7 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
       可使用ais-bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3 -m ais_bench --model=${om_model_path} --loop=100 --batchsize=${batch_size}
+         python3 -m ais_bench --model=${om_model_path} --loop=50  --batchsize=${batch_size}
         ```
 
       - 参数说明：
@@ -294,21 +317,21 @@ Yaojie Lu等人在ACL-2022中提出了通用信息抽取统一框架UIE。该框
 
 调用ACL接口推理计算，性能参考下列数据。
 
-| 芯片型号 | Batch Size | 精度（Acc） | 性能（fps） |
-| :------: | :--------:  | :--: | :--: |
-|    310P3      |     1       |      100%    |  156.61    |
-|    310P3      |     4       |      100%    |  162.92    |
-|    310P3      |     8       |      100%    |    169.20  |
-|    310P3      |     16       |    100%    |  172.80    |
-|    310P3      |     32       |   100%    |  173.97    |
-|    310P3      |     64       |      100%    |  172.48    |
+| 芯片型号 | Batch Size |  Seq_len|精度（Acc） | 性能（fps） |
+| :------: | :------:  |  :----|:--: | :--: |
+|    310P3      |     1       | 128 |     100%    |  493.99    |
+|    310P3      |     4       |  128 |    100%    |  1130.84    |
+|    310P3      |     8       |   128|    100%    |    1333.51  |
+|    310P3      |     16       |  128|  100%    |  1334.26    |
+|    310P3      |     32       |  128| 100%    |  1114.84    |
+|    310P3      |     64       |   128|   100%    |  1126.12    |
 
 测试tensorrt推理引擎，竞品性能参考下列数据。
 | 芯片型号 | Batch Size  | 性能（fps） |
 | :------: | :--------:  |  :--: |
-|    T4      |     1           |  210.32    |
-|    T4      |     4          |  208.46    |
-|    T4      |     8           |    210.97  | 
-|    T4      |     16           |  227.98    |
-|    T4      |     32          |  229.67    |
-|    T4      |     64           |  238.51    |
+|    T4      |     1           |  559.51    |
+|    T4      |     4          |  1021.18    |
+|    T4      |     8           |    1043.02  | 
+|    T4      |     16           |  1006.29    |
+|    T4      |     32          |  1013.30    |
+|    T4      |     64           |  1075.63    |
