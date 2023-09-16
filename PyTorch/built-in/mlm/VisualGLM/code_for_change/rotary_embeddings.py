@@ -42,7 +42,7 @@ class RotaryEmbedding(torch.nn.Module):
             seq_len = x.shape[seq_dim]
         if self.max_seq_len_cached is None or (seq_len > self.max_seq_len_cached):
             self.max_seq_len_cached = None if self.learnable else seq_len
-            t = torch.arange(seq_len, device=x.device, dtype=torch.float32)
+            t = torch.arange(seq_len, device=x.device, dtype=self.inv_freq.dtype)
             freqs = torch.einsum('i,j->ij', t, self.inv_freq)
             # Different from paper, but it uses a different permutation in order to obtain the same calculation
             emb = torch.cat((freqs, freqs), dim=-1).to(x.device)
@@ -51,8 +51,8 @@ class RotaryEmbedding(torch.nn.Module):
 
             cos_cached = emb.cos().unsqueeze(1)
             sin_cached = emb.sin().unsqueeze(1)
-            cos_cached = cos_cached.to(x.dtype)
-            sin_cached = sin_cached.to(x.dtype)
+            cos_cached = cos_cached.to(self.precision)
+            sin_cached = sin_cached.to(self.precision)
             if self.learnable:
                 return cos_cached, sin_cached
             self.cos_cached, self.sin_cached = cos_cached, sin_cached

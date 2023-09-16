@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -26,28 +27,18 @@ def gelu_impl(x):
     """OpenAI's gelu implementation."""
     return torch.fast_gelu(x)
 
-
 def gelu(x):
     return gelu_impl(x)
 
 from sat.model.position_embedding.rotary_embeddings import RotaryEmbedding, apply_rotary_pos_emb_index
-from sat.mpu.layers import ColumnParallelLinear
 
 class ChatGLMFinalMixin(BaseMixin):
     def __init__(self, vocab_size, hidden_size):
         super().__init__()
-        self.lm_head = ColumnParallelLinear(
-            hidden_size,
-            vocab_size,
-            gather_output=True,
-            bias=False,
-            module=self,
-            name="lm_head",
-        )
+        self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
 
     def final_forward(self, logits, **kwargs):
         return self.lm_head(logits)
-
 
 class ChatGLMAttnMixin(BaseMixin):
     def __init__(self, hidden_size, num_heads):
@@ -59,27 +50,51 @@ class ChatGLMAttnMixin(BaseMixin):
             learnable=False,
         )
 
+    def attention_fn(self, query_layer, key_layer, value_layer, attention_mask,
+                        attention_dropout=None, log_attention_weights=None, scaling_attention_score=True, **kwargs):
+        query_key_layer_scaling_coeff = float(kwargs['layer_id'] + 1)
+        if scaling_attention_score:
+            query_layer = query_layer / (math.sqrt(query_layer.shape[-1]) * query_key_layer_scaling_coeff)
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+        dtype = attention_scores.dtype
+        if log_attention_weights is not None:
+            attention_scores += log_attention_weights
+
+        if not (attention_mask.shape[-2] == 1 and (attention_mask > 0).all()):
+            # if auto-regressive, skip
+            attention_scores = torch.mul(attention_scores, attention_mask) - \
+                            10000.0 * (1.0 - attention_mask)
+        attention_scores = attention_scores.float()
+        attention_scores = attention_scores * query_key_layer_scaling_coeff
+        attention_probs = F.softmax(attention_scores, dim=-1)
+        attention_probs = attention_probs.type(dtype)
+
+        if attention_dropout is not None:
+            if mpu.get_cuda_rng_tracker is not None:
+                with mpu.get_cuda_rng_tracker().fork():
+                    attention_probs = attention_dropout(attention_probs)
+            else:
+                attention_probs = attention_dropout(attention_probs)
+
+        context_layer = torch.matmul(attention_probs, value_layer)
+        return context_layer
+
     def attention_forward(self, hidden_states, mask, **kw_args):
         mixin_self = self
         position_ids = kw_args['position_ids']
         self = self.transformer.layers[kw_args['layer_id']].attention
-        attention_fn = attention_fn_default
-        if 'attention_fn' in self.hooks:
-            attention_fn = self.hooks['attention_fn']
+        attention_fn = self.hooks['attention_fn']
+
+        hidden_states = hidden_states.transpose(0, 1)
         mixed_raw_layer = self.query_key_value(hidden_states)
-        (mixed_query_layer,
-            mixed_key_layer,
-            mixed_value_layer) = split_tensor_along_last_dim(mixed_raw_layer, self.stride)
 
-        dropout_fn = self.attention_dropout if self.training else None
+        new_tensor_shape = mixed_raw_layer.size()[:-1] + (
+            self.num_attention_heads_per_partition,
+            3 * self.hidden_size_per_attention_head,
+        )
+        mixed_raw_layer = mixed_raw_layer.view(*new_tensor_shape)
 
-        query_layer = self._transpose_for_scores(mixed_query_layer)
-        key_layer = self._transpose_for_scores(mixed_key_layer)
-        value_layer = self._transpose_for_scores(mixed_value_layer)
-        
-        query_layer = query_layer.permute(2, 0, 1, 3)
-        key_layer = key_layer.permute(2, 0, 1, 3)
-        value_layer = value_layer.permute(2, 0, 1, 3)
+        (query_layer, key_layer, value_layer) = split_tensor_along_last_dim(mixed_raw_layer, 3)
 
         q1, q2 = query_layer.chunk(2, dim=(query_layer.ndim - 1))
         k1, k2 = key_layer.chunk(2, dim=(key_layer.ndim - 1))
@@ -147,17 +162,6 @@ class ChatGLMLayerMixin(BaseMixin):
         
         mlp_input = self.post_attention_layernorm(hidden_states)
 
-        if self.is_decoder:
-            encoder_outputs = kw_args['encoder_outputs']
-            if encoder_outputs is not None:
-                assert 'cross_attention_mask' in kw_args
-                # Cross attention
-                attention_output = self.cross_attention(mlp_input, **kw_args)
-                # Residual connection.
-                hidden_states = mlp_input + attention_output
-                # Layer norm post the cross attention
-                mlp_input = self.post_cross_attention_layernorm(hidden_states)
-
         # MLP.
         mlp_output = self.mlp(mlp_input, **kw_args)
 
@@ -176,14 +180,13 @@ class ChatGLMLayerMixin(BaseMixin):
 class ChatGLMModel(BaseModel):
     def __init__(self, args, transformer=None, **kwargs):
         super(ChatGLMModel, self).__init__(args, transformer=transformer, activation_func=gelu, **kwargs)
-        del self.transformer.position_embeddings
         self.add_mixin("chatglm-final", ChatGLMFinalMixin(args.vocab_size, args.hidden_size))
         self.add_mixin("chatglm-attn", ChatGLMAttnMixin(args.hidden_size, args.num_attention_heads))
         self.add_mixin("chatglm-layer", ChatGLMLayerMixin(args.num_layers))
         self.bos_token_id = args.bos_token_id
         self.mask_token_id = args.mask_token_id
         self.gmask_token_id = args.gmask_token_id
-        self.pad_token_id = args.pad_token_id
+        self.pad_token_id = 3
 
     def position_embedding_forward(self, position_ids, output_cross_layer, **kw_args):
         return None
@@ -232,7 +235,7 @@ class ChatGLMModel(BaseModel):
     def get_masks(self, input_ids, device, **kwargs):
         batch_size, seq_length = input_ids.shape
         context_lengths = [seq.tolist().index(self.bos_token_id) for seq in input_ids]
-        attention_mask = torch.ones((batch_size, seq_length, seq_length), dtype=next(self.parameters()).dtype, device=device)
+        attention_mask = torch.ones((batch_size, seq_length, seq_length), device=device)
         attention_mask.tril_()
         for i, context_length in enumerate(context_lengths):
             attention_mask[i, :, :context_length] = 1
@@ -271,5 +274,4 @@ class ChatGLMModel(BaseModel):
         group.add_argument('--bos-token-id', type=int)
         group.add_argument('--mask-token-id', type=int)
         group.add_argument('--gmask-token-id', type=int)
-        group.add_argument('--pad-token-id', type=int)
         return super().add_model_specific_args(parser)
