@@ -31,6 +31,8 @@ export COMBINED_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
+# HCCL默认超时时间120s较少，修改为1800s对齐PyTorch默认设置
+export HCCL_CONNECT_TIMEOUT=1800
 
 #设置device侧日志登记为error
 msnpureport -g error -d 0
