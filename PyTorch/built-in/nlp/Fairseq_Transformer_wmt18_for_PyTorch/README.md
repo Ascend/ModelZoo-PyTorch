@@ -67,10 +67,10 @@ Fairseq Transformer wmt18模型是Fairseq套件中基于Transformer结构的翻�
     | 来源  | 名称                                             |
     | :---- |:----------------------------------------------- |
     | wmt13 | [training-parallel-europarl-v7.tgz](http://statmt.org/wmt13/training-parallel-europarl-v7.tgz) |
-    | wmt13 | [training-parallel-commoncrawl.tgz](http://statmt.org/wmt13/training-parallel-commoncrawl.tgz) |
     | wmt18 | [paracrawl-release1.en-de.zipporah0-dedup-clean.tgz](https://s3.amazonaws.com/web-language-models/paracrawl/release1/paracrawl-release1.en-de.zipporah0-dedup-clean.tgz) |
+    | wmt13 | [training-parallel-commoncrawl.tgz](http://statmt.org/wmt13/training-parallel-commoncrawl.tgz) |
     | wmt18 | [training-parallel-nc-v13.tgz](http://data.statmt.org/wmt18/translation-task/training-parallel-nc-v13.tgz) |
-    | wmt18 | [dev.tgz](http://data.statmt.org/wmt18/translation-task/dev.tgz) |
+    | Tilde | [rapid2016.tgz](http://data.statmt.org/wmt18/translation-task/rapid2016.tgz) |
     | wmt18 | [test.tgz](http://data.statmt.org/wmt18/translation-task/test.tgz) |
 
     其中，前五项语料为训练集+验证集；最后一项语料为测试集。
