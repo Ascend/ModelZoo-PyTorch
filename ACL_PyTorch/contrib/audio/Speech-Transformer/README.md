@@ -164,7 +164,7 @@ tgt_word_prj
    1. 获取权重文件。
 
       ```
-      wget https://ascend-pytorch-model-file.obs.cn-north-4.myhuaweicloud.com/%E9%AA%8C%E6%94%B6-%E6%8E%A8%E7%90%86/cv/audio/speech-transformer/final.pth.tar
+      wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Speech-transformer/PTH/final.pth.tar
       ```
        
    2. 导出 onnx 文件。
