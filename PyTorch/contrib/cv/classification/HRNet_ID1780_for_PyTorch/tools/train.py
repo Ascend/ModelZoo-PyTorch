@@ -263,6 +263,7 @@ def main():
     nproc = args.nproc
     num_workers = nproc // device_num
     bs = args.bs
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=bs,
@@ -270,7 +271,8 @@ def main():
         num_workers=num_workers,
         pin_memory=True,
         sampler=train_sampler,
-        drop_last=False
+        drop_last=False,
+        **kwargs
     )
     valid_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
@@ -283,7 +285,8 @@ def main():
         shuffle=(train_sampler is None),
         num_workers=num_workers,
         pin_memory=True,
-        drop_last=False
+        drop_last=False,
+        **kwargs
     )
 
     train_epochs = args.train_epochs

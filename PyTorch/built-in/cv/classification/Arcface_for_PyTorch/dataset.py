@@ -75,6 +75,7 @@ def get_dataloader(
     else:
         init_fn = partial(worker_init_fn, num_workers=num_workers, rank=rank, seed=seed)
 
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     train_loader = DataLoaderX(
         local_rank=local_rank,
         dataset=train_set,
@@ -84,6 +85,7 @@ def get_dataloader(
         pin_memory=True,
         drop_last=True,
         worker_init_fn=init_fn,
+        **kwargs
     )
 
     return train_loader

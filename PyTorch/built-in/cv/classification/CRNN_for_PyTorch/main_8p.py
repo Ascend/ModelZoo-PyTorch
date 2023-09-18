@@ -164,6 +164,7 @@ def main():
     else:
         train_sampler = None
 
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     train_loader = DataLoader(
         dataset=train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE_PER_GPU,
@@ -173,7 +174,8 @@ def main():
         collate_fn=utils.alignCollate(32, 100),
         pin_memory=config.PIN_MEMORY,
         sampler=train_sampler,
-        drop_last=config.DROP_LAST
+        drop_last=config.DROP_LAST,
+        **kwargs
     )
 
     # W,H
@@ -183,7 +185,8 @@ def main():
         batch_size=config.TEST.BATCH_SIZE_PER_GPU,
         shuffle=config.TEST.SHUFFLE,
         num_workers=config.WORKERS,
-        pin_memory=config.PIN_MEMORY
+        pin_memory=config.PIN_MEMORY,
+        **kwargs
     )
 
     # Wrap the model, data parallel
