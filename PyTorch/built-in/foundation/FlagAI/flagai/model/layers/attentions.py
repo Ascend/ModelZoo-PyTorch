@@ -209,7 +209,9 @@ class AQUILAAttention(nn.Module):
             xq = xq.transpose(1, 2).contiguous()
             keys = keys.transpose(1, 2).contiguous()
             values = values.transpose(1, 2).contiguous()
-            if self.use_triangle_attn:
+            training_falg = self.wo.training
+
+            if self.use_triangle_attn and training_falg:
                 output_size = (values.size(0), values.size(1), values.size(2), values.size(3))
                 np = values.size(1)
                 bsz, head_num, sequence_len, head_dim = keys.shape
@@ -257,10 +259,20 @@ class AQUILAAttention(nn.Module):
                 self.mask_tmp_initialed = True
 
                 return self.wo(context_layer)
-            scores = torch.matmul(xq, keys.transpose(2, 3)) / math.sqrt(self.head_dim)
-            ## for corner cases, especially in the last layer and dtype of fp16
-            scores = torch.clamp(scores, min=-1024., max=1024.)
-            scores = torch_npu.npu_scaled_masked_softmax(scores, mask, 1.0)
+
+            if not training_falg:
+                scores = torch.matmul(xq, keys.transpose(2, 3)) / math.sqrt(self.head_dim)
+                ## for corner cases, especially in the last layer and dtype of fp16
+                scores = torch.clamp(scores, min=-1024., max=1024.)
+                if mask is not None:
+                    scores = scores + mask  # (bs, n_local_heads, slen, cache_len + slen)
+                scores = F.softmax(scores.float(), dim=-1).type_as(xq)
+            else:
+                scores = torch.matmul(xq, keys.transpose(2, 3)) / math.sqrt(self.head_dim)
+                ## for corner cases, especially in the last layer and dtype of fp16
+                scores = torch.clamp(scores, min=-1024., max=1024.)
+                scores = torch_npu.npu_scaled_masked_softmax(scores, mask, 1.0)
+
             output = torch.matmul(scores, values)  # (bs, n_local_heads, slen, head_dim)
             output = output.transpose(
                 1, 2
