@@ -1055,7 +1055,7 @@ def main():
 
     model.qa_outputs.bias.data = model.qa_outputs.bias.data.float() # for ascend910 special
 
-    if os.getenv("ALLOW_FP32") or os.getenv("ALLOW_HF32"):
+    if args.local_rank != -1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                           broadcast_buffers=False, find_unused_parameters=True)
 
