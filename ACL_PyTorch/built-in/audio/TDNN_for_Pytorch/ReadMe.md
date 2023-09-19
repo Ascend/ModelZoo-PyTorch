@@ -99,9 +99,11 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
 2. 获取权重文件。
 
    [classifier.ckpt](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/TDNN/pth/classifier.ckpt) 和 [embedding_model.ckpt](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/TDNN/pth/embedding_model.ckpt)  
-   将模型权重文件放入当前目录下，将hyperparams.yaml文件放入best_model中
+   将模型权重文件和hyperparams.yaml文件放入best_model中
    ```
    mkdir best_model
+   mv classifier.ckpt best_model
+   mv embedding_model.ckpt best_model
    mv hyperparams.yaml best_model
    ```
 
@@ -223,13 +225,14 @@ TDNN是一种经典的语音识别网络结构，主要由Conv1D+Relu+BN组成�
 	  推理参考命令如下：
 
         ```
-         python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} --dymDims=feats:${batch_size},${length},23
+         python3 -m ais_bench --model=${om_model_path} --loop=20 --batchsize=${batch_size} --dymDims=feats:${batch_size},${length},23 --device 0
         ```
 
       - 参数说明：
         - --model：om模型路径
         - --batchsize：模型batch大小
         - --dymDims：推理输入的实际shape
+        - --device: npu卡序号
 
 
 
