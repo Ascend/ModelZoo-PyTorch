@@ -9,6 +9,18 @@
 # only supports single-GPU inference
 export PYTHONPATH=${PYTHONPATH}:`pwd`/cn_clip
 
+cur_path=$(pwd)
+cur_path_last_dirname=${cur_path##*/}
+if [ x"${cur_path_last_dirname}" == x"test" ]; then
+  test_path_dir=${cur_path}
+  cd ..
+  cur_path=$(pwd)
+else
+  test_path_dir=${cur_path}/test
+fi
+
+source ${test_path_dir}/env_npu.sh
+
 path=${1}
 dataset=cifar-100
 datapath=${path}/datasets/${dataset}/test
