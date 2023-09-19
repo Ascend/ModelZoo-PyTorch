@@ -149,14 +149,21 @@
 
    2. 优化onnx模型
       
-      FlashAttention算子需区分硬件形态，支持Atlas 300I Duo和Atlas 300I A2，请根据使用的硬件形态执行命令：
       ```bash
-      # 硬件形态为Duo或PRO
-      python3 modify_onnx.py models_bs${bs}/unet/unet.onnx models_bs${bs}/unet/unet_fa.onnx Duo
-
-      # 硬件形态为A2
-      python3 modify_onnx.py models_bs${bs}/unet/unet.onnx models_bs${bs}/unet/unet_fa.onnx A2
+      python3 modify_onnx.py \
+              --model models_bs${bs}/unet/unet.onnx \
+              --new_model models_bs${bs}/unet/unet_md.onnx \
+              --FA_soc Duo \
+              --TOME_num 5
       ```
+      - 参数说明：
+         - --model：onnx模型路径。
+         - --new_model：优化后生成的onnx模型路径。
+         - --FA_soc：使用FA算子的硬件形态。目前FlashAttention算子支持Atlas 300I Duo/Pro和Atlas 300I A2，Duo/Pro请设置参数为Duo，A2请设置参数为A2，其他不支持硬件请设置为None。默认为None。
+         - --TOME_num：插入TOME插件的数量，有效取值为[0, 5]。默认为0。Tome插件目前支持Atlas 300I Duo/Pro和Atlas 300I A2。
+
+      FA和TOME算子需通过安装推理引擎包获取，如未安装推理引擎，FA_soc和TOME_num参数请使用默认配置。
+
    
    3. 使用ATC工具将ONNX模型转OM模型。
 
@@ -202,7 +209,7 @@
          cd ./models_bs${bs}/unet/
 
          atc --framework=5 \
-             --model=./unet_fa.onnx \
+             --model=./unet_md.onnx \
              --output=./unet \
              --input_format=NCHW \
              --log=error \
