@@ -1,4 +1,4 @@
-# LLaMA-Adaptor模型-推理指导
+# LLaMA-Adapter模型-推理指导
 
 - [概述](#概述)
 
@@ -19,7 +19,8 @@
 
 - 参考实现：
    ```bash
-   https://github.com/OpenGVLab/LLaMA-Adapter
+   git clone https://github.com/OpenGVLab/LLaMA-Adapter
+   git reset --hard 95b638997765af15036266f5acb5a4dd44b8ae96
    ```
 
 # 输入输出数据
