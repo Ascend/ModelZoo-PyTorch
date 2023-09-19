@@ -61,7 +61,7 @@ FasterRCNN是一个业界领先的目标检测网络，他继承了FastRCNN的�
 
   编译器版本：gcc & g++ ≥ 5
   ```
-  python3 -m pip install -e Faster_Mask_RCNN_for_PyTorch
+  python3 -m pip install -e ./
   ```
   > **说明：** 
   >在重装PyTorch之后，通常需要重新编译detectron2。重新编译之前，需要使用`rm -rf build/**/*.so` 删除旧版本的build文件夹及对应的.so文件。

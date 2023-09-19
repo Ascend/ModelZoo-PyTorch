@@ -23,6 +23,8 @@ import math
 
 import numpy
 import torch
+if torch.__version__ >= '1.8':
+    import torch_npu
 from torch import nn
 from torch_npu.contrib.module import NpuPreGenDropout
 
@@ -129,7 +131,7 @@ class MultiHeadedAttention(nn.Module):
         """
         q, k, v = self.forward_qkv(query, key, value)
         if q.is_npu:
-            scores = torch.npu_bmmV2(q, k.transpose(-2, -1), []) / math.sqrt(self.d_k)
+            scores = torch_npu.npu_bmmV2(q, k.transpose(-2, -1), []) / math.sqrt(self.d_k)
         else:
             scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
         return self.forward_attention(v, scores, mask)
@@ -216,14 +218,14 @@ class LegacyRelPositionMultiHeadedAttention(MultiHeadedAttention):
         # as described in https://arxiv.org/abs/1901.02860 Section 3.3
         # (batch, head, time1, time2)
         if q_with_bias_u.is_npu:
-            matrix_ac = torch.npu_bmmV2(q_with_bias_u, k.transpose(-2, -1), [])
+            matrix_ac = torch_npu.npu_bmmV2(q_with_bias_u, k.transpose(-2, -1), [])
         else:
             matrix_ac = torch.matmul(q_with_bias_u, k.transpose(-2, -1))
 
         # compute matrix b and matrix d
         # (batch, head, time1, time1)
         if q_with_bias_v.is_npu:
-            matrix_bd = torch.npu_bmmV2(q_with_bias_v, p.transpose(-2, -1), [])
+            matrix_bd = torch_npu.npu_bmmV2(q_with_bias_v, p.transpose(-2, -1), [])
         else:
             matrix_bd = torch.matmul(q_with_bias_v, p.transpose(-2, -1))
         matrix_bd = self.rel_shift(matrix_bd)
