@@ -41,6 +41,7 @@ def extract_feature_pipeline(args):
     dataset_train = ReturnIndexDataset(os.path.join(args.data_path, "train"), transform=transform)
     dataset_val = ReturnIndexDataset(os.path.join(args.data_path, "val"), transform=transform)
     sampler = torch.utils.data.DistributedSampler(dataset_train, shuffle=False)
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train,
         sampler=sampler,
@@ -48,6 +49,7 @@ def extract_feature_pipeline(args):
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=False,
+        **kwargs
     )
     data_loader_val = torch.utils.data.DataLoader(
         dataset_val,
@@ -55,6 +57,7 @@ def extract_feature_pipeline(args):
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=False,
+        **kwargs
     )
     print(f"Data loaded with {len(dataset_train)} train and {len(dataset_val)} val imgs.")
 

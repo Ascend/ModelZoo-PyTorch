@@ -111,6 +111,7 @@ if __name__ == '__main__':
     dataset_train = OxfordParisDataset(args.data_path, args.dataset, split="train", transform=transform, imsize=args.imsize)
     dataset_query = OxfordParisDataset(args.data_path, args.dataset, split="query", transform=transform, imsize=args.imsize)
     sampler = torch.utils.data.DistributedSampler(dataset_train, shuffle=False)
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train,
         sampler=sampler,
@@ -118,6 +119,7 @@ if __name__ == '__main__':
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=False,
+        **kwargs
     )
     data_loader_query = torch.utils.data.DataLoader(
         dataset_query,
@@ -125,6 +127,7 @@ if __name__ == '__main__':
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=False,
+        **kwargs
     )
     print(f"train: {len(dataset_train)} imgs / query: {len(dataset_query)} imgs")
 

@@ -70,11 +70,13 @@ def eval_linear(args):
         pth_transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
     dataset_val = datasets.ImageFolder(os.path.join(args.data_path, "val"), transform=val_transform)
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     val_loader = torch.utils.data.DataLoader(
         dataset_val,
         batch_size=args.batch_size_per_gpu,
         num_workers=args.num_workers,
         pin_memory=True,
+        **kwargs
     )
 
     if args.evaluate:
@@ -97,6 +99,7 @@ def eval_linear(args):
         batch_size=args.batch_size_per_gpu,
         num_workers=args.num_workers,
         pin_memory=True,
+        **kwargs
     )
     print(f"Data loaded with {len(dataset_train)} train and {len(dataset_val)} val imgs.")
 
