@@ -131,6 +131,7 @@ class CtcCriterion(FairseqCriterion):
             target_lengths = sample["target_lengths"]
         else:
             target_lengths = pad_mask.sum(-1)
+        targets_flat = targets_flat.cpu()
         lprobs = lprobs.cpu()
         input_lengths = input_lengths.cpu()
         target_lengths = target_lengths.cpu()
