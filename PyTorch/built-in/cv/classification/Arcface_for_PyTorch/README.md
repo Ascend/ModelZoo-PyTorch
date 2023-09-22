@@ -164,12 +164,13 @@ Arcface-Torch可以高效快速地训练大规模目标识别训练集。本模�
 
    ```
    pip uninstall mxnet --y
+   apt update; apt install libopencv-dev
    wget https://archive.apache.org/dist/incubator/mxnet/1.9.1/apache-mxnet-src-1.9.1-incubating.tar.gz 
    tar -xvf apache-mxnet-src-1.9.1-incubating.tar.gz; cd apache-mxnet-src-1.9.1-incubating
    cp config/linux_arm.cmake config.cmake
    mkdir build; cd build
    cmake ..
-   cmake --build .   # 编译时间较久（约4h），请耐心等待。
+   cmake --build . -j64
    cd ../
    python -m pip install --user -e ./python
    ```
