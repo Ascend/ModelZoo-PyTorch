@@ -18,6 +18,9 @@ import torch
 import torch_npu
 import numpy as np
 
+from PIL import Image
+from torchvision import transforms
+
 import llama
 from torch_npu.contrib import transfer_to_npu
 from ais_bench.infer.interface import InferSession
@@ -27,10 +30,20 @@ DEVICE = "cpu"
 IMG_SIZE = 224
 BATCH_SIZE = 5
 INFER_LOOP = 5
+MEAN_MATCH_GPU = (0.48145466, 0.4578275, 0.40821073)
+STD_MATCH_GPU = (0.26862954, 0.26130258, 0.27577711)
 LLAMA_DIR = "/path/to/LLaMA/"
 CLIP_DIR = "/path/to/clip/"
 BIAS_DIR = "/path/to/BIAS-7B"
 PIC_FILE_PATH = "/path/to/picture"
+
+
+transform = transforms.Compose([
+    transforms.Resize(size=IMG_SIZE, interpolation=transforms.InterpolationMode("bicubic"), max_size=None),
+    transforms.CenterCrop(size=(IMG_SIZE, IMG_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=MEAN_MATCH_GPU, std=STD_MATCH_GPU)
+])
 
 torch.npu.set_device(torch.device(f"npu:{DEVICE_ID}"))
 
@@ -70,8 +83,8 @@ def img_process(file_path, begin_idx=1, bsz=5):
     res = None
     for i_ in range(begin_idx, begin_idx + bsz):
         img_name = f"pic_{i_}.jpg"
-        img = cv2.imread(file_path + img_name)
-        img = cv2.resize(img, (IMG_SIZE, IMG_SIZE), interpolation=cv2.INTER_CUBIC)
+        img = Image.fromarray(cv2.imread(file_path + img_name))
+        img = transform(img).cpu().numpy()
         res = img if res is None else np.concatenate((res, img), axis=0)
     res = res.reshape(bsz, *img.shape)
     res = res.astype(np.float16)
@@ -80,7 +93,7 @@ def img_process(file_path, begin_idx=1, bsz=5):
     
 model.init_acl_weight()
 
-prompt = llama.format_prompt("Is there a fight in the picture?")
+prompt = llama.format_prompt("Is someone fighting or engaged in a sparring match or wrestling?")
 prompt_bsz = []
 for i in range(BATCH_SIZE):
     prompt_bsz.append(prompt)
