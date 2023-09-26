@@ -310,7 +310,7 @@ def main():
         save_checkpoint({
             'epoch': epoch + 1,
             'model': config.MODEL.NAME,
-            'state_dict': model.module.state_dict(),
+            'state_dict': model.module.state_dict() if device_num > 1 else model.state_dict(),
             'perf': perf_indicator,
             'optimizer': optimizer.state_dict(),
         }, best_model, final_output_dir, filename='checkpoint.pth.tar')
@@ -319,7 +319,8 @@ def main():
                                           'final_state.pth.tar')
     logger.info('saving final model state to {}'.format(
         final_model_state_file))
-    torch.save(model.module.state_dict(), final_model_state_file)
+    state_dict = model.module.state_dict() if device_num > 1 else model.state_dict()
+    torch.save(state_dict, final_model_state_file)
     writer_dict['writer'].close()
 
 

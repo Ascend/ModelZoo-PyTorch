@@ -55,7 +55,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
         if stop_step:
             # reduce time for 1p perf test
             if i > 200:
-                sys.exit(0)
+                break
         # measure data loading time
         data_time.update(time.time() - end)
         start_time = time.time()
@@ -117,7 +117,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch,
                 writer_dict['train_global_steps'] = global_steps + 1
     
     # data avg 
-    batch_time_avg = sum(list1[5:]) / (len(list1)-5)
+    batch_time_avg = sum(list1[5:-5]) / (len(list1)-10)
     fps_avg = device_num*bs/batch_time_avg
     loss_avg = sum(list2[5:]) / (len(list2)-5)
     acc1_avg = sum(list3[5:]) / (len(list3)-5)
