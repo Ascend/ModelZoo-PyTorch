@@ -77,7 +77,11 @@ def main(opt, qtepoch=[0,]):
           checkpoint['state_dict'] = {k.replace('module.', ''): v for k, v in checkpoint['state_dict'].items()}
       model.load_state_dict(checkpoint['state_dict'], strict=False)
 
-  optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), opt.lr)
+  if not opt.use_fp32:
+    optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), opt.lr)
+  else:
+    optimizer = torch.optim.Adam(model.parameters(), opt.lr)
+
   if not opt.use_fp32:
     model, optimizer = amp.initialize(model, optimizer, opt_level="O1",loss_scale=19.0,combine_grad=True)
   start_epoch = 0
