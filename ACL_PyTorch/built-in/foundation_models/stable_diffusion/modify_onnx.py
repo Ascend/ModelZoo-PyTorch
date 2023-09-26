@@ -343,8 +343,8 @@ def insert_tome_block(model, max_num):
     # add initializer
     model.add_initializer('tome/Gather_index_a', index_a)
     model.add_initializer('tome/Gather_index_b', index_b)
-    bs_index_a = np.tile(index_a.reshape(1, -1), bs)
-    bs_index_b = np.tile(index_b.reshape(1, -1), bs)
+    bs_index_a = np.tile(index_a.reshape(1, -1), [bs, 1])
+    bs_index_b = np.tile(index_b.reshape(1, -1), [bs, 1])
     model.add_initializer('tome/index_a', bs_index_a)
     model.add_initializer('tome/index_b', bs_index_b)
     model.add_initializer('tome/Topk_k', np.array([3072]))
@@ -418,3 +418,4 @@ def main():
 if __name__ == '__main__':
     args = parse_arguments()
     main()
+    

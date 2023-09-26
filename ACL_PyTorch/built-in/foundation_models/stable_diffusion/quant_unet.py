@@ -306,5 +306,6 @@ def main():
     quant_onnx = os.path.join(quant_path, 'unet.onnx')
     calib.export_quant_onnx(quant_onnx, use_external=True)
 
+
 if __name__ == "__main__":
     main()
