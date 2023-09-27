@@ -1,4 +1,4 @@
-# Resnet50
+# Swin Transformer
 
 - [概述](#ZH-CN_TOPIC_0000001172161501)
 
