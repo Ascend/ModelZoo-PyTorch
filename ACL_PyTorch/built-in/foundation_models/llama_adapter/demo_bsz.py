@@ -18,9 +18,6 @@ import torch
 import torch_npu
 import numpy as np
 
-from PIL import Image
-from torchvision import transforms
-
 import llama
 from torch_npu.contrib import transfer_to_npu
 from ais_bench.infer.interface import InferSession
@@ -30,20 +27,10 @@ DEVICE = "cpu"
 IMG_SIZE = 224
 BATCH_SIZE = 5
 INFER_LOOP = 5
-MEAN_MATCH_GPU = (0.48145466, 0.4578275, 0.40821073)
-STD_MATCH_GPU = (0.26862954, 0.26130258, 0.27577711)
 LLAMA_DIR = "/path/to/LLaMA/"
 CLIP_DIR = "/path/to/clip/"
 BIAS_DIR = "/path/to/BIAS-7B"
 PIC_FILE_PATH = "/path/to/picture"
-
-
-transform = transforms.Compose([
-    transforms.Resize(size=IMG_SIZE, interpolation=transforms.InterpolationMode("bicubic"), max_size=None),
-    transforms.CenterCrop(size=(IMG_SIZE, IMG_SIZE)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=MEAN_MATCH_GPU, std=STD_MATCH_GPU)
-])
 
 torch.npu.set_device(torch.device(f"npu:{DEVICE_ID}"))
 
@@ -79,12 +66,45 @@ for _, module in model.named_modules():
         module.weight.data = module.weight.data.npu_format_cast(2)
 
 
+def resize_centercorp(img_path, target_size):
+    img = cv2.imread(img_path)
+    height, width, _ = img.shape
+
+    # get long and short edge
+    if width < height:
+        short_edge = width
+        long_eage = height
+    else:
+        short_edge = height
+        long_eage = width
+    
+    # get ratio of long and short edge
+    ratio = long_eage / short_edge
+
+    # scale short edges to target size
+    if width < height:
+        new_width = target_size
+        new_height = int(target_size * ratio)
+    else:
+        new_height = target_size
+        new_width = int(target_size * ratio)
+    resize_img = cv2.resize(img, (new_width, new_height))
+
+    # center crop
+    left = (new_width - target_size) // 2
+    top = (new_height - target_size) // 2
+    right = (new_width + target_size) // 2
+    bottom = (new_height + target_size) // 2
+    cropped_img = resize_img[top: bottom, left: right]
+
+    return cropped_img
+
+
 def img_process(file_path, begin_idx=1, bsz=5):
     res = None
     for i_ in range(begin_idx, begin_idx + bsz):
         img_name = f"pic_{i_}.jpg"
-        img = Image.fromarray(cv2.imread(file_path + img_name))
-        img = transform(img).cpu().numpy()
+        img = resize_centercorp(file_path + img_name, IMG_SIZE)
         res = img if res is None else np.concatenate((res, img), axis=0)
     res = res.reshape(bsz, *img.shape)
     res = res.astype(np.float16)
