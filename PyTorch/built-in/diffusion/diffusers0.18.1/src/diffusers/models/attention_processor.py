@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import torch
+import torch_npu
 import torch.nn.functional as F
 from torch import nn
 
@@ -22,22 +23,7 @@ from ..utils.import_utils import is_xformers_available
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
-
-class NpuLinear(torch.nn.Linear):
-    def forward(self, x):
-        if not x.is_npu:
-            return super(NpuLinear, self).forward(x)
-        input_shape = x.size()
-        if x.dim() == 3:
-            x = x.reshape(-1, self.in_features)
-            return torch.npu_linear(x, self.weight, self.bias).view(input_shape[0],
-                                                                    input_shape[1], self.out_features)
-        elif x.dim() == 2:
-            return torch.npu_linear(x, self.weight, self.bias)
-        else:
-            raise RuntimeError('not support this dim')
-
-nn.Linear = NpuLinear
+ 
 
 if is_xformers_available():
     import xformers
@@ -175,6 +161,12 @@ class Attention(nn.Module):
             processor = (
                 AttnProcessor2_0() if hasattr(F, "scaled_dot_product_attention") and self.scale_qk else AttnProcessor()
             )
+        self.set_processor(processor)
+
+    def set_use_npu_flash_attention(
+        self, set_use_npu_flash_attention: bool, attention_op: Optional[Callable] = None
+    ):
+        processor = NpuFlashAttnProcessor()
         self.set_processor(processor)
 
     def set_use_memory_efficient_attention_xformers(
@@ -333,13 +325,24 @@ class Attention(nn.Module):
         # The `Attention` class can call different attention processors / attention functions
         # here we simply pass along all tensors to the selected processor class
         # For standard processors that are defined here, `**cross_attention_kwargs` is empty
-        return self.processor(
+        if isinstance(self.processor, NpuFlashAttnProcessor):
+            return self.processor(
             self,
             hidden_states,
             encoder_hidden_states=encoder_hidden_states,
             attention_mask=attention_mask,
+            scale=self.scale,
+            heads=self.heads,
             **cross_attention_kwargs,
         )
+        else:
+            return self.processor(
+                self,
+                hidden_states,
+                encoder_hidden_states=encoder_hidden_states,
+                attention_mask=attention_mask,
+                **cross_attention_kwargs,
+            )
 
     def batch_to_head_dim(self, tensor):
         head_size = self.heads
@@ -365,12 +368,13 @@ class Attention(nn.Module):
             query = query.float()
             key = key.float()
 
-        if attention_mask is None:
-            attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
-        else:
-            beta = 1
-            attention_scores = torch.add(torch.mul(beta, attention_mask),
-                                         torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
+        with torch.cuda.amp.autocast(enabled=False):
+            if attention_mask is None:
+                attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
+            else:
+                beta = 1
+                attention_scores = torch.add(torch.mul(beta, attention_mask),
+                                            torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
 
 
         if self.upcast_softmax:
@@ -1053,6 +1057,106 @@ class XFormersAttnProcessor:
         )
         hidden_states = hidden_states.to(query.dtype)
         hidden_states = attn.batch_to_head_dim(hidden_states)
+
+        # linear proj
+        hidden_states = attn.to_out[0](hidden_states)
+        # dropout
+        hidden_states = attn.to_out[1](hidden_states)
+
+        if input_ndim == 4:
+            hidden_states = hidden_states.transpose(-1, -2).reshape(batch_size, channel, height, width)
+
+        if attn.residual_connection:
+            hidden_states = hidden_states + residual
+
+        hidden_states = hidden_states / attn.rescale_output_factor
+
+        return hidden_states
+
+
+class NpuFlashAttnProcessor:
+    r'''
+    Consistent with the implementation of xformerAttnProcessor
+    '''
+    def __init__(self, attention_op: Optional[Callable] = None):
+        self.attention_op = attention_op
+
+    def __call__(
+        self,
+        attn: Attention,
+        hidden_states,
+        encoder_hidden_states=None,
+        attention_mask=None,
+        temb=None,
+        scale=0.125,
+        heads=5,
+    ):
+        residual = hidden_states
+
+        if attn.spatial_norm is not None:
+            hidden_states = attn.spatial_norm(hidden_states, temb)
+
+        input_ndim = hidden_states.ndim
+
+        if input_ndim == 4:
+            batch_size, channel, height, width = hidden_states.shape
+            hidden_states = hidden_states.view(batch_size, channel, height * width).transpose(1, 2)
+
+        batch_size, sequence_length, _ = (
+            hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape
+        )
+        inner_dim = hidden_states.shape[-1]
+ 
+        attention_mask = attn.prepare_attention_mask(attention_mask, sequence_length, batch_size)
+
+        if attn.group_norm is not None:
+            hidden_states = attn.group_norm(hidden_states.transpose(1, 2)).transpose(1, 2)
+
+        query = attn.to_q(hidden_states)
+
+        if encoder_hidden_states is None:
+            encoder_hidden_states = hidden_states
+        elif attn.norm_cross:
+            encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
+
+        key = attn.to_k(encoder_hidden_states)
+        value = attn.to_v(encoder_hidden_states)
+
+        cur_attention_mask = None
+        key_sequence_length = key.shape[1]
+
+        if query.shape[1] >= 2000:
+
+            if key_sequence_length == 80:
+                cur_attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
+                cur_attention_mask = \
+                    torch.cat((cur_attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
+
+            hidden_states = torch_npu.npu_fusion_attention(
+                query, key, value, heads, input_layout="BSH",
+                pse=cur_attention_mask,
+                atten_mask=None,
+                scale=scale,
+                pre_tockens=65536,
+                next_tockens=65536,
+                keep_prob=1.,
+                sync=False,
+                inner_precise=0,
+            )[0]
+        else:
+
+            query = attn.head_to_batch_dim(query)
+            key = attn.head_to_batch_dim(key)
+            value = attn.head_to_batch_dim(value)
+            
+            if key_sequence_length == 80:
+                cur_attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
+                cur_attention_mask = \
+                    torch.cat((cur_attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
+
+            attention_probs = attn.get_attention_scores(query, key, cur_attention_mask)
+            hidden_states = torch.bmm(attention_probs, value)
+            hidden_states = attn.batch_to_head_dim(hidden_states)
 
         # linear proj
         hidden_states = attn.to_out[0](hidden_states)

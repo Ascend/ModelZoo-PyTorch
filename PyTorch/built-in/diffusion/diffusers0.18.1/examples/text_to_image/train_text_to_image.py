@@ -59,6 +59,10 @@ from torch_npu.optim import NpuFusedAdamW
 from torch_npu.contrib import transfer_to_npu
 
 
+
+# Allow NPU Conv_operator hostapi
+torch.npu.config.allow_internal_format = False
+
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.18.0")
 
@@ -499,6 +503,9 @@ def parse_args():
     parser.add_argument("--use_npu_fuse_adamW", action="store_true", help="Whether to use NpuFusedAdamW")
     parser.add_argument("--use_clip_grad_norm_fused", action="store_true", help="Whether to use clip_grad_norm_fused")
     parser.add_argument("--use_megatron_npu_adamW", action="store_true", help="Whether to use megatron_npu_adamW")
+    parser.add_argument(
+        "--enable_npu_flash_attention", action="store_true", help="Whether or not to use npu flash-attention."
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -631,6 +638,19 @@ def main():
             unet.enable_xformers_memory_efficient_attention()
         else:
             raise ValueError("xformers is not available. Make sure it is installed correctly")
+    
+    #Prepare for using Flash-Attention   
+    if args.enable_npu_flash_attention:
+        if args.mixed_precision == "fp16":
+            logger.info("NPU flash-attention is activated successfully")
+            unet.enable_npu_flash_attention()
+            enable_drop_last = True
+        else:   
+            raise NotImplementedError(
+                "NPU flash-attention activated failed, it only supports fp16 now"
+            )
+    else:
+        enable_drop_last = False      
 
     def compute_snr(timesteps):
         """
@@ -834,6 +854,7 @@ def main():
         collate_fn=collate_fn,
         batch_size=args.train_batch_size,
         num_workers=args.dataloader_num_workers,
+        drop_last=enable_drop_last
     )
 
     # Scheduler and math around the number of training steps.
@@ -969,6 +990,10 @@ def main():
 
                 # Get the text embedding for conditioning
                 encoder_hidden_states = text_encoder(batch["input_ids"])[0]
+                
+                # Prepare for using Npu Flash Attention
+                if args.enable_npu_flash_attention:
+                    encoder_hidden_states = torch_npu.npu_pad(encoder_hidden_states, (0, 0, 0, 3)).contiguous()
 
                 # Get the target for loss depending on the prediction type
                 if args.prediction_type is not None:
