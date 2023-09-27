@@ -80,7 +80,7 @@ def optimize(model_path: str, save_path: str) -> None:
     graph[first_reshape.inputs[1]].value = np.array([0, 512, 1, -1])
 
     first_mul = graph.get_nodes("Mul")[0]
-    graph[first_mul.inputs[1]].value = np.squeeze(graph[first_mul.inputs[1]].value)
+    graph[first_mul.inputs[1]].value = np.reshape(graph[first_mul.inputs[1]].value, (1, 512, 1, 1))
 
     first_add = graph.get_nodes("Add")[0]
     graph[first_add.inputs[1]].value = np.reshape(graph[first_add.inputs[1]].value, (1, 512, 1, 1))
