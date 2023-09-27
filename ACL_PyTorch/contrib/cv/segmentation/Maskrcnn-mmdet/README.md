@@ -63,10 +63,10 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 6.0.RC1 | -                                                            |
+  | 固件与驱动                                                   | 1.0.20.alpha  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 7.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
-  | PyTorch                                                      | 1.9.0   | -                                                            |
+  | PyTorch                                                      | 1.10.1   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
 
 
@@ -85,7 +85,6 @@ Maskrcnn是经典的示例分割网络，本模型代码基于mmdetection仓中�
 
    ```
    pip3 install -r requirements.txt
-   pip3 install mmcv-full==1.2.5 -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.9.0/index.html
    cd mmdetection/
    git apply ../mmdet_maskrcnn.patch
    pip3 install -v -e .

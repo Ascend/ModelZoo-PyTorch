@@ -1,5 +1,6 @@
-torch==1.9.0
-torchvision==0.10.0
+torch==1.10.1
+torchvision==0.11.2
+mmcv-full==1.2.4
 onnxruntime
 onnxoptimizer
 opencv-python
