@@ -137,6 +137,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     valid_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(valdir, transforms.Compose([
             transforms.Resize(int(config.MODEL.IMAGE_SIZE[0] / 0.875)),
@@ -147,7 +148,8 @@ def main():
         batch_size=bs,
         shuffle=False,
         num_workers=nproc,
-        pin_memory=True
+        pin_memory=True,
+        **kwargs
     )
 
     # evaluate on validation set

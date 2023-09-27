@@ -18,6 +18,15 @@ import torch
 from torch_npu.contrib import transfer_to_npu
 from omegaconf import DictConfig, OmegaConf
 
+# We need to setup root logger before importing any fairseq libraries.
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    stream=sys.stdout,
+)
+logger = logging.getLogger("fairseq_cli.train")
+
 from fairseq import checkpoint_utils, options, quantization_utils, tasks, utils
 from fairseq.data import data_utils, iterators
 from fairseq.data.plasma_utils import PlasmaStore
@@ -30,15 +39,6 @@ from fairseq.file_io import PathManager
 from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
-
-# We need to setup root logger before importing any fairseq libraries.
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-    stream=sys.stdout,
-)
-logger = logging.getLogger("fairseq_cli.train")
 
 
 def main(cfg: FairseqConfig) -> None:
@@ -191,9 +191,10 @@ def main(cfg: FairseqConfig) -> None:
                 pass
     # TODO: end of dry run section
 
+    # 兼容饱和模式
+    torch.npu.utils.check_overflow(0.0)
     train_meter = meters.StopwatchMeter()
     train_meter.start()
-    torch.npu.clear_npu_overflow_flag()
     while epoch_itr.next_epoch_idx <= max_epoch:
         if lr <= cfg.optimization.stop_min_lr:
             logger.info(

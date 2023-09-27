@@ -307,7 +307,7 @@ print(model)
 if 'npu' in device:
     optimizer = apex.optimizers.NpuFusedAdam(model.parameters(), lr=args.lr)
     model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level, \
-        loss_scale=256, combine_grad=True, combine_ddp=True if distributed else False)
+        combine_grad=True, combine_ddp=True if distributed else False)
 else:
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 

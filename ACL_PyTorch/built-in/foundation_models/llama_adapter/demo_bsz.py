@@ -66,12 +66,45 @@ for _, module in model.named_modules():
         module.weight.data = module.weight.data.npu_format_cast(2)
 
 
+def resize_centercorp(img_path, target_size):
+    img = cv2.imread(img_path)
+    height, width, _ = img.shape
+
+    # get long and short edge
+    if width < height:
+        short_edge = width
+        long_eage = height
+    else:
+        short_edge = height
+        long_eage = width
+    
+    # get ratio of long and short edge
+    ratio = long_eage / short_edge
+
+    # scale short edges to target size
+    if width < height:
+        new_width = target_size
+        new_height = int(target_size * ratio)
+    else:
+        new_height = target_size
+        new_width = int(target_size * ratio)
+    resize_img = cv2.resize(img, (new_width, new_height))
+
+    # center crop
+    left = (new_width - target_size) // 2
+    top = (new_height - target_size) // 2
+    right = (new_width + target_size) // 2
+    bottom = (new_height + target_size) // 2
+    cropped_img = resize_img[top: bottom, left: right]
+
+    return cropped_img
+
+
 def img_process(file_path, begin_idx=1, bsz=5):
     res = None
     for i_ in range(begin_idx, begin_idx + bsz):
         img_name = f"pic_{i_}.jpg"
-        img = cv2.imread(file_path + img_name)
-        img = cv2.resize(img, (IMG_SIZE, IMG_SIZE), interpolation=cv2.INTER_CUBIC)
+        img = resize_centercorp(file_path + img_name, IMG_SIZE)
         res = img if res is None else np.concatenate((res, img), axis=0)
     res = res.reshape(bsz, *img.shape)
     res = res.astype(np.float16)
@@ -80,7 +113,7 @@ def img_process(file_path, begin_idx=1, bsz=5):
     
 model.init_acl_weight()
 
-prompt = llama.format_prompt("Is there a fight in the picture?")
+prompt = llama.format_prompt("Is someone fighting or engaged in a sparring match or wrestling?")
 prompt_bsz = []
 for i in range(BATCH_SIZE):
     prompt_bsz.append(prompt)

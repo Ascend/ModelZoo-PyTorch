@@ -29,6 +29,16 @@ from torch import cuda
 
 import numpy as np
 import torch
+
+# We need to setup root logger before importing any fairseq libraries.
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    stream=sys.stdout,
+)
+logger = logging.getLogger("fairseq_cli.train")
+
 from fairseq import (
     checkpoint_utils,
     options,
@@ -59,15 +69,6 @@ except:
 
         def end(self):
             pass
-
-# We need to setup root logger before importing any fairseq libraries.
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
-    stream=sys.stdout,
-)
-logger = logging.getLogger("fairseq_cli.train")
 
 os.environ['MASTER_ADDR'] = '127.0.0.1' 
 os.environ['MASTER_PORT'] = '29688'

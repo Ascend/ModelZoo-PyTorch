@@ -1,4 +1,4 @@
-# LLaMA-Adaptor模型-推理指导
+# LLaMA-Adapter模型-推理指导
 
 - [概述](#概述)
 
@@ -19,7 +19,8 @@
 
 - 参考实现：
    ```bash
-   https://github.com/OpenGVLab/LLaMA-Adapter
+   git clone https://github.com/OpenGVLab/LLaMA-Adapter
+   git reset --hard 95b638997765af15036266f5acb5a4dd44b8ae96
    ```
 
 # 输入输出数据
@@ -117,7 +118,7 @@
 **模型的推理及执行都需在docker中进行**
 
 1. 图像模型CLIP部分
- 
+
     权重涉及半精度float16，暂时只支持在gpu环境导出onnx。
 - 转onnx
    ```
@@ -218,11 +219,12 @@
 
      ```
      cp ./llama/llama_adapter_bsz.py ./llama/llama_adapter.py
+     cp ./llama/llama_bsz.py ./llama/llama.py
      python demo_bsz.py
      ```
-
+   
      demo_bsz.py说明：
-
+   
      | 变量          | 说明                                                       |
      | ------------- | ---------------------------------------------------------- |
      | DEVICE_ID     | npu 卡号                                                   |
@@ -233,11 +235,11 @@
      | CLIP_DIR      | clip的om模型位置                                           |
      | BIAS_DIR      | BIAS-7B.pth文件位置                                        |
      | PIC_FILE_PATH | 测试图片文件夹位置，样例的图片命名为: pic_{序号}.jpg       |
-
+   
    - 性能打点
-
+   
    - llama_adapter_bsz.py中添加了以下时间戳：
-
+   
      ```
      self.clip_time		clip的om推理时间
      self.pre_time		llama的前处理时间
@@ -245,7 +247,7 @@
      self.post_time		llama后处理时间
      self.decode_time	输出文本解码时间
      ```
-
+   
      可于demo_bsz.py中每次调用model.generate()时取用，以打印显示其耗时情况
 
 

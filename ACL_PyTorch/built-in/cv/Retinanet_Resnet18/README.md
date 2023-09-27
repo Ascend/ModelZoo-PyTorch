@@ -53,7 +53,7 @@
   | 配套       | 版本    | 环境准备指导                                                                                          |
   | ---------- | ------- | ----------------------------------------------------------------------------------------------------- |
   | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN       | 6.3.RC1 | -                                                                                                     |
+  | CANN       | 7.0.RC1 | -                                                                                                     |
   | Python     | 3.7.5   | -                                                                                                     |
   | PyTorch    | 1.10.0   | -                                                                                                     |
 
@@ -135,7 +135,7 @@
 
          ```shell
          amct_onnx calibration --model retinanet.onnx --save_path ./amct --input_shape "input:1,3,1216,1216" --data_dir ./input_data/ --data_types "float32" --calibration_config amct.cfg
-         mv Retinanet_Resnet18_result_deploy_model.onnx retinanet.onnx
+         mv Retinanet_Resnet18_result_deploy_model.onnx retinanet_int8.onnx
          ```
          获得量化后的retinanet_int8.onnx
 
@@ -250,8 +250,8 @@
 调用ACL接口推理计算，性能参考下列数据。
 开源仓精度（mAP）：31.7
 
-| 芯片型号 | Batch Size   | 数据集 | 精度  | 性能(FP16) | 性能(INT8) |
-| --------- | ---------------- | ---------- | ---------- | --------------- | --------------- |
-|  310P3    |         1        |   COCO2017 | mAP：31.6  |     58.74      |    57.72   |
+| 芯片型号 | Batch Size   | 数据集 | 精度  | 性能(FP16) |
+| --------- | ---------------- | ---------- | ---------- | --------------- | 
+|  310P3    |         1        |   COCO2017 | mAP：31.6  |     50      |   
 该模型仅支持batch size为1
 

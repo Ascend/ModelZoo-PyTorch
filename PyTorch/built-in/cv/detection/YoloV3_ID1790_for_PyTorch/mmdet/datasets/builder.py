@@ -17,6 +17,7 @@ import platform
 import random
 from functools import partial
 
+import torch
 import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
@@ -135,7 +136,8 @@ def build_dataloader(dataset,
     init_fn = partial(
         worker_init_fn, num_workers=num_workers, rank=rank,
         seed=seed) if seed is not None else None
-
+    
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     data_loader = DataLoader(
         dataset,
         batch_size=batch_size,

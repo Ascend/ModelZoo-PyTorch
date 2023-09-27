@@ -4,3 +4,4 @@ mxnet
 onnx
 sklearn
 scikit-learn
+scipy==1.8.1

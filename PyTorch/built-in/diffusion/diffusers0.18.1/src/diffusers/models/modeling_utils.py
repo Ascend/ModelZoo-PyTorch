@@ -226,6 +226,23 @@ class ModelMixin(torch.nn.Module):
             if isinstance(module, torch.nn.Module):
                 fn_recursive_set_mem_eff(module)
 
+    def set_use_npu_flash_attention(
+        self, valid: bool, attention_op: Optional[Callable] = None
+    ) -> None:
+        # Recursively walk through all the children.
+        # Any children which exposes the set_use_npu_flash_attention method
+        # gets the message
+        def fn_recursive_set_mem_eff(module: torch.nn.Module):
+            if hasattr(module, "set_use_npu_flash_attention"):
+                module.set_use_npu_flash_attention(valid, attention_op)
+
+            for child in module.children():
+                fn_recursive_set_mem_eff(child)
+
+        for module in self.children():
+            if isinstance(module, torch.nn.Module):
+                fn_recursive_set_mem_eff(module)
+
     def enable_xformers_memory_efficient_attention(self, attention_op: Optional[Callable] = None):
         r"""
         Enable memory efficient attention from [xFormers](https://facebookresearch.github.io/xformers/).
@@ -261,6 +278,9 @@ class ModelMixin(torch.nn.Module):
         ```
         """
         self.set_use_memory_efficient_attention_xformers(True, attention_op)
+
+    def enable_npu_flash_attention(self, attention_op: Optional[Callable] = None):
+        self.set_use_npu_flash_attention(True, attention_op)
 
     def disable_xformers_memory_efficient_attention(self):
         r"""

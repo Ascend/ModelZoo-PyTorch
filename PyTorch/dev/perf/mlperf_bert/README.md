@@ -59,7 +59,7 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
 
 
 ## 准备数据集和预训练权重
-1. 参考https://github.com/mlcommons、training_results_v1.0/tree/master/NVIDIA/benchmarks/bert/implementations/pytorch准备数据集合预训练权重
+1. 参考 https://github.com/mlcommons/training_results_v1.0/tree/master/NVIDIA/benchmarks/bert/implementations/pytorch 准备数据集合预训练权重
 2. 把处理好的数据集合和预训练权重放到如下目录`<your_path>/input_preprocessing/`
 
    目录结构参考如下所示。

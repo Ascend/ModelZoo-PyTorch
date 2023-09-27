@@ -31,6 +31,7 @@
 # ============================================================================
 
 import torch
+import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -41,10 +42,10 @@ class NpuLinear(torch.nn.Linear):
         input_shape = x.size()
         if x.dim() == 3:
             x = x.reshape(-1, self.in_features)
-            return torch.npu_linear(x, self.weight, self.bias).view(input_shape[0], 
-                                            input_shape[1], self.out_features)
+            return torch_npu.npu_linear(x, self.weight, self.bias).view(input_shape[0], 
+                                        input_shape[1], self.out_features)
         elif x.dim() == 2:
-            return torch.npu_linear(x, self.weight, self.bias)
+            return torch_npu.npu_linear(x, self.weight, self.bias)
         else:
             raise RuntimeError('not support this dim')
             

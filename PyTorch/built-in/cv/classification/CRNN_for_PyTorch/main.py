@@ -102,6 +102,7 @@ def main():
             model.load_state_dict(checkpoint)
 
     # utils.model_info(model)
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     train_dataset = utils.lmdbDataset(config, is_train=True)
     train_loader = DataLoader(
         dataset=train_dataset,
@@ -110,7 +111,8 @@ def main():
         num_workers=config.WORKERS,
         collate_fn=utils.alignCollate(32, 100),
         pin_memory=config.PIN_MEMORY,
-        drop_last=config.DROP_LAST
+        drop_last=config.DROP_LAST,
+        **kwargs
     )
 
     val_dataset = utils.lmdbDataset(config, is_train=False, transform=utils.resizeNormalize((100, 32)))
@@ -120,6 +122,7 @@ def main():
         shuffle=config.TEST.SHUFFLE,
         num_workers=config.WORKERS,
         pin_memory=config.PIN_MEMORY,
+        **kwargs
     )
 
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)

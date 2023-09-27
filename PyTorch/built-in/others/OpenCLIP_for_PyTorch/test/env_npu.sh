@@ -13,7 +13,8 @@ else
     source ${CANN_INSTALL_PATH}/nnae/set_env.sh
 fi
 
-
+#开启非饱和模式,0-1关闭/1-开启
+export INF_NAN_MODE_ENABLE=1
 #将Host日志输出到串口,0-关闭/1-开启
 export ASCEND_SLOG_PRINT_TO_STDOUT=0
 #设置默认日志级别,0-debug/1-info/2-warning/3-error

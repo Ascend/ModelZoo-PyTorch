@@ -43,7 +43,7 @@ def run(model, classifier, dataloader, args):
 
             with autocast():
                 # predict
-                image_features = model.encode_image(images)
+                image_features = model.encode_image(images.half())
                 image_features = F.normalize(image_features, dim=-1)
                 logits = 100. * image_features @ classifier
 

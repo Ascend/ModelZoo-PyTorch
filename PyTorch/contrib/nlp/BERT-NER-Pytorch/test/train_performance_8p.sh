@@ -29,7 +29,7 @@ if [ -d ${test_path_dir}/output/${ASCEND_DEVICE_ID} ];then
 else
     mkdir -p ${test_path_dir}/output/$ASCEND_DEVICE_ID
 fi
-
+start_time=$(date +%s) 
 python -m torch.distributed.launch --nproc_per_node 8 \
   --master_addr $MASTER_ADDR --master_port $MASTER_PORT run_ner_crf.py \
   --model_type=bert \
@@ -51,22 +51,23 @@ python -m torch.distributed.launch --nproc_per_node 8 \
   --output_dir=$OUTPUR_DIR/${TASK_NAME}_output/ \
   --overwrite_output_dir \
   --seed=42 > ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log 2>&1
-end_time=$(data +%s)
+end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
-echo "------------------------Final result---------------------------"
-lines=$(cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log | grep -P "\[Training\] \d+/\d+.*ms/step")
-nlines=$(($(($(echo "${lines}" | wc -l) / 4)) * 3))
+echo "------------------ Final result ------------------"
+lines=$(grep -P "\[Training\] \d+/\d+.*ms/step" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log)
+nlines=10
 use_lines=$(echo "${lines}" | tail -n ${nlines})
 perfs=$(echo "${use_lines}" | sed -E 's/.*\[Training\].*\[=+\] ([0-9]+\.[0-9]+)ms.*/\1/')
 sum=$(echo "${perfs}" | tr '\n' '+' | sed -E 's/(.*)\+$/\1/')
 sum=$(echo "${sum}" | bc -l)
-avg=$(echo "${sum} / $(nlines)" | bc -l)
+avg=$(echo "${sum} / 10" | bc -l)
 echo "Final performance WPS: $avg"
 line=$(cat ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log | grep -P "f1:" | head -n 1)
 acc=$(echo "${line}" | grep -P ".*acc.*recall.*f1.*" | sed -E 's/.*f1: ([0-9]+\.[0-9]+).*/\1/')
 echo "Final Best Acc (F1 score): $acc"
 echo "E2E training duration sec: $e2e_time"
+
 
 
   

@@ -1,0 +1,130 @@
+--- old/utils.py	2023-09-19 09:53:41.631873300 +0800
++++ patches/utils.py	2023-09-18 21:36:02.903221500 +0800
+@@ -14,6 +14,9 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
++from multiprocessing import synchronize
++import os
++import time
+ import inspect
+ import warnings
+ from dataclasses import dataclass
+@@ -1042,6 +1045,7 @@
+         suppress_tokens: Optional[List[int]] = None,
+         begin_suppress_tokens: Optional[List[int]] = None,
+         forced_decoder_ids: Optional[List[List[int]]] = None,
++        profiling_enable:Optional[bool] = None,
+         **model_kwargs,
+     ) -> Union[GenerateOutput, torch.LongTensor]:
+         r"""
+@@ -1337,6 +1341,9 @@
+         # model_input_name is defined if model-specific keyword input is passed
+         # otherwise model_input_name is None
+         # all model-specific keyword inputs are removed from `model_kwargs`
++        torch.npu.synchronize()
++        sessionpreprocess_start_time = time.time()
++
+         inputs_tensor, model_input_name, model_kwargs = self._prepare_model_inputs(inputs, bos_token_id, model_kwargs)
+         batch_size = inputs_tensor.shape[0]
+ 
+@@ -1524,6 +1531,8 @@
+                 output_scores=output_scores,
+                 return_dict_in_generate=return_dict_in_generate,
+                 synced_gpus=synced_gpus,
++                sessionpreprocess_start_time=sessionpreprocess_start_time,
++                profiling_enable=profiling_enable,
+                 **model_kwargs,
+             )
+ 
+@@ -2147,6 +2156,8 @@
+         output_scores: Optional[bool] = None,
+         return_dict_in_generate: Optional[bool] = None,
+         synced_gpus: Optional[bool] = False,
++        sessionpreprocess_start_time:Optional[float] = None,
++        profiling_enable:bool = False,
+         **model_kwargs,
+     ) -> Union[GreedySearchOutput, torch.LongTensor]:
+         r"""
+@@ -2267,7 +2278,27 @@
+         unfinished_sequences = input_ids.new(input_ids.shape[0]).fill_(1)
+ 
+         this_peer_finished = False  # used by synced_gpus only
++
++        torch.npu.synchronize()
++        sessionpreprocess_end_time = time.time()
++        forward_count = 0
++        pre_first_token_time = 0
++        forward_first_token_time = 0
++        post_first_token_time = 0
++
++        pre_total_token_time = 0
++        forward_total_token_time = 0
++        post_total_token_time = 0
++
+         while True:
++            forward_count += 1
++            if forward_count == 30 and profiling_enable:
++                stream = torch.npu.synchronize()
++                profile_config = torch.npu.profileConfig(TORCH_CALL_STACK=True)
++                prof = torch.npu.profile("./")
++                prof.__enter__()
++            torch.npu.synchronize()
++            pre_start_time = time.time()
+             if synced_gpus:
+                 # Under synced_gpus the `forward` call must continue until all gpus complete their sequence.
+                 # The following logic allows an early break if all peers finished generating their sequence
+@@ -2280,7 +2311,8 @@
+ 
+             # prepare model inputs
+             model_inputs = self.prepare_inputs_for_generation(input_ids, **model_kwargs)
+-
++            torch.npu.synchronize()
++            forward_start_time = time.time()
+             # forward pass to get next token
+             outputs = self(
+                 **model_inputs,
+@@ -2288,7 +2320,8 @@
+                 output_attentions=output_attentions,
+                 output_hidden_states=output_hidden_states,
+             )
+-
++            torch.npu.synchronize()
++            forward_end_time = time.time()
+             if synced_gpus and this_peer_finished:
+                 continue  # don't waste resources running the code we don't need
+ 
+@@ -2340,6 +2373,33 @@
+                     break
+                 else:
+                     this_peer_finished = True
++            torch.npu.synchronize()
++            postprocess_end_time = time.time()    
++            if forward_count == 30 and profiling_enable:
++                stream = torch.npu.synchronize()
++                prof.__exit__(None, None, None)   
++            elapse = (forward_end_time - pre_start_time) * 1000
++            if forward_count == 1:
++                pre_first_token_time =  elapse
++            else:
++                pre_total_token_time += elapse
++            elapse = (forward_end_time - forward_start_time) * 1000
++            if forward_count == 1:
++                forward_first_token_time =  elapse
++            else:
++                forward_total_token_time += elapse
++            elapse = (postprocess_end_time - forward_end_time) * 1000
++            if forward_count == 1:
++                post_first_token_time =  elapse
++            else:
++                post_total_token_time += elapse            
++        
++        print(f"[SessionPreprocess token delay] : {sessionpreprocess_end_time-sessionpreprocess_start_time}ms \n")
++        forward_next_token_time = pre_total_token_time/ (forward_count -1)
++        print(f"======== model process time ========\n")
++        print(f"[ first token delay ] : {forward_first_token_time} ========\n")
++        print(f"[ avg token delay ] : {forward_next_token_time} ========\n")
++        print(f"[ all token delay ] : {forward_total_token_time + forward_first_token_time} ========\n")
+ 
+         if return_dict_in_generate:
+             if self.config.is_encoder_decoder:

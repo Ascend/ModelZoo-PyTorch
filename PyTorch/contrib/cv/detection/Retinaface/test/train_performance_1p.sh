@@ -101,6 +101,10 @@ fi
 ##################启动训练脚本##################
 # 训练开始时间，不需要修改
 start_time=$(date +%s)
+device_id=$ASCEND_DEVICE_ID
+let range_min=$device_id*24
+let range_max=$range_min+23
+taskset -c $range_min-$range_max \
 python3 train.py \
     --data=${data_path}/train/label.txt \
     --addr=$(hostname -I |awk '{print $1}') \

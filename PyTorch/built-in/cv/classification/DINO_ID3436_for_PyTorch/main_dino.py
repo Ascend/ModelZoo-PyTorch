@@ -174,6 +174,7 @@ def train_dino(args):
     )
     dataset = datasets.ImageFolder(args.data_path, transform=transform)
     sampler = torch.utils.data.DistributedSampler(dataset, shuffle=True)
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     data_loader = torch.utils.data.DataLoader(
         dataset,
         sampler=sampler,
@@ -181,6 +182,7 @@ def train_dino(args):
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=True,
+        **kwargs
     )
     print(f"Data loaded: there are {len(dataset)} images.")
 

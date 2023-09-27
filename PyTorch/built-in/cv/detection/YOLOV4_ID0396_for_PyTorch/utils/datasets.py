@@ -76,12 +76,14 @@ def create_dataloader(path, imgsz, batch_size, stride, opt, hyp=None, augment=Fa
     batch_size = min(batch_size, len(dataset))
     nw = min([os.cpu_count() // world_size, batch_size if batch_size > 1 else 0, 16])  # number of workers
     train_sampler = torch.utils.data.distributed.DistributedSampler(dataset) if local_rank != -1 else None
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     dataloader = torch.utils.data.DataLoader(dataset,
                                              batch_size=batch_size,
                                              num_workers=nw,
                                              sampler=train_sampler,
                                              pin_memory=True,
-                                             collate_fn=LoadImagesAndLabels.collate_fn)
+                                             collate_fn=LoadImagesAndLabels.collate_fn,
+                                             **kwargs)
     return dataloader, dataset
 
 
