@@ -531,7 +531,7 @@ class FairseqTask(object):
             with torch.cuda.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))):
                 loss, sample_size, logging_output = criterion(model, sample)
         # 兼容饱和模式
-        torch.npu.utils.check_overflow(0.0)
+        torch.npu.utils.npu_check_overflow(0.0)
         if ignore_grad:
             loss *= 0
         with torch.autograd.profiler.record_function("backward"):
