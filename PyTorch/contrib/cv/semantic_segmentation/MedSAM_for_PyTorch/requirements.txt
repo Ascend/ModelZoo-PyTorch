@@ -1,0 +1,15 @@
+torchvision
+opencv-python
+pycocotools
+matplotlib
+onnxruntime
+onnx
+
+tqdm
+wandb
+nibabel
+imageio
+SimpleITK
+scikit-image
+connected-components-3d
+monai
