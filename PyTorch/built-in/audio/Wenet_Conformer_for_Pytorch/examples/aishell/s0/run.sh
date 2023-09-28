@@ -30,6 +30,7 @@ data_url=www.openslr.org/resources/33
 nj=16
 dict=data/dict/lang_char.txt
 
+HOST_NOOD_ADDR="localhost:0"
 # data_type can be `raw` or `shard`. Typically, raw is used for small dataset,
 # `shard` is used for large dataset which is over 1k hours, and `shard` is
 # faster on reading data and training.
@@ -54,7 +55,7 @@ performance_epoch=${10}
 # use average_checkpoint will get better result
 average_checkpoint=true
 decode_checkpoint=$dir/final.pt
-average_num=30
+average_num=20
 decode_modes="ctc_greedy_search"
 
 . ../../../tools/parse_options.sh || exit 1;
@@ -123,8 +124,6 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
   num_gpus=$(echo $CUDA_VISIBLE_DEVICES | awk -F "," '{print NF}')
   # Use "nccl" if it works, otherwise use "gloo"
   dist_backend="hccl"
-  world_size=`expr $num_gpus \* $num_nodes`
-  echo "total gpus is: $world_size"
   cmvn_opts=
   $cmvn && cp data/${train_set}/global_cmvn $dir
   $cmvn && cmvn_opts="--cmvn ${dir}/global_cmvn"
@@ -132,15 +131,8 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
   # train.py rewrite $train_config to $dir/train.yaml with model input
   # and output dimension, and $dir/train.yaml will be used for inference
   # and export.
-  for ((i = 0; i < $num_gpus; ++i)); do
-  {
-    gpu_id=$(echo $CUDA_VISIBLE_DEVICES | cut -d',' -f$[$i+1])
-    # Rank of each gpu/process used for knowing whether it is
-    # the master of a worker.
-    rank=`expr $node_rank \* $num_gpus + $i`
-    p_start=$((0+24*gpu_id))
-    p_end=$((23+24*gpu_id))
-    taskset -c $p_start-$p_end python ../../../wenet/bin/train.py --gpu $gpu_id \
+  torchrun --nnodes=$num_nodes --nproc_per_node=$num_gpus --rdzv_endpoint=$HOST_NOOD_ADDR \
+   ../../../wenet/bin/train.py \
       --config $train_config \
       --data_type $data_type \
       --symbol_table $dict \
@@ -149,16 +141,11 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
       ${checkpoint:+--checkpoint $checkpoint} \
       --model_dir $dir \
       --ddp.init_method $init_method \
-      --ddp.world_size $world_size \
-      --ddp.rank $rank \
       --ddp.dist_backend $dist_backend \
       --num_workers 8 \
       --performance_epoch $performance_epoch \
       $cmvn_opts \
-      --pin_memory > $test_output_dir/0/train_$gpu_id.log 2>&1
-  } &
-  done
-  wait
+      --pin_memory > $test_output_dir/0/train.log 2>&1
 fi
 
 if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then

@@ -47,26 +47,11 @@ def get_args():
                         help='train and cv data type')
     parser.add_argument('--train_data', required=True, help='train data file')
     parser.add_argument('--cv_data', required=True, help='cv data file')
-    parser.add_argument('--gpu',
-                        type=int,
-                        default=-1,
-                        help='gpu id for this local rank, -1 for cpu')
     parser.add_argument('--model_dir', required=True, help='save model dir')
     parser.add_argument('--checkpoint', help='checkpoint model')
     parser.add_argument('--tensorboard_dir',
                         default='tensorboard',
                         help='tensorboard log dir')
-    parser.add_argument('--ddp.rank',
-                        dest='rank',
-                        default=0,
-                        type=int,
-                        help='global rank for distributed training')
-    parser.add_argument('--ddp.world_size',
-                        dest='world_size',
-                        default=-1,
-                        type=int,
-                        help='''number of total processes/gpus for
-                        distributed training''')
     parser.add_argument('--ddp.dist_backend',
                         dest='dist_backend',
                         default='hccl',
@@ -123,6 +108,8 @@ def get_args():
                         default='',
                         required=False,
                         help='LF-MMI dir')
+    parser.add_argument('--local_rank', type=int, default=-1,
+                        help='local rank passed from distributed launcher')
     parser.add_argument('--performance_epoch',
                         type=int,
                         default=-1,
@@ -138,7 +125,6 @@ def main():
     args = get_args()
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)s %(message)s')
-    torch_npu.npu.set_device(args.gpu)
 
     # Set random seed
     torch.manual_seed(777)
@@ -147,13 +133,17 @@ def main():
     if len(args.override_config) > 0:
         configs = override_config(configs, args.override_config)
 
-    distributed = args.world_size > 1
+    world_size = int(os.environ.get('WORLD_SIZE', 1))
+    local_rank = int(os.environ.get('LOCAL_RANK', 0))
+    rank = int(os.environ.get('RANK', 0))
+    distributed = world_size > 1
     if distributed:
-        logging.info('training on multiple gpus, this gpu {}'.format(args.gpu))
+        logging.info('training on multiple gpus, this gpu {}'.format(local_rank))
+        torch_npu.npu.set_device(local_rank)
         dist.init_process_group(args.dist_backend,
                                 init_method=args.init_method,
-                                world_size=args.world_size,
-                                rank=args.rank)
+                                world_size=world_size,
+                                rank=rank)
 
     symbol_table = read_symbol_table(args.symbol_table)
 
@@ -200,7 +190,7 @@ def main():
     configs['is_json_cmvn'] = True
     configs['lfmmi_dir'] = args.lfmmi_dir
 
-    if args.rank == 0:
+    if rank == 0:
         saved_config_path = os.path.join(args.model_dir, 'train.yaml')
         with open(saved_config_path, 'w') as fout:
             data = yaml.dump(configs)
@@ -208,9 +198,9 @@ def main():
 
     # Init asr model from configs
     model = init_model(configs)
-    print(model)
+    print(model) if local_rank == 0 else None
     num_params = sum(p.numel() for p in model.parameters())
-    print('the number of model params: {:,d}'.format(num_params))
+    print('the number of model params: {:,d}'.format(num_params)) if local_rank == 0 else None
 
     # !!!IMPORTANT!!!
     # Try to export the model by script, if fails, we should refine
@@ -231,7 +221,7 @@ def main():
     num_epochs = configs.get('max_epoch', 100)
     model_dir = args.model_dir
     writer = None
-    if args.rank == 0:
+    if rank == 0:
         os.makedirs(model_dir, exist_ok=True)
         exp_id = os.path.basename(model_dir)
         writer = SummaryWriter(os.path.join(args.tensorboard_dir, exp_id))
@@ -239,10 +229,10 @@ def main():
     if distributed:
         # cuda model is required for nn.parallel.DistributedDataParallel
         assert torch_npu.npu.is_available()
-        model.npu(args.gpu)
+        model.npu()
         model = torch.nn.parallel.DistributedDataParallel(
             model, find_unused_parameters=True)
-        device = torch.device("npu", args.gpu)
+        device = torch.device("npu")
         if args.fp16_grad_sync:
             from torch.distributed.algorithms.ddp_comm_hooks import (
                 default as comm_hooks,
@@ -251,12 +241,12 @@ def main():
                 state=None, hook=comm_hooks.fp16_compress_hook
             )
     else:
-        use_cuda = args.gpu >= 0 and torch.cuda.is_available()
+        use_cuda = torch.cuda.is_available()
         device = torch.device('cuda' if use_cuda else 'cpu')
         model = model.to(device)
 
     if configs['optim'] == 'adam':
-        optimizer = optim.Adam(model.parameters(), **configs['optim_conf'])
+        optimizer = torch_npu.optim.NpuFusedAdam(model.parameters(), **configs['optim_conf'])
     elif configs['optim'] == 'adamw':
         optimizer = optim.AdamW(model.parameters(), **configs['optim_conf'])
     else:
@@ -269,10 +259,10 @@ def main():
         raise ValueError("unknown scheduler: " + configs['scheduler'])
 
     final_epoch = None
-    configs['rank'] = args.rank
+    configs['rank'] = rank
     configs['is_distributed'] = distributed
     configs['use_amp'] = args.use_amp
-    if start_epoch == 0 and args.rank == 0:
+    if start_epoch == 0 and rank == 0:
         save_model_path = os.path.join(model_dir, 'init.pt')
         save_checkpoint(model, save_model_path)
 
@@ -296,7 +286,7 @@ def main():
         cv_loss = total_loss / num_seen_utts
 
         logging.info('Epoch {} CV info cv_loss {}'.format(epoch, cv_loss))
-        if args.rank == 0:
+        if rank == 0:
             save_model_path = os.path.join(model_dir, '{}.pt'.format(epoch))
             save_checkpoint(
                 model, save_model_path, {
@@ -311,7 +301,7 @@ def main():
         if args.performance_epoch != -1 and args.performance_epoch == epoch:
             break
 
-    if final_epoch is not None and args.rank == 0:
+    if final_epoch is not None and rank == 0:
         final_model_path = os.path.join(model_dir, 'final.pt')
         os.remove(final_model_path) if os.path.exists(final_model_path) else None
         os.symlink('{}.pt'.format(final_epoch), final_model_path)
