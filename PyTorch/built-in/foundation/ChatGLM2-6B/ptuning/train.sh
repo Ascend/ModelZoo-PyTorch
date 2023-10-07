@@ -1,8 +1,8 @@
 PRE_SEQ_LEN=128
 LR=2e-2
 NUM_GPUS=1
-
 source env_npu.sh
+#torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
 python3 main_without_tokenizer.py \
     --do_train \
     --train_file AdvertiseGen/train.json \
@@ -11,7 +11,7 @@ python3 main_without_tokenizer.py \
     --prompt_column content \
     --response_column summary \
     --overwrite_cache \
-    --model_name_or_path ../../6Bv2_weight/ \
+    --model_name_or_path ../model/ \
     --output_dir output/adgen-chatglm2-6b-pt-$PRE_SEQ_LEN-$LR \
     --overwrite_output_dir \
     --max_source_length 1024 \

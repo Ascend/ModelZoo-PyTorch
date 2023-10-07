@@ -1,8 +1,8 @@
 CHECKPOINT=adgen-chatglm2-6b-ft-1e-4
 STEP=1000
 NUM_GPUS=1
-
 source env_npu.sh
+#torchrun --standalone --nnodes=1 --nproc-per-node=$NUM_GPUS main.py \
 python3 main_without_tokenizer.py \
     --do_predict \
     --validation_file AdvertiseGen/dev.json \
