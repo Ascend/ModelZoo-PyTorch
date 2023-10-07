@@ -1055,7 +1055,12 @@ def main():
 
     model.qa_outputs.bias.data = model.qa_outputs.bias.data.float() # for ascend910 special
 
+    if os.getenv("ALLOW_FP32") or os.getenv("ALLOW_HF32"):
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+                                                          broadcast_buffers=False, find_unused_parameters=True)
+
     global_step = 0
+
     if args.do_train:
         print("Doing train...")
         if args.cache_dir is None:
