@@ -35,7 +35,10 @@ ABINet的特点即是autonomous（自治的）、bidirectional（双向的）、
 
   | Torch_Version     | 三方库依赖版本 
   | --------          |:---------:
-  | PyTorch 1.8       |  mmcv==1.7.1; albumentations==1.2.1; mmdet==2.28.1
+  | PyTorch 1.8       |  mmcv==1.7.1; albumentations==1.2.1; mmdet==2.28.1         
+  | PyTorch 1.11      |  mmcv==1.7.1; albumentations==1.2.1; mmdet==2.28.1
+
+  > **说明：** 当前Torch_Version不支持PyTorch2.1。
 
 - 环境准备指导。
 
