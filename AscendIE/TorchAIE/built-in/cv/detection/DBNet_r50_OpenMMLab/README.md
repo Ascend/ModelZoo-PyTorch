@@ -63,6 +63,10 @@
   cmake -DCMAKE_CXX_COMPILER=g++-9 -DMMDEPLOY_TARGET_BACKENDS=torchscript -DTorch_DIR=${Torch_DIR} ..
   make -j$(nproc) && make install
   ```
+以上g++版本需要根据自身环境配置。如因为找不到torch的原因导致无法成功编译，那么需要将上方cmake语句修改为：
+  ```
+  cmake -DCMAKE_CXX_COMPILER=g++-9 -DMMDEPLOY_TARGET_BACKENDS=torchscript -DTorch_DIR=${Torch_DIR} -DCMAKE_PREFIX_PATH=${Torch_DIR} ..
+  ```
 #### 参考链接
   ```
   url=https://github.com/open-mmlab/mmocr/blob/main/README_zh-CN.md
@@ -95,7 +99,10 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
 ```
 
 ### 准备脚本与必要文件
-在本地的mmdeploy地址下载本代码仓中dbnet_compile_run.py脚本和模型权重文件。
+在本地的mmdeploy地址下载本代码仓中dbnet_compile_run.py脚本，从上方模型链接的dbnet模型README中下载模型权重文件。或者直接从以下链接获取：
+ ```
+ url=https://download.openmmlab.com/mmocr/textdet/dbnet/dbnet_resnet50_1200e_icdar2015/dbnet_resnet50_1200e_icdar2015_20221102_115917-54f50589.pth
+ ```
 - 关键路径
   ```
    ├── work_dir
@@ -110,7 +117,7 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
 clone了mmocr仓后执行下面命令
 ```
   cd mmocr
-  python tools/dataset_coverters/prepare_dataset.py icdar2015 --task textdet
+  python tools/dataset_converters/prepare_dataset.py icdar2015 --task textdet
 ```
 数据集会生成在 ```mmocr/data/icdar2015``` 中。在后续运行时视情况对 ```mmocr/configs/textdet/_base_/datasets/icdar2015.py``` 中的 ```icdar2015_textdet_data_root``` 的路径做更改来保证运行脚本可以获取到数据集。
 
