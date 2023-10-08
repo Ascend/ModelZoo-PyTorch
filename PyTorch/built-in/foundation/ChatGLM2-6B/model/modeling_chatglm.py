@@ -1,3 +1,18 @@
+# coding=utf-8
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """ PyTorch ChatGLM model. """
 
 import math
@@ -8,13 +23,12 @@ import re
 import sys
 
 import torch
+import torch_npu
 import torch.utils.checkpoint
 import torch.nn.functional as F
 from torch import nn
 from torch.nn import CrossEntropyLoss, LayerNorm
 from torch.nn.utils import skip_init
-import torch_npu
-
 from typing import Optional, Tuple, Union, List, Callable, Dict, Any
 
 from transformers.modeling_outputs import (
@@ -149,7 +163,6 @@ class RotaryEmbedding(nn.Module):
 
         # Calculate the product of position index and $\theta_i$
         idx_theta = torch.outer(seq_idx, theta).float()
-        # Tag: cos, sin ;
         cache = torch.stack([torch.cos(idx_theta), torch.sin(idx_theta)], dim=-1)
 
         # this is to mimic the behaviour of complex32, else we will get different results
@@ -168,12 +181,8 @@ def apply_rotary_pos_emb_(x: torch.Tensor, rope_cache: torch.Tensor) -> torch.Te
     # x: [sq, b, np, hn]
     # Tag：q, k: [sq, b, np, hn], hn=128
     sq, b, np, hn = x.size(0), x.size(1), x.size(2), x.size(3)
-
     cos, sin, q, x_pass = get_x_cos_sin_(rope_cache, sq, x)
-    # $$$$$$$$$$$$attention_scores.shape, attention_mask.shape torch.Size([4, 32, 2048, 2048]) torch.Size([4, 1, 2048, 2048])
-    # print("$$$$$$$$$$$  cos.shape, sin.shape, q.shape", cos.shape, sin.shape, q.shape)
     x_out2 = torch_npu.npu_rotary_mul(q, cos, sin)
-
     x_out2 = x_out2.flatten(3)
     return torch.cat((x_out2, x_pass), dim=-1)
 
@@ -197,7 +206,6 @@ def get_x_cos_sin_(rope_cache, sq, x):
     # torch.Size([2048, 4, 1, 64])
     # rot_dim = cos.shape[-1]
     # x, x_pass = x[..., :rot_dim], x[..., rot_dim:]
-    # x_pass, x = torch.chunk(x, 2, dim=-1)
     x, x_pass = torch.chunk(x, 2, dim=-1)
     return cos, sin, x, x_pass
 
@@ -214,19 +222,15 @@ def apply_rotary_pos_emb(x: torch.Tensor, rope_cache: torch.Tensor) -> torch.Ten
     # truncate to support variable sizes
     rope_cache = rope_cache[:sq]
 
-    # (sq,b, 32, 2)
-    # Tag：总体上就是用的reshape+片选 实现rotate 交换动作;
-    # 最后一维是2, 举例如下：[q1, q2],[q3, q4]
+    # (sq, b, 32, 2)
     xshaped = x.reshape(sq, -1, np, rot_dim // 2, 2)
-    # (sq,b, 1, 32, 2); 同样最后一维是2, 举例如下：[cos1, sin1],[cos2, sin2], ...
     rope_cache = rope_cache.view(sq, -1, 1, xshaped.size(3), 2)
-    # rope_cache[..., 0]; shape-->(sq,b, 32)
-    # xshaped[..., 0]-->[q1, q3,...]; 利用片选分离出单数， 双数的q
+    # rope_cache[..., 0]; shape-->(sq, b, 32)
     x_out2 = torch.stack(
         [
-            # [q1, q3, ] *[cos1, cos2, cos3] - [q2, q4, ] *[sin1, sin2, sin3]
+            # [q1, q3, ] * [cos1, cos2, cos3] - [q2, q4, ] * [sin1, sin2, sin3]
             xshaped[..., 0] * rope_cache[..., 0] - xshaped[..., 1] * rope_cache[..., 1],
-            # [q2, q4, ] *[cos1, cos2, cos3] - [q1, q3, ] *[sin1, sin2, sin3]
+            # [q2, q4, ] * [cos1, cos2, cos3] - [q1, q3, ] * [sin1, sin2, sin3]
             xshaped[..., 1] * rope_cache[..., 0] + xshaped[..., 0] * rope_cache[..., 1],
         ],
         -1,
@@ -243,8 +247,6 @@ class RMSNorm(torch.nn.Module):
 
     def forward(self, hidden_states: torch.Tensor):
         input_dtype = hidden_states.dtype
-        # variance = hidden_states.to(torch.float32).pow(2).mean(-1, keepdim=True)
-        # hidden_states = hidden_states * torch.rsqrt(variance + self.eps)
         hidden_states_fp32 = hidden_states.to(torch.float32)
         variance = torch.mul(hidden_states_fp32, hidden_states_fp32).mean(-1, keepdim=True)
         hidden_states = hidden_states * torch.rsqrt(variance + self.eps).half()
@@ -279,7 +281,6 @@ class CoreAttention(torch.nn.Module):
         self.attention_dropout = torch.nn.Dropout(config.attention_dropout)
 
     def forward(self, query_layer, key_layer, value_layer, attention_mask):
-        # print("query_layer.shape, key_layer.shape, value_layer.shape, attention_mask.shape", query_layer.shape, key_layer.shape, value_layer.shape, attention_mask.shape)
         pytorch_major_version = int(torch.__version__.split('.')[0])
         if pytorch_major_version >= 2:
             query_layer, key_layer, value_layer = [k.permute(1, 2, 0, 3) for k in [query_layer, key_layer, value_layer]]
@@ -304,69 +305,23 @@ class CoreAttention(torch.nn.Module):
             query_layer = query_layer.view(output_size[2], output_size[0] * output_size[1], -1)
             # [sk, b, np, hn] -> [sk, b * np, hn]
             key_layer = key_layer.view(output_size[3], output_size[0] * output_size[1], -1)
-            # Tag: alpha可以尝试改为常数；
             alpha = (1.0 / self.norm_factor)
             query_layer = query_layer * alpha
             # preallocting input tensor: [b * np, sq, sk]
-            '''
-            matmul_input_buffer = torch.empty(
-                output_size[0] * output_size[1], output_size[2], output_size[3], dtype=query_layer.dtype,
-                device=query_layer.device
-            )
 
-            # Raw attention scores. [b * np, sq, sk]
-            
-            matmul_result = torch.baddbmm(
-                matmul_input_buffer,
-                query_layer.transpose(0, 1),  # [b * np, sq, hn]
-                key_layer.transpose(0, 1).transpose(1, 2),  # [b * np, hn, sk]
-                beta=0.0,
-                alpha=(1.0 / self.norm_factor),
-            )
-            '''
-
-            # print("$$$$$$$$$$alpha: ", alpha)
-            # alpha = 0.08838834764831843
-            # matmul_result = alpha * torch.bmm(query_layer.transpose(0, 1), key_layer.permute(1, 2, 0))
             matmul_result = torch.bmm(query_layer.transpose(0, 1), key_layer.permute(1, 2, 0))
             # change view to [b, np, sq, sk]
             attention_scores = matmul_result.view(*output_size)
-            # print("attention_scores.type()", attention_scores.dtype)
             # ===========================
             # Attention probs and dropout
             # ===========================
 
             # attention scores and attention mask [b, np, sq, sk]
-            # if self.attention_softmax_in_fp32:
-            #     attention_scores = attention_scores.float()
-            # Tag:会进来这段函数， 生成上三角；
-            '''
-            if attention_mask is None and attention_scores.shape[2] == attention_scores.shape[3]:
-                # print("attention_mask is None and attention_scores.shape[2] == attention_scores.shape[3]")
-                # attention_mask = torch.ones(output_size[0], 1, output_size[2], output_size[3],
-                #                             device=attention_scores.device, dtype=torch.bool)
-                attention_mask = torch.ones(output_size[0], 1, output_size[2], output_size[3],
-                                            device=attention_scores.device)
-                attention_mask.tril_()
-                # attention_mask = ~attention_mask
-                attention_mask = (attention_mask < 0.5).bool()
-            '''
-            # print("$$$$attention_mask", attention_mask)
-            import numpy as np
-            # if int(os.environ.get('LOCAL_RANK')) == 0:
-            #     np.save("attention_scores", attention_scores.cpu().numpy())
-            #     np.save("attention_mask", attention_mask.cpu().numpy())
-            self.scale_mask_softmax = False
-            # Tag: Cause overflow
+            self.scale_mask_softmax = True
             if self.scale_mask_softmax:
-                if self.coeff is not None and attention_mask is not None:
-                    # torch.Size([4, 32, 2049, 2049]) torch.Size([4, 1, 2049, 2049])
-                    # print("attention_scores.shape, attention_mask.shape", attention_scores.shape, attention_mask.shape)
-                    attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask,
-                                                                          self.coeff, False)
-                else:
-                    print("$$$$$$$$$$$$ERROR, exit")
-                    exit(1)
+                assert self.coeff, attention_mask
+                attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask, self.coeff,
+                                                                      False)
             else:
                 if attention_mask is not None:
                     attention_scores = attention_scores.masked_fill(attention_mask, float("-inf"))
@@ -376,22 +331,6 @@ class CoreAttention(torch.nn.Module):
                 attention_probs = attention_probs.type_as(value_layer)
             # This is actually dropping out entire tokens to attend to, which might
             # seem a bit unusual, but is taken from the original Transformer paper.
-
-            # if int(os.environ.get('LOCAL_RANK')) == 0:
-            #     print("attention_probs", attention_probs.shape, attention_probs)
-            #     np.save("use_scale_mask_softmax", attention_probs.cpu().numpy())
-            #     np.save("attention_scores1", attention_scores.cpu().numpy())
-            #     np.save("attention_mask1", attention_mask.cpu().numpy())
-            #     if attention_mask is not None:
-            #         attention_scores = attention_scores.masked_fill(attention_mask, float("-inf"))
-            #     if self.coeff is not None:
-            #         attention_scores = attention_scores * self.coeff
-            #     attention_probs = F.softmax(attention_scores, dim=-1)
-            #     attention_probs = attention_probs.type_as(value_layer)
-            #     print("attention_probs", attention_probs.shape, attention_probs)
-            #     np.save("non_scale_mask_softmax", attention_probs.cpu().numpy())
-            #     print("$$$$save done, prepare to exit")
-            #     exit(0)
             attention_probs = self.attention_dropout(attention_probs)
             # =========================
             # Context layer. [sq, b, hp]
@@ -409,9 +348,8 @@ class CoreAttention(torch.nn.Module):
             # matmul: [b * np, sq, hn]
             context_layer = torch.bmm(attention_probs, value_layer.transpose(0, 1))
             # change view [b, np, sq, hn]
-            #context_layer = context_layer.view(*output_size)
+            context_layer = context_layer.view(*output_size)
             # [b, np, sq, hn] --> [sq, b, np, hn]
-            # Tag:原生
             #context_layer = context_layer.permute(2, 0, 1, 3).contiguous()
             context_layer = torch.npu_confusion_transpose(context_layer, [2, 0, 1, 3], [*output_size], False)
             # [sq, b, np, hn] --> [sq, b, hp]
@@ -654,7 +592,6 @@ class GLMBlock(torch.nn.Module):
         # hidden_states: [s, b, h]
 
         # Layer norm at the beginning of the transformer layer.
-        # layernorm_output = self.input_layernorm(hidden_states.contiguous())
         layernorm_output = self.input_layernorm(hidden_states)
         # Self attention.
         attention_output, kv_cache = self.self_attention(
@@ -790,13 +727,11 @@ class ChatGLMPreTrainedModel(PreTrainedModel):
         """Initialize the weights."""
         return
 
-    def get_masks_(self, input_ids, device):
+    def get_masks_(self, input_ids):
         batch_size, seq_length = input_ids.shape
         attention_mask = torch.ones(batch_size, 1, seq_length, seq_length, device=input_ids.device)
         attention_mask.tril_()
-        # attention_mask = ~attention_mask
         attention_mask = (attention_mask < 0.5).bool()
-
         return attention_mask
 
     def get_masks(self, input_ids, past_key_values, padding_mask=None):
@@ -886,7 +821,6 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
         if self.pre_seq_len is not None:
             for param in self.parameters():
                 param.requires_grad = False
-            # self.prefix_tokens = torch.arange(self.pre_seq_len).long()
             self.prefix_tokens = torch.arange(self.pre_seq_len).int()
             self.prefix_encoder = PrefixEncoder(config)
             self.dropout = torch.nn.Dropout(0.1)
@@ -936,58 +870,35 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             if past_key_values is None:
                 past_key_values = self.get_prompt(batch_size=batch_size, device=input_ids.device,
                                                   dtype=inputs_embeds.dtype)
-            # Tag ：无效这函数
             if attention_mask is not None:
                 attention_mask = torch.cat([attention_mask.new_ones((batch_size, self.pre_seq_len)),
                                             attention_mask], dim=-1)
 
-        # Tag:测试用； 直接修改为V1版本的 attention_mask = self.get_masks容易出错呀；
-        # if attention_mask is None:
-        full_attention_mask = self.get_masks_(
-            input_ids,
-            device=input_ids.device
-        )
+        full_attention_mask = self.get_masks_(input_ids)
 
-        # print("$"*20)
-        # print("full_attention_mask, attention_mask", full_attention_mask, attention_mask)
-
-        # print("$" * 10)
-        # print("self.config.bos_token_id", self.config.bos_token_id)
-        # Tag ：无效这函数
         if full_attention_mask is None:
-            # print("full_attention_mask is None")
             if (attention_mask is not None and not attention_mask.all()) or (past_key_values and seq_length != 1):
                 full_attention_mask = self.get_masks(input_ids, past_key_values, padding_mask=attention_mask)
-        # Tag：测试用
-        # full_attention_mask = self.get_masks(input_ids, past_key_values, padding_mask=attention_mask)
-        # print("full_attention_mask ", full_attention_mask )
+
         # Rotary positional embeddings
         rotary_pos_emb = self.rotary_pos_emb(self.seq_length)
         if position_ids is not None:
             rotary_pos_emb = rotary_pos_emb[position_ids]
         else:
-            # Tag: 取出前seq_length个元素，并在第一维度上增加一个新的维度，使得张量的维度从原来的[seq_length, hidden_size]变为[1, seq_length, hidden_size]
             rotary_pos_emb = rotary_pos_emb[None, :seq_length]
         if USE_NPU_ROTARY:
-            # 又变成[seq, 1]
             rotary_pos_emb = rotary_pos_emb.transpose(0, 1).contiguous()
-            # Tag： 修改rotary_pos_emb --> (cos, sin)
             sq = seq_length
             rope_cache = rotary_pos_emb
             rot_dim = rope_cache.shape[-2] * 2
             # truncate to support variable sizes
             # rope_cache = rope_cache[:sq]
             rope_cache = rope_cache.view(sq, -1, 1, rot_dim // 2, 2)
-            # [cos1, cos2, cos3...]
-            # Tag:其实就复制了一份(五维;    [x, x, x, rot_dim, 2]
             cos = torch.cat([rope_cache[..., 0], rope_cache[..., 0]], dim=3)
             sin = torch.cat([rope_cache[..., 1], rope_cache[..., 1]], dim=3)
-            # print("@@@@@@@@@@@@@ cos, sin.shape", cos.shape, sin.shape)
             rotary_pos_emb = (cos, sin)
 
         # Run encoder.
-        # print("$"*10)
-        # print("full_attention_mask", full_attention_mask)
         hidden_states, presents, all_hidden_states, all_self_attentions = self.encoder(
             inputs_embeds, full_attention_mask, rotary_pos_emb=rotary_pos_emb,
             kv_caches=past_key_values, use_cache=use_cache, output_hidden_states=output_hidden_states
@@ -1107,7 +1018,6 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         if return_last_logit:
             hidden_states = hidden_states[-1:]
         lm_logits = self.transformer.output_layer(hidden_states)
-        # Tag：原生自带的
         lm_logits = lm_logits.transpose(0, 1).contiguous()
 
         loss = None
@@ -1196,7 +1106,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         history = history + [(query, response)]
         return response, history
 
-    @torch.inference_mode()
+    @torch.no_grad()
     def stream_chat(self, tokenizer, query: str, history: List[Tuple[str, str]] = None, past_key_values=None,
                     max_length: int = 8192, do_sample=True, top_p=0.8, temperature=0.8, logits_processor=None,
                     return_past_key_values=False, **kwargs):
@@ -1233,7 +1143,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
                 else:
                     yield response, new_history
 
-    @torch.inference_mode()
+    @torch.no_grad()
     def stream_generate(
             self,
             input_ids,
@@ -1329,7 +1239,6 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
             )
-            # unfinished_sequences = unfinished_sequences.mul((sum(next_tokens != i for i in eos_token_id)).long())
             unfinished_sequences = unfinished_sequences.mul((sum(next_tokens != i for i in eos_token_id)).int())
             if return_past_key_values:
                 yield input_ids, outputs.past_key_values
