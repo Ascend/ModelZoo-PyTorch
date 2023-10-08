@@ -58,7 +58,7 @@ python cn_clip/eval/evaluation.py \
     ${DATAPATH}/datasets/${dataset_name}/${split}_predictions.jsonl \
     output.json
 echo "文到图检索"
-cat output.json
+
 
 # 图到文检索
 python cn_clip/eval/transform_ir_annotation_to_tr.py \
@@ -69,7 +69,7 @@ python cn_clip/eval/evaluation_tr.py \
     ${DATAPATH}/datasets/${dataset_name}/${split}_tr_predictions.jsonl \
     output_tr.json
 echo "图到文检索"
-cat output_tr.json
+
 
 endTime=`date "+%Y-%m-%d %H:%M:%S"`
 duration=$(($(date +%s -d "${endTime}")-$(date +%s -d "${beginTime}")))
@@ -77,6 +77,13 @@ hour=$(( $duration/3600 ))
 min=$(( ($duration-${hour}*3600)/60 ))
 sec=$(( $duration-${hour}*3600-${min}*60 ))
 HMS=`echo ${hour}:${min}:${sec}`
+
+text_to_image_acc_r5=`awk -F '\"r5\":' '{print $2}' output.json | awk -F ',' '{print $1}'`
+image_to_text_acc_r5=`awk -F '\"r5\":' '{print $2}' output_tr.json | awk -F ',' '{print $1}'`
+
+echo "text_to_image_acc_r5 : $text_to_image_acc_r5"
+echo "image_to_text_acc_r5 : $image_to_text_acc_r5"
+
 echo "开始：$beginTime"
 echo "结束：$endTime"
 echo "耗时：$HMS"
