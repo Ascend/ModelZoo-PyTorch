@@ -52,5 +52,6 @@ int main(int argc, const char* argv[])
     auto jitRes = module.forward(inputIvalues);
     std::cout << "jitRes:" << jitRes << std::endl;
 
+    torch_aie::finalize();
     return 0;
 }
