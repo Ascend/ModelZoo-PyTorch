@@ -43,7 +43,7 @@ from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaL
 from .configuration_chatglm import ChatGLMConfig
 
 # flags required to enable jit fusion kernels
-
+USE_NPU_ROTARY=True
 if sys.platform != 'darwin':
     torch._C._jit_set_profiling_mode(False)
     torch._C._jit_set_profiling_executor(False)
@@ -202,9 +202,9 @@ def get_x_cos_sin(rope_cache, sq, x):
 def get_x_cos_sin_(rope_cache, sq, x):
     cos, sin = rope_cache
     # torch.Size([2048, 4, 1, 64])
-    rot_dim = cos.shape[-1]
+    # rot_dim = cos.shape[-1]
     # x, x_pass = x[..., :rot_dim], x[..., rot_dim:]
-    x_pass, x = torch.chunk(x, 2, dim=-1)
+    x, x_pass = torch.chunk(x, 2, dim=-1)
     return cos, sin, x, x_pass
 
 
@@ -213,7 +213,7 @@ def apply_rotary_pos_emb(x: torch.Tensor, rope_cache: torch.Tensor) -> torch.Ten
     # x: [sq, b, np, hn]
     # Tag：q, k: [sq, b, np, hn], hn=128
     sq, b, np, hn = x.size(0), x.size(1), x.size(2), x.size(3)
-    # rot_dim = 64
+    # rot_dim =64
     rot_dim = rope_cache.shape[-2] * 2
     # Tag: x-->(sq, b, 64, 2)
     x, x_pass = x[..., :rot_dim], x[..., rot_dim:]
@@ -320,11 +320,6 @@ class CoreAttention(torch.nn.Module):
                 assert self.coeff, attention_mask
                 attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask, self.coeff,
                                                                       False)
-                if self.coeff is not None and attention_mask is not None:
-                    attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask,
-                                                                          self.coeff, False)
-                else:
-                    exit(1)
             else:
                 if attention_mask is not None:
                     attention_scores = attention_scores.masked_fill(attention_mask, float("-inf"))
@@ -353,7 +348,8 @@ class CoreAttention(torch.nn.Module):
             # change view [b, np, sq, hn]
             context_layer = context_layer.view(*output_size)
             # [b, np, sq, hn] --> [sq, b, np, hn]
-            context_layer = context_layer.permute(2, 0, 1, 3).contiguous()
+            #context_layer = context_layer.permute(2, 0, 1, 3).contiguous()
+            context_layer = torch.npu_confusion_transpose(context_layer, [2, 0, 1, 3], [*output_size], False)
             # [sq, b, np, hn] --> [sq, b, hp]
             new_context_layer_shape = context_layer.size()[:-2] + (self.hidden_size_per_partition,)
             context_layer = context_layer.view(*new_context_layer_shape)
@@ -456,8 +452,12 @@ class SelfAttention(torch.nn.Module):
 
         # apply relative positional encoding (rotary embedding)
         if rotary_pos_emb is not None:
-            query_layer = apply_rotary_pos_emb_(query_layer, rotary_pos_emb)
-            key_layer = apply_rotary_pos_emb_(key_layer, rotary_pos_emb)
+            if USE_NPU_ROTARY:
+                query_layer = apply_rotary_pos_emb_(query_layer, rotary_pos_emb)
+                key_layer = apply_rotary_pos_emb_(key_layer, rotary_pos_emb)
+            else:
+                query_layer = apply_rotary_pos_emb(query_layer, rotary_pos_emb)
+                key_layer = apply_rotary_pos_emb(key_layer, rotary_pos_emb)
 
         # adjust key and value for inference
         if kv_cache is not None:
@@ -884,16 +884,17 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             rotary_pos_emb = rotary_pos_emb[position_ids]
         else:
             rotary_pos_emb = rotary_pos_emb[None, :seq_length]
-        rotary_pos_emb = rotary_pos_emb.transpose(0, 1).contiguous()
-        sq = seq_length
-        rope_cache = rotary_pos_emb
-        rot_dim = rope_cache.shape[-2] * 2
-        # truncate to support variable sizes
-        rope_cache = rope_cache.view(sq, -1, 1, rot_dim // 2, 2)
-        # [cos1, cos2, cos3...]
-        cos = torch.cat([rope_cache[..., 0], rope_cache[..., 0]], dim=3)
-        sin = torch.cat([rope_cache[..., 1], rope_cache[..., 1]], dim=3)
-        rotary_pos_emb = (cos, sin)
+        if USE_NPU_ROTARY:
+            rotary_pos_emb = rotary_pos_emb.transpose(0, 1).contiguous()
+            sq = seq_length
+            rope_cache = rotary_pos_emb
+            rot_dim = rope_cache.shape[-2] * 2
+            # truncate to support variable sizes
+            # rope_cache = rope_cache[:sq]
+            rope_cache = rope_cache.view(sq, -1, 1, rot_dim // 2, 2)
+            cos = torch.cat([rope_cache[..., 0], rope_cache[..., 0]], dim=3)
+            sin = torch.cat([rope_cache[..., 1], rope_cache[..., 1]], dim=3)
+            rotary_pos_emb = (cos, sin)
 
         # Run encoder.
         hidden_states, presents, all_hidden_states, all_self_attentions = self.encoder(
