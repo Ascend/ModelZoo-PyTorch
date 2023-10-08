@@ -128,7 +128,6 @@ def split_tensor_along_last_dim(
     tensor_list = torch.split(tensor, last_dim_size, dim=last_dim)
     # Note: torch.split does not create contiguous tensors by default.
     if contiguous_split_chunks:
-        # 原生；
         return tuple(chunk.contiguous() for chunk in tensor_list)
 
     return tensor_list
@@ -137,7 +136,6 @@ def split_tensor_along_last_dim(
 class RotaryEmbedding(nn.Module):
     def __init__(self, dim, original_impl=False, device=None, dtype=None):
         super().__init__()
-        # Tag:规避精度问题；
         inv_freq = 1.0 / (10000 ** (torch.arange(0, dim, 2, device=device).to(dtype=dtype) / dim).double()).to(
             dtype=dtype)
 
@@ -1088,7 +1086,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         inputs = inputs.to(self.device)
         return inputs
 
-    @torch.inference_mode()
+    @torch.no_grad()
     def chat(self, tokenizer, query: str, history: List[Tuple[str, str]] = None, max_length: int = 8192, num_beams=1,
              do_sample=True, top_p=0.8, temperature=0.8, logits_processor=None, **kwargs):
         if history is None:
