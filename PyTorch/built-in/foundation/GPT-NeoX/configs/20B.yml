@@ -36,6 +36,8 @@
   "output_layer_init_method": "wang_init",
 
   "scaled_masked_softmax_fusion":true,
+  "async_tensor_model_parallel_allreduce":true,
+  "use_triangle_attn":true,
 
   # optimizer settings
   "optimizer": {

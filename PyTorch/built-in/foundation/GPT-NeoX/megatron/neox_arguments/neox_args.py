@@ -245,6 +245,16 @@ class NeoXArgsModel(NeoXArgsTemplate):
     Enable fusion of query_key_value_scaling general masking and softmax.
     """
 
+    async_tensor_model_parallel_allreduce: bool = False
+    """
+	Enable hidden allreduce
+	"""
+
+    use_triangle_attn: bool = False
+    """
+	enable use triangle attention
+	"""
+
     bias_gelu_fusion: bool = False
     """
     Enable bias and gelu fusion.
