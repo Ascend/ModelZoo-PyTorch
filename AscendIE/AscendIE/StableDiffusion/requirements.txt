@@ -1,3 +1,4 @@
 torch
 diffusers
 transformers
+open_clip_torch

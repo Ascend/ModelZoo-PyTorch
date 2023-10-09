@@ -17,12 +17,93 @@ import stat
 import time
 import argparse
 import logging
+import json
+import csv
 from typing import Callable, List, Optional, Union
 import torch
 import numpy as np
 from diffusers import StableDiffusionPipeline
 import ascendie as aie
 from background_runtime import BackgroundRuntime
+
+
+class PromptLoader:
+    def __init__(
+        self,
+        prompt_file: str,
+        prompt_file_type: str,
+        batch_size: int,
+        num_images_per_prompt: int = 1,
+    ):
+        self.prompts = []
+        self.catagories = ['Not_specified']
+        self.batch_size = batch_size
+        self.num_images_per_prompt = num_images_per_prompt
+
+        if prompt_file_type == 'plain':
+            self.load_prompts_plain(prompt_file)
+
+        elif prompt_file_type == 'parti':
+            self.load_prompts_parti(prompt_file)
+
+        self.current_id = 0
+        self.inner_id = 0
+
+    def __len__(self):
+        return len(self.prompts) * self.num_images_per_prompt
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current_id == len(self.prompts):
+            raise StopIteration
+
+        ret = {
+            'prompts': [],
+            'catagories': [],
+            'save_names': [],
+            'n_prompts': self.batch_size,
+        }
+        for _ in range(self.batch_size):
+            if self.current_id == len(self.prompts):
+                ret['prompts'].append('')
+                ret['save_names'].append('')
+                ret['catagories'].append('')
+                ret['n_prompts'] -= 1
+
+            else:
+                prompt, catagory_id = self.prompts[self.current_id]
+                ret['prompts'].append(prompt)
+                ret['catagories'].append(self.catagories[catagory_id])
+                ret['save_names'].append(f'{self.current_id}_{self.inner_id}')
+
+                self.inner_id += 1
+                if self.inner_id == self.num_images_per_prompt:
+                    self.inner_id = 0
+                    self.current_id += 1
+
+        return ret
+
+    def load_prompts_plain(self, file_path: str):
+        with os.fdopen(os.open(file_path, os.O_RDONLY, stat.S_IRUSR), "r") as f:
+            for i, line in enumerate(f):
+                prompt = line.strip()
+                self.prompts.append((prompt, 0))
+                
+    def load_prompts_parti(self, file_path: str):
+        with os.fdopen(os.open(file_path, os.O_RDONLY, stat.S_IRUSR), "r") as f:
+            # Skip the first line
+            next(f)
+            tsv_file = csv.reader(f, delimiter="\t")
+            for i, line in enumerate(tsv_file):
+                prompt = line[0]
+                catagory = line[1]
+                if catagory not in self.catagories:
+                    self.catagories.append(catagory)
+
+                catagory_id = self.catagories.index(catagory)
+                self.prompts.append((prompt, catagory_id))
 
 
 class AIEStableDiffusionPipeline(StableDiffusionPipeline):
@@ -49,10 +130,12 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         logging.info("finish build model")
         if not model_data:
             logging.error("build model failed")
+        with os.fdopen(os.open(onnx_path[:-5] + '.om', os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR), "wb") as f:
+            f.write(model_data.data)
         del builder
         return model_data
     
-    def build_engines_onnx(self, clip_onnx_path, unet_om_path, vae_onnx_path):
+    def build_engines_onnx(self, clip_onnx_path, unet_onnx_path, vae_onnx_path):
         ret = aie.set_device(self.device_0)
         self.runtime = aie.Runtime.get_instance()
         clip_model_data = self.parse_onnx_model(clip_onnx_path)
@@ -60,7 +143,8 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         context1 = engine1.create_context()
         self.engines['clip'] = engine1
         self.contexts['clip'] = context1
-        engine2 = self.runtime.deserialize_engine_from_file(unet_om_path)
+        unet_model_data = self.parse_onnx_model(unet_onnx_path)
+        engine2 = self.runtime.deserialize_engine_from_mem(unet_model_data)
         context2 = engine2.create_context()
         self.engines['unet'] = engine2
         self.contexts['unet'] = context2
@@ -70,7 +154,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         self.engines['vae'] = engine3
         self.contexts['vae'] = context3
         if self.device_1:
-            self.unet_bg = BackgroundRuntime.clone(self.device_1, unet_om_path, self.engines['unet'])
+            self.unet_bg = BackgroundRuntime.clone(self.device_1, unet_onnx_path, self.engines['unet'])
             self.use_parallel_inferencing = True
         
     def build_engines(self, clip_path, unet_path, vae_path):
@@ -292,7 +376,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         if output_type == "pil":
             image = self.numpy_to_pil(image)
 
-        return (image[0], has_nsfw_concept)
+        return (image, has_nsfw_concept)
     
     def _encode_prompt(
         self,
@@ -438,26 +522,47 @@ def parse_arguments():
         default="prompts.txt",
         help="A prompt file used to generate images.",
     )
-
+    parser.add_argument(
+        "--prompt_file_type", 
+        choices=["plain", "parti"],
+        default="plain", 
+        help="Type of prompt file.",
+    )
+    parser.add_argument(
+        "--prompt_file_type", 
+        choices=["plain", "parti"],
+        default="plain", 
+        help="Type of prompt file.",
+    )
+    parser.add_argument(
+        "--prompt_file_type", 
+        choices=["plain", "parti"],
+        default="plain", 
+        help="Type of prompt file.",
+    )
     parser.add_argument(
         "--om_model_dir",
         type=str,
         default="./om_models",
         help="Base path of om models.",
     )
-    
     parser.add_argument(
         "--onnx_model_dir",
         type=str,
         default="./onnx_models",
         help="Base path of onnx models.",
     )
-    
     parser.add_argument(
         "--save_dir",
         type=str,
         default="./results",
         help="Path to save result images.",
+    )
+    parser.add_argument(
+        "--info_file_save_path", 
+        type=str, 
+        default="./image_info.json", 
+        help="Path to save image information file.",
     )
     parser.add_argument(
         "--steps",
@@ -476,6 +581,19 @@ def parse_arguments():
         action="store_true",
         help="if use onnx parser."
     )
+    parser.add_argument(
+        "--num_images_per_prompt",
+        default=1,
+        type=int,
+        help="Number of images generated for each prompt.",
+    )
+    parser.add_argument(
+        "-bs",
+        "--batch_size", 
+        type=int, 
+        default=1, 
+        help="Batch size."
+    )
 
     return parser.parse_args()
 
@@ -489,14 +607,12 @@ def main():
         pipe.device_0, pipe.device_1 = args.device
     else:
         pipe.device_0 = args.device
-    with os.fdopen(os.open(args.prompt_file, os.O_RDONLY, stat.S_IRUSR), "r") as f:
-        prompts = [line.strip() for line in f]
         
     if args.use_onnx_parser:
         clip_onnx_path = os.path.join(args.onnx_model_dir, "clip", "clip.onnx")
-        unet_om_path = os.path.join(args.om_model_dir, "unet", "unet.om")
+        unet_onnx_path = os.path.join(args.onnx_model_dir, "unet", "unet.onnx")
         vae_onnx_path = os.path.join(args.onnx_model_dir, "vae", "vae.onnx")
-        pipe.build_engines_onnx(clip_onnx_path, unet_om_path, vae_onnx_path)
+        pipe.build_engines_onnx(clip_onnx_path, unet_onnx_path, vae_onnx_path)
     else:
         clip_om_path = os.path.join(args.om_model_dir, "clip", "clip.om")
         unet_om_path = os.path.join(args.om_model_dir, "unet", "unet.om")
@@ -505,16 +621,38 @@ def main():
     pipe.malloc_io_binding()
 
     use_time = 0
-    infer_num = len(prompts)
-    for i, prompt in enumerate(prompts):
+    prompt_loader = PromptLoader(args.prompt_file, 
+                                 args.prompt_file_type, 
+                                 args.batch_size,
+                                 args.num_images_per_prompt,
+                                 )
+    infer_num = 0
+    image_info = []
+    current_prompt = None
+    for i, input_info in enumerate(prompt_loader):
+        prompts = input_info['prompts']
+        catagories = input_info['catagories']
+        save_names = input_info['save_names']
+        n_prompts = input_info['n_prompts']
+        
+        print(f"[{infer_num + n_prompts}/{len(prompt_loader)}]: {prompts}")
+        infer_num += args.batch_size
         start_time = time.time()
-        image = pipe.ascendie_infer(
-            prompt,
+        images = pipe.ascendie_infer(
+            prompts,
             num_inference_steps=args.steps,
         )
         use_time += time.time() - start_time
-        image = image[0]
-        image.save(os.path.join(save_dir, f"illustration_{i}.png"))
+        for j in range(n_prompts):
+            image_save_path = os.path.join(save_dir, f"{save_names[j]}.png")
+            image = images[0][j]
+            image.save(image_save_path)
+
+            if current_prompt != prompts[j]:
+                current_prompt = prompts[j]
+                image_info.append({'images': [], 'prompt': current_prompt, 'category': catagories[j]})
+
+            image_info[-1]['images'].append(image_save_path)
 
     print(f"[info] infer number: {infer_num}; use time: {use_time:.3f}s; "
           f"average time: {use_time/infer_num:.3f}s")
@@ -522,6 +660,13 @@ def main():
         pipe.unet_bg.stop()
 
     pipe.release()
+    
+    # Save image information to a json file
+    if os.path.exists(args.info_file_save_path):
+        os.remove(args.info_file_save_path)
+        
+    with os.fdopen(os.open(args.info_file_save_path, os.O_RDWR | os.O_CREAT, 0o644), "w") as f:
+        json.dump(image_info, f)
 
 
 if __name__ == "__main__":
