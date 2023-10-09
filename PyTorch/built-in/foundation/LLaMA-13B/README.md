@@ -161,7 +161,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
   python3 -m fastchat.model.apply_delta \
   --base-model-path /path/to/llama-7b \
   --target-model-path /output/path/to/vicuna-7b \
-  --delta-path lmsys/vicuna-7b-delta-v1.1
+  --delta-path lmsys/vicuna-7b-delta-v0
   ```
 
 #### Vicuna-13B
@@ -171,7 +171,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
   python3 -m fastchat.model.apply_delta \
   --base-model-path /path/to/llama-13b \
   --target-model-path /output/path/to/vicuna-13b \
-  --delta-path lmsys/vicuna-13b-delta-v1.1
+  --delta-path lmsys/vicuna-13b-delta-v0
   ```
 
 下载完毕后，可以在源码包根目录下找到对应的预训练参数文件夹。
@@ -253,28 +253,6 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 | 7B-NPU  | -     |            2990 | 3      |     zero1 |
 | 13B-竞品A  | -     |            1386 | 3      |     zero2 |
 | 13B-NPU | -     |            1498 | 3      |     zero2 |
-
-# 模型推理
-
-## 支持模型
-
-- Vicuna，LLaMA
-
-## 执行推理
-
-由于当前npu上融合算子scaledmaskedsoftmax算子存在限制，在推理时需要将源码包根目录下transformers_modify文件夹中的下列文件替换到transformers安装目录下的对应位置（基于transformers 4.28.1版本）；
-
-  ``` 
-  modeling_llama_eval.py -> transformers/models/llama/modeling_llama.py
-  ```
-
-执行下列命令以完成模型推理（基于单NPU，推理13B模型大约需要28GB显存，推理7B模型大约需要14G显存）。
-
-  ```
-  source /usr/local/Ascend/ascend_toolkit/set_env.sh
-  python3 -m fastchat.serve.cli --model-path path/to/FastChat/7B-vicuna --num-gpus 1 --conv-template conv_one_shot
-  python3 -m fastchat.serve.cli --model-path path/to/FastChat/13B-vicuna --num-gpus 1 --conv-template conv_one_shot
-  ```
 
 # 版本说明
 
