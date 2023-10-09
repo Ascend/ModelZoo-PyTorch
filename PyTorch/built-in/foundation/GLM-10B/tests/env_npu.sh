@@ -43,6 +43,8 @@ export COMBINED_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
+#饱和/非饱和模式溢出检测
+export INF_NAN_MODE_ENABLE=1
 
 ulimit -SHn 512000
 
