@@ -719,7 +719,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>YFCC100M</td>
     <td>75.04%</td>
         <td>97.85%</td>
-    <td>5.75s(e2e)</td>
+    <td>0.174(e2e)</td>
     <td nowrap="nowrap">1 x 1 x 1200 x 1600</td>
 </table>
 
