@@ -1035,7 +1035,7 @@ def main():
                                             warmup=args.warmup_proportion,
                                             t_total=num_train_optimization_steps)
 
-            if args.loss_scale == 0:
+            if args.loss_scale == 0 or (hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan()):
                 model, optimizer = amp.initialize(model, optimizer, opt_level="O2", keep_batchnorm_fp32=False,
                                                   loss_scale="dynamic", combine_grad=True,
                                                   combine_ddp=True if args.local_rank != -1 else False)

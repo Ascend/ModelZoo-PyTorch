@@ -1066,14 +1066,24 @@ class Trainer:
 
         # Mixed precision training with apex (torch < 1.6)
         if self.use_apex:
-            if training:
-                model, self.optimizer = amp.initialize(model, self.optimizer,
-                                                       opt_level=self.args.fp16_opt_level,
-                                                       loss_scale=self.args.loss_scale,
-                                                       combine_grad=self.args.use_combine_grad)
-            elif self.optimizer is None:
-                model = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level,
-                                       loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
+            if hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan():
+                if training:
+                    model, self.optimizer = amp.initialize(model, self.optimizer,
+                                                        opt_level=self.args.fp16_opt_level,
+                                                        loss_scale='dynamic',
+                                                        combine_grad=self.args.use_combine_grad)
+                elif self.optimizer is None:
+                    model = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level,
+                                        loss_scale='dynamic', combine_grad=self.args.use_combine_grad)
+            else:
+                if training:
+                    model, self.optimizer = amp.initialize(model, self.optimizer,
+                                                        opt_level=self.args.fp16_opt_level,
+                                                        loss_scale=self.args.loss_scale,
+                                                        combine_grad=self.args.use_combine_grad)
+                elif self.optimizer is None:
+                    model = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level,
+                                        loss_scale=self.args.loss_scale, combine_grad=self.args.use_combine_grad)
 
         # Multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:

@@ -133,8 +133,12 @@ def train(hyp, opt, device, tb_writer=None):
     del pg0, pg1, pg2
 
     if opt.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level,
-                                          loss_scale=opt.loss_scale, combine_grad=True)
+        if hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan():
+            model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level,
+                                            loss_scale='dynamic', combine_grad=True)
+        else:
+            model, optimizer = amp.initialize(model, optimizer, opt_level=opt.opt_level,
+                                            loss_scale=opt.loss_scale, combine_grad=True)
     # Scheduler https://arxiv.org/pdf/1812.01187.pdf
     # https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#OneCycleLR
     lf = lambda x: (((1 + math.cos(x * math.pi / epochs)) / 2) ** 1.0) * 0.8 + 0.2  # cosine
