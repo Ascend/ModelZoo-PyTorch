@@ -1038,11 +1038,13 @@ def main():
             if args.loss_scale == 0 or (hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan()):
                 model, optimizer = amp.initialize(model, optimizer, opt_level="O2", keep_batchnorm_fp32=False,
                                                   loss_scale="dynamic", combine_grad=True,
-                                                  combine_ddp=True if args.local_rank != -1 else False)
+                                                  combine_ddp=True if args.local_rank != -1 
+                                                  and torch.__version__ < '2.1' else False)
             else:
                 model, optimizer = amp.initialize(model, optimizer, opt_level="O2", keep_batchnorm_fp32=False,
                                                   loss_scale=args.loss_scale, combine_grad=True,
-                                                  combine_ddp=True if args.local_rank != -1 else False)
+                                                  combine_ddp=True if args.local_rank != -1 
+                                                  and torch.__version__ < '2.1' else False)
             if args.do_train:
                 scheduler = LinearWarmUpScheduler(optimizer, warmup=args.warmup_proportion,
                                                   total_steps=num_train_optimization_steps)
@@ -1055,7 +1057,7 @@ def main():
 
     model.qa_outputs.bias.data = model.qa_outputs.bias.data.float() # for ascend910 special
 
-    if os.getenv("ALLOW_FP32") or os.getenv("ALLOW_HF32"):
+    if args.local_rank != -1 and (os.getenv("ALLOW_FP32") or os.getenv("ALLOW_HF32") or torch.__version__ >= '2.1'):
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                           broadcast_buffers=False, find_unused_parameters=True)
 
