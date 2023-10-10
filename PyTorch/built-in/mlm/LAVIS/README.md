@@ -4,6 +4,7 @@
 -   [准备训练环境]()
 -   [开始训练]()
 -   [训练结果展示]()
+-   [视觉问答(VQA)任务推理]()
 -   [版本说明]()
 
 # 概述
@@ -36,7 +37,8 @@ LAVIS 是一个多模态模型套件，包含CLIP、ALBEF、BLIP、BLIP2、Instr
 
   | Torch_Version  | Java_Version |
   | :------------: | :----------: |
-  | PyTorch 1.11.1 | JDK 1.8以上  |
+  | PyTorch 1.11.0 | JDK 1.8以上  |
+- 
 
   评估使用 Stanford CoreNLP工具，该工具为Java开发，因此需要Java相关依赖。
 
@@ -56,9 +58,10 @@ LAVIS 是一个多模态模型套件，包含CLIP、ALBEF、BLIP、BLIP2、Instr
 
 ## 适配情况
 
-| 任务             | 支持模型 | 支持数据集 |
-| ---------------- | -------- | ---------- |
-| Image Captioning | BLIP2    | COCO2014   |
+| 任务                | 支持模型         | 支持数据集    |
+|-------------------|--------------|----------|
+| Image Captioning  | BLIP2        | COCO2014 |
+ | infer             | InstructBLIP |          |
 
 ## BLIP2
 
@@ -164,8 +167,58 @@ bert-base-uncased
      ]
      ```
 
+## InstructBLIP
+
+### 视觉问答(VQA)任务推理
+
+#### 获取Vicuna-7B权重：
+
+1. 获取原始LLaMA权重
+   
+2. 获取vicuna-7b-delta-v1.1权重。
+   
+3. 在模型根目录下使用以下转换脚本将delta权重应用于原始Llama权重，需要30GB cpu内存，如果cpu内存小于32GB，大于16GB，可在命令后加--low-cpu-mem，转换后的权重放在模型根目录下
+   ```
+   python3 -m fastchat.model.apply_delta \
+    --base-model-path /path/to/llama-7b \  
+    --target-model-path vicuna-7b \
+    --delta-path lmsys/vicuna-7b-delta-v1.1
+   ```
+   
+   参数说明如下：
+   ```
+   base-model-path：原始Llama权重路径
+   target-model-path：转换后的vicuna权重存放路径
+   delta-path：应用了delta的vicuna权重路径
+   ```
+
+#### 获取instruct_blip_vicuna7b_trimmed权重，放在模型根目录下
+
+#### 获取bert-base-uncased权重，放在模型根目录下
+
+#### 在模型目录下运行推理脚本。
+ ```
+   source ./test/env_npu.sh
+   python projects/instructblip/infer.py --img_path xxx --prompt xxx
+   
+   # 或者使用shell脚本启动：
+   bash ./test/run_infer_full_1p.sh --img_path xxx --prompt xxx  #单卡推理，请将的img_path更换成实际的路径,prompt更换为需要推理的prompt
+   ```
+
+   模型推理脚本参数说明如下。
+   
+   ```
+   公共参数：
+   --img_path                             //待推理图片路径
+   --prompt                               //推理prompt
+   ```
+
 # 版本说明
 
 ## 变更
 
 2023.08.18：首次发布。
+
+2023.10.08: 新增InstructBLIP推理
+
+
