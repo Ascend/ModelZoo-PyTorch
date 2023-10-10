@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import copy
 import logging
 import numpy as np
@@ -187,7 +188,8 @@ class DatasetMapper:
         padded = F.pad(images, padding_size, value=pad_value)
         batched_imgs = padded.unsqueeze_(0)
 
-        if self.amp and (self.opt_level == "O1" or self.opt_level == "O2"):
+        if self.amp and (self.opt_level == "O1" or self.opt_level == "O2") \
+            and not os.getenv('ALLOW_HF32') and not os.getenv('ALLOW_FP32'):
             batched_imgs = batched_imgs.to(torch.float16)
         dataset_dict["image_preprocess"] = batched_imgs.contiguous()
 
