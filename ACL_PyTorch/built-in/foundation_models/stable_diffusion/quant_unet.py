@@ -235,11 +235,11 @@ def main():
         input_shape += inp.name + ':' + ','.join(shape) + ';'
         if args.data_free:
             dtype = inp.type.tensor_type.elem_type
-            size = [x.dim_value for x in dims]
+            data_size = [x.dim_value for x in dims]
             if dtype == 1:
-                data[0].append(np.random.random(size).astype(np.float32))
+                data[0].append(np.random.random(data_size).astype(np.float32))
             if dtype == 7:
-                data[0].append(np.random.randint(10, size).astype(np.int64))
+                data[0].append(np.random.randint(10, size=data_size).astype(np.int64))
 
     if not args.data_free:
         device = None

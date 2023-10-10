@@ -155,7 +155,9 @@
 
       2. 模型优化
 
-         运行modify_onnx.py脚本
+         运行modify_onnx.py脚本。
+
+         未量化场景，TOME_num可设为5以获得最优性能收益。如果使用量化，推荐将TOME_num参数设为4以获得较好的精度和性能数据。
          ```bash 
          # 使用未量化模型
          python3 modify_onnx.py \
@@ -169,7 +171,7 @@
                --model models_bs${bs}/unet_quant/unet.onnx \
                --new_model models_bs${bs}/unet/unet_md.onnx \
                --FA_soc Duo \
-               --TOME_num 5
+               --TOME_num 4
          ```
          参数说明：
          - --model：onnx模型路径。
