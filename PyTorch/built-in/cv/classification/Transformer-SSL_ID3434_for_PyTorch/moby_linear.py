@@ -71,7 +71,7 @@ def parse_option():
                         help='local rank for DistributedDataParallel')
     
     # dev: linear eval settings
-    parser.add_argument('--lr', type=float, default=1.0, help='the base lr for linear evaluation')
+    parser.add_argument('--lr', type=float, default=0.5, help='the base lr for linear evaluation')
     parser.add_argument('--drop-path-rate', type=float, default=0.2, help='the drop path rate used in linear evaluation')
     parser.add_argument('--epochs', type=int, help="training epochs")
 
