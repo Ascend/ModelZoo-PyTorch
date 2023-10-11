@@ -40,6 +40,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络。灵活�
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | numpy==1.22.1 |
+  | PyTorch 2.1   | - |
   
 - 环境准备指导。
 

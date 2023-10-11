@@ -43,6 +43,7 @@ DINO 是一个非监督的图像语义分割模型，模型结合transformer采�
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | torchvision==0.6.0 |
   | PyTorch 1.8 | torchvision==0.9.1   |
+  | PyTorch 1.11 | torchvision==0.12.0   |
 
 - 环境准备指导。
 
@@ -55,6 +56,8 @@ DINO 是一个非监督的图像语义分割模型，模型结合transformer采�
   pip install -r 1.5_requirements.txt  # PyTorch1.5版本
   
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+
+  pip install -r 1.11_requirements.txt  # PyTorch1.11版本
   ```
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。
