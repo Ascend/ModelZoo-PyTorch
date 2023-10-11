@@ -39,6 +39,7 @@ bert4torch是一个基于pytorch的训练框架，前期以效仿和实现bert4k
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 

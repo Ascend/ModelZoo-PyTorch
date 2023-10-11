@@ -40,6 +40,7 @@ Arcface-Torch可以高效快速地训练大规模目标识别训练集。本模�
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 

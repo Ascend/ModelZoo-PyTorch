@@ -41,6 +41,7 @@ Albert是自然语言处理模型，基于Bert模型修改得到。相比于Bert
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 

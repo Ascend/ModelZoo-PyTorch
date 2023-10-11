@@ -42,6 +42,7 @@ BERT-Large模型是一个24层，1024维，24个自注意头（self attention he
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 

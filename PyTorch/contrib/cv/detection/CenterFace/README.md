@@ -39,6 +39,7 @@ Centerface的非官方版本，实现了速度和准确性之间的最佳平衡�
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 
