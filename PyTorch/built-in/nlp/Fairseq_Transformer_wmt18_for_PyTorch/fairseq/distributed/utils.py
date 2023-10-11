@@ -686,11 +686,11 @@ def all_reduce_dict(data: Mapping[str, Any], device, group) -> Dict[str, Any]:
     for k in data_keys:
         t = data[k]
         if not torch.is_tensor(t):
-            cpu_data[k] = torch.tensor(t)
+            cpu_data[k] = torch.tensor(t, dtype=torch.float)
         elif t.device.type != device.type:
-            cpu_data[k] = t
+            cpu_data[k] = t.to(dtype=torch.float)
         else:
-            device_data[k] = t
+            device_data[k] = t.to(dtype=torch.float)
 
     def _all_reduce_dict(data: OrderedDict):
         if len(data) == 0:
