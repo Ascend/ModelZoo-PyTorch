@@ -1,0 +1,3 @@
+scipy
+torchvision==0.16.0
+pillow==9.1.0

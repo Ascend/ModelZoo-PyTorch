@@ -329,8 +329,12 @@ def main_worker(args):
                                      T_max=args.epochs * IMAGENET_TRAINSET_SIZE // args.batch_size // args.num_gpus)
 
     if args.amp:
-        model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level,
-                                          loss_scale=args.loss_scale_value, combine_grad=True)
+        if hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan():
+            model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level,
+                                                loss_scale='dynamic', combine_grad=True)
+        else:
+            model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level,
+                                                loss_scale=args.loss_scale_value, combine_grad=True)
 
     if args.num_gpus > 1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[cur_device], broadcast_buffers=False)

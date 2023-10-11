@@ -39,9 +39,8 @@ class BaichuanClassifier:
         self.model = transformers.AutoModelForCausalLM.from_pretrained(
             self.model_path,
             torch_dtype=torch.float16,
-            device_map='auto',
             trust_remote_code=True,
-        )
+        ).cuda()
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             self.model_path,
             use_fast=False,

@@ -598,10 +598,11 @@ def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=N
         train_sampler = None
 
     dataloader_fn = MultiEpochsDataLoader  # torch.utils.data.DataLoader
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     train_loader = dataloader_fn(
         train_dataset, batch_size=batch_size, shuffle=(train_sampler is None),
         num_workers=workers, worker_init_fn=_worker_init_fn, pin_memory=True, sampler=train_sampler,
-        collate_fn=fast_collate, drop_last=True)
+        collate_fn=fast_collate, drop_last=True, **kwargs)
     return train_loader, len(train_loader), train_sampler
 
 
@@ -619,11 +620,12 @@ def get_pytorch_val_loader(data_path, batch_size, workers=5, _worker_init_fn=Non
         val_sampler = None
 
     dataloader_fn = MultiEpochsDataLoader  # torch.utils.data.DataLoader
+    kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
     val_loader = dataloader_fn(
         val_dataset,
         sampler=val_sampler,
         batch_size=batch_size, shuffle=(val_sampler is None),
-        num_workers=workers, worker_init_fn=_worker_init_fn, pin_memory=True, collate_fn=fast_collate)
+        num_workers=workers, worker_init_fn=_worker_init_fn, pin_memory=True, collate_fn=fast_collate, **kwargs)
 
     return val_loader
 

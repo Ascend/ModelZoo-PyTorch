@@ -510,35 +510,16 @@ class FairseqTask(object):
                 - logging outputs to display while training
         """
         model.train()
-        if update_num > 300000:
-            cann_profiling_path = '/home/crm/fairseq-main/cann_profiling'
-            if not os.path.exists(cann_profiling_path):
-                os.mkdir(cann_profiling_path)
-            model.set_num_updates(update_num)
-            with torch.npu.profile(cann_profiling_path):
-            #with torch.autograd.profiler.profile(use_npu=True) as prof:
-                with torch.autograd.profiler.record_function("forward"):
-                    #with torch.npu.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))): TODO crm
-                    loss, sample_size, logging_output = criterion(model, sample)
-
-                torch.npu.clear_npu_overflow_flag()
-                if ignore_grad:
-                    loss *= 0
-                with torch.autograd.profiler.record_function("backward"):
-                    optimizer.backward(loss)
-            #prof.export_chrome_trace("/home/crm/fairseq-main/output.prof")
-            exit(0)
-        else:
-            model.set_num_updates(update_num)
-            with torch.autograd.profiler.record_function("forward"):
-                # with torch.npu.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))): TODO crm
-                loss, sample_size, logging_output = criterion(model, sample)
-            torch.npu.clear_npu_overflow_flag()
-            if ignore_grad:
-                loss *= 0
-            with torch.autograd.profiler.record_function("backward"):
-                optimizer.backward(loss)
-
+        model.set_num_updates(update_num)
+        with torch.autograd.profiler.record_function("forward"):
+            # with torch.npu.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))): TODO crm
+            loss, sample_size, logging_output = criterion(model, sample)
+        # 兼容饱和模式
+        torch.npu.utils.npu_check_overflow(0.0)
+        if ignore_grad:
+            loss *= 0
+        with torch.autograd.profiler.record_function("backward"):
+            optimizer.backward(loss)
         return loss, sample_size, logging_output
 
     def valid_step(self, sample, model, criterion):

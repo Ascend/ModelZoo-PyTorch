@@ -198,6 +198,12 @@ class ParallelSelfAttention(nn.Module):
 
         self.fp16 = neox_args.precision == "fp16"
         self.bf16 = neox_args.precision == "bfloat16"
+
+        self.use_triangle_attn = neox_args.use_triangle_attn
+        self.block_size = 512
+        self.mask_tmp_initialed = False
+        self.mask_tmp_groups = []
+
         self.attention_mask_func = attention_mask_func
         self.apply_query_key_layer_scaling = neox_args.apply_query_key_layer_scaling
         self.use_cache = use_cache
@@ -313,6 +319,62 @@ class ParallelSelfAttention(nn.Module):
     def attention(
         self, query_layer, key_layer, value_layer, layer_past, attention_mask
     ):
+        if self.use_triangle_attn and layer_past is None and query_layer.size(
+                0) >= self.block_size * 2 and query_layer.size(0) % self.block_size == 0:
+            # context layer shape: [b, np, sq, hn]
+            output_size = (value_layer.size(1),
+                           value_layer.size(2),
+                           query_layer.size(0),
+                           value_layer.size(3))
+            np = value_layer.size(2)
+            sequence_len, bsz, head_num, head_dim = query_layer.shape
+
+            # todo the scenarios that cannot be exactly divided
+            sparse_groups = sequence_len // self.block_size
+            context_layer = None
+            alpha = 1.0 / self.norm_factor
+            query_layer *= alpha
+
+            q_tmp_layers_tuple = torch.chunk(query_layer, sparse_groups, 0)
+            k_tmp_layers_tuple = torch.chunk(key_layer, sparse_groups, 0)
+            v_tmp_layers_tuple = torch.chunk(value_layer, sparse_groups, 0)
+
+            context_list_tmp, k_tmp, v_tmp = [], (), ()
+            for i in range(sparse_groups):
+                # compute slice shape of q k v for each loop
+                q_begin = i * self.block_size
+                q_end = (i + 1) * self.block_size
+                kv_begin = 0
+                kv_end = (i + 1) * self.block_size
+
+                # q_tmp: [q_size, b * np, hn]
+                q_tmp = q_tmp_layers_tuple[i].permute(1, 2, 0, 3).contiguous()
+				# slice k and v
+                if i == 0:
+                    k_tmp = k_tmp_layers_tuple[i].permute(1, 2, 3, 0).contiguous()
+                    v_tmp = v_tmp_layers_tuple[i].permute(1, 2, 0, 3).contiguous()
+                else:
+                    k_tmp = torch.cat((k_tmp, k_tmp_layers_tuple[i].permute(1, 2, 3, 0).contiguous()), -1).contiguous()
+                    v_tmp = torch.cat((v_tmp, v_tmp_layers_tuple[i].permute(1, 2, 0, 3).contiguous()), -2).contiguous()
+                cur_sim = torch.matmul(q_tmp, k_tmp)
+                # [b, np, sq, sk] -> [b, np, q_size, kv_size]
+                if not self.mask_tmp_initialed:
+                    mask_tmp = attention_mask[:, :, q_begin:q_end, kv_begin:kv_end]
+                    self.mask_tmp_groups.append(mask_tmp.contiguous())
+                else:
+                    mask_tmp = self.mask_tmp_groups[i]
+                probs = self.scale_mask_softmax(cur_sim, mask_tmp)
+                with mpu.get_cuda_rng_tracker().fork():
+                    probs = self.attention_dropout(probs)
+                # [b * np, q_size, kv_size] * [b * np, kv_size, hn] -> [b * np, q_size, hn]
+                context_layer_tmp = torch.matmul(probs, v_tmp)
+                context_list_tmp.append(context_layer_tmp)
+            self.mask_tmp_initialed = True
+            context_layer = torch.cat(context_list_tmp, 2)
+            # =================
+            # Output. [sq, b, h]
+            # =================
+            return context_layer
         # ===================================
         # Raw attention scores. [b, np, s, s]
         # ===================================
@@ -331,28 +393,13 @@ class ParallelSelfAttention(nn.Module):
         )
         key_layer = key_layer.view(output_size[3], output_size[0] * output_size[1], -1)
 
-
-        '''
-        ### Raw attention scores. [b * np, sq, sk]  # orig
-        matmul_result = torch.baddbmm(
-            matmul_result,
-            query_layer.transpose(0, 1),  # [b * np, sq, hn]
-            key_layer.transpose(0, 1).transpose(1, 2),  # [b * np, hn, sk]
-            beta=0.0,
-            alpha=(1.0 / self.norm_factor),
-        )
-        '''
         ###bmmm
         alpha = (1.0 / self.norm_factor)
         query_layer *= alpha
         matmul_result = torch.bmm(
-            # matmul_result,
             query_layer.transpose(0, 1),  # [b * np, sq, hn]
             key_layer.transpose(0, 1).transpose(1, 2),  # [b * np, hn, sk]
-            # beta=0.0,
-            # alpha=(1.0 / self.norm_factor),
         )
-        
 
         # change view to [b, np, sq, sk]
         attention_scores = matmul_result.view(*output_size)

@@ -493,10 +493,16 @@ def main():
     amp_autocast = suppress  # do nothing
     loss_scaler = None
     if use_amp == 'apex':
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O1', combine_grad=True, loss_scale=65504)
-        loss_scaler = ApexScaler()
-        if args.local_rank == 0:
-            _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')
+        if hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan():
+            model, optimizer = amp.initialize(model, optimizer, opt_level='O1', combine_grad=True, loss_scale='dynamic')
+            loss_scaler = ApexScaler()
+            if args.local_rank == 0:
+                _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')
+        else:
+            model, optimizer = amp.initialize(model, optimizer, opt_level='O1', combine_grad=True, loss_scale=65504)
+            loss_scaler = ApexScaler()
+            if args.local_rank == 0:
+                _logger.info('Using NVIDIA APEX AMP. Training in mixed precision.')
     elif use_amp == 'native':
         amp_autocast = torch.cuda.amp.autocast
         loss_scaler = NativeScaler()

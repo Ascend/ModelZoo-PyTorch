@@ -45,7 +45,7 @@ class DynamicLossScaler(object):
     def check_overflow(self, grad_norm):
         # detect inf and nan
         self.found_inf.fill_(0.0)
-        has_overflow = torch.npu.utils.check_overflow(grad_norm)
+        has_overflow = torch.npu.utils.npu_check_overflow(grad_norm)
         if has_overflow:
             self.found_inf.fill_(1)
         if torch.distributed.is_initialized():

@@ -79,7 +79,7 @@ gpt_options=" \
        --checkpoint-activations \
        --save-interval 2000 \
        --eval-interval 50000 \
-       --save "./checkpoints" \
+       --save "$cur_path/test/output/${ASCEND_DEVICE_ID}/checkpoints/" \
        --split 1 \
        --eval-iters 10 \
        --eval-batch-size 8 \
@@ -88,6 +88,7 @@ gpt_options=" \
        --batch-size $BATCH_SIZE \
        --skip-init \
        --fp16 \
+       --log-interval 1 \
        --pretrain_model_path $PRETRAIN_MODEL_PATH \
        --use_lora >$cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 "
@@ -110,8 +111,8 @@ CaseName=${Network}_bs${BatchSize}_${WORLD_SIZE}'p'_'acc'
 # 结果打印，不需要修改
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
-avg_time=`grep -a 'iteration (ms)'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "ms): " '{print $2}'|awk -F " | learn" '{print $1}'|tail -100 | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
-FPS=`echo "$BatchSize / $avg_time" |bc`
+avg_time=`grep -a 'iteration (ms)'  $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "ms): " '{print $2}'|awk -F " | learn" '{print $1}'|tail -100 | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
+FPS=`echo "scale=2;($BatchSize * 1000) / $avg_time" |bc`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
 
@@ -124,10 +125,11 @@ echo "E2E Training Duration sec : $e2e_time"
 # 吞吐量
 ActualFPS=${FPS}
 # 训练总时长
-TrainingTime=`grep -a 'Time'  ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "Time: " '{print $2}'|awk -F "," '{print $1}'| awk '{a+=$1} END {printf("%.3f",a)}'`
+TrainingTime=`grep -a 'iteration (ms)'  $cur_path/test/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log|awk -F "ms): " '{print $2}'|awk -F " | learn" '{print $1}'| awk '{a+=$1} END {if (NR != 0) printf("%.3f",a)}'`
+FinalTrainingTime=`echo "scale=2;$TrainingTime / 1000" |bc`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-grep -o "total loss [0-9.]*" ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F " " {print$3} >>${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+grep -o "total loss [0-9.]*" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F " " {print$3} >>${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
 
 # # 最后一个迭代loss值，不需要修改
 # ActualLoss=$(awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt)
@@ -139,5 +141,5 @@ echo "BatchSize = ${BatchSize}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${Ca
 echo "DeviceType = ${DeviceType}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
-echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
-echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
+echo "TrainingTime = ${FinalTrainingTime} s" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
+echo "E2ETrainingTime = ${e2e_time} s" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log

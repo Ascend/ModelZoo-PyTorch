@@ -27,7 +27,6 @@ def ToBGRTensor(img):
     if isinstance(img, PIL.Image.Image):
         img = np.asarray(img)
     img = img[:, :, ::-1] # 2 BGR
-    img = np.transpose(img, [2, 0, 1]) # 2 (3, H, W)
     img = np.ascontiguousarray(img)
     img = torch.from_numpy(img).float()
     return img
@@ -51,12 +50,11 @@ def gen_input_bin(save_path, file_batches, batch):
         i = i + 1
         # RGBA to RGB
         image = Image.open(os.path.join(src_path, file)).convert('RGB')
-
         image = OpencvResize(image, 256)
         crop = transforms.CenterCrop(224)
         image = crop(image)
         image = ToBGRTensor(image)
-        img = np.array(image, dtype=np.float32)
+        img = np.array(image, dtype=np.uint8)
         img.tofile(os.path.join(save_path, file.split('.')[0] + ".bin"))
 
 def preprocess(src_path, save_path):

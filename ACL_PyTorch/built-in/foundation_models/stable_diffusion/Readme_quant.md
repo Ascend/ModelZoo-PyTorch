@@ -31,7 +31,7 @@ python3 quant_unet.py \
 - --model：模型名称或本地模型目录的路径。
 - --model_dir：存放导出模型的目录。
 - --prompt_file：输入文本文件，按行分割。
-- --save_path：量化模型的储存目录。
+- --save_path：量化模型的储存目录，为model_dir下的子文件夹名。
 - --data_free：使用虚拟数据。
 
 执行成功后生成`models_bs${bs}/unet_quant`文件夹，包含unet.onnx模型及权重。
@@ -114,7 +114,7 @@ python3 quant_unet.py \
         - --model：模型名称或本地模型目录的路径。
         - --model_dir：存放导出模型的目录。
         - --prompt_file：输入文本文件，按行分割。
-        - --save_path：量化模型的储存目录。
+        - --save_path：量化模型的储存文件夹，为model_dir下的子文件夹名。
         - --device：推理设备ID；可用逗号分割传入两个设备ID，此时会使用并行方式进行推理。
 
         执行成功后生成`models_bs${bs}/unet_quant`文件夹，包含unet.onnx模型及权重。

@@ -221,7 +221,12 @@ def main_worker(npu, nnpus_per_node, args):
             print('=>unsupported precision mode!')
             exit()
         opt_level = args.pm
-        model, optimizer = amp.initialize(model, optimizer, opt_level=opt_level, loss_scale=args.loss_scale,combine_grad=True)
+        if hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan():
+            model, optimizer = amp.initialize(model, optimizer, opt_level=opt_level, 
+                                              loss_scale='dynamic', combine_grad=True)
+        else:
+            model, optimizer = amp.initialize(model, optimizer, opt_level=opt_level, 
+                                              loss_scale=args.loss_scale,combine_grad=True)
 
     global total_batch_size
     total_batch_size = args.batch_size

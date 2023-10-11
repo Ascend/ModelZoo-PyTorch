@@ -21,6 +21,7 @@
 
 
 import math
+from typing import Callable, Optional
 
 import torch
 import torch.nn.functional as F
@@ -29,6 +30,8 @@ from torch.nn.parameter import Parameter
 
 from .initialize import get_model_parallel_rank
 from .initialize import get_model_parallel_world_size
+from .initialize import get_model_parallel_group
+from .initialize import get_fp32_allreduce
 from .mappings import copy_to_model_parallel_region
 from .mappings import gather_from_model_parallel_region
 from .mappings import reduce_from_model_parallel_region
@@ -90,6 +93,111 @@ def _initialize_affine_weight_cpu(
     if return_master_weight:
         return master_weight
     return None
+
+
+# allreduce_hidden
+class LinearWithGradAccumulationAndAsyncCommunication(torch.autograd.Function):
+    """See linear_with_grad_accumulation_and_async_allreduce"""
+    @staticmethod
+    def forward(
+        ctx,
+        input,
+        weight,
+        bias,
+        gradient_accumulation_fusion,
+        async_grad_allreduce,
+        sequence_parallel,
+    ):
+        ctx.save_for_backward(input, weight)
+        ctx.use_bias = bias is not None
+        ctx.gradient_accumulation_fusion = gradient_accumulation_fusion
+        ctx.async_grad_allreduce = async_grad_allreduce
+        # ctx.sequence_parallel = sequence_parallel
+
+        total_input = input
+
+        output = torch.matmul(total_input, weight.t())
+        if bias is not None:
+            output = output + bias
+        return output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, weight = ctx.saved_tensors
+        use_bias = ctx.use_bias
+        total_input = input
+        grad_input = grad_output.matmul(weight)
+
+        # Doing gather + slicing during the NeMo forward pass can make this tensor
+        # not be contiguous. PyTorch only checks if the tensor is contiguous, and only
+        # clones it if it's not contiguous:
+        # https://github.com/pytorch/pytorch/blob/c47cf9bc7f9e02f649ab4ed53fe4d35732c92ab6/torch/_refs/__init__.py#L2761
+        grad_output = grad_output.contiguous()
+        # Convert the tensor shapes to 2D for execution compatibility
+        grad_output = grad_output.view(
+            grad_output.shape[0] * grad_output.shape[1], grad_output.shape[2]
+        )
+        total_input = total_input.view(
+            total_input.shape[0] * total_input.shape[1], total_input.shape[2]
+        )
+
+        if ctx.async_grad_allreduce:
+            # Bf16 convert
+            dt = grad_input.dtype
+            if dt == torch.bfloat16 and get_fp32_allreduce():
+                grad_input = grad_input.float()
+
+            # Asynchronous all-reduce
+            handle = torch.distributed.all_reduce(
+                grad_input, group=get_model_parallel_group(), async_op=True
+            )
+
+            # Bf16 convert
+            if dt == torch.bfloat16 and get_fp32_allreduce():
+                grad_input = grad_input.bfloat16()
+            # Here we rely on CUDA_DEVICE_MAX_CONNECTIONS=1 to ensure that the
+            # all-reduce is scheduled before the weight gradient computation
+
+        if ctx.gradient_accumulation_fusion:
+            if weight.main_grad.dtype == torch.float32:
+                fused_weight_gradient_mlp_cuda.wgrad_gemm_accum_fp32(
+                    total_input, grad_output, weight.main_grad
+                )
+            elif weight.main_grad.dtype in (torch.float16, torch.bfloat16):
+                fused_weight_gradient_mlp_cuda.wgrad_gemm_accum_fp16(
+                    total_input, grad_output, weight.main_grad
+                )
+            else:
+                raise RuntimeError("Unsupported gradient type for gradient accumulation fusion")
+            grad_weight = None
+        else:
+            grad_weight = grad_output.t().matmul(total_input)
+        grad_bias = grad_output.sum(dim=0) if use_bias else None
+
+        if ctx.async_grad_allreduce:
+            handle.wait()
+
+        return grad_input, grad_weight, grad_bias, None, None, None
+
+# allreduce_hidden
+def linear_with_grad_accumulation_and_async_allreduce(
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    bias: Optional[torch.Tensor],
+    gradient_accumulation_fusion: bool,
+    async_grad_allreduce: bool,
+    sequence_parallel: bool,
+) -> torch.Tensor:
+    args = [
+        input,
+        weight,
+        bias,
+        gradient_accumulation_fusion,
+        async_grad_allreduce,
+        sequence_parallel,
+    ]
+    return LinearWithGradAccumulationAndAsyncCommunication.apply(*args)
+
 
 
 class VocabParallelEmbedding(torch.nn.Module):
@@ -483,6 +591,11 @@ class ColumnParallelLinear(torch.nn.Module):
                 self.bias.zero_()
         else:
             self.register_parameter("bias", None)
+        # allreduce_hidden
+        self._forward_impl = linear_with_grad_accumulation_and_async_allreduce
+        self.async_tensor_model_parallel_allreduce = (
+            neox_args.async_tensor_model_parallel_allreduce and world_size > 1
+        )
 
     # Copied from Mup
     def width_mult(self):
@@ -539,12 +652,26 @@ class ColumnParallelLinear(torch.nn.Module):
     def forward(self, input_):
         if self.use_mup and self.mup_rescale_parameters:
             input_ /= self.width_mult()
-        # Set up backprop all-reduce.
-        input_parallel = copy_to_model_parallel_region(input_)
         # Matrix multiply.
-
         bias = self.bias if not self.skip_bias_add else None
-        output_parallel = F.linear(input_parallel, self.weight, bias)
+        # allreduce_hidden
+        if self.async_tensor_model_parallel_allreduce:
+            # goes into async tensor model parallel allreduce
+            input_parallel = input_
+            output_parallel = self._forward_impl(
+                                    input=input_parallel,
+                                    weight=self.weight,
+                                    bias=bias,
+                                    gradient_accumulation_fusion=False, #self.gradient_accumulation_fusion,
+                                    async_grad_allreduce=self.async_tensor_model_parallel_allreduce,
+                                    sequence_parallel=False,
+                                )
+        else:
+            # orig
+            # Set up backprop all-reduce.
+            input_parallel = copy_to_model_parallel_region(input_)
+            output_parallel = F.linear(input_parallel, self.weight, bias)
+
         if self.gather_output:
             # All-gather across the partitions.
             output = gather_from_model_parallel_region(output_parallel)

@@ -79,11 +79,15 @@ def train_segmentor(model,
     # amp should implement before DDP
     optimizer = build_optimizer(model, cfg.optimizer)
     if meta['device'] == 'npu':
-        model, optimizer = amp.initialize(model.npu(), optimizer,
-                opt_level=cfg.opt_level, loss_scale=cfg.loss_scale, combine_grad=True)
-        for ls in amp._amp_state.loss_scalers:
-            ls._scale_seq_len = 50
-            ls._loss_scale = 2. ** 24
+        if hasattr(torch.npu.utils, 'is_support_inf_nan') and torch.npu.utils.is_support_inf_nan():
+            model, optimizer = amp.initialize(model.npu(), optimizer,
+                    opt_level=cfg.opt_level, loss_scale='dynamic', combine_grad=True)
+        else:
+            model, optimizer = amp.initialize(model.npu(), optimizer,
+                    opt_level=cfg.opt_level, loss_scale=cfg.loss_scale, combine_grad=True)
+            for ls in amp._amp_state.loss_scalers:
+                ls._scale_seq_len = 50
+                ls._loss_scale = 2. ** 24
     else:
         model, optimizer = amp.initialize(model.cuda(), optimizer,
                 opt_level=cfg.opt_level, loss_scale=cfg.loss_scale)

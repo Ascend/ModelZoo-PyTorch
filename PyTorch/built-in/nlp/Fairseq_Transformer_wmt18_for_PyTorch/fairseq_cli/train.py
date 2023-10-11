@@ -192,7 +192,7 @@ def main(cfg: FairseqConfig) -> None:
     # TODO: end of dry run section
 
     # 兼容饱和模式
-    torch.npu.utils.check_overflow(0.0)
+    torch.npu.utils.npu_check_overflow(0.0)
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while epoch_itr.next_epoch_idx <= max_epoch:

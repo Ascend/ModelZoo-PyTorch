@@ -174,7 +174,9 @@
              --input_shape="image:${bs},3,224,224" \
              --output=shufflenetv1_bs${bs} \
              --log=debug \
-             --soc_version=Ascend${chip_name} 
+             --soc_version=Ascend${chip_name} \
+             --insert_op_conf=aipp.config \
+             --enable_small_channel=1
          ```
 
          - 参数说明：

@@ -136,16 +136,30 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
 
 1. 获取原始数据集。
 
-   该模型使用室外场景数据集[YFCC100M](http://projects.dfki.uni-kl.de/yfcc100m/)进行测试。使用如下命令下载解压数据集并置于指定路径：
 
+   该模型使用室外场景数据集 YFCC100M 进行模型精度测试。进入 [Google Drive](https://drive.google.com/drive/folders/1xrc6ZuCOGYwno1DEIfK-jbvZGqK4Oc79)，自行下载该目录下所有分卷包，然后执行以下命令解压数据并放置到指定目录：
+    
+   ```bash
+   cat ./raw_data.tar.* | tar -zxv
+   mkdir ~/data
+   mv raw_data/yfcc100m ~/data/
    ```
-   git clone https://github.com/zjhthu/OANet
-   cd OANet
-   git reset --hard 51d71ff3f57161e912ec72420cd91cf7db64ab74
-   bash download_data.sh raw_data raw_data_yfcc.tar.gz 0 8
-   tar -xvf raw_data_yfcc.tar.gz
-   mv raw_data/yfcc100m ~/data  
+   
+   最后，数据的放置的目录结构应如下：
    ```
+   ├── ~/
+       └── data/
+           └── yfcc100m/
+               ├── big_ben_1/
+               ├── big_ben_2/
+               ├── ...
+               ├── westminster_abbey_1/
+               └── westminster_abbey_2/
+   ```
+    
+   注：如果不能访问 Google Drive，也可从[Kaggle](https://www.kaggle.com/datasets/forcewithme/yfcc100m-dataset)下载数据。
+
+
 
 ## 模型推理<a name="section741711594517"></a>
 
@@ -265,6 +279,6 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
 
 SuperPoint + SuperGlue 模型的性能和精度参考下列数据。
 
-| 芯片型号    | Batch Size | 数据集   | pth精度（ AUC@20 \| Prec ） | NPU精度（ AUC@20 \| Prec ) | E2E耗时 |
+| 芯片型号    | Batch Size | 数据集   | pth精度（ AUC@20 \| Prec ） | NPU精度（ AUC@20 \| Prec ) | E2E性能 |
 | ----------- | ---------- | -------- | --------------------------- | -------------------------- | ------- |
-| Ascend310P3 | 1          | YFCC100M | 75.08 \| 98.55              | 75.04 \| 97.85             | 5.75s   |
+| Ascend310P3 | 1          | YFCC100M | 75.08 \| 98.55              | 75.04 \| 97.85             | 0.174fps   |

@@ -199,7 +199,8 @@ def main(cfg: FairseqConfig) -> None:
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     logger.info(f"max_epoch: {max_epoch}")
-    torch.npu.clear_npu_overflow_flag()
+    # 兼容饱和模式
+    torch.npu.utils.npu_check_overflow(0.0)
     while epoch_itr.next_epoch_idx <= max_epoch:
         if lr <= cfg.optimization.stop_min_lr:
             logger.info(

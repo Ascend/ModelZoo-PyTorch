@@ -1134,8 +1134,8 @@ class NpuFlashAttnProcessor:
 
             hidden_states = torch_npu.npu_fusion_attention(
                 query, key, value, heads, input_layout="BSH",
-                pse=cur_attention_mask,
-                atten_mask=None,
+                pse=None,
+                atten_mask=cur_attention_mask,
                 scale=scale,
                 pre_tockens=65536,
                 next_tockens=65536,

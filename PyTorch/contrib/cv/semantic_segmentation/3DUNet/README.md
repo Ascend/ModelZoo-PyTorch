@@ -41,6 +41,8 @@ UNet是完全对称的，且对解码器（应该自Hinton提出编码器、解�
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | pillow==8.4.0 |
   | PyTorch 1.8 | pillow==9.1.0 |
+  | PyTorch 1.11 | - |
+  | PyTorch 2.1 | - |  
   
 - 环境准备指导。
 
@@ -53,6 +55,10 @@ UNet是完全对称的，且对解码器（应该自Hinton提出编码器、解�
   pip install -r 1.5_requirements.txt  # PyTorch1.5版本
   
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+
+  pip install -r 1.11_requirements.txt  # PyTorch1.11版本
+
+  pip install -r 2.1_requirements.txt  # PyTorch2.1版本
   ```
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。

@@ -40,6 +40,8 @@ CRNN (Convolutional Recurrent Neural Network) 于2015年由华中科技大学的
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
   | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
+  | PyTorch 1.11 | torchvision==0.12.0 |
+  | PyTorch 2.1 | torchvision==0.16.0 |
   
 - 环境准备指导。
 
@@ -52,6 +54,10 @@ CRNN (Convolutional Recurrent Neural Network) 于2015年由华中科技大学的
   pip install -r 1.5_requirements.txt  # PyTorch1.5版本
   
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+
+  pip install -r 1.11_requirements.txt  # PyTorch1.11版本
+
+  pip install -r 2.1_requirements.txt  # PyTorch2.1版本
   ```
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。

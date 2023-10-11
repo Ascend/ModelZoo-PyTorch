@@ -155,9 +155,10 @@ VisualGLM-6B 依靠来自于 CogView 数据集的30M高质量中文图文对，�
 
 # 推理任务
 ```
-python3 --english 
---from_pretrained test/output/${ASCEND_DEVICE_ID}/checkpoints/ 
---chatglm_path glm/chatglm 
+python3 cli_demo.py \
+--english \
+--from_pretrained test/output/${ASCEND_DEVICE_ID}/checkpoints/ \
+--chatglm_path glm/chatglm \
 --prompt_en "What's in the image?"
 ```
 --english使用英文输入，--from_pretrained是训练保存的checkpoints，chatglm_path加载预训练chatglm地址，在glm/chatlglm路径下。

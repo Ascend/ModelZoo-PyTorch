@@ -93,14 +93,10 @@ CaseName=${Network}_bs${BatchSize}_${RANK_SIZE}'p'_'acc'
 echo "------------------ Final result ------------------"
 # 输出性能FPS，需要模型审视修改
 FPS=0.0
-for ((i = 0; i < 8; i++))
-do
-  {
-     grep "${epochs}th epoch e2e fps:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${i}.log| awk -F "${epochs}th epoch e2e fps:" '{print substr($2,0,6)}' &> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
-     fps=$(cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | xargs echo -n | tr ' ' '+' | xargs echo | bc)
-     FPS=`echo "scale=2;$FPS+$fps"|bc`
-  }
-done
+
+grep "${epochs}th epoch e2e fps:" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log | awk -F "${epochs}th epoch e2e fps:" '{print $2}' &>${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log
+FPS=$(cat ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_fps.log | xargs echo -n | tr ' ' '+' | xargs echo | bc)
+
 wait
 
 # 打印，不需要修改
@@ -119,12 +115,9 @@ ActualFPS=${FPS}
 TrainingTime=`awk 'BEGIN{printf "%.2f\n", 1/'${FPS}'}'`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
-for ((i = 0; i < 8; i++))
-do
-  {
-    grep "CV info cv_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${i}.log | awk -F "CV info cv_loss" '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
-  }
-done
+
+grep "CV info cv_loss" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log | awk -F "CV info cv_loss" '{print $2}' >> ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
+
 wait
 # 最后一个迭代loss值，不需要修改
 ActualLoss=$(awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt)

@@ -105,6 +105,8 @@ do
     elif [[ $para == --fp32 ]];then
       	fp32=`echo ${para#*=}`
       	export ALLOW_FP32=True
+    elif [[ $para == --learning_rate* ]];then
+      	learning_rate=`echo ${para#*=}`
     fi
 done
 

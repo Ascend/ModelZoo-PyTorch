@@ -135,7 +135,7 @@ class BackgroundRuntime:
         if parse_onnx:
             builder = aie.Builder.create_builder(b'Ascend310P3')
             logging.info("finish create builder")
-            network = aie.builder.create_network()
+            network = builder.create_network()
             logging.info("finish create network")
             parser = aie.OnnxModelParser()
             if not parser.parse_model(network, model_path):

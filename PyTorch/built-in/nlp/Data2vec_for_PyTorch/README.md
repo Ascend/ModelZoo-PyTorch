@@ -39,6 +39,7 @@ data2vec 是首个适用于多模态的高性能自监督算法。Meta AI 将 da
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 
