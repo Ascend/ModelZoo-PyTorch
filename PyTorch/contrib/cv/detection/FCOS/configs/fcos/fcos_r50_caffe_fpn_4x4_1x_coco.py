@@ -139,7 +139,7 @@ total_epochs = 12
 max_step = None
 # add for print log
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
          dict(type='TextLoggerHook'),
          # dict(type='TensorboardLoggerHook')
