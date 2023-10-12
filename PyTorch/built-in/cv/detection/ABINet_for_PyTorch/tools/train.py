@@ -35,11 +35,10 @@ from mmocr.utils import (collect_env, get_root_logger, is_2dlist,
 import torch_npu
 from torch_npu.contrib import transfer_to_npu
 
-torch.npu.set_compile_mode(jit_compile=False)
 option = {}
 option["NPU_FUZZY_COMPILE_BLACKLIST"] = "MaskedFill"
-option["MM_BMM_ND_ENABLE"] = 'disable'
 torch.npu.set_option(option)
+torch.npu.set_compile_mode(jit_compile=False)
 
 
 class TrainArg:
