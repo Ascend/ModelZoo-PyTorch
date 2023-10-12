@@ -26,7 +26,7 @@
 
 支持模型列表如下。
 
->**说明：**   
+>**说明：**
 >**因使用版本差异，模型性能可能存在波动，性能仅供参考**
 
 
@@ -159,23 +159,56 @@ CV-recognition
         </td>
         <td>svt</td>
 	<td></td>
-        <td></td>
         <td> 79.91% </td>
-	<td> 1951(bs8) </td>
-	<td>1 x 1 x 32 x wSize</td>
+	    <td> 1951(bs8) </td>
+	    <td>1 x 1 x 32 x wSize</td>
+    <td></td>
     <tr>
         <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/recognition/ABINet_MMOCR">  ABINet </a>
         </td>
         <td>svt</td>
 	<td></td>
-        <td></td>
         <td> 91.96% </td>
 	<td> 57.53(bs8) </td>
+        <td></td>
 	<td>bs x 3 x 32 x 128</td>
     </tr>
 </table>
 
+Semantic Segmentation
 
+<table align="center">
+    <tr>
+        <th rowspan=2>Name</th>
+	    <th rowspan=2>Dataset</th>
+        <th align="center" colspan=2>精度</th>
+	    <th rowspan=2>310P最优性能(对应bs)</th>
+	    <th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+	    <td>dice score</td>
+        <td>consine similarity</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/semantic-segmentation/CRNN_OpenMMlab">  UNet </a>
+        </td>
+        <td>Kaggle's Carvana Image Masking Challenge</td>
+	    <td>97.4%</td>
+        <td></td>
+        <td>50.968(bs1)</td>
+	    <td>1 x 3 x 572 x 572</td>
+	</td>
+    <tr>
+        <td>
+            <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/semantic-segmentation/UnetUnet++">  UNet++ </a>
+        </td>
+        <td>随机数据</td>
+	    <td></td>
+        <td>100.0%</td>
+        <td>25.008(bs1)</td>
+	<td>bs x 3 x 32 x 128</td>
+</table>
 
 
