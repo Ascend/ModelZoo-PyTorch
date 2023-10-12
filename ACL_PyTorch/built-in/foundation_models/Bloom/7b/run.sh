@@ -14,7 +14,6 @@ case "${RUN_OPTION}" in
         cd $TRANSFORMER_PACKAGE_PATH/models/bloom/
         patch -p1 < modeling.patch
         cd $SCRIPT_DIR
-        export ACLTRANSFORMER_SAVE_TENSOR=1
         export TASK_QUEUE_ENABLE=1
         python3 run_bloom_npu.py
         ;;
