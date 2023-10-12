@@ -201,7 +201,7 @@
 
      目录：ModelZoo-PyTorch/ACL_PyTorch/built-in/foundation_models/llama_adapter
 
-     1、llama_adapter_bsz.py拷贝到LLaMA-Adapter/llama_adapter_v2_multimodal7b/llama/
+     1、llama_adapter_bsz.py、llama_bsz.py拷贝到LLaMA-Adapter/llama_adapter_v2_multimodal7b/llama/
 
      2、demo_bsz.py拷贝到LLaMA-Adapter/llama_adapter_v2_multimodal7b/
 
@@ -213,11 +213,12 @@
 
      ```shell
      cp ./llama/llama_adapter.py ./llama/llama_adapter_bak.py
+     cp ./llama/llama.py ./llama/llama_bak.py
      ```
-
+   
      执行修改后脚本
-
-     ```
+   
+     ```shell
      cp ./llama/llama_adapter_bsz.py ./llama/llama_adapter.py
      cp ./llama/llama_bsz.py ./llama/llama.py
      python demo_bsz.py

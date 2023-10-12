@@ -300,13 +300,12 @@ class LLaMA_adapter(nn.Module):
 
             e_forward = time.time()
 
-            logits = logits.float().cpu()
             if temperature > 0:
-                probs = torch.nn.functional.softmax(logits / temperature, dim=-1)
+                probs = torch.softmax(logits / temperature, dim=-1)
                 next_token = sample_top_p(probs, top_p)
             else:
                 next_token = torch.argmax(logits, dim=-1)
-            next_token = next_token.reshape(-1).npu()
+            next_token = next_token.reshape(-1)
 
             next_token = torch.where(
                 input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token
