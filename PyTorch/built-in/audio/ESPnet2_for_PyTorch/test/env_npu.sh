@@ -34,6 +34,7 @@ export HCCL_EXEC_TIMEOUT=1200
 
 export BMMV2_ENABLE=0
 export SCALAR_TO_HOST_MEM=1
+export INF_NAN_MODE_ENABLE=0
 
 ulimit -SHn 512000
 
