@@ -43,7 +43,6 @@ ECAPA-TDNN是一个用于声纹识别的深度学习模型，它基于传统TDNN
 
    1. 请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》准备torch_npu环境。
    2. 安装torchaudio，npu安装方法请参考:https://gitee.com/ascend/modelzoo/issues/I48AZM
-   3. PyTorch2.1需安装[torchaudio-2.1.0.dev20230819+cpu-cp38-cp38-linux_aarch64.whl](https://download.pytorch.org/whl/nightly/torchaudio/)离线包
   
 - 安装依赖并安装环境。
 

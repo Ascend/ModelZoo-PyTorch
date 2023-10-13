@@ -35,6 +35,7 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
   | Torch_Version |              三方库依赖版本               |
   | :-----------: | :---------------------------------------: |
   | PyTorch 1.11  | torchvision==0.12.0; transformers==4.19.2 |
+  | PyTorch 2.1   | torchvision==0.16.0; transformers==4.19.2 |
 
 - 环境准备指导。
 

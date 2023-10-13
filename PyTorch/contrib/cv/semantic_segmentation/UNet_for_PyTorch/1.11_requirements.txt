@@ -1,0 +1,5 @@
+albumentations==0.5.2
+opencv-python==4.6.0.66
+tqdm
+scikit-learn==1.0.2
+torchvision==0.12.0
