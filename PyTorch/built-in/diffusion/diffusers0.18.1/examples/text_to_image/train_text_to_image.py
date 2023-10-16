@@ -506,6 +506,9 @@ def parse_args():
     parser.add_argument(
         "--enable_npu_flash_attention", action="store_true", help="Whether or not to use npu flash-attention."
     )
+    parser.add_argument(
+        "--enable_pin_memory", action="store_true", help="Whether or not to enable pin_memory in dataloader."
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -854,7 +857,8 @@ def main():
         collate_fn=collate_fn,
         batch_size=args.train_batch_size,
         num_workers=args.dataloader_num_workers,
-        drop_last=enable_drop_last
+        drop_last=enable_drop_last,
+        pin_memory=args.enable_pin_memory
     )
 
     # Scheduler and math around the number of training steps.
@@ -993,7 +997,9 @@ def main():
                 
                 # Prepare for using Npu Flash Attention
                 if args.enable_npu_flash_attention:
-                    encoder_hidden_states = torch_npu.npu_pad(encoder_hidden_states, (0, 0, 0, 3)).contiguous()
+                    s_b, s_s, s_h = encoder_hidden_states.shape
+                    pad = torch.zeros(s_b, 3, s_h).to(encoder_hidden_states.device)
+                    encoder_hidden_states = torch.cat((encoder_hidden_states, pad), 1)
 
                 # Get the target for loss depending on the prediction type
                 if args.prediction_type is not None:

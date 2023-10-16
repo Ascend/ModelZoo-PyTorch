@@ -147,7 +147,8 @@ class BasicTransformerBlock(nn.Module):
                 hidden_states, timestep, class_labels, hidden_dtype=hidden_states.dtype
             )
         else:
-            norm_hidden_states = self.norm1(hidden_states)
+            with torch.cuda.amp.autocast(enabled=False):
+                norm_hidden_states = self.norm1(hidden_states)
 
         cross_attention_kwargs = cross_attention_kwargs if cross_attention_kwargs is not None else {}
 
@@ -163,9 +164,10 @@ class BasicTransformerBlock(nn.Module):
 
         # 2. Cross-Attention
         if self.attn2 is not None:
-            norm_hidden_states = (
-                self.norm2(hidden_states, timestep) if self.use_ada_layer_norm else self.norm2(hidden_states)
-            )
+            with torch.cuda.amp.autocast(enabled=False):
+                norm_hidden_states = (
+                    self.norm2(hidden_states, timestep) if self.use_ada_layer_norm else self.norm2(hidden_states)
+                )
 
             attn_output = self.attn2(
                 norm_hidden_states,
@@ -176,7 +178,8 @@ class BasicTransformerBlock(nn.Module):
             hidden_states = attn_output + hidden_states
 
         # 3. Feed-forward
-        norm_hidden_states = self.norm3(hidden_states)
+        with torch.cuda.amp.autocast(enabled=False):
+            norm_hidden_states = self.norm3(hidden_states)
 
         if self.use_ada_layer_norm_zero:
             norm_hidden_states = norm_hidden_states * (1 + scale_mlp[:, None]) + shift_mlp[:, None]

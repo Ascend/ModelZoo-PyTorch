@@ -432,7 +432,8 @@ class Attention(nn.Module):
         assert self.norm_cross is not None, "self.norm_cross must be defined to call self.norm_encoder_hidden_states"
 
         if isinstance(self.norm_cross, nn.LayerNorm):
-            encoder_hidden_states = self.norm_cross(encoder_hidden_states)
+            with torch.cuda.amp.autocast(enabled=False):
+                encoder_hidden_states = self.norm_cross(encoder_hidden_states)
         elif isinstance(self.norm_cross, nn.GroupNorm):
             # Group norm norms along the channels dimension and expects
             # input to be in the shape of (N, C, *). In this case, we want
@@ -1122,20 +1123,19 @@ class NpuFlashAttnProcessor:
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
 
-        cur_attention_mask = None
         key_sequence_length = key.shape[1]
 
         if query.shape[1] >= 2000:
 
             if key_sequence_length == 80:
-                cur_attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
-                cur_attention_mask = \
-                    torch.cat((cur_attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
+                attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
+                attention_mask = \
+                    torch.cat((attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
 
             hidden_states = torch_npu.npu_fusion_attention(
                 query, key, value, heads, input_layout="BSH",
                 pse=None,
-                atten_mask=cur_attention_mask,
+                atten_mask=attention_mask,
                 scale=scale,
                 pre_tockens=65536,
                 next_tockens=65536,
@@ -1150,11 +1150,11 @@ class NpuFlashAttnProcessor:
             value = attn.head_to_batch_dim(value)
             
             if key_sequence_length == 80:
-                cur_attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
-                cur_attention_mask = \
-                    torch.cat((cur_attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
+                attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
+                attention_mask = \
+                    torch.cat((attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
 
-            attention_probs = attn.get_attention_scores(query, key, cur_attention_mask)
+            attention_probs = attn.get_attention_scores(query, key, attention_mask)
             hidden_states = torch.bmm(attention_probs, value)
             hidden_states = attn.batch_to_head_dim(hidden_states)
 
