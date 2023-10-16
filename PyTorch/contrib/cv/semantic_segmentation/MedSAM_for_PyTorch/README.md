@@ -13,7 +13,7 @@
 这是对MedSAM官方仓的迁移，使其能在NPU上进行训练和推理。
 ## 简述
 
-***Segment Anything Model (SAM)*** 是一个图像分割类模型，它在1100万张图像和11亿张掩码的数据集上进行了训练，在各种分割任务中具有强大零样本能力。它可用于为图像中的所有对象生成分割的mask,也可额外通过给模型输入诸如点、框、文本等prompt生成更准确的分割mask。
+***Segment Anything Model (SAM)*** 是一个图像分割类模型，它在1100万张图像和11亿张掩码的数据集上进行了训练，在各种分割任务中具有强大零样本能力。它可用于为图像中的所有对象生成分割的MASK，也可额外通过给模型输入诸如点、框、文本等PROMPT生成更准确的分割MASK。
 
 
 ***Medical SAM (MedSAM)*** 项目是在SAM基础上的下游应用，该项目将病灶的医疗影像数据作为输入，训练一个用于分割不同器官病灶的模型。不同于SAM的是，使用该模型需要给出bbox以获得更准确的病灶分割MASK，且由于训练数据的形式是一个BBOX内只包含一个MASK，因此推理的时候每个框只会给出1个准确的病灶MASK。
@@ -45,7 +45,7 @@
 
 - 环境准备指导。
 
-  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》、《[AscendPyTorch安装指南](https://gitee.com/ascend/pytorch)》。
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
   
 - 安装依赖。
 
@@ -56,7 +56,7 @@
 
 ## 准备数据集
 
-1. 获取数据集。
+1. 获取数据集
 
    用户自行下载原始数据集MICCAI FLARE2022，在源码包根目录下新建目录data,并将数据集解压至该目录，数据集目录结构参考如下所示：
 
@@ -74,17 +74,17 @@
 
 2. 数据预处理
 
-   *安装cc3d:*
+   安装cc3d：
    ```shell 
    pip install connected-components-3d
    ```
 
-   *修改pre_CT_MR.py脚本：*
+   修改pre_CT_MR.py脚本：
    ```python
    nii_path = "data/FLARE22Train/images"  # path to the nii images
    gt_path = "data/FLARE22Train/labels"  # path to the ground truth
    ```
-   *在源码包根目录下执行数据预处理脚本：*
+   在源码包根目录下执行数据预处理脚本：
 
    ```shell
    python pre_CT_MR.py
@@ -93,10 +93,7 @@
 
 ## 获取预训练模型
 
-下载原始SAM模型，在源码包根目录下新建目录models，将SAM模型放入该目录下:
-- [sam_vit_b](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth)
-- [sam_vit_l](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth)
-- [sam_vit_h](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth)
+下载原始SAM模型。用户可根据segment-anything中的[README.md](https://github.com/facebookresearch/segment-anything#model-checkpoints)下载“sam_vit_b”，“sam_vit_l”，“sam_vit_h”权重文件，并在源码包根目录下新建目录models，将SAM模型放入“models/”目录下。
 
 # 开始训练
 
@@ -110,11 +107,10 @@
    
 2. 运行训练脚本
 
-   支持多机多卡训练，以单机八卡为例
-
-   - 启动单机8卡训练
+   支持多机多卡训练，以单机8卡为例：
 
      ```
+     # 启动单机8卡训练
      bash ./train_multi_npus.sh  
      ```
    模型训练脚本参数说明如下。
@@ -143,7 +139,7 @@
     --init_method                            // 分布式初始化
     ```
    
-   训练完成后，权重文件保存在work_dir下，并输出模型训练loss等信息
+   训练完成后，权重文件保存在work_dir下，并输出模型训练loss等信息。
 
 # 推理评估
 
@@ -165,18 +161,17 @@
     # 转换后输出的模型权重路径
     save_path = "../models/medsam_vit_l_train.pth"
     ```
-    然后执行转换脚本得到转换后的模型
+    然后执行转换脚本得到转换后的模型：
     ```shell
     python utils/ckpt_convert.py
     ```
    
 3. 运行评估脚本
 
-   支持多机多卡推理，这里以单机单卡为例
-
-   - 启动单机8卡评估，注意每张卡都会评估切分好的独立的一份测试集
+   支持多机多卡推理，这里以单机8卡为例：
 
      ```
+     # 启动单机8卡评估，注意每张卡都会评估切分好的独立的一份测试集
      bash ./eval_multi_npus.sh  
      ```
    模型训练脚本参数说明如下。
@@ -200,17 +195,16 @@
     --nproc_per_node                         // 每个节点上的NPU数量
     --init_method                            // 分布式初始化
    ```
-    评估完成后，会打印DSC、MIOU等评估指标，并保存一张推理对比图到当前路径
+    评估完成后，会打印DSC、MIOU等评估指标，并保存一张推理对比图到当前路径。
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME    | DSC | MIOU | FPS | Epochs | AMP_Type |
-| ------- | ----- | ----- | ---: | ------ | -------: |
-| 8p-A100 | 95.9 | 92.4 | 0.76 | 100    |        O0 |
-| 8p-昇腾910  | 96.2 | 92.8 | 0.81 | 100    |       O0 |
-
+| NAME      | DSC | MIOU | FPS | Epochs     | AMP_Type|
+| :-------:   | :-----: | :-----: | :---: | :------: | :-------: |
+| 8p-A100   | 95.9 | 92.4 | 0.76 | 100      |  O0 |
+| 8p-昇腾910 | 96.2 | 92.8 | 0.81 | 100     | O0 |
 
 # 版本说明
 
