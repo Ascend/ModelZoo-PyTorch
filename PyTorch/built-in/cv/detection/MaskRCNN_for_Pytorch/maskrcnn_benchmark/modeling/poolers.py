@@ -123,7 +123,7 @@ class Pooler(nn.Module):
         dtype, device = x[0].dtype, x[0].device
         result = torch.zeros(
             (num_rois, num_channels, output_size, output_size),
-            dtype=torch.float,
+            dtype=dtype,
             device=device,
         )
         for level, (per_level_feature, pooler) in enumerate(zip(x, self.poolers)):
