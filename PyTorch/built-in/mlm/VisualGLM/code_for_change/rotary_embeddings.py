@@ -119,8 +119,7 @@ def apply_rotary_pos_emb_index(q, k, cos, sin, position_id):
     # position_id: [sq, b], q, k: [sq, b, np, hn], cos: [sq, 1, hn] -> [sq, b, 1, hn]
     cos, sin = F.embedding(position_id, cos.squeeze(1)).unsqueeze(2), \
                F.embedding(position_id, sin.squeeze(1)).unsqueeze(2)  
-    q = torch_npu.npu_rotary_mul(q, cos, sin)
-    k = torch_npu.npu_rotary_mul(k, cos, sin)
+    q, k = (q * cos) + (rotate_half(q) * sin), (k * cos) + (rotate_half(k) * sin)
     return q, k
 
 
