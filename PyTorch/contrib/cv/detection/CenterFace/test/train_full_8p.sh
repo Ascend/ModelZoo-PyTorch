@@ -13,7 +13,8 @@ Network="CenterFace_ID4089_for_PyTorch"
 
 #训练batch_size,,需要模型审视修改
 batch_size=16
-
+#关闭INF/NAN
+export INF_NAN_MODE_ENABLE=0
 #参数校验，不需要修改
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 for para in $*
