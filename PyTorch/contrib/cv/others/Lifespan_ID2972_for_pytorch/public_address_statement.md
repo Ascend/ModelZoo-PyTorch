@@ -13,3 +13,4 @@
  | 开源代码引入 | https://github.com/royorel/Lifespan_Age_Transformation_Synthesis | Lifespan_ID2972_for_pytorch/util/util.py | https://grail.cs.washington.edu/projects/lifespan_age_transformation_synthesis/pretrained_models/deeplab_model.pth | 下载预训练权重 |
  | 开源代码引入 | https://github.com/royorel/Lifespan_Age_Transformation_Synthesis | Lifespan_ID2972_for_pytorch/util/util.py | https://drive.google.com/uc?id=1fhq5lvWy-rjrzuHdMoZfLsULvF0gJGwD | 下载依赖    |
  | 开源代码引入 | https://github.com/royorel/Lifespan_Age_Transformation_Synthesis | Lifespan_ID2972_for_pytorch/util/util.py | https://grail.cs.washington.edu/projects/lifespan_age_transformation_synthesis/pretrained_models/shape_predictor_68_face_landmarks.dat | 下载预训练权重 |
+| 开发引入 | / | Lifespan_ID2972_for_pytorch/util/deeplab.py | https://github.com/chenxi116/DeepLabv3.pytorch | 源码实现 |
