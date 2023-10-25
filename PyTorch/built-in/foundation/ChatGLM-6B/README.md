@@ -205,7 +205,7 @@ bash preprocess.sh
 
 |     NAME      | SamplesPerSec | Iterations  | DataType  | Torch_Version | Card |
 |:-------------:|:-------------:|:-:|:-:|:-:|:----:|
-| Finetune -NPU |     2213      | 5000   | fp16  | 1.11  | 910B |
+| Finetune -NPU |     2213      | 5000   | fp16  | 1.11  | 910 |
 | Finetune -GPU |     2048      | 5000   | fp16  | 1.11  | A800 |
 
 说明：P-Tuning 仅打通功能，无性能优化。

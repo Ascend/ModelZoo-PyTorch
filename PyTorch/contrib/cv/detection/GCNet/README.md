@@ -134,7 +134,6 @@ bash ./test/eval.sh  --weight_path=数据集路径
 | NPU-1p | -         | 0.52      |
 | NPU-8p | 39.1      | 2.35      |
 
-注：NPU测试数据来自910B(arm)（OS:Ubuntu18.04.5 LTS (Bionic Beaver)）
 
 # 公网地址说明
 
