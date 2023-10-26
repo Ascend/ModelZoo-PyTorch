@@ -1456,7 +1456,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>99.7%</td>
         <td></td>
         <td></td>
-        <td></td>
+        <td>1432(bs16)</td>
         <td>746(bs16)</td>
         <td>bs x 3 x 112 x 112</td>
     </tr>
