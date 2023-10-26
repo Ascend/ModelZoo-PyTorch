@@ -59,10 +59,7 @@ def pth2onnx(input_file, output_file, batch_size=1):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-file', type=str, default='~/.torch/models/enet_citys.pth')
-    parser.add_argument('--output-file', type=str, default='model/enet_citys_910_bs1.onnx')
+    parser.add_argument('--output-file', type=str, default='model/enet_citys_bs1.onnx')
     parser.add_argument('--batch-size', type=int, default=1)
     args = parser.parse_args()
     pth2onnx(args.input_file, args.output_file, batch_size=args.batch_size)
-
-# python ENet_pth2onnx.py --input-file models/enet_citys.pth --output-file models/enet_citys_910_bs1.onnx --batch-size 1
-# python ENet_pth2onnx.py --input-file models/enet_citys.pth --output-file models/enet_citys_910_bs16.onnx --batch-size 16

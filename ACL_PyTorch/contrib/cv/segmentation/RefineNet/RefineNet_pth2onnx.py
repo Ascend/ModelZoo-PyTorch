@@ -20,8 +20,8 @@ from RefineNet_pytorch.models.resnet import rf101
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input-file', type=str, default='model/RefineNet_910.pth.tar')
-    parser.add_argument('--output-file', type=str, default='model/RefineNet_910.onnx')
+    parser.add_argument('--input-file', type=str, default='model/RefineNet.pth.tar')
+    parser.add_argument('--output-file', type=str, default='model/RefineNet.onnx')
     args = parser.parse_args()
 
     num_classes = 21

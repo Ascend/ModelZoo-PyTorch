@@ -50,12 +50,12 @@ if __name__ == "__main__":
         for name, module in model.named_modules():
             if isinstance(module, torch.nn.Linear):
                 module.weight.data = module.weight.data.npu_format_cast(2)
-        print("soc_version:", soc_version, " is 910B, support ND")
+        print("soc_version:", soc_version, "support ND")
     else:
         for name, module in model.named_modules():
             if isinstance(module, torch.nn.Linear):
                 module.weight.data = module.weight.data.npu_format_cast(29)
-        print("soc_version:", soc_version, " is not 910B, support NZ")
+        print("soc_version:", soc_version, "support NZ")
 
     for name, module in model.named_modules():
         if isinstance(module, torch.nn.Embedding):

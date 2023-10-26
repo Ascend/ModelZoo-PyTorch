@@ -1026,32 +1026,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     </tr>
 </table>
 
-<p>foundation_models</p>
-<table align="center">
-    <tr>
-        <th rowspan=2>ID</th>
-        <th rowspan=2>Name</th>
-        <th rowspan=2>Dataset</th>
-        <th align="center" colspan=1>精度</th>
-        <th colspan=1>最优性能（对应bs）</th>
-        <th rowspan=2>输入shape</th>
-    </tr>
-    <tr>
-        <td>retrieval_recall@5</td>
-        <td>910B4</td>
-    </tr>
-    <tr>
-        <td> 100398 </td>
-        <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/foundation_models/OpenCLIP"> OpenCLIP </a>
-        </td>
-        <td> flickr30k </td>
-        <td> image: 0.8841 <br> text: 0.9620 </td>
-        <td> vision: 326(bs64)<br> text: 4502(bs64)</td>
-        <td> vision: bs x 3 x 224 x 224 <br> text: bs x 77 </td>
-    </tr>
-</table>
-
 
 <h2>生态贡献模型</h2>
 <p>CV-classfication</p>

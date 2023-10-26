@@ -42,7 +42,7 @@ def trans_data_format(model):
         for name, module in model.named_modules():
             if isinstance(module, torch.nn.Linear):
                 module.weight.data = module.weight.data.npu_format_cast(2)
-        print("soc version: ", soc_version, " is 910B, support ND")
+        print("soc version: ", soc_version, "support ND")
     else:
         # if on 910A or 310P chip, eliminate the TransData and Transpose ops by converting weight data types
         for name, module in model.named_modules():
@@ -51,7 +51,7 @@ def trans_data_format(model):
                     # eliminate TransData op before lm_head calculation
                     module.weight.data = torch.nn.parameter.Parameter(module.weight.data)
                 module.weight.data = module.weight.data.npu_format_cast(29)
-        print("soc version: ", soc_version, " is not 910B, support NZ")
+        print("soc version: ", soc_version, "support NZ")
 
     for name, module in model.named_modules():
         if isinstance(module, torch.nn.Embedding):
