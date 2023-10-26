@@ -1,3 +1,22 @@
 | 类型         | 开源代码地址                                                                    | 文件名                   | 公网IP地址/公网URL地址/域名/邮箱地址              | 用途说明                         |
 | ------------ | ------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------- | -------------------------------- |
-| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/utils.py | ./deepctr_torch/utils.py | https://pypi.python.org/pypi/deepctr-torch/json   | 使用json获取pypi上的包的版本     |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/utils.py | ./deepctr_torch/utils.py | https://pypi.python.org/pypi/deepctr-torch/json   | 使用json获取pypi上的包的版本 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/utils.py | ./deepctr_torch/utils.py | https://github.com/shenweichen/DeepCTR-Torch/releases/tag | 使用json获取DeepCTR-PyTorch的版本     |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/utils.py | ./deepctr_torch/utils.py | https://pypi.org/project/deepctr-torch/#history | 使用json获取DeepCTR-PyTorch的版本 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/models/basemodel.py | ./deepctr_torch/models/basemodel.py | https://tensorflow.google.cn/api_docs/python/tf/keras/callbacks | 第三方库源码地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/models/basemodel.py | ./deepctr_torch/models/basemodel.py | https://pytorch.org/docs/stable/optim.html | 第三方库源码地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/models/basemodel.py | ./deepctr_torch/models/basemodel.py | https://pytorch.org/docs/stable/nn.functional.html#loss-functions | 第三方库源码地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/sequence.py | ./deepctr_torch/layers/sequence.py | https://arxiv.org/pdf/1706.06978.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | http://arxiv.org/abs/1708.05027 | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://arxiv.org/pdf/1905.09433.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://arxiv.org/pdf/1803.05170.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://arxiv.org/pdf/1708.04617.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://arxiv.org/abs/1810.11921 | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://arxiv.org/abs/2008.13535 | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://arxiv.org/pdf/1611.00144.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | https://github.com/Atomu2014/product-nets | 源码包地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/interaction.py | ./deepctr_torch/layers/interaction.py | http://ir.ia.ac.cn/bitstream/173211/12337/1/A%20Convolutional%20Click%20Prediction%20Model.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/core.py | ./deepctr_torch/layers/core.py | https://arxiv.org/pdf/1706.06978.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/activation.py | ./deepctr_torch/layers/activation.py | https://arxiv.org/pdf/1706.06978.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/shenweichen/DeepCTR-Torch/blob/master/deepctr_torch/layers/activation.py | ./deepctr_torch/layers/activation.py | https://github.com/zhougr1993/DeepInterestNetwork, https://github.com/fanoping/DIN-pytorch | 源码包地址公网来源说明 |
