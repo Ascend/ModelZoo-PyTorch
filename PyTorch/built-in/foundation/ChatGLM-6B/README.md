@@ -12,7 +12,9 @@
 
 ## 简述
 
-ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于 [General Language Model (GLM)](https://github.com/THUDM/GLM) 架构，具有 62 亿参数。本仓支持P-Tuning v2 和全参数fintune。
+ChatGLM-6B 是一个开源的、支持**中英双语**的对话语言模型，基于 [General Language Model (GLM)](https://github.com/THUDM/GLM) 架构，具有 62 亿参数。
+
+本仓支持**P-Tuning v2 和全参数fintune**。
 
 - 参考实现：
 
@@ -41,9 +43,11 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
 
   **表 1**  版本支持表
 
-  | Torch_Version      |    三方库依赖版本     |
-  |:--------------:| :----------------------------------------------------------: |
-  | PyTorch 1.11 | deepspeed 0.9.2 |
+  | 软件名称  |    版本    |                             链接                             |
+  |:--------------:| :----------------------------------------------------------: |:--------------:|
+  | CANN | 7.0.RC1 | [LINK](https://support.huawei.com/carrier/productNewOffering?col=product&path=PBI1-21430725/PBI1-21430756/PBI1-22892969/PBI1-23710427/PBI1-251168373&resTab=SW) |
+  | Atlas 800T A2 | 1.0.RC3 | [LINK](https://support.huawei.com/carrier/productNewOffering?col=product&path=PBI1-21430725/PBI1-21430756/PBI1-22892969/PBI1-23710427/PBI1-254184887) |
+  | FrameworkPTAdapter | 5.0.RC3 |      [LINK](https://gitee.com/ascend/pytorch/releases)       |
   
 - 环境准备指导。
 
@@ -73,7 +77,7 @@ ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于
    pip show transformers
    # 获取transformers的Location路径
    # 使用fix文件夹下的tranining_args.py替换路径下transformers/tranining_args.py
-   ```
+  ```
 
 
 ## 准备数据集
@@ -107,7 +111,7 @@ bash preprocess.sh
          ├──data-00007-of-00008.arrow
          ├──dataset_info.json
          ├──state.json
-   ```
+```
 
 
 ## 准备模型权重
@@ -115,7 +119,7 @@ bash preprocess.sh
 1. 获取语言识别模型和预训练权重
 
    用户从[链接](https://huggingface.co/THUDM/chatglm-6b/tree/v0.1.0)自行获取模型文件（除了modeling_chatglm.py）和8份权重文件（pytorch_model-0000*-of-00008.bin
-），并放于model目录下，微调依赖该模型权重。
+   ），并放于model目录下，微调依赖该模型权重。
    model参考目录如下
    ```
    ├── model
@@ -136,7 +140,7 @@ bash preprocess.sh
          ├──tokenization_chatglm.py
          ├──tokenizer_config.json
    ```
-  
+
 
 
 # 开始训练
@@ -171,7 +175,7 @@ bash preprocess.sh
      bash ds_train_fintune.sh 
      ```
 
-    
+   
    模型训练参数说明如下。
 
    ```
@@ -249,7 +253,7 @@ bash preprocess.sh
    
    ```
 3. 加载参数阶段有卡死现象
-    
+   
    ```
    删除root下的cache目录，重新运行
    ```

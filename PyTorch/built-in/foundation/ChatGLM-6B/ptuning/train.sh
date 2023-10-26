@@ -1,5 +1,6 @@
 PRE_SEQ_LEN=128
 LR=2e-2
+export TRAIN_STATE=0
 source env_npu.sh
 python3 main.py \
     --do_train \
