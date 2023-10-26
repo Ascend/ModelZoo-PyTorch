@@ -8,8 +8,28 @@
 | 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/tools/get_pascal_voc.sh                 | CenterNet/src/tools/get_pascal_voc.sh                 | https://s3.amazonaws.com/images.cocodataset.org/external/external_PASCAL_VOC.zip                    | 下载数据集   |
 | 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/tools/kitti_eval/evaluate_object_3d.cpp | CenterNet/src/tools/kitti_eval/evaluate_object_3d.cpp | http://www.cvlibs.net/datasets/kitti/user_submit_check_login.php?benchmark=object&user=%s&result=%s | 结果保存的地址 |
 | 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/tools/kitti_eval/mail.h                 | CenterNet/src/tools/kitti_eval/mail.h                 | noreply@cvlibs.net                                                                                  | 邮箱地址    |
-
-
-
-
-
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/DCNv2/src/cuda/dcn_v2_im2col_cuda_double.h | CenterNet/src/lib/models/networks/dcn/modules/deform_conv.py | https://arxiv.org/abs/1811.11168 | 论文地址 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/logger.py | CenterNet/src/lib/logger.py | https://gist.github.com/gyglim/1f8dfb1b5c82627ae3efcfbbadb9f514 | 源码实现 |
+| 开发引入 | / | CenterNet/src/lib/models/networks/DCNv2/setup.py | https://github.com/charlesshang/DCNv2 | 源码实现 |
+| 开发引入 | / | CenterNet/src/lib/models/networks/pose_dla_dcn.py | http://dl.yf.io/dla/models | 预训练模型 |
+| 开发引入 | / | CenterNet/src/lib/models/networks/dcn/modules/deform_conv.py | https://github.com/open-mmlab/mmcv/blob/master/mmcv/ops/modulated_deform_conv.py | 源码实现 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/DCNv2/src/dcn_v2_cuda_double.c | CenterNet/src/lib/models/networks/DCNv2/src/cpu/dcn_v2_cpu.cpp | http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemm | 相关说明 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/resnet_dcn.py | https://download.pytorch.org/models/resnet18-5c106cde.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/DCNv2/src/cuda/dcn_v2_im2col_cuda_double.h | CenterNet/src/lib/models/networks/DCNv2/src/cuda/dcn_v2_im2col_cuda.h | https://arxiv.org/abs/1811.11168 | 论文地址 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/tools/kitti_eval/evaluate_object_3d.cpp | CenterNet/src/tools/kitti_eval/evaluate_object_3d.cpp | https://github.com/prclibo/kitti_eval | 源码实现 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/msra_resnet.py | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/msra_resnet.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/resnet_dcn.py | https://download.pytorch.org/models/resnet34-333f7ec4.pth | 预训练模型 |
+| 开发引入 | / | CenterNet/src/lib/models/networks/dlav0.py | http://dl.yf.io/dla/models | 预训练模型 |
+| 开发引入 | / | CenterNet/src/lib/models/networks/DCNv2/src/cuda/dcn_v2_cuda.cu | https://github.com/pytorch/pytorch/blob/master/aten/src/THC/generic/THCTensorMathBlas.cu | 源码实现 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/DCNv2/src/dcn_v2_cuda_double.c | CenterNet/src/lib/models/networks/DCNv2/src/cpu/dcn_v2_cpu.cpp | https://github.com/torch/cunn/blob/master/lib/THCUNN/generic/SpatialConvolutionMM.cu | 源码实现 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/resnet_dcn.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/msra_resnet.py | https://download.pytorch.org/models/resnet34-333f7ec4.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/tools/voc_eval_lib/setup.py | CenterNet/src/tools/voc_eval_lib/setup.py | http://code.activestate.com/recipes/52224-find-a-file-given-a-search-path/ | 相关说明 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/DCNv2/src/cuda/dcn_v2_im2col_cuda_double.h | CenterNet/src/lib/models/networks/DCNv2/src/cpu/dcn_v2_im2col_cpu.h | https://arxiv.org/abs/1811.11168 | 论文地址 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/resnet_dcn.py | https://download.pytorch.org/models/resnet50-19c8e357.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/utils/image.py | CenterNet/src/lib/utils/image.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/msra_resnet.py | https://download.pytorch.org/models/resnet50-19c8e357.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/msra_resnet.py | https://download.pytorch.org/models/resnet18-5c106cde.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/DCNv2/src/dcn_v2_cuda_double.c | CenterNet/src/lib/models/networks/DCNv2/src/cuda/dcn_v2_cuda.cu | https://github.com/torch/cunn/blob/master/lib/THCUNN/generic/SpatialConvolutionMM.cu | 源码实现 |
+| 开源代码引入 | https://github.com/xingyizhou/CenterNet/blob/master/src/lib/models/networks/resnet_dcn.py | CenterNet/src/lib/models/networks/resnet_dcn.py | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 预训练模型 |
