@@ -4718,7 +4718,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>4.68%</td>
         <td></td>
         <td></td>
-    <td>150.28(bs1)</td>
+    <td>154.8(bs1)</td>
         <td></td>
     <td nowrap="nowrap">多尺度</td>
 </table>
