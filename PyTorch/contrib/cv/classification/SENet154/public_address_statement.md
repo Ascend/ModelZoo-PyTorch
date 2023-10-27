@@ -7,3 +7,6 @@
 | 开发引入 | / | url.ini | http://data.lip6.fr/cadene/pretrainedmodels/se_resnet152-d17c99b7.pth | 下载权重文件 |
 | 开发引入 | / | url.ini | http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth | 下载权重文件 |
 | 开发引入 | / | url.ini | http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth | 下载权重文件 |
+| 开发引入 | / | SENet154/lsr.py | https://arxiv.org/pdf/1512.00567.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/Cadene/pretrained-models.pytorch/pretrainedmodels/utils.py | SENet154/data.py | https://github.com/tensorflow/models/blob/master/research/inception/inception/image_processing.py#L294 | 源码实现 |
+| 开源代码引入 | https://github.com/Cadene/pretrained-models.pytorch/pretrainedmodels/models/senet.py | SENet154/senet.py | https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py | 源码实现 |
