@@ -8,12 +8,15 @@
     "contiguous_gradients": false,
     "overlap_comm": true,
     "reduce_scatter": true,
-    "reduce_bucket_size": 250000000,
-    "allgather_bucket_size": 500000000
+    "reduce_bucket_size": 50000000,
+    "allgather_bucket_size": 250000000
   },
   "zero_allow_untested_optimizer": true,
+  "bf16": {
+    "enabled": true
+  },
   "fp16": {
-    "enabled": true,
+    "enabled": false,
     "loss_scale": 0,
     "loss_scale_window": 1000,
     "hysteresis": 2,

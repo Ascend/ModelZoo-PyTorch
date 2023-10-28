@@ -1,6 +1,5 @@
 botocore
 boto3
-deepspeed
 filelock
 scipy
 nltk
@@ -21,4 +20,7 @@ transformers
 rouge_score
 fasttext
 unidecode
-deepspeed==0.6.0
+deepspeed==0.9.2
+decorator
+sympy
+attrs
