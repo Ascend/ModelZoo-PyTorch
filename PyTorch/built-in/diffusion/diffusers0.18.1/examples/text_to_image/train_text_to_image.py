@@ -509,6 +509,9 @@ def parse_args():
     parser.add_argument(
         "--enable_pin_memory", action="store_true", help="Whether or not to enable pin_memory in dataloader."
     )
+    parser.add_argument(
+        "--enable_persistent_workers", action="store_true", help="Whether or not to enable persistent_workers in dataloader."
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -647,13 +650,10 @@ def main():
         if args.mixed_precision == "fp16":
             logger.info("NPU flash-attention is activated successfully")
             unet.enable_npu_flash_attention()
-            enable_drop_last = True
-        else:   
+        else:
             raise NotImplementedError(
                 "NPU flash-attention activated failed, it only supports fp16 now"
             )
-    else:
-        enable_drop_last = False      
 
     def compute_snr(timesteps):
         """
@@ -857,8 +857,8 @@ def main():
         collate_fn=collate_fn,
         batch_size=args.train_batch_size,
         num_workers=args.dataloader_num_workers,
-        drop_last=enable_drop_last,
-        pin_memory=args.enable_pin_memory
+        pin_memory=args.enable_pin_memory,
+        persistent_workers=args.enable_persistent_workers
     )
 
     # Scheduler and math around the number of training steps.
@@ -994,12 +994,6 @@ def main():
 
                 # Get the text embedding for conditioning
                 encoder_hidden_states = text_encoder(batch["input_ids"])[0]
-                
-                # Prepare for using Npu Flash Attention
-                if args.enable_npu_flash_attention:
-                    s_b, s_s, s_h = encoder_hidden_states.shape
-                    pad = torch.zeros(s_b, 3, s_h).to(encoder_hidden_states.device)
-                    encoder_hidden_states = torch.cat((encoder_hidden_states, pad), 1)
 
                 # Get the target for loss depending on the prediction type
                 if args.prediction_type is not None:
