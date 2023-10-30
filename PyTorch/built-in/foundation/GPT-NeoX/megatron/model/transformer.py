@@ -316,6 +316,8 @@ class ParallelSelfAttention(nn.Module):
             parallel_output=parallel_output,
         )
 
+        self.checkpoint_activations = neox_args.checkpoint_activations
+        self.checkpoint_selective = neox_args.checkpoint_selective
     def attention(
         self, query_layer, key_layer, value_layer, layer_past, attention_mask
     ):
@@ -625,9 +627,14 @@ class ParallelSelfAttention(nn.Module):
         if self.use_flash_attention:
             context_layer = self.flash_attention(query_layer, key_layer, value_layer)
         elif not self.sparse:
-            context_layer = self.attention(
-                query_layer, key_layer, value_layer, layer_past, attention_mask
-            )
+            def custom_forward(q, k, v):
+                return self.attention(q, k, v, layer_past, attention_mask)
+            if not self.checkpoint_selective or not self.checkpoint_activations or self.layer_number < self.checkpoint_full_layers:
+                context_layer = self.attention(
+                    query_layer, key_layer, value_layer, layer_past, attention_mask
+                )
+            else:
+                context_layer = mpu.checkpoint(custom_forward, query_layer, key_layer, value_layer)
         else:
             context_layer = self.sparse_attention(
                 query_layer, key_layer, value_layer, attention_mask
@@ -717,6 +724,9 @@ class ParallelTransformerLayer(nn.Module):
         )
 
         self.layer_past = None  # used to cache k/v pairs in inference
+        self.checkpoint_activations = neox_args.checkpoint_activations
+        self.checkpoint_selective = neox_args.checkpoint_selective
+        self.checkpoint_full_layers = neox_args.checkpoint_full_layers
 
     def _get_bias_dropout(self):
         if self.bias_dropout_fusion:
@@ -730,6 +740,22 @@ class ParallelTransformerLayer(nn.Module):
         return fn
 
     def forward(self, x, attention_mask, layer_past=None):
+        def custom_layer_forward(x):
+            return self.core_forward(x, attention_mask)
+        if not self.checkpoint_activations and self.checkpoint_selective and self.layer_number < self.checkpoint_full_layers:
+            return mpu.checkpoint(custom_layer_forward, x)
+             # jianyu ,reduce
+            #r = mpu.checkpoint(custom_layer_forward, x)
+        else:
+            #r = self.core_forward(x, attention_mask)
+            return self.core_forward(x, attention_mask)
+        """
+        if self.gpt_j_residual:
+            return x + self.reduce(r)
+        else:
+            return r
+        """
+    def core_forward(self, x, attention_mask, layer_past=None):
         layer_past = layer_past if layer_past is not None else self.layer_past
         bias_dropout_fn = self._get_bias_dropout()
         # x: [b, s, h]

@@ -343,8 +343,7 @@ def forward_step(
 ):
     """Forward step."""
     if neox_args.is_pipe_parallel:
-        # return model.eval_batch(data_iterator, return_logits=return_logits)
-        return model.eval_batch(data_iterator)
+        return model.eval_batch(data_iterator, return_logits=return_logits)
 
     # Get the batch.
     if timers is not None:
@@ -527,7 +526,10 @@ def get_optimizer(model, neox_args):
                 #         "WARNING: APEX not installed - defaulting to deepspeed's fused adam"
                 #     )
                 #     from deepspeed.ops.adam import FusedAdam as Adam
-                from torch.optim import AdamW as Adam
+                if neox_args.zero_allow_untested_optimizer:
+                    from megatron.optimizer import AdamW as Adam
+                else:
+                    from torch.optim import AdamW as Adam 
                 # from torch_npu.optim import NpuFusedAdam
 
                 adam_optimizer = Adam
@@ -618,14 +620,14 @@ def setup_model_and_optimizer(neox_args, use_cache=False, iteration=None):
             lr_scheduler=_lr_scheduler,
             dist_init_required=False,
             model_parameters=_model_params,
-            config_params=neox_args.deepspeed_config,
+            #config_params=neox_args.deepspeed_config,
             mpu=mpu if not neox_args.is_pipe_parallel else None,
         )
         model.total_params = get_total_params(model.module)
         print_rank_0(f' > total params: {"{:,}".format(model.total_params)}')
 
         if neox_args.is_pipe_parallel:
-            # model.set_has_attention_mask(True)
+            model.set_has_attention_mask(True)
             if neox_args.curriculum_learning:
                 curr_scheduler = CurriculumScheduler(neox_args.curriculum_learning)
                 if iteration is not None and iteration > 0:
