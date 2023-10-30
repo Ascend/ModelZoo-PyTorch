@@ -54,7 +54,8 @@ def do_train(
         arguments,
         val_data_loader=None,
         meters=None,
-        zero_shot=False
+        zero_shot=False,
+        early_stop_iteration=-1,
 ):
     logger = logging.getLogger("maskrcnn_benchmark.trainer")
     logger.info("Start training")
@@ -100,6 +101,9 @@ def do_train(
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
+        if early_stop_iteration > 0:
+            if iteration == early_stop_iteration + 1:
+                break
 
         images = images.to(device)
         captions = None
@@ -214,15 +218,15 @@ def do_train(
 
         batch_time = time.time() - end
         end = time.time()
-        meters.update(time=batch_time, data=data_time)
+        train_fps = cfg.SOLVER.IMS_PER_BATCH / batch_time
+        meters.update(time=batch_time, data=data_time, fps=train_fps)
         eta_seconds = meters.time.global_avg * (max_iter - iteration)
         eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
 
-        if iteration % 20 == 0 or iteration == max_iter:
-        # if iteration % 1 == 0 or iteration == max_iter:
+        if iteration % 1 == 0 or iteration == max_iter:
             #logger.info(
             if global_rank <= 0:
-                print(
+                logger.info(
                     meters.delimiter.join(
                         [
                             "eta: {eta}",

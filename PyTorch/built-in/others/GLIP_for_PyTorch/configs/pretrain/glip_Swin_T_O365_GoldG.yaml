@@ -3,6 +3,10 @@ MODEL:
   WEIGHT: "swin_tiny_patch4_window7_224.pth"
   RPN_ONLY: True
   RPN_ARCHITECTURE: "VLDYHEAD"
+  SWINT:
+    DROP_PATH_RATE: 0.0
+  FPN:
+    DROP_PROB: 0.0
 
   BACKBONE:
     CONV_BODY: "SWINT-FPN-RETINANET"
@@ -13,6 +17,8 @@ MODEL:
     FREEZE: False
     MODEL_TYPE: "bert-base-uncased" # "roberta-base", "clip"
     MASK_SPECIAL: False
+    INPUT_DROPOUT_P: 0.0
+    DROPOUT_P: 0.0
 
   RPN:
     USE_FPN: True
@@ -33,6 +39,7 @@ MODEL:
     LOG_SCALE: 0.0
 
     FUSE_CONFIG:
+      JOINT_EMB_DROPOUT: 0.0
       EARLY_FUSE_ON: True
       TYPE: "MHA-B"
       USE_CLASSIFICATION_LOSS: False
@@ -48,7 +55,7 @@ MODEL:
       CLAMP_BERTATTN_MAX_FOR_OVERFLOW: True
       CLAMP_DOT_PRODUCT: True
            
-    USE_CHECKPOINT: True
+    USE_CHECKPOINT: False
 
 TEST:
   DURING_TRAINING: False

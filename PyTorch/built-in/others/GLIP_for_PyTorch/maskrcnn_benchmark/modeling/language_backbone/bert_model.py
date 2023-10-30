@@ -15,9 +15,18 @@ class BertEncoder(nn.Module):
         print("LANGUAGE BACKBONE USE GRADIENT CHECKPOINTING: ", self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT)
 
         if self.bert_name == "bert-base-uncased":
-            config = BertConfig.from_pretrained(self.bert_name)
-            config.gradient_checkpointing = self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT
-            self.model = BertModel.from_pretrained(self.bert_name, add_pooling_layer=False, config=config)
+            if cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH:
+                config = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH)
+                config.gradient_checkpointing = self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT
+                config.hidden_dropout_prob = 0.0
+                config.attention_probs_dropout_prob = 0.0
+                print('config: ', config, flush=True)
+                self.model = BertModel.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH,
+                                                       add_pooling_layer=False, config=config)
+            else:
+                config = BertConfig.from_pretrained(self.bert_name)
+                config.gradient_checkpointing = self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT
+                self.model = BertModel.from_pretrained(self.bert_name, add_pooling_layer=False, config=config)
             self.language_dim = 768
         elif self.bert_name == "roberta-base":
             config = RobertaConfig.from_pretrained(self.bert_name)
