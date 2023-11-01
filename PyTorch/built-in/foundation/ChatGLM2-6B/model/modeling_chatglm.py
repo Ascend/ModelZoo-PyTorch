@@ -44,7 +44,7 @@ from .configuration_chatglm import ChatGLMConfig
 
 # flags required to enable jit fusion kernels
 
-USE_FLASH = True
+USE_FLASH = False
 USE_SCALED_SOFTMAX = False
 if sys.platform != 'darwin':
     torch._C._jit_set_profiling_mode(False)
