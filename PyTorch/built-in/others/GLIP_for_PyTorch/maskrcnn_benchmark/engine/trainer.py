@@ -245,7 +245,8 @@ def do_train(
                         memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                     )
                 )
-        if val_data_loader and (iteration % checkpoint_period == 0 or iteration == max_iter):
+        if val_data_loader and (iteration % checkpoint_period == 0 or iteration == max_iter or
+                                iteration == early_stop_iteration):
             if is_main_process():
                 print("Evaluating")
             eval_result = 0.0

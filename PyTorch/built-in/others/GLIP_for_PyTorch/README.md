@@ -37,6 +37,8 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
   |---------------|:---------:    |
   | PyTorch 1.11  |  mmcv-full==1.7.1; |
 
+- 注意 mmcv-full 需要拉取1.x分支的最新代码源码编译，不要使用pip安装方式。
+
 - 环境准备指导。
 
   请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
@@ -72,6 +74,7 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
 
 ## 准备预训练模型
 - 下载预训练模型glip_tiny_model_o365_goldg_cc_sbu.pth，路径为/${模型文件夹名称}/pretrain/glip_tiny_model_o365_goldg_cc_sbu.pth。
+- 下载预训练语言模型文件夹bert-base-uncased，路径为/${模型文件夹名称}/bert-base-uncased。
 
 # 开始训练
 
@@ -107,12 +110,19 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
      bash test/train_performance_8p.sh   #多卡性能测试
      ```
 
+   --batch_size                      //训练批次大小
+   --load_from                       //加载的预训练参数路径
+   --fp32                            //开启fp32模式
+
    模型训练脚本参数说明如下。
 
    ```bash
       --config-file                  //配置文件
       --override_output_dir          //结果保存路径
+      --early_stop_iteration         //早停训练迭代数
       MODEL.WEIGHT                   //预训练权重路径
+      MODEL.LANGUAGE_BACKBONE.TOKENIZER_PATH   //分词模型路径
+      MODEL.LANGUAGE_BACKBONE.MODEL_PATH       //预训练bert权重路径
       SOLVER.IMS_PER_BATCH           //训练批次大小
       SOLVER.USE_AMP                 //使能混精训练
       SOLVER.MAX_EPOCH               //训练epoch数

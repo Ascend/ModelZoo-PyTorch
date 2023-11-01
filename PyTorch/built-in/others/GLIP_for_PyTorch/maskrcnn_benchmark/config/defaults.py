@@ -820,6 +820,7 @@ _C.TEST = CN()
 _C.TEST.EXPECTED_RESULTS = []
 _C.TEST.EXPECTED_RESULTS_SIGMA_TOL = 4
 _C.TEST.DURING_TRAINING = False
+_C.TEST.AFTER_TRAINING = False
 # Number of images per batch
 # This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
 # see 2 images per batch

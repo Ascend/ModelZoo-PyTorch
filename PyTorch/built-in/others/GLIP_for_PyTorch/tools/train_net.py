@@ -70,7 +70,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False, early_stop_iterat
         start_iter=0  # <TODO> Sample data from resume is disabled, due to the conflict with max_epoch
     )
 
-    if cfg.TEST.DURING_TRAINING or cfg.SOLVER.USE_AUTOSTEP:
+    if cfg.TEST.DURING_TRAINING or cfg.TEST.AFTER_TRAINING or cfg.SOLVER.USE_AUTOSTEP:
         data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
         data_loaders_val = data_loaders_val[0]
     else:
