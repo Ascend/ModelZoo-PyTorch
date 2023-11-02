@@ -20,6 +20,7 @@ import itertools
 import logging
 import math
 import os
+import time
 import random
 import shutil
 from pathlib import Path
@@ -28,6 +29,7 @@ from typing import Dict
 import datasets
 import numpy as np
 import torch
+import torch_npu
 import torch.nn.functional as F
 import torch.utils.checkpoint
 import transformers
@@ -54,7 +56,7 @@ from diffusers.models.attention_processor import LoRAAttnProcessor, LoRAAttnProc
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version, is_wandb_available
 from diffusers.utils.import_utils import is_xformers_available
-
+from torch_npu.contrib import transfer_to_npu
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.21.0")
@@ -989,7 +991,9 @@ def main(args):
             text_encoder_one.train()
             text_encoder_two.train()
         train_loss = 0.0
+        step_end_time = time.time()
         for step, batch in enumerate(train_dataloader):
+            step_data_time = time.time() - step_end_time
             # Skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
                 if step % args.gradient_accumulation_steps == 0:
@@ -1137,6 +1141,14 @@ def main(args):
 
             if global_step >= args.max_train_steps:
                 break
+
+            step_total_time = time.time() - step_end_time
+        
+            logger.info(f"step_train_time: {step_total_time}")
+            logger.info(f"step_data_time: {step_data_time}")
+            logger.info(f"FPS: {args.train_batch_size * accelerator.num_processes/step_total_time}")
+            
+            step_end_time = time.time()
 
         if accelerator.is_main_process:
             if args.validation_prompt is not None and epoch % args.validation_epochs == 0:
