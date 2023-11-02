@@ -1,4 +1,4 @@
-# Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
-import json
-import time
-import argparse
 import torch
 import torch_aie
+import numpy as np
+import time
+from tqdm import tqdm
 from torch_aie import _enums
 
-from ais_bench.infer.interface import InferSession
+from pathlib import Path
+from common.util.dataset import coco80_to_coco91_class, correct_bbox, save_coco_json
+from utils.general import non_max_suppression, scale_coords
+from common.util.model import nms
 
-from yolov3.utils.datasets import create_dataloader
-from yolov3.utils.general import scale_coords, non_max_suppression
-from yolov3.common.util.dataset import evaluate, coco80_to_coco91_class, correct_bbox, save_coco_json
+
+def forward_nms_op(model, dataloader):
+    pred_results = []
+    for i in tqdm(range(len(dataloader))):
+        # load and preprocess dataset
+        valid_num, img, img_info, img0, img_name, shapes = dataloader[i]
+
+        # pt infer
+        result = pt_infer(model, [img, img_info])
+        box_out = result[0]
+        box_out_num = result[1]
+
+        for idx in range(valid_num):
+            # coordinate change
+            num_det = int(box_out_num[idx][0])
+            boxout = box_out[idx][:num_det * 6].reshape(6, -1).transpose().astype(np.float32)  # 6xN -> Nx6
+            # append to COCO-JSON dictionary
+            image_id = int(img_name[idx].split('.')[0])
+            save_coco_json(boxout, pred_results, image_id, coco80_to_coco91_class())
+
+    return pred_results
 
 
-def forward_nms_script(model, dataloader, cfg):
+def forward_nms_script(model, dataloader, cfg, batchsize):
     pred_results = []
     num = 0
     performance = 0
@@ -36,8 +56,9 @@ def forward_nms_script(model, dataloader, cfg):
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         nb, _, height, width = img.shape  # batch size, channels, height, width
         padding = False
-
         img = torch.Tensor(img)
+
+        # pt infer
         result, Performance = pt_infer(model, img)
         performance += Performance
         num += 1
@@ -67,74 +88,12 @@ def forward_nms_script(model, dataloader, cfg):
             path = Path(paths[idx])
             image_id = int(path.stem) if path.stem.isnumeric() else path.stem
             save_coco_json(pred, pred_results, image_id, coco80_to_coco91_class())
-    print('性能(微秒)：', performance / num)
+    print('性能(毫秒)：', performance / batchsize / num * 1000)
     return pred_results
 
+
 def pt_infer(model, input_li):
-    T1 = time.perf_counter()
+    T1 = time.time()
     results = model.forward(input_li)
-    T2 = time.perf_counter()
+    T2 = time.time()
     return results, T2 - T1
-
-def nms(box_out, conf_thres=0.4, iou_thres=0.5):
-    try:
-        boxout = non_max_suppression(box_out, conf_thres=conf_thres, iou_thres=iou_thres, multi_label=True)
-    except:
-        boxout = non_max_suppression(box_out, conf_thres=conf_thres, iou_thres=iou_thres)
-
-    return boxout
-
-
-def main(opt, cfg):
-    # load model
-    model_orig = torch.jit.load(opt.model)
-    min_shape = (1, 3, 640, 640)
-    max_shape = (32, 3, 640, 640)
-    torch_aie.set_device(0)
-    inputs = []
-    inputs.append(torch_aie.Input(min_shape = min_shape, max_shape= max_shape))
-    model = torch_aie.compile(
-        model_orig,
-        inputs=inputs,
-        precision_policy=_enums.PrecisionPolicy.FP16,
-        truncate_long_and_double=True,
-        require_full_compilation=False,
-        allow_tensor_replace_int=False,
-        min_block_size=3,
-        torch_executed_ops=[],
-        soc_version="Ascend310P3",
-        optimization_level=0)
-
-
-    # load dataset
-    single_cls = False if opt.tag == '9.6.0' else opt
-    dataloader = create_dataloader(f"{opt.data_path}/val2017.txt", opt.img_size, opt.batch_size, max(cfg["stride"]), single_cls, pad=0.5)[0]
-    # inference & nms
-    pred_results = forward_nms_script(model, dataloader, cfg)
-
-    pred_json_file = f"{opt.model.split('.')[0]}_{opt.tag}_predictions.json"
-    print(f'saving results to {pred_json_file}')
-    with open(pred_json_file, 'w') as f:
-        json.dump(pred_results, f)
-
-    # evaluate mAP
-    evaluate(opt.ground_truth_json, pred_json_file)
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='YOLOv3 offline model inference.')
-    parser.add_argument('--data_path', type=str, default="coco", help='root dir for val images and annotations')
-    parser.add_argument('--ground_truth_json', type=str, default="coco/instances_val2017.json",
-                        help='annotation file path')
-    parser.add_argument('--tag', type=str, default='9.6.0', help='yolov3 tags')
-    parser.add_argument('--model', type=str, default="yolov3_torch_aie.pt", help='ts model path')
-    parser.add_argument('--batch_size', type=int, default=1, help='batch size')
-    parser.add_argument('--img_size', nargs='+', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--cfg_file', type=str, default='model.yaml', help='model parameters config file')
-    parser.add_argument('--device-id', type=int, default=0, help='device id')
-    parser.add_argument('--single-cls', action='store_true', help='treat as single-class dataset')
-    opt = parser.parse_args()
-
-    with open(opt.cfg_file) as f:
-        cfg = yaml.load(f, Loader=yaml.FullLoader)
-    main(opt, cfg)

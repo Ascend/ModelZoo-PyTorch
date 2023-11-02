@@ -19,15 +19,13 @@ import torch
 import torch_aie
 from torch_aie import _enums
 
-def export_torch_aie(model_path, save_path="./"):
-    trace_model = torch.jit.load(model_path)
+def export_torch_aie(opt_args):
+    trace_model = torch.jit.load(opt_args.torch_script_path)
     trace_model.eval()
 
-    min_shape = (1, 3, 640, 640)
-    max_shape = (32, 3, 640, 640)
     torch_aie.set_device(0)
     inputs = []
-    inputs.append(torch_aie.Input((1, 3, 640, 640)))
+    inputs.append(torch_aie.Input((opt_args.batch_size, 3, 640, 640)))
     torchaie_model = torch_aie.compile(
         trace_model,
         inputs=inputs,
@@ -37,23 +35,24 @@ def export_torch_aie(model_path, save_path="./"):
         allow_tensor_replace_int=False,
         min_block_size=3,
         torch_executed_ops=[],
-        soc_version="Ascend310P3",
+        soc_version=opt_args.soc_version,
         optimization_level=0)
-    suffix = os.path.splitext(model_path)[-1]
-    saved_name = os.path.basename(model_path).split('.')[0] + f"_torch_aie" + suffix
-    torchaie_model.save(os.path.join(save_path, saved_name))
-    print("torch aie yolov3 compiled done. saved model is ", os.path.join(save_path, saved_name))
+    suffix = os.path.splitext(opt_args.torch_script_path)[-1]
+    saved_name = os.path.basename(opt_args.torch_script_path).split('.')[0] + f"_torch_aie" + suffix
+    torchaie_model.save(os.path.join(opt_args.save_path, saved_name))
+    print("torch aie yolov3 compiled done. saved model is ", os.path.join(opt_args.save_path, saved_name))
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--torch-script-path', type=str, default='./yolov3.torchscript.pt', help='trace model path')
-    parser.add_argument('--batch-size', type=int, default=1, help='batch size')
-    parser.add_argument('--save-path', type=str, default='./', help='compiled model path')
+    parser.add_argument('--torch_script_path', type=str, default='./yolov3.torchscript.pt', help='trace model path')
+    parser.add_argument('--soc_version', type=str, default='Ascend310P3', help='soc version')
+    parser.add_argument('--batch_size', type=int, default=1, help='batch size')
+    parser.add_argument('--save_path', type=str, default='./', help='compiled model path')
     opt_args = parser.parse_args()
     return opt_args
 
 def main(opt_args):
-    export_torch_aie(opt_args.torch_script_path, opt_args.save_path)
+    export_torch_aie(opt_args)
 
 if __name__ == '__main__':
     opt = parse_opt()
