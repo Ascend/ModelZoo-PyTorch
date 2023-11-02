@@ -161,7 +161,7 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
 3. 保存编译优化模型（非必要，可不执行。后续执行的推理脚本包含编译优化过程）
 
     ```
-     python export_torch_aie_ts.py --torch-script-path ${PWD}/yolov3.torchscript.pt --batch-size 1
+     python export_torch_aie_ts.py --batch-size=1
     ```
 
 
