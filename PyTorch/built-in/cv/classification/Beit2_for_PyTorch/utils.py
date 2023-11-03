@@ -27,7 +27,22 @@ import argparse
 
 import torch
 import torch.distributed as dist
-from torch._six import inf
+
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    MixedPrecision,
+    BackwardPrefetch,
+    ShardingStrategy,
+    FullStateDictConfig,
+    StateDictType,
+)
+from torch.distributed.fsdp.wrap import (
+    transformer_auto_wrap_policy,
+    enable_wrap,
+    wrap,
+)
+
+from torch import inf
 
 from tensorboardX import SummaryWriter
 
@@ -76,7 +91,7 @@ class SmoothedValue(object):
         """
         if not is_dist_avail_and_initialized():
             return
-        t = torch.tensor([self.count, self.total], dtype=torch.float64, device='cuda')
+        t = torch.tensor([self.count, self.total], dtype=torch.float32, device='cuda')
         dist.barrier()
         dist.all_reduce(t)
         t = t.tolist()
@@ -558,9 +573,15 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler, mo
         elif (epoch + 1) % save_ckpt_freq == 0:
             checkpoint_paths.append(output_dir / ('checkpoint-%s.pth' % epoch_name))
 
+        save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+        with FSDP.state_dict_type(
+                model, StateDictType.FULL_STATE_DICT, save_policy
+        ):
+            cpu_state = model.state_dict()
+
         for checkpoint_path in checkpoint_paths:
             to_save = {
-                'model': model_without_ddp.state_dict(),
+                'model': cpu_state,
                 'optimizer': optimizer.state_dict(),
                 'epoch': epoch,
                 # 'scaler': loss_scaler.state_dict(),
