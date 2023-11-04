@@ -365,7 +365,7 @@ class ParallelSelfAttention(torch.nn.Module):
 @torch.jit.script
 def gelu_impl(x):
     """OpenAI's gelu implementation."""
-    return torch.fast_gelu(x)
+    return torch_npu.fast_gelu(x)
 
 
 def gelu(x):
