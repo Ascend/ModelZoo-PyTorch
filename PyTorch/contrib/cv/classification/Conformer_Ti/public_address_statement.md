@@ -16,3 +16,11 @@
 | 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py  | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_patch32_224_in21k-9046d2e7.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py  | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_resnet50_224_in21k-6f7c7740.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py  | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_resnet50_384-9fd3c705.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py | https://arxiv.org/abs/2012.12877 | 论文地址 |
+| 开发引入 | / | Conformer_Ti/timm_need/data/mixup.py | https://github.com/clovaai/CutMix-PyTorch | 源码实现 |
+| 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py | https://github.com/google-research/vision_transformer/blob/00883dd691c63a6830751563748663526e811cee/vit_jax/checkpoint.py#L224 | 源码实现 |
+| 开发引入 | / | Conformer_Ti/timm_need/data/mixup.py | https://arxiv.org/abs/1905.04899 | 论文地址 |
+| 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py | https://github.com/google-research/vision_transformer | 源码实现 |
+| 开源代码引入 | https://github.com/pengzhiliang/Conformer/blob/815aaad3ef5dbdfcf1e11368891416c2d7478cb1/vision_transformer.py | Conformer_Ti/vision_transformer.py | https://arxiv.org/abs/2010.11929 | 论文地址 |
+| 开发引入 | / | Conformer_Ti/timm_need/data/mixup.py | https://arxiv.org/abs/1710.09412 | 论文地址 |

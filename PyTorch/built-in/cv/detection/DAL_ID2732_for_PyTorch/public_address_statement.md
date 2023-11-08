@@ -1,6 +1,22 @@
 | 类型 | 开源代码地址                                                                                | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
 | ---- |---------------------------------------------------------------------------------------| ------ | ------------------------------------ |------|
 | 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/DOTA2COCO.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/DOTA2COCO.py | http://captain.whu.edu.cn/DOTAweb/ | 文档地址 |
-
-
-
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/augment.py | DAL_ID2732_for_PyTorch/utils/augment.py | https://medium.com/uruvideo/dataset-augmentation-with-random-homographies-a8f4b44830d4 | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/ResultMerge_multi_process.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/ResultMerge.py | http://captain.whu.edu.cn/DOTAweb/tasks.html | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/overlaps_cuda/setup.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/poly_nms_gpu/setup.py | http://code.activestate.com/recipes/52224-find-a-file-given-a-search-path/ | 相关说明 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/augment.py | DAL_ID2732_for_PyTorch/utils/augment.py | https://arxiv.org/abs/1708.04552 | 论文地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/bbox.py | DAL_ID2732_for_PyTorch/utils/bbox.py | http://fromwiz.com/share/s/34GeEW1RFx7x2iIM0z1ZXVvc2yLl5t2fTkEg2ZVhJR2n50xg | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/augment.py | DAL_ID2732_for_PyTorch/utils/augment.py | https://towardsdatascience.com/when-conventional-wisdom-fails-revisiting-data-augmentation-for-self-driving-cars-4831998c5509 | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/overlaps_cuda/setup.py | DAL_ID2732_for_PyTorch/utils/overlaps_cuda/setup.py | http://code.activestate.com/recipes/52224-find-a-file-given-a-search-path/ | 相关说明 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/ResultMerge_multi_process.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/dota_evaluation_task2.py | http://captain.whu.edu.cn/DOTAweb/tasks.html | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/ResultMerge_multi_process.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/dota-v1.5_evaluation_task1.py | http://captain.whu.edu.cn/DOTAweb/tasks.html | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/models/losses.py | DAL_ID2732_for_PyTorch/models/losses.py | https://github.com/facebookresearch/maskrcnn-benchmark | 源码实现 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/ResultMerge_multi_process.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/dota_evaluation_task1.py | http://captain.whu.edu.cn/DOTAweb/tasks.html | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/ResultMerge_multi_process.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/dota-v1.5_evaluation_task2.py | http://captain.whu.edu.cn/DOTAweb/tasks.html | 数据集地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/models/losses.py | DAL_ID2732_for_PyTorch/models/main_losses.py | https://github.com/facebookresearch/maskrcnn-benchmark | 源码实现 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/utils.py | DAL_ID2732_for_PyTorch/utils/utils.py | https://github.com/pytorch/vision/issues/223 | 相关说明 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/utils.py | DAL_ID2732_for_PyTorch/utils/utils.py | https://pytorch.org/docs/stable/notes/randomness.html | 相关说明 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/ResultMerge_multi_process.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/ResultMerge_multi_process.py | http://captain.whu.edu.cn/DOTAweb/tasks.html | 数据集地址 |
+| 开发引入 | / | DAL_ID2732_for_PyTorch/models/losses.py | https://arxiv.org/pdf/1904.02701.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/utils/augment.py | DAL_ID2732_for_PyTorch/utils/augment.py | https://github.com/hysts/pytorch_cutout/blob/master/dataloader.py | 源码实现 |
+| 开源代码引入 | https://github.com/ming71/DAL/blob/48cd29fdbf5eeea1b5b642bd1f04bbf1863b31e3/datasets/DOTA_devkit/polyiou.py | DAL_ID2732_for_PyTorch/datasets/DOTA_devkit/polyiou.py | http://www.swig.org | 相关说明 |

@@ -1,3 +1,21 @@
 | 类型     | 开源代码地址                                                       | 文件名                                          | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
 |--------|--------------------------------------------------------------|----------------------------------------------|------------------------|--------|
 | 开发引入 | / | url.ini | https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png | 下载测试图片 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/config/models.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/config/hrnet.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/modelarts/_init_paths.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/config/__init__.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/utils/modelsummary.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/utils/modelsummary.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/config/default.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/tools/_init_paths.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/core/evaluate.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/config/default.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/utils/utils.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/utils/utils.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/models/cls_hrnet.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/core/function.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/config/hrnet.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/valid.py | HRNet_ID1780_for_PyTorch/lib/models/__init__.py | sunk@mail.ustc.edu.cn | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/models/cls_hrnet.py | Bin.Xiao@microsoft.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/HRNet/HRNet-Image-Classification/tools/_init_paths.py | HRNet_ID1780_for_PyTorch/lib/config/models.py | Bin.Xiao@microsoft.com | 邮箱地址 |

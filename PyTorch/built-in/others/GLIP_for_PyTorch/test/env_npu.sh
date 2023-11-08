@@ -22,6 +22,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_GLOBAL_EVENT_ENABLE=0
 #设置是否开启taskque,0-关闭/1-开启
 export TASK_QUEUE_ENABLE=1
+#设置是否开启fftsplus,0-关闭/1-开启
+export ASCEND_ENHANCE_ENABLE=1
 
 #设置device侧日志登记为error
 msnpureport -g error -d 0

@@ -46,7 +46,7 @@ from maskrcnn_benchmark.utils.amp import autocast, GradScaler
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
-def train(cfg, local_rank, distributed, use_tensorboard=False,):
+def train(cfg, local_rank, distributed, use_tensorboard=False, early_stop_iteration=-1):
     model = build_detection_model(cfg)
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
@@ -70,7 +70,7 @@ def train(cfg, local_rank, distributed, use_tensorboard=False,):
         start_iter=0  # <TODO> Sample data from resume is disabled, due to the conflict with max_epoch
     )
 
-    if cfg.TEST.DURING_TRAINING or cfg.SOLVER.USE_AUTOSTEP:
+    if cfg.TEST.DURING_TRAINING or cfg.TEST.AFTER_TRAINING or cfg.SOLVER.USE_AUTOSTEP:
         data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
         data_loaders_val = data_loaders_val[0]
     else:
@@ -152,7 +152,8 @@ def train(cfg, local_rank, distributed, use_tensorboard=False,):
         checkpoint_period,
         arguments,
         data_loaders_val,
-        meters
+        meters,
+        early_stop_iteration=early_stop_iteration,
     )
 
     return model
@@ -205,6 +206,7 @@ def main():
     parser.add_argument("--save_original_config", action="store_true")
     parser.add_argument("--disable_output_distributed", action="store_true")
     parser.add_argument("--override_output_dir", default=None)
+    parser.add_argument("--early_stop_iteration", type=int, default=-1)
 
     args = parser.parse_args()
 
@@ -263,7 +265,8 @@ def main():
     model = train(cfg=cfg,
                   local_rank=args.local_rank,
                   distributed=args.distributed,
-                  use_tensorboard=args.use_tensorboard)
+                  use_tensorboard=args.use_tensorboard,
+                  early_stop_iteration=args.early_stop_iteration)
 
 
 if __name__ == "__main__":

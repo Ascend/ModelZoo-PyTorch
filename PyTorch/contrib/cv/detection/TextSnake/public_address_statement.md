@@ -11,3 +11,5 @@
 | 开源代码引入 | https://github.com/princewang1994/TextSnake.pytorch  | TextSnake/network/vgg.py     | https://download.pytorch.org/models/vgg13_bn-abd245e5.pth | 下载预训练权重   |
 | 开源代码引入 | https://github.com/princewang1994/TextSnake.pytorch  | TextSnake/network/vgg.py     | https://download.pytorch.org/models/vgg16_bn-6c64b313.pth | 下载预训练权重   |
 | 开源代码引入 | https://github.com/princewang1994/TextSnake.pytorch  | TextSnake/network/vgg.py     | https://download.pytorch.org/models/vgg19_bn-c79401a0.pth | 下载预训练权重   |
+| 开源代码引入 | https://github.com/princewang1994/TextSnake.pytorch/dataset/total_text/gdrivedl.sh | TextSnake/dataset/total_text/gdrivedl.sh | https://github.com/matthuisman/files.matthuisman.nz/blob/master/gdrivedl | 源码实现 |
+| 开源代码引入 | https://github.com/princewang1994/TextSnake.pytorch/dataset/total_text/Evaluation_Protocol/Python_scripts/Deteval.py | TextSnake/dataset/total_text/Evaluation_Protocol/Python_scripts/Deteval.py | https://github.com/cs-chan/Total-Text-Dataset/blob/master/Evaluation_Protocol/Python_scripts/Deteval.py | 源码实现 |

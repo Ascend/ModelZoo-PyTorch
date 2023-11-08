@@ -16,7 +16,15 @@ import datetime
 import numpy as np
 import time
 import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+
+import functools
+from torch.utils.data.distributed import DistributedSampler
 import torch.backends.cudnn as cudnn
+
+from modeling_finetune import Block, PatchEmbed, DropPath, RelativePositionBias, Mlp, Attention
+
 import json
 import os
 
@@ -32,6 +40,26 @@ import utils
 import modeling_pretrain
 import modeling_vqkd
 
+
+torch_npu.npu.set_compile_mode(jit_compile=True)
+torch_npu.npu.config.allow_internal_format = False
+
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    MixedPrecision,
+    BackwardPrefetch,
+    ShardingStrategy,
+    FullStateDictConfig,
+    StateDictType,
+    FullOptimStateDictConfig,
+)
+
+from torch.distributed.fsdp.wrap import (
+    transformer_auto_wrap_policy,
+    enable_wrap,
+    wrap,
+)
+
 def get_args():
     parser = argparse.ArgumentParser('BEiT pre-training script', add_help=False)
     parser.add_argument('--batch_size', default=64, type=int)
@@ -43,7 +71,7 @@ def get_args():
     parser.add_argument("--tokenizer_model", type=str, default="vqkd_encoder_base_decoder_3x768x12_clip")
     
     # Model parameters
-    parser.add_argument('--model', default='beit_base_patch16_224_8k_vocab', type=str, metavar='MODEL',
+    parser.add_argument('--model', default='beit_huge_5B_cls_pt', type=str, metavar='MODEL',
                         help='Name of model to train')
     parser.add_argument('--rel_pos_bias', action='store_true')
     parser.add_argument('--disable_rel_pos_bias', action='store_false', dest='rel_pos_bias')
@@ -128,13 +156,13 @@ def get_args():
                         help='path where to save, empty for no saving')
     parser.add_argument('--log_dir', default=None,
                         help='path where to tensorboard log')
-    parser.add_argument('--device', default='cuda',
+    parser.add_argument('--device', default='npu',
                         help='device to use for training / testing')
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--auto_resume', action='store_true')
     parser.add_argument('--no_auto_resume', action='store_false', dest='auto_resume')
-    parser.set_defaults(auto_resume=True)
+    parser.set_defaults(auto_resume=False)
 
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')    
@@ -143,8 +171,8 @@ def get_args():
                         help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
     parser.add_argument('--no_pin_mem', action='store_false', dest='pin_mem',
                         help='')
-    parser.set_defaults(pin_mem=True)
-    
+    parser.set_defaults(pin_mem=False)
+
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
@@ -222,7 +250,8 @@ def main(args):
     dataset_train = build_beit_pretraining_dataset(args)
 
     # prepare visual tokenizer
-    vqkd = get_visual_tokenizer(args).to(device)
+
+    vqkd = get_visual_tokenizer(args).to(device).half()
 
     if True:  # args.distributed:
         num_tasks = utils.get_world_size()
@@ -251,7 +280,7 @@ def main(args):
         drop_last=True,
     )
 
-    model.to(device)
+    model.to(device).to(torch.bfloat16)
     model_without_ddp = model
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -266,11 +295,31 @@ def main(args):
     print("Number of training examples per epoch = %d" % (total_batch_size * num_training_steps_per_epoch))
 
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
-        model_without_ddp = model.module
+        manual_auto_wrap_policy = functools.partial(
+            transformer_auto_wrap_policy,
+            transformer_layer_cls={
+                Block,
+                PatchEmbed,
+                DropPath,
+                RelativePositionBias,
+                Mlp,
+                Attention
+            },
+        )
+        model = FSDP(model,
+                     auto_wrap_policy=manual_auto_wrap_policy,
+                     device_id=torch.cuda.current_device(),
+                     backward_prefetch=BackwardPrefetch.BACKWARD_PRE,
+                     sharding_strategy=ShardingStrategy.SHARD_GRAD_OP,
+                     limit_all_gathers=True,
+                     use_orig_params = True,
+                     )
 
-    optimizer = create_optimizer(
-        args, model_without_ddp)
+
+
+
+    optimizer = create_optimizer(args, model)
+
     loss_scaler = NativeScaler()
 
     print("Use step level LR & WD scheduler!")
@@ -284,8 +333,6 @@ def main(args):
         args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch)
     print("Max WD = %.7f, Min WD = %.7f" % (max(wd_schedule_values), min(wd_schedule_values)))
 
-    utils.auto_load_model(
-        args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()

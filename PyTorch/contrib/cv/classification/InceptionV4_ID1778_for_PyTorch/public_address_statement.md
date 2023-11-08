@@ -4,3 +4,4 @@
 | 开源代码引入 | https://github.com/Cadene/pretrained-models.pytorch/blob/8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0/pretrainedmodels/models/inceptionv4.py | InceptionV4_ID1778_for_PyTorch/inceptionv4.py | http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/Cadene/pretrained-models.pytorch/blob/8aae3d8f1135b6b13fed79c1d431e3449fdbf6e0/pretrainedmodels/models/inceptionv4.py | InceptionV4_ID1778_for_PyTorch/inceptionv4_v2.py | http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth | 下载权重文件 |
 | 开发引入   | / | url.ini                                       | http://data.lip6.fr/cadene/pretrainedmodels/inceptionv4-8e4777a0.pth | 下载权重文件 |
+| 开发引入 | / | InceptionV4_ID1778_for_PyTorch/infer/data/imagenet1000_clsidx_to_labels.names | https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a | 源码实现 |

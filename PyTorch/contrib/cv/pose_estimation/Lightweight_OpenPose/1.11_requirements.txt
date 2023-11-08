@@ -1,0 +1,3 @@
+opencv-python
+pycocotools==2.0.4
+torchvision==0.12.0

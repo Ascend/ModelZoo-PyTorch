@@ -25,9 +25,14 @@ Baichuan2-7B 是由百川智能开发的一个开源可商用的大规模预训�
 
   **表 1**  版本支持表
 
-  | Python版本 | Torch_Version      | 三方库依赖版本                                 |
-  | :--------: | :----------------------------------------------: | :----------------------------------------------: |
-  | Python 3.7 | PyTorch 1.11 | deepspeed 0.9.2 |
+  | 配套        | 版本    | 下载链接                                                                                                                  |
+  |-----------|-------|-----------------------------------------------------------------------------------------------------------------------|
+  | 固件与驱动      | 23.0.RC3 | [HDK固件与驱动](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/260867092)             |
+  | CANN      | 7.0.RC1 | [CANN](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373/software/260809541)               |
+  | Python    | 3.7   | -                                                                                                                     |
+  | torch     | 1.11.0 | [torch](https://repo.huaweicloud.com/kunpeng/archive/Ascend/PyTorch/torch-1.11.0-cp37-cp37m-linux_aarch64.whl)        |
+  | torch-npu | 1.11.0 | [torch-npu](https://gitee.com/ascend/pytorch/releases/download/v5.0.rc3-pytorch1.11.0/torch_npu-1.11.0.post4_for_kunpeng.zip) |
+  | deepspeed | 0.9.2 | -                                                                                                                     |
 
 - 环境准备指导
 
@@ -64,7 +69,7 @@ Baichuan2-7B 是由百川智能开发的一个开源可商用的大规模预训�
   
   ```shell
   pip3 install torch-1.11.0-cp37-cp37m-linux_aarch64.whl
-  pip3 install torch_npu-1.11.0.post1-cp37-cp37m-linux_aarch64.whl
+  pip3 install torch_npu-1.11.0.post4-cp37-cp37m-linux_aarch64.whl
   ```
 
 

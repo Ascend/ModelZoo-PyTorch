@@ -10,3 +10,9 @@
 | 开发引入 | / | url.ini | https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth | 下载权重文件 |
 | 开发引入 | / | url.ini | https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth | 下载权重文件 |
 | 开发引入 | / | url.ini | https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth | 下载权重文件 |
+| 开发引入 | / | ResNeXt-50-32x4d_ID1624_for_PyTorch/models/resnet_0_6_0.py | https://ngc.nvidia.com/catalog/model-scripts/nvidia:resnet_50_v1_5_for_pytorch | 相关说明 |
+| 开发引入 | / | ResNeXt-50-32x4d_ID1624_for_PyTorch/models/resnet_0_6_0.py | https://arxiv.org/pdf/1605.07146.pdf | 论文地址 |
+| 开发引入 | / | ResNeXt-50-32x4d_ID1624_for_PyTorch/models/resnet_0_6_0.py | https://arxiv.org/abs/1706.02677 | 论文地址 |
+| 开发引入 | / | ResNeXt-50-32x4d_ID1624_for_PyTorch/models/resnet_0_6_0.py | https://arxiv.org/abs/1512.03385 | 论文地址 |
+| 开发引入 | / | ResNeXt-50-32x4d_ID1624_for_PyTorch/models/resnet_0_6_0.py | https://arxiv.org/pdf/1512.03385.pdf | 论文地址 |
+| 开发引入 | / | ResNeXt-50-32x4d_ID1624_for_PyTorch/models/resnet_0_6_0.py | https://arxiv.org/pdf/1611.05431.pdf | 论文地址 |

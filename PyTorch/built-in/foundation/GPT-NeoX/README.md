@@ -39,9 +39,9 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
 
   | 配套       | 版本                                                        |
   | --------- | ------------------------------------------------------------ |
-  | 固件与驱动 | 23.0.T13 |
-  | CANN       | 6.1.RC2 |
-  | PyTorch    |PyTorch 1.11|
+  | 固件与驱动 | 23.0.RC2 |
+  | CANN       | 6.1.RC3 |
+  | PyTorch    | PyTorch 1.11|
   | Python     |Python 3.7.5|
 
 
@@ -77,7 +77,7 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
 3. 安装pdsh插件
 
   ```
-  获取pdsh-2.34源码并解压
+  获取pdsh-2.34源码并解压 https://github.com/chaos/pdsh/releases/tag/pdsh-2.34
   cd pdsh-2.34
   ./configure --with-ssh
   make && make install
@@ -148,6 +148,70 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
    2、官方训练使用：HFTokenizer
    ```
 
+# 适配代码
+
+## Deepspeed代码
+
+1. deepspeed/runtime/pipe/engine.py:957  #修正deepspeed 0.6.0配置 
+
+   ```
+   #inputs_grad_tail = [
+                #    elt.grad for elt in inputs[1:] if elt.grad is not None
+                #]   
+                inputs_grad_tail = [elt.grad for elt in inputs[1:]]  # 修改后
+   ```
+## 模型代码修复
+
+1. megatron/training.py:621 #deepspeed配置
+
+   ```
+   model=model,
+            optimizer=optimizer,
+            args=neox_args,
+            lr_scheduler=_lr_scheduler,
+            dist_init_required=False,
+            model_parameters=_model_params,
+            #config_params=neox_args.deepspeed_config, # 0.9.2 需要注释掉
+            config_params=neox_args.deepspeed_config, # 0.6.0 不需要注释
+            mpu=mpu if not neox_args.is_pipe_parallel else None,
+
+   ```
+
+2. megatron/training.py:628 
+
+   ```
+   if neox_args.is_pipe_parallel:
+            model.set_has_attention_mask(True) # 0.6.0 不需要注释
+            # model.set_has_attention_mask(True) # 0.9.2 需要注释掉
+   ```
+
+3. logits返回类型:megatron/training.py:346
+
+   ```
+   """Forward step."""
+    if neox_args.is_pipe_parallel:
+        # return model.eval_batch(data_iterator, return_logits=return_logits) # 适配0.9.2
+        return model.eval_batch(data_iterator)  # 适配 0.6.0
+
+   ```
+4. hostfile适配:slots改为slot
+
+   ```
+    #127.0.0.1 slots=16 # 适配0.9.2
+    127.0.0.1 slot=16 # 适配0.6.0
+   ```
+## 模型代码修改记录
+
+1. 优化配置默认开启，在yaml文件中隐藏  megatron/neox_arguments/neox_args.py
+
+   ```
+    scaled_masked_softmax_fusion: bool = True # 默认 fused_softmax融合算子开启
+    
+    async_tensor_model_parallel_allreduce: bool = True # 默认allreduce通信隐藏开启
+
+    use_triangle_attn: bool = True # 默认倒三角开启
+
+   ```
 
 
 # 开始训练
@@ -177,7 +241,7 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
      启动8卡训练
 
      ```
-     python ./deepy.py train.py -d configs 20B.yml #修改20B.yml文件  
+     python ./deepy.py train.py -d configs 20B.yml # 适当调整 20B.yml文件，如20B单机8卡会oom，可将num-layer调小至22
      ```
 
 
@@ -186,7 +250,7 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
 
    ```
    # Tokenizer /  checkpoint settings - you will need to change these to the location you have them saved in
-    "vocab-file": "./20B_checkpoints/20B_tokenizer.json", # 根据tokenizer_type 配置相应所需词表
+    "vocab-file": "./tokenizer/20B_tokenizer.json", # 根据tokenizer_type 配置相应所需词表
     "save": "./20B_checkpoints", # ckpt保存路径
     "load": "./20B_checkpoints", # ckpt加载路径
     "data-path": "./data/pile_20B_tokenizer/pile_20B_tokenizer_text_document", # 数据集路径
@@ -234,8 +298,8 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
 |     NAME      | tflops | Iterations  | DataType  | Torch_Version | Card |
 |:-------------:|:-------------:|:-:|:-:|:-:|:----:|
 | GPU-2pp4mp2dp |     100      | 5000   | fp16  | 1.5  | A100 |
-| NPU-2pp4mp2dp |     150      | 5000   | fp16  | 1.5  | 910B |
-备注：一定要有竞品和NPU。
+| NPU-2pp4mp2dp |     150      | 5000   | fp16  | 1.5  | 910 |
+
 
 # 版本说明
 
@@ -246,6 +310,10 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
 ## 已知问题
 
 **_当前发行版本中存在的问题描述。_**
+1. deepspeed问题pr:data helpers overflow bug https://github.com/NVIDIA/Megatron-LM/pull/507
+相应适配:deepspeed/runtime/utils.py 636行
+assert meta.dtype == torch.long ->  assert meta.dtype == torch.long or meta.dtype == torch.int32
+2. 对shell脚本进行转码：find ./ -name '*' | xargs dos2unix
 
 无。
 

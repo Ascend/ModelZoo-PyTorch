@@ -1,5 +1,5 @@
-torch==1.7.1
-torchvision==0.8.2
+torch==2.1.0
+torchvision==0.16.0
 timm==0.4.12
 Pillow
 blobfile
@@ -11,3 +11,13 @@ einops
 tensorboardX
 deepspeed==0.4.0
 scipy
+decorator
+attrs
+absl-py
+cloudpickle
+synr==0.5.0
+tornado
+ftfy
+regex
+sympy
+

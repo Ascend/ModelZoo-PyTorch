@@ -10,3 +10,5 @@
 | 开源代码引入 | https://github.com/YifanXu74/Evo-ViT/blob/4c5d9b30b0a3c9b1e7b8687a9490555bd9d714ca/levit/evo_levit_384.py | Evo-Levit_256_384/levit/evo_levit_384.py | https://dl.fbaipublicfiles.com/LeViT/LeViT-192-92712e41.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/YifanXu74/Evo-ViT/blob/4c5d9b30b0a3c9b1e7b8687a9490555bd9d714ca/levit/evo_levit_384.py | Evo-Levit_256_384/levit/evo_levit_384.py | https://dl.fbaipublicfiles.com/LeViT/LeViT-256-13b5763e.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/YifanXu74/Evo-ViT/blob/4c5d9b30b0a3c9b1e7b8687a9490555bd9d714ca/levit/evo_levit_384.py | Evo-Levit_256_384/levit/evo_levit_384.py | https://dl.fbaipublicfiles.com/LeViT/LeViT-384-9bdaf2e2.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/YifanXu74/Evo-ViT/levit/losses_levit.py | Evo-Levit_256_384/levit/losses_levit.py | https://github.com/peterliht/knowledge-distillation-pytorch/blob/master/model/net.py#L100 | 源码实现 |
+| 开发引入 | / | Evo-Levit_256_384/main_levit.py | https://github.com/NVIDIA/apex/tree/master/examples/imagenet | 源码实现 |

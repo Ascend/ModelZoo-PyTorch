@@ -345,10 +345,14 @@ class Attention(nn.Module):
             )
 
     def batch_to_head_dim(self, tensor):
-        head_size = self.heads
-        batch_size, seq_len, dim = tensor.shape
-        tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim)
-        tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size // head_size, seq_len, dim * head_size)
+        if len(tensor.shape) == 3:
+            head_size = self.heads
+            batch_size, seq_len, dim = tensor.shape
+            tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim)
+            tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size // head_size, seq_len, dim * head_size)
+        elif len(tensor.shape) == 4:
+            batch_size, head_size, seq_len, dim = tensor.shape
+            tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size, seq_len, dim * head_size)
         return tensor
 
     def head_to_batch_dim(self, tensor, out_dim=3):
@@ -368,13 +372,12 @@ class Attention(nn.Module):
             query = query.float()
             key = key.float()
 
-        with torch.cuda.amp.autocast(enabled=False):
-            if attention_mask is None:
-                attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
-            else:
-                beta = 1
-                attention_scores = torch.add(torch.mul(beta, attention_mask),
-                                            torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
+        if attention_mask is None:
+            attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
+        else:
+            beta = 1
+            attention_scores = torch.add(torch.mul(beta, attention_mask),
+                                        torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
 
 
         if self.upcast_softmax:
@@ -1123,17 +1126,13 @@ class NpuFlashAttnProcessor:
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
 
-        key_sequence_length = key.shape[1]
-
         if query.shape[1] >= 2000:
-
-            if key_sequence_length == 80:
-                attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
-                attention_mask = \
-                    torch.cat((attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
+            query = attn.head_to_batch_dim(query, out_dim=4)
+            key = attn.head_to_batch_dim(key, out_dim=4)
+            value = attn.head_to_batch_dim(value, out_dim=4)
 
             hidden_states = torch_npu.npu_fusion_attention(
-                query, key, value, heads, input_layout="BSH",
+                query, key, value, heads, input_layout="BNSD",
                 pse=None,
                 atten_mask=attention_mask,
                 scale=scale,
@@ -1144,19 +1143,13 @@ class NpuFlashAttnProcessor:
                 inner_precise=0,
             )[0]
         else:
-
             query = attn.head_to_batch_dim(query)
             key = attn.head_to_batch_dim(key)
             value = attn.head_to_batch_dim(value)
-            
-            if key_sequence_length == 80:
-                attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
-                attention_mask = \
-                    torch.cat((attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
 
             attention_probs = attn.get_attention_scores(query, key, attention_mask)
             hidden_states = torch.bmm(attention_probs, value)
-            hidden_states = attn.batch_to_head_dim(hidden_states)
+        hidden_states = attn.batch_to_head_dim(hidden_states)
 
         # linear proj
         hidden_states = attn.to_out[0](hidden_states)

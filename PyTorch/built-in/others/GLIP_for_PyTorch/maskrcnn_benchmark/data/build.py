@@ -251,7 +251,7 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, num_replicas=None
         ), "SOLVER.IMS_PER_BATCH ({}) must be divisible by the number "
         "of GPUs ({}) used.".format(images_per_batch, num_gpus)
         images_per_gpu = images_per_batch // num_gpus
-        shuffle = True
+        shuffle = False
         num_iters = cfg.SOLVER.MAX_ITER
     else:
         images_per_batch = cfg.TEST.IMS_PER_BATCH
@@ -405,7 +405,10 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, num_replicas=None
         else:
             extra_args["tokenizer"] = CLIPTokenizerFast.from_pretrained("openai/clip-vit-base-patch32", from_slow=True)
     else:
-        extra_args['tokenizer'] = AutoTokenizer.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.TOKENIZER_TYPE)
+        if cfg.MODEL.LANGUAGE_BACKBONE.TOKENIZER_PATH:
+            extra_args['tokenizer'] = AutoTokenizer.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.TOKENIZER_PATH)
+        else:
+            extra_args['tokenizer'] = AutoTokenizer.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.TOKENIZER_TYPE)
 
     if isinstance(dataset_list[0], (tuple, list)):
         datasets = build_dataset_by_group(dataset_list, transforms, DatasetCatalog, is_train,

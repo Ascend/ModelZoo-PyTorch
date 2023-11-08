@@ -17,6 +17,7 @@ import sys
 from typing import Iterable
 
 import torch
+import torch_npu
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -39,6 +40,11 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
     for step, (batch, extra_info) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         # assign learning rate & weight decay for each step
         it = start_steps + step  # global training iteration
+
+        # 删除cache
+        if step == 0:
+            torch.cuda.empty_cache()
+
         if lr_schedule_values is not None or wd_schedule_values is not None:
             for i, param_group in enumerate(optimizer.param_groups):
                 if lr_schedule_values is not None:
@@ -47,25 +53,25 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
                     param_group["weight_decay"] = wd_schedule_values[it]
 
         samples, images, bool_masked_pos = batch
-        images = images.to(device, non_blocking=True)
-        samples = samples.to(device, non_blocking=True)
+
+        #使用BF16格式数据
+        images = images.to(device, non_blocking=True).half()
+        #使用BF16格式数据
+        samples = samples.to(device, non_blocking=True).to(torch.bfloat16)
         bool_masked_pos = bool_masked_pos.to(device, non_blocking=True)
 
         with torch.no_grad():
-            with torch.cuda.amp.autocast():
-                input_ids = vqkd.get_codebook_indices(images)
+            input_ids = vqkd.get_codebook_indices(images)
             bool_masked_pos = bool_masked_pos.flatten(1).to(torch.bool)
             labels = input_ids[bool_masked_pos]
 
-        with torch.cuda.amp.autocast(): # enabled=False
-            outputs = model(samples, bool_masked_pos=bool_masked_pos)
-
-            if isinstance(outputs, list):
-                loss_1 = loss_fn(input=outputs[0], target=labels)
-                loss_2 = loss_fn(input=outputs[1], target=labels)
-                loss = loss_1 + loss_2 
-            else:
-                loss = loss_fn(input=outputs, target=labels)
+        outputs = model(samples, bool_masked_pos=bool_masked_pos)
+        if isinstance(outputs, list):
+            loss_1 = loss_fn(input=outputs[0].to(torch.float32), target=labels)
+            loss_2 = loss_fn(input=outputs[1].to(torch.float32), target=labels)
+            loss = loss_1 + loss_2
+        else:
+            loss = loss_fn(input=outputs.to(torch.float32), target=labels)
 
 
         loss_value = loss.item()
@@ -75,11 +81,8 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
             sys.exit(1)
 
         optimizer.zero_grad()
-        # this attribute is added by timm on one optimizer (adahessian)
-        is_second_order = hasattr(optimizer, 'is_second_order') and optimizer.is_second_order
-        grad_norm = loss_scaler(loss, optimizer, clip_grad=max_norm,
-                                parameters=model.parameters(), create_graph=is_second_order)
-        loss_scale_value = loss_scaler.state_dict()["scale"]
+        loss.backward()
+        optimizer.step()
 
         torch.cuda.synchronize()
         
@@ -103,7 +106,6 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
                 log_writer.update(mlm_acc=mlm_acc, head="loss")
 
         metric_logger.update(loss=loss_value)
-        metric_logger.update(loss_scale=loss_scale_value)
         min_lr = 10.
         max_lr = 0.
         for group in optimizer.param_groups:
@@ -117,15 +119,12 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
             if group["weight_decay"] > 0:
                 weight_decay_value = group["weight_decay"]
         metric_logger.update(weight_decay=weight_decay_value)
-        metric_logger.update(grad_norm=grad_norm)
 
         if log_writer is not None:
             log_writer.update(loss=loss_value, head="loss")
-            log_writer.update(loss_scale=loss_scale_value, head="opt")
             log_writer.update(lr=max_lr, head="opt")
             log_writer.update(min_lr=min_lr, head="opt")
             log_writer.update(weight_decay=weight_decay_value, head="opt")
-            log_writer.update(grad_norm=grad_norm, head="opt")
 
             log_writer.set_step()
 

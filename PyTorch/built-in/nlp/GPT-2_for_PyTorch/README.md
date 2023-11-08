@@ -65,8 +65,8 @@ Megatron 和 DeepSpeed 是两个很重要的预训练框架。Megatron 是英伟
   
   ```
   cd GPT-2_for_PyTorch
-  pip3 install deepspeed==0.6.0  # 首先安装原生deepspeed
-  git clone -b adaptor https://gitee.com/ascend/DeepSpeed.git
+  pip3 install deepspeed==0.9.2  # 首先安装原生deepspeed
+  git clone -b v0.9.2 https://gitee.com/ascend/DeepSpeed.git
   cd ./DeepSpeed
   pip3 install ./
   cd -

@@ -41,8 +41,8 @@
 
     | 配套      | 版本    | 环境准备指导 |
     | --------- | ------- | ---------- |
-    | 固件与驱动 | 1.0.17  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-    | CANN      | 6.0.RC1 | -          |
+    | 固件与驱动 | 1.0.20.alpha | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+    | CANN      | 7.0.RC1 | -          |
     | Python    | 3.7.5   | -          |
     
     说明：请根据推理卡型号与 CANN 版本选择相匹配的固件与驱动版本。
@@ -181,7 +181,7 @@
     + 为了避免测试过程因持续时间太长而受到干扰，建议通过纯推理的方式进行性能测试。
     + 使用吞吐率作为性能指标，单位为 fps，反映模型在单位时间（1秒）内处理的样本数。
     ```bash
-    python3 -m ais_bench --model model/model_ir_se100_bs${batch_size}.om --batchsize ${batch_size}
+    python3 -m ais_bench --model model/model_ir_se100_bs${batch_size}.om --batchsize ${batch_size} --loop 100
     ```
     执行完纯推理命令，程序会打印出与性能相关的指标，找到以关键字 **[INFO] throughput** 开头的一行，行尾的数字即为 OM 模型的吞吐率。
 
@@ -208,13 +208,13 @@
 ----
 # 性能&精度
 
-在310P设备上，OM模型的精度为  **{Top1@Acc=83.52%}**，当batchsize设为1时模型性能最优，达 266.8 fps。
+在310P设备上，OM模型的精度为  **Acc=99.76%**，当batchsize设为16时模型性能最优，达 **1432fps**。
 
 | 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
 | --------- | --------- | ----------- | --------------- | --------- |
-|Ascend310P3| 1         | IFW | 0.9976 | 582.65 fps |
-|Ascend310P3| 4         | ILSVRC2012  | 0.9976 | 1184.08 fps |
-|Ascend310P3| 8         | ILSVRC2012  | 0.9976 | 1454.05 fps |
-|Ascend310P3| 16        | ILSVRC2012  | 0.9976 | 1461.82 fps |
-|Ascend310P3| 32        | ILSVRC2012  | 0.9976 | 1410.92 fps |
-|Ascend310P3| 64        | ILSVRC2012  | 0.9976 | 1354.52 fps |
+|Ascend310P3| 1         | IFW | 0.9976 | 566 fps |
+|Ascend310P3| 4         | IFW | 0.9976 | 1136 fps |
+|Ascend310P3| 8         | IFW | 0.9976 | 1373 fps |
+|Ascend310P3| 16        | IFW | 0.9976 | 1432 fps |
+|Ascend310P3| 32        | IFW | 0.9976 | 1384 fps |
+|Ascend310P3| 64        | IFW | 0.9976 | 1305 fps |

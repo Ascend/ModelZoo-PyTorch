@@ -35,7 +35,7 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
   branch=master
   commit_id=538fe8b39327d8343763b859daf7b9d03a05396e
   ```
-上述两个开源代码仓库都没有给出训练好的模型权重文件，因此使用910训练好的pth权重文件来做端到端推理，该权重文件的精度是0.7844。
+
 
 ## 输入输出数据<a name="输入输出数据"></a>
 
@@ -140,7 +140,7 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
 
    1. 获取权重文件。
 
-       从ModelZoo的源码包中获取RefineNet权重文件[RefineNet_910.pth.tar](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/RefineNet/PTH/RefineNet_910.pth.tar)。
+       从ModelZoo的源码包中获取[RefineNet权重文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/RefineNet/PTH/RefineNet_910.pth.tar)，重命名为 RefineNet.pth.tar, 放置在当前目录下。
 
    2. 导出onnx文件。
 
@@ -149,10 +149,10 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
          运行RefineNet_pth2onnx.py脚本。
 
          ```
-         python3.7.5 RefineNet_pth2onnx.py --input-file RefineNet_910.pth.tar --output-file RefineNet_910.onnx
+         python3.7.5 RefineNet_pth2onnx.py --input-file RefineNet.pth.tar --output-file RefineNet.onnx
          ```
 
-         获得RefineNet_910.onnx文件。
+         获得RefineNet.onnx文件。
          - 参数说明：
          
            - --input-file：输入的RefineNet模型的权重文件。
@@ -192,7 +192,7 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
          使用atc将onnx模型转换为om模型文件，工具使用方法可以参考《[CANN 开发辅助工具指南 \(推理\)](https://support.huawei.com/enterprise/zh/ascend-computing/cann-pid-251168373?category=developer-documents&subcategory=auxiliary-development-tools)》。生成转换batch size为16的om模型的命令如下，对于其他的batch size，可作相应的修改。
          
          ```
-         atc --framework=5 --model=RefineNet_910.onnx --output=RefineNet_910_bs1 --input_format=NCHW --input_shape="input:1,3,500,500" --log=debug --soc_version=Ascend${chip_name}
+         atc --framework=5 --model=RefineNet.onnx --output=RefineNet_bs1 --input_format=NCHW --input_shape="input:1,3,500,500" --log=debug --soc_version=Ascend${chip_name}
          ```
       
          - 参数说明：
@@ -205,7 +205,7 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
            -   --log：日志级别。
            -   --soc\_version：处理器型号。
          
-           运行成功后生成RefineNet_910_bs1.om模型文件。
+           运行成功后生成RefineNet_bs1.om模型文件。
          
 2. 开始推理验证。
 
@@ -217,7 +217,7 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
 
         ```
         mkdir result
-        python3.7.5 -m ais_bench --model RefineNet_910_bs1.om --input ./prepare_dataset --batchsize 1 --output ./result --outfmt "TXT" --device 0
+        python3.7.5 -m ais_bench --model RefineNet_bs1.om --input ./prepare_dataset --batchsize 1 --output ./result --outfmt "TXT" --device 0
         ```
         - 参数说明：
 
@@ -253,7 +253,7 @@ RefineNet是发表在2017CVPR上的一篇文章，旨在实现高分辨的语义
       可使用ais_bench推理工具的纯推理模式验证不同batch_size的om模型的性能，参考命令如下：
 
         ```
-         python3.7.5 -m ais_bench --model RefineNet_910_bs1.om --batchsize 1 --output ./result --loop 1000 --device 0
+         python3.7.5 -m ais_bench --model RefineNet_bs1.om --batchsize 1 --output ./result --loop 1000 --device 0
         ```
 
       - 参数说明：

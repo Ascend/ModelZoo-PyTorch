@@ -5,3 +5,16 @@
 | 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/zihangJiang/TokenLabeling/releases/download/1.0/lvvit_m-56M-224-84.0.pth.tar | 下载权重文件 |
 | 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/zihangJiang/TokenLabeling/releases/download/1.0/lvvit_s-26M-224-83.3.pth.tar | 下载权重文件 |
 | 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/zihangJiang/TokenLabeling/releases/download/1.0/lvvit_s-26M-384-84.4.pth.tar | 下载权重文件 |
+| 开发引入 | / | LVVIT/tlt/data/loader.py | https://github.com/rwightman/pytorch-image-models/blob/master/timm/data/loader.py | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/tlt/data/dataset.py | LVVIT/tlt/data/dataset.py | http://www.codinghorror.com/blog/archives/001018.html | 相关说明 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/validate.py | LVVIT/generate_label.py | https://github.com/rwightman/pytorch-image-models | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/validate.py | LVVIT/validate.py | https://github.com/rwightman/pytorch-image-models | 源码实现 |
+| 开发引入 | / | LVVIT/seg/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py#L353 | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/tlt/data/mixup.py | LVVIT/tlt/data/mixup.py | https://github.com/rwightman/pytorch-image-models/blob/master/timm/data/mixup.py | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/seg/mmseg/models/backbones/vit.py | LVVIT/seg/mmseg/models/backbones/vit.py | https://github.com/open-mmlab/mmsegmentation/blob/master/mmseg/models/backbones/vit.py | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/seg/mmseg/models/backbones/vit.py | LVVIT/seg/mmseg/models/backbones/vit.py | https://arxiv.org/abs/2010.11929 | 论文地址 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/tlt/models/layers.py | LVVIT/tlt/models/layers.py | https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/tlt/data/mixup.py | LVVIT/tlt/data/mixup.py | https://github.com/naver-ai/relabel_imagenet/blob/main/utils/relabel_functions.py | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/tlt/utils/utils.py | LVVIT/tlt/utils/utils.py | https://github.com/google-research/vision_transformer/blob/00883dd691c63a6830751563748663526e811cee/vit_jax/checkpoint.py#L224 | 源码实现 |
+| 开源代码引入 | https://github.com/zihangJiang/TokenLabeling/blob/main/visualize/baselines/ViT/LVViT_LRP.py | LVVIT/visualize/baselines/ViT/LVViT_LRP.py | https://github.com/hila-chefer/Transformer-Explainability/blob/main/baselines/ViT/ViT_LRP.py | 源码实现 |
+| 开发引入 | / | LVVIT/tlt/data/random_augment_label.py | https://github.com/rwightman/pytorch-image-models/blob/master/timm/data/auto_augment.py | 源码实现 |

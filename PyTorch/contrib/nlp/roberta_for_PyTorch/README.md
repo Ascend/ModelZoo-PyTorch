@@ -43,6 +43,7 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
 
 - 环境准备指导。
 
@@ -52,7 +53,7 @@ RoBERTa 在模型规模、算力和数据上，都比 BERT 有一定的提升。
 
   ```
   pip install -r requirements.txt # 小于PyTorch2.0版本
-  pip install -r 2.0_requirements.txt # PyTorch2.0版本
+  pip install -r 2.0_requirements.txt # PyTorch2.0及以上版本
   python3 setup.py build_ext --inplace
   ```
   > **说明：** 

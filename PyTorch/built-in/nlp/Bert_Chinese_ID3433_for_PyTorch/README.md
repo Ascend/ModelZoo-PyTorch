@@ -148,7 +148,6 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      bash test/train_performance_8p.sh --data_path=dataset_file_path --batch_size=16 --model_size=large --warmup_ratio=0.1 --weight_decay=0.00001   # 8卡性能训练  
      ```
 
-
    - 多机多卡训练
    
      启动base多机多卡训练。
@@ -186,56 +185,48 @@ BERT的全称是Bidirectional Encoder Representation from Transformers，即双�
      --node_rank                              //集群节点序号，master节点是0，其余节点依次加1
      --master_addr                            //master节点服务器的ip
      --master_port                            //分布式训练中，master节点使用的端口
-     --data_path                              //数据集路径
+     --data_path                              //数据集路径,需写到数据集的一级目录。
      ```
-     
-    
-  --data\_path 参数填写数据集路径，需写到数据集的一级目录。   
+   
+   模型训练脚本参数说明如下。
 
+    ```
+    公共参数：
+    --config_name                            //模型配置文件
+    --model_type                             //模型类型
+    --tokenizer_name                         //分词文件路径
+    --train_file                             //数据集路径
+    --eval_metric_path                       //精度评估处理脚本路径
+    --line_by_line                           //是否将数据中一行视为一句话
+    --pad_to_max_length                      //是否对数据做padding处理
+    --remove_unused_columns                  //是否移除不可用的字段
+    --save_steps                             //保存的step间隔
+    --overwrite_output_dir                   //是否进行覆盖输出
+    --per_device_train_batch_size            //每个卡的train的batch_size
+    --per_device_eval_batch_size             //每个卡的evaluate的batch_size
+    --do_train                               //是否进行train
+    --do_eval                                //是否进行evaluate
+    --fp16                                   //是否使用混合精度
+    --fp16_opt_level                         //混合精度level
+    --loss_scale                             //loss scale值
+    --use_combine_grad                       //是否开启tensor叠加优化
+    --optim                                  //优化器
+    --output_dir                             //输出保存路径
+    ```
+   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
 
-  - 在线推理  
-    启动在线推理。
+3. 在线推理  
+   - 启动在线推理。
  
     ```
     bash ./test/train_eval_1p.sh --data_path=real_data_path --device_id=xxx --checkpoint=real_checkpoint_path
     ```
 
     ```
-      --data_path： 数据集路径
-      --device_id：  在线推理时所使用的device_id
-      --checkpoint:  权重文件目录
-   ```
-       
-
-
-   模型训练脚本参数说明如下。
-
-   ```
-   公共参数：
-   --config_name                            //模型配置文件
-   --model_type                             //模型类型
-   --tokenizer_name                         //分词文件路径
-   --train_file                             //数据集路径
-   --eval_metric_path                       //精度评估处理脚本路径
-   --line_by_line                           //是否将数据中一行视为一句话
-   --pad_to_max_length                      //是否对数据做padding处理
-   --remove_unused_columns                  //是否移除不可用的字段
-   --save_steps                             //保存的step间隔
-   --overwrite_output_dir                   //是否进行覆盖输出
-   --per_device_train_batch_size            //每个卡的train的batch_size
-   --per_device_eval_batch_size             //每个卡的evaluate的batch_size
-   --do_train                               //是否进行train
-   --do_eval                                //是否进行evaluate
-   --fp16                                   //是否使用混合精度
-   --fp16_opt_level                         //混合精度level
-   --loss_scale                             //loss scale值
-   --use_combine_grad                       //是否开启tensor叠加优化
-   --optim                                  //优化器
-   --output_dir                             //输出保存路径
-   ```
-   
-   训练完成后，权重文件保存在当前路径下，并输出模型训练精度和性能信息。
-
+    --data_path： 数据集路径
+    --device_id：  在线推理时所使用的device_id
+    --checkpoint:  权重文件目录
+    ```
 
 # 训练结果展示
 

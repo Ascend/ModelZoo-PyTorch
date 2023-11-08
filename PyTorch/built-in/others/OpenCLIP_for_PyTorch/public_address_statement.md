@@ -22,8 +22,33 @@
 | 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/pretrained.py | ./src/open_clip/setup.py | https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_l_14-laion400m_e31-69988bb6.pt   | 开源预训练模型下载链接                |
 | 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/pretrained.py | ./src/open_clip/setup.py | https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_l_14-laion400m_e32-3d133497.pt   | 开源预训练模型下载链接                |
 | 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/pretrained.py | ./src/open_clip/setup.py | https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt   | 开源预训练模型下载链接                |
-
-
-
-
-
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/master/tests/util_test.py | ./tests/util_test.py | https://github.com/mlfoundations/open_clip/issues/219 | open_clip源码地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/master/tests/test_inference.py | ./tests/test_inference.py | https://github.com/mlfoundations/open_clip/issues/219 | open_clip源码地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/master/tests/test_inference.py | ./tests/test_inference.py | https://github.com/pytorch/pytorch/issues/92073 | pytorch公网地址来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/training/params.py | ./src/training/params.py | https://arxiv.org/pdf/2103.00020.pdf | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/training/main.py | ./src/training/main.py | http://www.codinghorror.com/blog/archives/001018.html | codinghorror地址公网来源说明 |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/training/main.py | ./src/training/main.py | https://arxiv.org/abs/2111.07991 | 参考论文地址公网来源说明 |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/training/data.py | ./src/training/data.py | https://github.com/webdataset/webdataset/issues/169 | webdataset地址公网来源说明 |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/zero_shot_metadata.py | ./src/open_clip/zero_shot_metadata.py | https://github.com/openai/CLIP/blob/main/notebooks/Prompt_Engineering_for_ImageNet.ipynb | openai/CLIP地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/utils.py | ./src/open_clip/utils.py | https://github.com/pytorch/pytorch/blob/a5895f85be0f10212791145bfedc0261d364f103/torch/nn/modules/batchnorm.py#L762 | pytorch.nn.modules公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/transformer.py | ./src/open_clip/transformer.py | https://arxiv.org/abs/2212.00794 | 参考论文地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/transformer.py | ./src/open_clip/transformer.py | https://github.com/pytorch/pytorch/issues/79887#issuecomment-1161758372 | pytorch/issues公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/transformer.py | ./src/open_clip/transformer.py | https://arxiv.org/abs/2302.01327v1 | 参考论文地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/transformer.py | ./src/open_clip/transformer.py | https://github.com/pytorch/pytorch/issues/79887#issuecomment-1161758372 | pytorch/issues公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/tokenizer.py | ./src/open_clip/tokenizer.py | https://github.com/openai/CLIP | openai/CLIP地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/tokenizer.py | ./src/open_clip/tokenizer.py | https://stackoverflow.com/q/62691279 | stackoverflow地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/timm_model.py | ./src/open_clip/timm_model.py | https://github.com/rwightman/pytorch-image-models | 源码地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/push_to_hf_hub.py | ./src/open_clip/push_to_hf_hub.py | https://huggingface.co/openai/clip-vit-large-patch14 | huggingface.co公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/openai.py | ./src/open_clip/openai.py | https://github.com/openai/CLIP | openai/CLIP地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/model.py | ./src/open_clip/model.py | https://github.com/openai/CLIP | openai/CLIP地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/model.py | ./src/open_clip/model.py | https://arxiv.org/abs/2205.01580 | 参考论文地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/model.py | ./src/open_clip/model.py | https://arxiv.org/abs/2111.07991 | 参考论文地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/model.py | ./src/open_clip/model.py | https://arxiv.org/abs/2111.07991 | 参考论文地址公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_model.py | ./src/open_clip/hf_model.py | https://github.com/huggingface/transformers | huggingface公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_configs.py | ./src/open_clip/hf_configs.py | https://huggingface.co/docs/transformers/model_doc/roberta#roberta | huggingface.co模型文档公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_configs.py | ./src/open_clip/hf_configs.py | https://huggingface.co/docs/transformers/model_doc/xlm-roberta#transformers.XLMRobertaConfig | huggingface.co模型文档公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_configs.py | ./src/open_clip/hf_configs.py | https://huggingface.co/docs/transformers/model_doc/mt5#mt5 | huggingface.co模型文档公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_configs.py | ./src/open_clip/hf_configs.py | https://github.com/google-research/text-to-text-transfer-transformer/issues/273 | text-to-text-transfer-transformer公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_configs.py | ./src/open_clip/hf_configs.py | https://github.com/huggingface/transformers/blob/v4.24.0/src/transformers/models/t5/modeling_t5.py#L374 | huggingface模型文件公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/hf_configs.py | ./src/open_clip/hf_configs.py | https://huggingface.co/docs/transformers/model_doc/bert | huggingface.co模型文档公网来源说明   |
+| 开源代码引入 | https://github.com/mlfoundations/open_clip/blob/main/src/open_clip/coca_model.py | ./src/open_clip/coca_model.py | https://huggingface.co/docs/transformers/main/en/main_classes/text_generation | huggingface.co文档公网来源说明   |

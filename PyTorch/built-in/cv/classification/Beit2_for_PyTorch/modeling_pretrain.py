@@ -13,6 +13,7 @@
 
 import math
 import torch
+import torch_npu
 import torch.nn as nn
 from functools import partial
 
@@ -20,6 +21,7 @@ from modeling_finetune import Block, _cfg, PatchEmbed, RelativePositionBias
 from timm.models.registry import register_model
 from timm.models.layers import trunc_normal_ as __call_trunc_normal_
 
+from torch.utils.checkpoint import checkpoint
 
 def trunc_normal_(tensor, mean=0., std=1.):
     __call_trunc_normal_(tensor, mean=mean, std=std, a=-std, b=std)
@@ -248,6 +250,7 @@ class VisionTransformerForMaskedImageModelingCLS(VisionTransformerForMaskedImage
                  use_abs_pos_emb=use_abs_pos_emb, use_rel_pos_bias=use_rel_pos_bias, use_shared_rel_pos_bias=use_shared_rel_pos_bias, init_std=init_std)
 
         self.early_layers = early_layers
+        self.depth = depth
         print(f'early layer {early_layers}, late layer {depth - early_layers}, condenser head layers {head_layers}, shared_lm_head {shared_lm_head}')
 
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, max(depth, early_layers + head_layers))]  # stochastic depth decay rule
@@ -288,14 +291,21 @@ class VisionTransformerForMaskedImageModelingCLS(VisionTransformerForMaskedImage
         w = bool_masked_pos.unsqueeze(-1).type_as(mask_token)
         x = x * (1 - w) + mask_token * w
 
-        x = torch.cat((cls_tokens, x), dim=1)
+        x = torch.cat((cls_tokens.contiguous(), x.contiguous()), dim=1)
         if self.pos_embed is not None:
             x = x + self.pos_embed
         x = self.pos_drop(x)
 
-        rel_pos_bias = self.rel_pos_bias() if self.rel_pos_bias is not None else None
+        rel_pos_bias = checkpoint(self.rel_pos_bias) if self.rel_pos_bias is not None else None
         for i, blk in enumerate(self.blocks):
-            x = blk(x, rel_pos_bias=rel_pos_bias)
+            if self.training:
+                if i % 3 == 0 or i == (self.depth - 1):
+                    x = blk(x, rel_pos_bias=rel_pos_bias)
+                else:
+                    x = checkpoint(blk, x, rel_pos_bias)
+            else:
+                x = blk(x, rel_pos_bias=rel_pos_bias)
+
             if i + 1 == self.early_layers:
                 early_states = x[:, 1:]
 
@@ -493,6 +503,28 @@ def beit_huge_patch14_224_8k_vocab(pretrained=False, **kwargs):
     model = VisionTransformerForMaskedImageModeling(
         patch_size=14, embed_dim=1280, depth=32, num_heads=16, mlp_ratio=4, qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6), vocab_size=8192, **kwargs)
+    model.default_cfg = _cfg()
+    if pretrained:
+        checkpoint = torch.load(
+            kwargs["init_ckpt"], map_location="cpu"
+        )
+        model.load_state_dict(checkpoint["model"])
+    return model
+
+
+@register_model
+def beit_huge_5B_cls_pt(pretrained=False, **kwargs):
+    if "num_classes" in kwargs:
+        _ = kwargs.pop("num_classes")
+    if 'vocab_size' in kwargs:
+        vocab_size = kwargs['vocab_size']
+
+        _ = kwargs.pop("vocab_size")
+    else:
+        vocab_size = 8192
+    model = VisionTransformerForMaskedImageModelingCLS(
+        patch_size=16, embed_dim=4096, depth=21, num_heads=16, mlp_ratio=4, qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6), vocab_size=vocab_size, **kwargs)
     model.default_cfg = _cfg()
     if pretrained:
         checkpoint = torch.load(

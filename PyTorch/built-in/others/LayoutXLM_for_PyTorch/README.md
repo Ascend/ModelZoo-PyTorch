@@ -38,6 +38,8 @@ LayoutLMv2详见 [README_MV2.md](README_MV2.md)
   | Torch_Version     | 三方库依赖版本 
   | --------          |:---------:
   | PyTorch 1.8       | transformers==4.5.1; detectron2==0.3; seqeval==1.2.2; datasets==2.7.1; packaging==21.0
+  | PyTorch 1.11       | transformers==4.5.1; detectron2==0.3; seqeval==1.2.2; datasets==2.7.1; packaging==21.0
+  | PyTorch 2.1       | transformers==4.5.1; detectron2==0.3; seqeval==1.2.2; datasets==2.7.1; packaging==21.0
 
 - 环境准备指导。
 

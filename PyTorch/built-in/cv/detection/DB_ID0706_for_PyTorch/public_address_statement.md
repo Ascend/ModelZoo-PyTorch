@@ -6,4 +6,9 @@
 | 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/backbones/resnet.py | DB_ID0706_for_PyTorch/backbones/resnet.py | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/backbones/resnet.py | DB_ID0706_for_PyTorch/backbones/resnet.py | https://download.pytorch.org/models/resnet152-b121ed2d.pth | 下载权重文件 |
 | 开发引入 | /                                                                                         | DB_ID0706_for_PyTorch/Dockerfile          | http://download.osgeo.org/geos/geos-3.8.1.tar.bz2 | 下载第三方包 |
-
+| 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/backbones/mobilenetv3.py | DB_ID0706_for_PyTorch/backbones/mobilenetv3.py | https://github.com/kuan-wang/pytorch-mobilenet-v3 | 源码实现 |
+| 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/backbones/mobilenetv3.py | DB_ID0706_for_PyTorch/backbones/mobilenetv3.py | https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.1/ppocr/modeling/backbones/det_mobilenet_v3.py | 源码实现 |
+| 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/data/processes/random_crop_data.py | DB_ID0706_for_PyTorch/data/processes/random_crop_data.py | https://github.com/argman/EAST | 源码实现 |
+| 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/decoders/dice_loss.py | DB_ID0706_for_PyTorch/decoders/dice_loss.py | https://arxiv.org/abs/1707.03237 | 论文地址 |
+| 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/concern/__init__.py | DB_ID0706_for_PyTorch/concern/visualizer.py | wanzhaoyi@megvii.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/MhLiao/DB/4ac194d0357fd102ac871e37986cb8027ecf094e/concern/__init__.py | DB_ID0706_for_PyTorch/concern/__init__.py | wanzhaoyi@megvii.com | 邮箱地址 |

@@ -6,3 +6,7 @@
 | 开发引入 | / | url.ini | https://download.pytorch.org/models/resnet50-19c8e357.pth | 下载权重文件 |
 | 开发引入 | / | url.ini | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 下载权重文件 |
 | 开发引入 | / | url.ini | https://download.pytorch.org/models/resnet152-b121ed2d.pth | 下载权重文件 |
+| 开发引入 | / | ResNet101_ID1595_for_PyTorch/resnet.py | https://arxiv.org/pdf/1605.07146.pdf | 论文地址 |
+| 开发引入 | / | ResNet101_ID1595_for_PyTorch/resnet.py | https://arxiv.org/pdf/1611.05431.pdf | 论文地址 |
+| 开发引入 | / | ResNet101_ID1595_for_PyTorch/resnet.py | https://arxiv.org/abs/1706.02677 | 论文地址 |
+| 开发引入 | / | ResNet101_ID1595_for_PyTorch/resnet.py | https://arxiv.org/pdf/1512.03385.pdf | 论文地址 |
