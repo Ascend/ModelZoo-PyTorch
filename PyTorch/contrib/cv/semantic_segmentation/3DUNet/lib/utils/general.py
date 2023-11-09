@@ -126,7 +126,7 @@ def make_dirs(path):
         # shutil.rmtree(path)
         # os.mkdir(path)
     else:
-        os.makedirs(path)
+        os.makedirs(path, exist_ok=True)
 
 
 def save_list(name, list):

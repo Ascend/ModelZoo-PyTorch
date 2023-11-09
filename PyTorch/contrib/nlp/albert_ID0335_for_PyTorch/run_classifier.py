@@ -419,10 +419,10 @@ def main():
     os.environ['RANK'] = "%d" % args.local_rank
 
     if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
+        os.makedirs(args.output_dir, exist_ok=True)
     args.output_dir = args.output_dir + '{}'.format(args.model_type)
     if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
+        os.makedirs(args.output_dir, exist_ok=True)
     init_logger(log_file=args.output_dir + '/{}-{}.log'.format(args.model_type, args.task_name))
     if os.path.exists(args.output_dir) and os.listdir(
             args.output_dir) and args.do_train and not args.overwrite_output_dir:
