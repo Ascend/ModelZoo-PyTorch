@@ -1,4 +1,19 @@
 # Copyright (c) Megvii Inc. All rights reserved.
+# coding=utf-8
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from argparse import ArgumentParser
 
@@ -32,16 +47,15 @@ def run_cli(model_class=BEVDepthLightningModel,
                                default=0,
                                help='seed for initializing training.')
     parent_parser.add_argument('--ckpt_path', type=str)
+    parent_parser.add_argument('--learning_rate', type=float)
     parser = BEVDepthLightningModel.add_model_specific_args(parent_parser)
     parser.set_defaults(profiler='simple',
                         deterministic=False,
-                        max_epochs=extra_trainer_config_args.get('epochs', 24),
                         accelerator='ddp',
                         num_sanity_val_steps=0,
                         gradient_clip_val=5,
                         limit_val_batches=0,
                         enable_checkpointing=True,
-                        precision=16,
                         default_root_dir=os.path.join('./outputs/', exp_name))
     args = parser.parse_args()
     if args.seed is not None:

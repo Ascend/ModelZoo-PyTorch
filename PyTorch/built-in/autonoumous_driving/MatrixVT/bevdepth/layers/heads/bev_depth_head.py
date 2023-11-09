@@ -212,32 +212,35 @@ class BEVDepthHead(CenterHead):
                 # 0 is background for each task, so we need to add 1 here.
                 task_class.append(gt_labels_3d[m] + 1 - flag2)
             task_boxes.append(
-                torch.cat(task_box, axis=0).to(gt_bboxes_3d.device))
+                torch.cat(task_box, axis=0))
             task_classes.append(
-                torch.cat(task_class).long().to(gt_bboxes_3d.device))
+                torch.cat(task_class).int())
             flag2 += len(mask)
         draw_gaussian = draw_heatmap_gaussian
         heatmaps, anno_boxes, inds, masks = [], [], [], []
+        feature_map_size = feature_map_size.cpu().numpy().tolist()
 
         for idx, task_head in enumerate(self.task_heads):
             heatmap = gt_bboxes_3d.new_zeros(
                 (len(self.class_names[idx]), feature_map_size[1],
                  feature_map_size[0]),
-                device='cuda')
+                device='cpu')
 
             anno_box = gt_bboxes_3d.new_zeros(
                 (max_objs, len(self.train_cfg['code_weights'])),
                 dtype=torch.float32,
-                device='cuda')
+                device='cpu')
 
             ind = gt_labels_3d.new_zeros((max_objs),
-                                         dtype=torch.int64,
-                                         device='cuda')
+                                         dtype=torch.int32,
+                                         device='cpu')
             mask = gt_bboxes_3d.new_zeros((max_objs),
                                           dtype=torch.uint8,
-                                          device='cuda')
+                                          device='cpu')
 
             num_objs = min(task_boxes[idx].shape[0], max_objs)
+            task_classes[idx] = task_classes[idx].cpu()
+            task_boxes[idx] = task_boxes[idx].cpu()
 
             for k in range(num_objs):
                 cls_id = task_classes[idx][k] - 1
@@ -269,7 +272,7 @@ class BEVDepthHead(CenterHead):
 
                     center = torch.tensor([coor_x, coor_y],
                                           dtype=torch.float32,
-                                          device='cuda')
+                                          device='cpu')
                     center_int = center.to(torch.int32)
 
                     # throw out not in range objects to avoid out of array
@@ -297,7 +300,7 @@ class BEVDepthHead(CenterHead):
                         box_dim = box_dim.log()
                     if len(task_boxes[idx][k]) > 7:
                         anno_box[new_idx] = torch.cat([
-                            center - torch.tensor([x, y], device='cuda'),
+                            center - torch.tensor([x, y], device='cpu'),
                             z.unsqueeze(0),
                             box_dim,
                             torch.sin(rot).unsqueeze(0),
@@ -307,16 +310,16 @@ class BEVDepthHead(CenterHead):
                         ])
                     else:
                         anno_box[new_idx] = torch.cat([
-                            center - torch.tensor([x, y], device='cuda'),
+                            center - torch.tensor([x, y], device='cpu'),
                             z.unsqueeze(0), box_dim,
                             torch.sin(rot).unsqueeze(0),
                             torch.cos(rot).unsqueeze(0)
                         ])
 
-            heatmaps.append(heatmap)
-            anno_boxes.append(anno_box)
-            masks.append(mask)
-            inds.append(ind)
+            heatmaps.append(heatmap.cuda())
+            anno_boxes.append(anno_box.cuda())
+            masks.append(mask.cuda())
+            inds.append(ind.cuda())
         return heatmaps, anno_boxes, inds, masks
 
     def loss(self, targets, preds_dicts, **kwargs):
@@ -436,7 +439,7 @@ class BEVDepthHead(CenterHead):
                         boxes.detach().cpu().numpy(),
                         self.test_cfg['min_radius'][task_id],
                         post_max_size=self.test_cfg['post_max_size']),
-                                        dtype=torch.long,
+                                        dtype=torch.int,
                                         device=boxes.device)
 
                     boxes3d = boxes3d[keep]
@@ -459,7 +462,7 @@ class BEVDepthHead(CenterHead):
                             self.test_cfg['thresh_scale'][task_id],
                             post_max_size=self.test_cfg['post_max_size'],
                         ),
-                        dtype=torch.long,
+                        dtype=torch.int,
                         device=boxes.device,
                     )
 

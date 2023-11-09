@@ -1,4 +1,19 @@
+# coding=utf-8
 # Copyright (c) Megvii Inc. All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from functools import partial
 
@@ -187,6 +202,7 @@ class BEVDepthLightningModel(LightningModule):
 
     def __init__(self,
                  gpus: int = 1,
+                 learning_rate = 2e-4 / 64,
                  data_root='data/nuScenes',
                  eval_interval=1,
                  batch_size_per_device=8,
@@ -203,7 +219,7 @@ class BEVDepthLightningModel(LightningModule):
         self.eval_interval = eval_interval
         self.batch_size_per_device = batch_size_per_device
         self.data_root = data_root
-        self.basic_lr_per_img = 2e-4 / 64
+        self.basic_lr_per_img = learning_rate
         self.class_names = class_names
         self.backbone_conf = backbone_conf
         self.head_conf = head_conf
@@ -308,7 +324,7 @@ class BEVDepthLightningModel(LightningModule):
         gt_depths = torch.where(
             (gt_depths < self.depth_channels + 1) & (gt_depths >= 0.0),
             gt_depths, torch.zeros_like(gt_depths))
-        gt_depths = F.one_hot(gt_depths.long(),
+        gt_depths = F.one_hot(gt_depths.int(),
                               num_classes=self.depth_channels + 1).view(
                                   -1, self.depth_channels + 1)[:, 1:]
 
@@ -397,8 +413,9 @@ class BEVDepthLightningModel(LightningModule):
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=self.batch_size_per_device,
-            num_workers=4,
+            num_workers=8,
             drop_last=True,
+            pin_memory=False,
             shuffle=False,
             collate_fn=partial(collate_fn,
                                is_return_depth=self.data_return_depth

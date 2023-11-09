@@ -118,7 +118,7 @@ def depth_transform(cam_depth, resize, resize_dims, crop, flip, rotate):
     Returns:
         np array: [h/down_ratio, w/down_ratio, d]
     """
-
+    cam_depth = cam_depth.astype(np.float32)
     H, W = resize_dims
     cam_depth[:, :2] = cam_depth[:, :2] * resize
     cam_depth[:, 0] -= crop[0]
@@ -130,10 +130,10 @@ def depth_transform(cam_depth, resize, resize_dims, crop, flip, rotate):
     cam_depth[:, 1] -= H / 2.0
 
     h = rotate / 180 * np.pi
-    rot_matrix = [
+    rot_matrix = np.array([
         [np.cos(h), np.sin(h)],
         [-np.sin(h), np.cos(h)],
-    ]
+    ]).astype(np.float32)
     cam_depth[:, :2] = np.matmul(rot_matrix, cam_depth[:, :2].T).T
 
     cam_depth[:, 0] += W / 2.0
@@ -141,7 +141,7 @@ def depth_transform(cam_depth, resize, resize_dims, crop, flip, rotate):
 
     depth_coords = cam_depth[:, :2].astype(np.int16)
 
-    depth_map = np.zeros(resize_dims)
+    depth_map = np.zeros(resize_dims).astype(np.float32)
     valid_mask = ((depth_coords[:, 1] < resize_dims[0])
                   & (depth_coords[:, 0] < resize_dims[1])
                   & (depth_coords[:, 1] >= 0)
@@ -396,15 +396,6 @@ class NuscDetDataset(Dataset):
         sweep_sensor2sensor_mats = list()
         sweep_timestamps = list()
         sweep_lidar_depth = list()
-        if self.return_depth or self.use_fusion:
-            sweep_lidar_points = list()
-            for lidar_info in lidar_infos:
-                lidar_path = lidar_info['LIDAR_TOP']['filename']
-                lidar_points = np.fromfile(os.path.join(
-                    self.data_root, lidar_path),
-                                           dtype=np.float32,
-                                           count=-1).reshape(-1, 5)[..., :4]
-                sweep_lidar_points.append(lidar_points)
         for cam in cams:
             imgs = list()
             sensor2ego_mats = list()
@@ -479,9 +470,11 @@ class NuscDetDataset(Dataset):
                 intrin_mat[:3, :3] = torch.Tensor(
                     cam_info[cam]['calibrated_sensor']['camera_intrinsic'])
                 if self.return_depth and (self.use_fusion or sweep_idx == 0):
-                    point_depth = self.get_lidar_depth(
-                        sweep_lidar_points[sweep_idx], img,
-                        lidar_infos[sweep_idx], cam_info[cam])
+                    file_name = os.path.split(cam_info[cam]['filename'])[-1]
+                    point_depth = np.fromfile(os.path.join(
+                        self.data_root, 'depth_gt', f'{file_name}.bin'),
+                        dtype=np.float32,
+                        count=-1).reshape(-1, 3)
                     point_depth_augmented = depth_transform(
                         point_depth, resize, self.ida_aug_conf['final_dim'],
                         crop, flip, rotate_ida)

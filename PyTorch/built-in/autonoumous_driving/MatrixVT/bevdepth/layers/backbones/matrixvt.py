@@ -272,14 +272,18 @@ class MatrixVT(BaseLSSFPN):
         geom_uni = self.bev_anchors[None].repeat([B, 1, 1, 1])  # B,128,128,2
         B, L, L, _ = geom_uni.shape
 
-        circle_map = geom_uni.new_zeros((B, D, L * L))
+        circle_map = geom_uni.new_zeros((B, D, L * L), device='cpu')
 
-        ray_map = geom_uni.new_zeros((B, Nc * W, L * L))
+        ray_map = geom_uni.new_zeros((B, Nc * W, L * L), device='cpu')
+        geom_idx_cpu = geom_idx.cpu()
+
         for b in range(B):
             for dir in range(Nc * W):
-                ray_map[b, dir, geom_idx[b, dir]] += 1
+                ray_map[b, dir, geom_idx_cpu[b, dir]] += 1
             for d in range(D):
-                circle_map[b, d, geom_idx[b, :, d]] += 1
+                circle_map[b, d, geom_idx_cpu[b, :, d]] += 1
+        circle_map = circle_map.to(geom_uni.device)
+        ray_map = ray_map.to(geom_uni.device)
         null_point = int((bev_size / 2) * (bev_size + 1))
         circle_map[..., null_point] = 0
         ray_map[..., null_point] = 0
