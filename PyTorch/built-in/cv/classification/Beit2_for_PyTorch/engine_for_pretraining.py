@@ -41,7 +41,7 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
         # assign learning rate & weight decay for each step
         it = start_steps + step  # global training iteration
 
-        # 删除cache
+        # delete cache
         if step == 0:
             torch.cuda.empty_cache()
 
@@ -54,9 +54,9 @@ def train_one_epoch(model: torch.nn.Module, vqkd: torch.nn.Module,
 
         samples, images, bool_masked_pos = batch
 
-        #使用BF16格式数据
+        # use BF16
         images = images.to(device, non_blocking=True).half()
-        #使用BF16格式数据
+        # use BF16
         samples = samples.to(device, non_blocking=True).to(torch.bfloat16)
         bool_masked_pos = bool_masked_pos.to(device, non_blocking=True)
 
