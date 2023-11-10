@@ -37,7 +37,7 @@ msnpureport -g error -d 7
 #关闭Device侧Event日志
 msnpureport -e disable
 
-path_lib=$(python3.7 -c """
+path_lib=$(python3 -c """
 import sys
 import re
 result=''
@@ -56,4 +56,4 @@ print(result)"""
 
 echo ${path_lib}
 
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
