@@ -154,7 +154,7 @@ bash valprep.sh
     ```
     在上面的命令中，"./vit_base_patch8_224.ts"是原始torchscript模型路径，"224"是模型输入的图片尺寸大小，"1"是batch size。  
     运行结束后，可以看到命令行打印“[SUCCESS] AIE inference result is the same as JIT!"， 
-    说明AIE推理结果与torchscript原始模型推理结果一致。
+    说明AIE推理结果与torchscript原始模型推理结果一致。若不一致，可先在数据集上测试精度，只要精度达标，可忽略模型输出的差异。
 4. 运行模型评估脚本，测试ImageNet验证集推理精度
     ```
     python3 eval.py --model_path ./vit_base_patch8_224.ts --data_path ./imagenet/val --batch_size 1 --image_size 224
@@ -163,12 +163,22 @@ bash valprep.sh
     ```
     top1 is 85.632, top5 is 97.764, step is 50000
     ```
+5. 测试模型推理性能
+   ```shell
+   # 分别将模型优化等级设置为 1 和 2，进行图优化和算子优化，达到最优性能
+   python perf_test.py --model_path ./vit_base_patch8_224.ts --batch_size 1 --image_size 224 --optim_level 1
+   python perf_test.py --model_path ./vit_base_patch8_224.ts --batch_size 1 --image_size 224 --optim_level 2
+   ```
+    运行结束后，可以看到命令行打印如下信息，说明推理性能约为 59 fps。
+   ```
+   FPS: 58.79
+   ```
 
 # 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用torch-aie推理计算，精度参考下列数据。
+调用torch-aie推理计算，精度性能参考下列数据。
 
 | 芯片型号 | 模型变体 | Batch Size | 数据集 | 精度                                   | 性能（fps） |
-| --------- |-----|------------| ---------- |------------------------------------- |--------|
-| 310P3 | vit_base_patch8_224    | 1          | ImageNet | top-1: 85.632% <br>top-5: 97.764% | 58  |
+| --------- |-----|------------| ---------- |------------------------------------- |---------|
+| 310P3 | vit_base_patch8_224    | 1          | ImageNet | top-1: 85.632% <br>top-5: 97.764% | 59      |
 

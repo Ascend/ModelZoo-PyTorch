@@ -26,7 +26,7 @@ def main():
     output = model(input)
     print(f'output shape: {output.shape}')
 
-    script_model = torch.jit.script(model, input)
+    script_model = torch.jit.trace(model, input)
     script_model.save(f'{args.model_name}.ts')
 
 
