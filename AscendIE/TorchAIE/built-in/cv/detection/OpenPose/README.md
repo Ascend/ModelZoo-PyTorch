@@ -63,9 +63,10 @@
     源码目录结构：
 
     ``` 
-   ├── pth2ts.py         // 用于转换pth文件到torchscript文件 
-   ├── preprocess.py      // 数据集预处理脚本，通过均值方差处理归一化图片并进行缩放填充等
-   ├── postprocess.py     // 验证推理结果脚本，模型输出的分类结果和标签，给出Accuracy 
+   ├── inference.py
+   ├── preprocess.py
+   ├── postprocess.py
+   ├── pth2ts.py
    └── README.md
     ```
 
@@ -77,7 +78,7 @@
    cd lightweight-human-pose-estimation.pytorch
    git checkout master
    git reset --hard 1590929b601535def07ead5522f05e5096c1b6ac
-   cd -
+   cd ..
    ```
 
 3. 安装依赖。
@@ -166,4 +167,4 @@
 
 | 芯片型号 | Batch Size | 数据集 | 精度   | 性能     |
 | -------- | ---------- | ------ | ------ | -------- |
-| 310P3 | 1 | coco2017 | 0.403 | 111 it/s |
+| 310P3 | 1 | coco2017 | 0.403 | 338.76 FPS |
