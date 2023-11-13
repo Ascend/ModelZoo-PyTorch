@@ -148,13 +148,13 @@ bash valprep.sh
     
     评估使用AIE推理引擎进行模型推理的性能分为静态shape和动态shape，对应的脚本为calculate_cost_static.py与calculate_cost_dynamic.py。
 
-    评估静态输入，运行calculate_cost_static.py脚本，会打印出平均耗时，单位为s。
+    评估静态输入，运行calculate_cost_static.py脚本，会打印出吞吐量。
 
     ```
         python calculate_cost_static.py --ts_model=./resnext50.ts
     ```
 
-    动态输入，运行calculate_cost_dynamic.py脚本，会打印出平均耗时，单位为s。
+    动态输入，运行calculate_cost_dynamic.py脚本，会打印出吞吐量。
 
     ```
         python calculate_cost_dynamic.py --ts_model=./resnext50.ts
@@ -163,7 +163,7 @@ bash valprep.sh
 4. 运行模型精度评估脚本，acc_eval.py，测试ImageNet验证集推理精度。
 
     ```
-        python acc_eval.py --mode_path=./resnext50.ts --data_path=./imagenet/val
+        python acc_eval.py --model_path=./resnext50.ts --data_path=./imagenet/val
     ```
    
 5. 运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 71.35% 和 90.502%。
@@ -172,10 +172,18 @@ bash valprep.sh
     ```
    
 6. 如果需要更高精度，可以尝试修改精度评估脚本acc_eval.py中的数据前处理部分，例如修改数据normalize的标准差std的值来进行调整。
+
+7. 因编译模型时默认使用的‘optimization_level=0’参数设置，即不使用AOE优化，若相同BatchSize时达不到下表中的性能，需要先将
+calculate_cost_static文件中的 ‘optimization_level’ 设置为1，再运行性能评估脚本，然后再将其设置为2，再运行性能评估脚本。
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用torch-AIE推理计算，性能参考下列数据。
+调用torch-AIE推理计算，静态shape性能参考下列数据。
 
-| 芯片型号 | Batch Size   | 数据集 | 精度(top1) | 精度（top5） | 性能                                  |
-| --------- | ---------------- | ---------- |----------|----------|-------------------------------------|
-|     Ascend310P3      |       1           |     imagenet       | 71.35%   | 90.5%    | 3.33ms（静态shape）；5.29ms（shape range） |
+| 芯片型号 | Batch Size | 数据集 | 精度(top1) | 精度（top5） | 性能(吞吐量) |
+| --------- |------------| ---------- |----------|----------|---------|
+|     Ascend310P3      | 1          |     imagenet       | 71.35%   | 90.5%    | 820     |
+|     Ascend310P3      | 4          |     imagenet       | 71.35%   | 90.5%    | 1468    |
+|     Ascend310P3      | 8          |     imagenet       | 71.35%   | 90.5%    | 1588    |
+|     Ascend310P3      | 16         |     imagenet       | 71.35%   | 90.5%    | 1556    |
+|     Ascend310P3      | 32         |     imagenet       | 71.35%   | 90.5%    | 1607    |
+|     Ascend310P3      | 64         |     imagenet       | 71.35%   | 90.5%    | 1309    |
