@@ -833,7 +833,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td></td>
         <td></td>
         <td>99.93%</td>
-    <td>1682(bs64)</td>
+    <td>1484(bs64)</td>
     <td nowrap="nowrap">bs x 1800 x 24</td>
     </tr>
     <tr>
