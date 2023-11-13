@@ -439,7 +439,7 @@ class BEVDepthHead(CenterHead):
                         boxes.detach().cpu().numpy(),
                         self.test_cfg['min_radius'][task_id],
                         post_max_size=self.test_cfg['post_max_size']),
-                                        dtype=torch.int,
+                                        dtype=torch.long,
                                         device=boxes.device)
 
                     boxes3d = boxes3d[keep]

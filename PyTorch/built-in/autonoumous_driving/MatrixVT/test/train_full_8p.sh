@@ -84,14 +84,14 @@ nohup python3 ./bevdepth/exps/nuscenes/MatrixVT/matrixvt_bev_depth_lss_r50_256x7
           --amp_backend 'native' \
           --gpus ${RANK_SIZE} \
           --precision 16 \
-          --batch_size_per_device > result.log 2>&1 &
+          --batch_size_per_device ${batch_size} > result.log 2>&1 &
 wait
 
 
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-step_time=`grep -o 'step_time=  [0-90]\+\(\.[0-9]\+\)\? ' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| sed 's/step_time= //g' | tail -n+2 | awk '{sum += $1} END {avg = sum / NR; print avg}'`
+step_time=`grep -o 'step_time=\s*[0-90]\+\(\.[0-9]\+\)\?\s*' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| sed 's/step_time= //g' | tail -n+2 | awk '{sum += $1} END {avg = sum / NR; print avg}'`
 FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
 #排除功能问题导致计算溢出的异常，增加健壮性
 if [ x"${FPS}" == x"2147483647" ] || [ x"${FPS}" == x"-2147483647" ];then

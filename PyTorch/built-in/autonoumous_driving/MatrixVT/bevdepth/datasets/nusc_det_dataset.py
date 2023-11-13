@@ -118,7 +118,6 @@ def depth_transform(cam_depth, resize, resize_dims, crop, flip, rotate):
     Returns:
         np array: [h/down_ratio, w/down_ratio, d]
     """
-    cam_depth = cam_depth.astype(np.float32)
     H, W = resize_dims
     cam_depth[:, :2] = cam_depth[:, :2] * resize
     cam_depth[:, 0] -= crop[0]
@@ -130,10 +129,10 @@ def depth_transform(cam_depth, resize, resize_dims, crop, flip, rotate):
     cam_depth[:, 1] -= H / 2.0
 
     h = rotate / 180 * np.pi
-    rot_matrix = np.array([
+    rot_matrix = [
         [np.cos(h), np.sin(h)],
         [-np.sin(h), np.cos(h)],
-    ]).astype(np.float32)
+    ]
     cam_depth[:, :2] = np.matmul(rot_matrix, cam_depth[:, :2].T).T
 
     cam_depth[:, 0] += W / 2.0
@@ -141,7 +140,7 @@ def depth_transform(cam_depth, resize, resize_dims, crop, flip, rotate):
 
     depth_coords = cam_depth[:, :2].astype(np.int16)
 
-    depth_map = np.zeros(resize_dims).astype(np.float32)
+    depth_map = np.zeros(resize_dims)
     valid_mask = ((depth_coords[:, 1] < resize_dims[0])
                   & (depth_coords[:, 0] < resize_dims[1])
                   & (depth_coords[:, 1] >= 0)

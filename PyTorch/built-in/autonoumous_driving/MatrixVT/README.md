@@ -51,8 +51,19 @@
   ```shell
   git clone -b 1.x https://github.com/open-mmlab/mmcv
   cd mmcv
+  
   安装完成后将code_for_change中的setup.py替换到mmcv中的setup.py
+  
   MMCV_WITH_OPS=1 pip install -e . -v
+  
+  安装完成mmcv之后，进入{mmcv_install_path}/mmcv/ops/deform_conv.py文件夹，修改deform_conv.py文件，修改内容如下：
+  导入torch_npu
+  修改第56行，将torch.npu_deformable_conv2dbk修改为torch_npu.npu_deformable_conv2dbk
+  
+  修改modulated_deform_conv.py，修改内容如下：
+  导入torch_npu
+  修改第59行，将torch.npu_deformable_conv2d修改为torch_npu.npu_deformable_conv2d
+    
   cd ../
   ```
 
@@ -60,6 +71,7 @@
   ```shell
   pip install mmdet3d==1.0.0rc4
   ```
+  
 
 - 返回源码目录
   ```shell
@@ -69,7 +81,7 @@
   ```shell
   pip show pytorch_lightning
   ```
-  找到pytorch_lightning的安装路径，将code_for_change中的subprocess_script.py和types.py替换掉源码。其中subprocess_script.py位于{pyotch_lightning_install_path}/strategies/launchers/文件夹中，types.py位于{pyotch_lightning_install_path}/utilities文件夹下面。
+  找到pytorch_lightning的安装路径，将code_for_change中的subprocess_script.py、training_epoch_loop.py和types.py替换掉源码。其中subprocess_script.py位于{pyotch_lightning_install_path}/strategies/launchers/文件夹中，types.py位于{pyotch_lightning_install_path}/utilities文件夹下面，training_epoch_loop.py位于{pyotch_lightning_install_path}/loops/epoch。
 
 
 ### 准备数据集
@@ -122,5 +134,11 @@ bash ./test/train_perference_8p.sh # 8卡精度
 
 ### FAQ
 1. 如果训练完成开始推理时报错，请将修改的subprocess_script.py文件复原。
+2. 报错scikit_learning.libs/libgomp-d22c30c5.so.1.0.0: cannot allocate memory in static TLS block的问题，解决方案为：
+  ```
+  导入环境变量
+  export LD_PRELOAD={libgomp-d22c30c5.so.1.0.0_path}/libgomp-d22c30c5.so.1.0.0
+  ```
+
 
 
