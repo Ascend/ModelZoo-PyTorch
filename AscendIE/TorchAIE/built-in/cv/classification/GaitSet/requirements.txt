@@ -1,0 +1,11 @@
+torch==2.0.1
+opencv-python==4.5.2.52
+xarray
+numpy
+imageio
+sympy
+six
+wheel
+decorator
+mpmath
+tqdm
