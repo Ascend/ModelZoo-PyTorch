@@ -13,18 +13,21 @@
 # limitations under the License.
 
 import argparse
-import time
 
 import torch
 import torch_aie
+from torch_aie import _enums
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='./vit_base_patch8_224_aie.ts',
-                        help='Compiled model path')
+    parser.add_argument('--model_path', type=str, default='./vit_base_patch8_224.ts',
+                        help='Original TorchScript model path')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--image_size', type=int, default=224, help='Image size')
+    parser.add_argument('--output_path', type=str, default='./vit_base_patch8_224_aie.ts',
+                        help='Compiled model path')
+    parser.add_argument('--optim_level', type=int, default=0, help='Optimization level')
     parser.add_argument('--device_id', type=int, default=0, help='NPU device id')
     return parser.parse_args()
 
@@ -36,32 +39,19 @@ def main():
 
     model = torch.jit.load(args.model_path)
     model.eval()
-    print('Model loaded successfully.')
 
-    random_input = torch.rand(args.batch_size, 3, args.image_size, args.image_size)
-    device = f'npu:{args.device_id}'
-    random_input = random_input.to(device)
-    stream = torch_aie.npu.Stream(device)
-
-    # warm up
-    num_warmup = 10
-    for _ in range(num_warmup):
-        with torch_aie.npu.stream(stream):
-            model(random_input)
-            stream.synchronize()
-    print('warmup done')
-
-    # performance test
-    print('Start performance test.')
-    num_infer = 100
-    start = time.time()
-    for _ in range(num_infer):
-        with torch_aie.npu.stream(stream):
-            model(random_input)
-            stream.synchronize()
-    avg_time = (time.time() - start) / num_infer
-    fps = args.batch_size / avg_time
-    print(f'FPS: {fps:.4f}')
+    input_info = [torch_aie.Input((args.batch_size, 3, args.image_size, args.image_size))]
+    print('Start compiling model.')
+    print(f'Optimization level: {args.optim_level}')
+    compiled_model = torch_aie.compile(
+        model,
+        inputs=input_info,
+        precision_policy=_enums.PrecisionPolicy.FP16,
+        allow_tensor_replace_int=False,
+        optimization_level=args.optim_level,
+        soc_version="Ascend310P3")
+    print('Model compiled successfully.')
+    compiled_model.save(args.output_path)
 
 
 if __name__ == '__main__':
