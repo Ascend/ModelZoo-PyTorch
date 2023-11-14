@@ -285,3 +285,8 @@ pip3 install requirements.txt
 ## 训练过程<a name="section1589455252218"></a>
 
 通过“模型训练”中的训练指令启动单卡或者多卡训练。单卡和多卡通过运行不同脚本，支持单卡。模型存储路径为${cur_path}/output/$ASCEND_DEVICE_ID，包括训练的log以及checkpoints文件。以单卡训练为例，loss信息在文件${cur_path}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log中。
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
