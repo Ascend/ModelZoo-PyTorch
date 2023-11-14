@@ -4566,7 +4566,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td></td>
         <td>0.9991</td>
         <td></td>
-    <td>1536(bs4)</td>
+    <td>1654(bs4)</td>
         <td></td>
     <td nowrap="nowrap">bs x 80 x 200</td>
     </tr>

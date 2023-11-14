@@ -60,8 +60,8 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
 
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
-  | 固件与驱动                                                   | 22.0.2  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 5.1.RC2 | -                                                            |
+  | 固件与驱动                                                   | 23.0.0  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
+  | CANN                                                         | 7.0.0   | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |
   | PyTorch                                                      | 1.6.0   | -                                                            |
   | 说明：Atlas 300I Duo 推理卡请以CANN版本选择实际固件与驱动版本。 | \       | \                                                            |
@@ -273,10 +273,10 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
 
 | Model      | batch_size | T4Throughput/Card | 310PThroughput/Card |
 |------------|------------|-------------------|--------------------|
-| ECAPA-TDNN | 1          | 485.43            | 846.67             |
-| ECAPA-TDNN | 4          | 705.46            | 1536.01            |
-| ECAPA-TDNN | 8          | 798.4             | 1408.43            |
-| ECAPA-TDNN | 16         | 770.89            | 1315.78            |
-| ECAPA-TDNN | 32         | 828.84            | 1281.53            |
-| ECAPA-TDNN | 64         | 847.37            | 1221.6             |
-| ECAPA-TDNN | best       | 847.37            | 1226.45            |
+| ECAPA-TDNN | 1          | 485.43            | 981             |
+| ECAPA-TDNN | 4          | 705.46            | 1654            |
+| ECAPA-TDNN | 8          | 798.4             | 1461            |
+| ECAPA-TDNN | 16         | 770.89            | 1302            |
+| ECAPA-TDNN | 32         | 828.84            | 1211            |
+| ECAPA-TDNN | 64         | 847.37            | 1238            |
+| ECAPA-TDNN | best       | 847.37            | 1654            |
