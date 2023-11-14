@@ -743,18 +743,16 @@ class ParallelTransformerLayer(nn.Module):
         def custom_layer_forward(x):
             return self.core_forward(x, attention_mask)
         if not self.checkpoint_activations and self.checkpoint_selective and self.layer_number < self.checkpoint_full_layers:
-            return mpu.checkpoint(custom_layer_forward, x)
-             # jianyu ,reduce
-            #r = mpu.checkpoint(custom_layer_forward, x)
+            r = mpu.checkpoint(custom_layer_forward, x)
         else:
-            #r = self.core_forward(x, attention_mask)
-            return self.core_forward(x, attention_mask)
-        """
+            r = self.core_forward(x, attention_mask)
+
+        # recompute reduce optimization
         if self.gpt_j_residual:
             return x + self.reduce(r)
         else:
             return r
-        """
+
     def core_forward(self, x, attention_mask, layer_past=None):
         layer_past = layer_past if layer_past is not None else self.layer_past
         bias_dropout_fn = self._get_bias_dropout()
@@ -802,7 +800,7 @@ class ParallelTransformerLayer(nn.Module):
                 )
 
             # output = (x + attn(ln(x)) + mlp(ln(x))
-            output = residual + self.reduce(output)
+            # output = residual + self.reduce(output)
         else:
             # pseudocode:
             # x = x + attn(ln1(x))

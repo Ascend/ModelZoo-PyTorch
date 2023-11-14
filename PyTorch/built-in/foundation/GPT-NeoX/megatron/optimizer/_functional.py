@@ -140,9 +140,10 @@ def adamw(params: List[Tensor],
         bias_correction2 = 1 - beta2 ** step
 
         # Decay the first and second moment running average coefficient
+        """
         exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
         exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
-        """
+
         if amsgrad:
             # Maintains the maximum of all 2nd moment running avg. till now
             torch.maximum(max_exp_avg_sqs[i], exp_avg_sq, out=max_exp_avg_sqs[i])
@@ -156,25 +157,40 @@ def adamw(params: List[Tensor],
         param.addcdiv_(exp_avg, denom, value=-step_size)
         """
         # jianyu optim
-        n = 4
+        n = 8
         single_range = 0
         single_range = int(len(exp_avg_sq) / n)
         ranges = [single_range * i for i in range(n + 1)]
         ranges[n] = len(exp_avg_sq)
-        for i in range(n):
-            rf = ranges[i]
-            rt = ranges[i + 1]
+        denom = None
+        for s in range(n):
+            rf = ranges[s]
+            rt = ranges[s + 1]
+
+            exp_avg[rf:rt].mul_(beta1).add_(grad[rf:rt], alpha=1 - beta1)
+            # exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+            if denom == None:
+                denom = torch.mul(grad[rf:rt], grad[rf:rt])
+            else:
+                torch.mul(grad[rf:rt], grad[rf:rt], out=denom)
+            
+            denom.mul_(1 - beta2)
+            exp_avg_sq[rf:rt].mul_(beta2)
+            exp_avg_sq[rf:rt].add_(denom)
+
             if amsgrad:
                 # Maintains the maximum of all 2nd moment running avg. till now
                 torch.maximum(max_exp_avg_sqs[i][rf:rt], exp_avg_sq[rf:rt], out=max_exp_avg_sqs[i][rf:rt])
                 # Use the max. for normalizing running avg. of gradient
-                denom = max_exp_avg_sqs[i][rf:rt].sqrt()
+                # denom = max_exp_avg_sqs[i][rf:rt].sqrt()
+                torch.sqrt(max_exp_avg_sqs[i][rf:rt], out=denom)
                 tmp = math.sqrt(bias_correction2)
                 denom = denom.div_(tmp).add_(eps)
                 # denom = (max_exp_avg_sqs[i].sqrt() / math.sqrt(bias_correction2)).add_(eps)
             else:
                 # denom = (exp_avg_sq.sqrt() / math.sqrt(bias_correction2)).add_(eps)
-                denom = exp_avg_sq[rf:rt].sqrt()
+                # denom = exp_avg_sq[rf:rt].sqrt()
+                torch.sqrt(exp_avg_sq[rf:rt], out=denom)
                 tmp = math.sqrt(bias_correction2)
                 denom = denom.div_(tmp).add_(eps)
 
