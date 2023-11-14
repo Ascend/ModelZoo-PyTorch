@@ -46,7 +46,7 @@ export HCCL_WHITELIST_DISABLE=1
 #饱和/非饱和模式溢出检测
 export INF_NAN_MODE_ENABLE=1
 #设置FA开关
-export ASCEND_USE_FLASH_ATTN=1
+export ASCEND_USE_FLASH_ATTN=True
 #开启FFTS+
 export HCCL_OP_BASE_FFTS_MODE_ENABLE=True
 

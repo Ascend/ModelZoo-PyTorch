@@ -295,7 +295,7 @@ class ParallelSelfAttention(torch.nn.Module):
                 pad_v.contiguous(), 64, "BSH",
                 pse=None,
                 padding_mask=None,
-                atten_mask=1 - pad_m,
+                atten_mask=(1 - pad_m).bool(),
                 scale=(1. / math.sqrt(self.hidden_size_per_attention_head)),
                 pre_tockens=65536,
                 next_tockens=0,
