@@ -164,7 +164,7 @@ index a69bc0944..2ccfd99fa 100644
          b, c, t, f = x.size()
 -        x = self.out(x.transpose(1, 2).contiguous().view(b, t, c * f))
 +        f = 20
-+        c=c.numpy()
++
 +        x = x.transpose(1, 2)[:,:,:,:20]
 +        x = self.out(x.contiguous().reshape(b, t, c * f))
          if x_mask is None:
