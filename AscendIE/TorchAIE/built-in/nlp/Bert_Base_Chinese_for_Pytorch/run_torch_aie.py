@@ -119,13 +119,28 @@ def inference(torchaie_model, datasets):
     num_datas = datasets['num_datas']
     
     all_logits_list = []
+    inference_time = []
+    count = 0
     for step in tqdm(range(num_datas)):
-        input_ids_vec = input_ids_vec_list[step]
-        attention_mask = attention_mask_list[step]
-        token_type_ids = token_type_ids_list[step]
-        logits = torchaie_model.forward(input_ids_vec, attention_mask, token_type_ids)
-        all_logits_list.append(logits)
+        input_ids_vec_npu = input_ids_vec_list[step].to('npu:0')
+        attention_mask_npu = attention_mask_list[step].to('npu:0')
+        token_type_ids_npu = token_type_ids_list[step].to('npu:0')
 
+        stream = torch_aie.npu.Stream('npu:0')
+        with torch_aie.npu.stream(stream):
+            inf_start = time.time()
+            logits = torchaie_model(input_ids_vec_npu, attention_mask_npu, token_type_ids_npu)
+            stream.synchronize()
+            inf_end = time.time()
+            inf_time = inf_end - inf_start
+            count = count + 1
+            if count > 5:
+                inference_time.append(inf_time)
+            logits = logits.to('cpu')
+            all_logits_list.append(logits)
+
+    average_inference_time = np.mean(inference_time)
+    print('pure model inference performance=', average_inference_time * 1000, 'ms')
     return all_logits_list
     
 
@@ -139,7 +154,7 @@ def run(torchaie_model, input_dir, gt_dir, batch_size, seq_length):
     end = time.time()
     times = end - start
     performance = times / num_datas
-    print('performance=', performance * 1000, 'ms')
+    print('end2end performance=', performance * 1000, 'ms')
 
     all_logits_array = np.concatenate(all_logits_list, axis=0)
     all_labels_array = np.concatenate(all_labels_list, axis=0)
@@ -168,6 +183,7 @@ if __name__ == '__main__':
     input_info = [torch_aie.Input((1, 384), dtype=torch.int64),
                     torch_aie.Input((1, 384), dtype=torch.int64),
                     torch_aie.Input((1, 384), dtype=torch.int64)]
+
     torchaie_model = torch_aie.compile(
         ts_model,
         inputs=input_info,
@@ -175,10 +191,11 @@ if __name__ == '__main__':
         truncate_long_and_double=True,
         require_full_compilation=True,
         allow_tensor_replace_int=True,
-        min_block_size=3,
         torch_executed_ops=[],
         soc_version="Ascend310P3",
+        optimization_level=0,
     )
+
     torchaie_model.eval()
     
     batch_size = 1

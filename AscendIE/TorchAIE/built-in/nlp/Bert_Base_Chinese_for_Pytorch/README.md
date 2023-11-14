@@ -439,9 +439,9 @@ special_tokens_mask : [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 
 
 性能：
 
-|       模型        | BatchSize | om离线推理性能(经过onnx优化) | torch-aie性能 |
-| :---------------: | :-------: | :--------------------------: | :-----------: |
-| Bert-Base-Chinese |     1     |      5.34ms(186.9 fps)       | 13ms(75.9fps) |
+|       模型        | BatchSize | om离线推理性能(经过onnx优化) | torch-aie性能(10.19号版本)端到端 | torch-aie性能(11.13号版本)纯模型推理 | torch-aie性能(11.13号版本)端到端 |
+| :---------------: | :-------: | :--------------------------: | :------------------------------: | :------------------------: | :------------------------: |
+| Bert-Base-Chinese |     1     |      5.34ms(186.9 fps)       |          13ms(75.9fps)           |           14.3ms           |          19.2ms           |
 
 
 # 公网地址说明
@@ -493,6 +493,6 @@ TORCH_AIE_LOG_PRINT_TO_STDOUT：0为不打屏；1为打屏；默认为不打屏
 TORCH_AIE_LOG_LEVEL：0为debug级别；1为info级别；2为warn级别；3为error级别；默认为error级别
 使用示例：
 ```commandline
-export TORCH_AIE_LOG_PRINT_TO_STDOUT=0 && export TORCH_AIE_LOG_LEVEL=0 #不打屏，日志级别为debug
+export TORCH_AIE_LOG_PRINT_TO_STDOUT=1 && export TORCH_AIE_LOG_LEVEL=0 #打屏，日志级别为debug
 ```
 日志文件位于默认路径：~/ascend/log/torch_aie_log/

@@ -55,7 +55,6 @@ class RefineModel(torch.nn.Module):
 
     def forward(self, input_ids, attention_mask, token_type_ids):
         x = self._base_model(input_ids, attention_mask, token_type_ids)
-        # return x[0].argmax(dim=-1)
         return x[0]
 
 
