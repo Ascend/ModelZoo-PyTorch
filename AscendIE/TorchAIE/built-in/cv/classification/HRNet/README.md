@@ -50,36 +50,16 @@ model_name=HRNet-W18-C
 
 | 配套                    | 版本              | 
 |-----------------------|-----------------| 
-| CANN                  | 6.3.RC2.alph002 | -                                                       |
-| Python                | 3.9.0           |                                                           
+| 固件与驱动                 | 23.0.rc1                |
+| CANN                  | 	7.0.RC1.alpha003| -                                                       |
+| Python                | 	3.9.11           |                                                           
 | PyTorch               | 2.0.1           |
 | torchVison            | 0.15.2          |-
 | timm                  | 0.6.13          | -                                                         |
-| tqdm                  | -               | -                                                         |
-| Ascend-cann-torch-aie | -               
-| Ascend-cann-aie       | -
+| Torch_AIE                  | 6.3.rc2              | -                                                         |
 | 芯片类型                  | Ascend310P3     | -                                                         |
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
-## 安装CANN包
-
- ```
- chmod +x Ascend-cann-toolkit_6.3.RC2.alpha002_linux-aarch64.run 
-./Ascend-cann-toolkit_6.3.RC2.alpha002_linux-aarch64.run --install
- ```
-下载Ascend-cann-torch-aie和Ascend-cann-aie得到run包和压缩包
-## 安装Ascend-cann-aie
- ```
-  chmod +x Ascend-cann-aie_6.3.T200_linux-aarch64.run
-  ./Ascend-cann-aie_6.3.T200_linux-aarch64.run --install
-  cd Ascend-cann-aie
-  source set_env.sh
-  ```
-## 安装Ascend-cann-torch-aie
- ```
- tar -zxvf Ascend-cann-torch-aie-6.3.T200-linux_aarch64.tar.gz
- pip3 install torch-aie-6.3.T200-linux_aarch64.whl
- ```
 
 ## 获取源码<a name="section4622531142816"></a>
 
@@ -123,7 +103,7 @@ bash valprep.sh
 
 1. 模型转换。
 
-   使用PyTorch将模型权重文件.pth转换为.onnx文件，再使用ATC工具将.onnx文件转为离线推理模型文件.om文件。
+   使用PyTorch将模型权重文件.pth转换为.pt文件。
 
    1. 获取权重文件。
 
@@ -151,25 +131,14 @@ bash valprep.sh
 
          获得hrnet.pt文件。
 
-2. 运行C++推理样例
-        ```cpp
-        sh build.sh
-        ./build/sample ./swin_base_patch4_window12_384.ts 384 1
-        ```
-        在上面的命令中，"./swin_base_patch4_window12_384.ts"是原始torchscript模型路径，"384"是模型输入的图片尺寸大小，"1"是batch size。  
-        运行结束后，可以看到命令行打印“[SUCCESS] AIE inference result is the same as JIT!"， 
-        说明AIE推理结果与torchscript原始模型推理结果一致。
-
 3. 运行模型评估脚本，测试ImageNet验证集推理精度
        ```
-       python3 eval.py --model_path ./swin_base_patch4_window12_384.ts --data_path ./imagenet/val --batch_size 1 --image_size 384
+       python3 eval.py --model_path ./hrnet.ts --data_path ./imagenet/val --batch_size 1 --image_size 224
        ```
        运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 86.4520% 和 98.0560%。
        ```
        top1 is 86.4520, top5 is 98.0560, step is 50000
        ```
-
-
 
 # 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
