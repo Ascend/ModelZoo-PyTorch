@@ -193,10 +193,25 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
      --need_compile：是否需要进行模型编译（若使用export_torch_aie_ts.py输出的模型，则不用选该项）
      --batch_size：模型batch size
      --img_size：推理size（像素）
-     --cfg_file：模型参数配置文件路径
+     --cfg_file：模型参数配置文件路径，默认model.yaml
      --device_id：硬件编号
      --single_cls：是否视为单类数据集
     ```
+   使用的model.yaml配置：
+    ```
+     # parameters
+     img_size: [640, 640]  # height, width
+     class_num: 80  # number of classes
+     conf_thres: 0.001  # object confidence threshold, conf>0.1 for nms_op
+     iou_thres: 0.6  # IOU threshold for NMS
+        
+     # anchors
+     anchors:
+       - [10,13, 16,30, 33,23]  # P3/8
+       - [30,61, 62,45, 59,119]  # P4/16
+       - [116,90, 156,198, 373,326]  # P5/32
+     stride: [8, 16, 32]
+         ```
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 
@@ -226,10 +241,9 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
 
 **表 3** 模型推理性能
 
-| Soc version | Batch Size | Dataset | Performance |
-| -------- | ---------- | ---------- | ---------- |
-| 310P3    | 4          | coco2017 | 22.26 ms/pic |
-| 310P3    | 10          | coco2017 | 22.01 ms/pic |
+| Soc version | Batch Size | Dataset | Performance    |
+| -------- | ---------- | ---------- |----------------|
+| 310P3    | 4          | coco2017 | 153.085 ms/pic |
 
 
 # 可能遇到的问题<a name="ZH-CN_TOPIC_0000001172201574"></a>
