@@ -96,13 +96,8 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
-   
-    ```
-    cd deepspeech.pytorch
-    python3 ./data/an4.py
-    ```
-    得到的数据结构为
+1. 获取原始数据集an4_raw.bigendian.tar.gz。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip），解压得到的数据结构为：
+
     ```
     |——an4_test_manifest.json
     |——labels.json  
@@ -111,8 +106,8 @@ Deepspeech是百度推出的语音识别框架，系统采用了端对端的深�
             |——train
             |——test
     ```
+
     > **说明：** 
-    >如下载不了，可在本地用vscode拉代码下载过后传到服务器。
     >获取原始数据前将源码移动到deepspeech.pytorch文件
 
 2. 数据预处理。
