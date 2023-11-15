@@ -96,7 +96,7 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
 
 2. 导出原始torchscript模型，用于编译优化。
     ```
-    python3 export.py --model_name swin_base_patch4_window12_384 --checkpoint ./inception_v3_google-1a9a5a14.pth --output inceptionv3.pt
+    python3 export.py --checkpoint ./inception_v3_google-1a9a5a14.pth --output inceptionv3.pt
     ```
     导出模型后，会在当前目录下生成inceptionv3.pt文件。
 
