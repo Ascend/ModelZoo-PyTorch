@@ -90,18 +90,20 @@ def forward_nms_script(model, dataloader, cfg, batchsize, device_id):
     avg_inf_time = sum(inference_time) / len(inference_time) / batchsize * 1000
     print('性能(毫秒)：', avg_inf_time)
     print("throughput(fps): ", 1000 / avg_inf_time)
+
     return pred_results
 
 
 def pt_infer(model, input_li, device_id, loop_num, inference_time):
+    input_npu_li = input_li.to("npu:" + str(device_id))
     stream = torch_aie.npu.Stream("npu:" + str(device_id))
     with torch_aie.npu.stream(stream):
         inf_start = time.time()
-        results = model.forward(input_li)
+        output_npu = model.forward(input_npu_li)
         stream.synchronize()
         inf_end = time.time()
         inf = inf_end - inf_start
         if loop_num >= 5:  # use 5 step to warmup
             inference_time.append(inf)
-
+    results = tuple([output_npu[0].to("cpu"), [i.to("cpu") for i in output_npu[1]]])
     return results, inference_time
