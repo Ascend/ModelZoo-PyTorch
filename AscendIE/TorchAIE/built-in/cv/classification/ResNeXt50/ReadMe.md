@@ -177,13 +177,13 @@ bash valprep.sh
 calculate_cost_static文件中的 ‘optimization_level’ 设置为1，再运行性能评估脚本，然后再将其设置为2，再运行性能评估脚本。
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用torch-AIE推理计算，静态shape性能参考下列数据。
+调用torch-AIE推理计算，静态shape性能参考下列数据(以下数据均未使用aoe优化)。
 
 | 芯片型号 | Batch Size | 数据集 | 精度(top1) | 精度（top5） | 性能(吞吐量) |
 | --------- |------------| ---------- |----------|----------|---------|
-|     Ascend310P3      | 1          |     imagenet       | 71.35%   | 90.5%    | 820     |
-|     Ascend310P3      | 4          |     imagenet       | 71.35%   | 90.5%    | 1468    |
-|     Ascend310P3      | 8          |     imagenet       | 71.35%   | 90.5%    | 1588    |
-|     Ascend310P3      | 16         |     imagenet       | 71.35%   | 90.5%    | 1556    |
-|     Ascend310P3      | 32         |     imagenet       | 71.35%   | 90.5%    | 1607    |
-|     Ascend310P3      | 64         |     imagenet       | 71.35%   | 90.5%    | 1309    |
+|     Ascend310P3      | 1          |     imagenet       | 71.35%   | 90.5%    | 1091    |
+|     Ascend310P3      | 4          |     imagenet       | 71.35%   | 90.5%    | 2654    |
+|     Ascend310P3      | 8          |     imagenet       | 71.35%   | 90.5%    | 3280    |
+|     Ascend310P3      | 16         |     imagenet       | 71.35%   | 90.5%    | 3382    |
+|     Ascend310P3      | 32         |     imagenet       | 71.35%   | 90.5%    | 3513    |
+|     Ascend310P3      | 64         |     imagenet       | 71.35%   | 90.5%    | 2200    |
