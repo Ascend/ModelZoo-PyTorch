@@ -121,7 +121,7 @@ CV-detection
         <td>  </td>
         <td>  </td>
         <td>  </td>
-        <td>24.727(4)</td>
+        <td>27.704(4)</td>
 	<td> bs x 3 x 640 x 640 </td>
     </tr>
     <tr>
