@@ -15,47 +15,7 @@ import os
 import sys
 import torch
 import numpy as np
-from transformers import AutoConfig, AutoModelForMaskedLM, AutoTokenizer
-
-
-def build_base_model(tokenizer, model_path, config_path, device):
-    config_kwargs = {
-        'cache_dir': './bert-base-chinese',
-        'revision': 'main',
-        'use_auth_token': None
-    }
-    config = AutoConfig.from_pretrained(config_path, **config_kwargs)
-    model = AutoModelForMaskedLM.from_pretrained(
-        model_path,
-        config=config,
-        revision='main',
-        use_auth_token=None
-    )
-    model.to(device=device)
-    model.eval()
-    model.resize_token_embeddings(len(tokenizer))
-    return model
-
-
-def build_tokenizer(tokenizer_name):
-    tokenizer_kwargs = {
-        'cache_dir': './bert-base-chinese',
-        'use_fast': True,
-        'revision': 'main',
-        'use_auth_token': None
-    }
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, **tokenizer_kwargs)
-    return tokenizer
-
-
-class RefineModel(torch.nn.Module):
-    def __init__(self, tokenizer, model_path, config_path, device="cpu"):
-        super(RefineModel, self).__init__()
-        self._base_model = build_base_model(tokenizer, model_path, config_path, device)
-
-    def forward(self, input_ids, attention_mask, token_type_ids):
-        x = self._base_model(input_ids, attention_mask, token_type_ids)
-        return x[0]
+from model import build_tokenizer, RefineModel
 
 
 def generate_random_data(shape, dtype, low=0, high=2):
@@ -64,7 +24,7 @@ def generate_random_data(shape, dtype, low=0, high=2):
     elif dtype in ["int32", "int64"]:
         return np.random.uniform(low, high, shape).astype(dtype)
     else:
-        raise NotImplementedError("Not supported format: {}".format(dtype))
+        raise NotImplementedError("Not supported dtype: {}".format(dtype))
 
 
 def export_onnx(model_dir, save_path, seq_len=384, batch_size=1):
@@ -82,19 +42,11 @@ def export_onnx(model_dir, save_path, seq_len=384, batch_size=1):
         torch.Tensor(generate_random_data([batch_size, seq_len], "int64")).to(torch.int64),
         torch.Tensor(generate_random_data([batch_size, seq_len], "int64")).to(torch.int64)
     )
-    input_names = ["input_ids", "attention_mask", "token_type_ids"]
-    output_names = ["out"]
-    dynamic_axes = {
-        "input_ids": {0: "B"},
-        "attention_mask": {0: "B"},
-        "token_type_ids": {0: "B"},
-        "out": {0: "B"}
-    }
 
     ts_model = torch.jit.trace(model, input_data)
     ts_model.save(save_path)
 
-# python3 export_trace_model.py ./bert-base-chinese/ ./bert_base_chinese.pt 384
+
 if __name__ == '__main__':
     model_dir = sys.argv[1]
     save_path = sys.argv[2]

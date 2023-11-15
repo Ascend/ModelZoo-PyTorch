@@ -18,57 +18,16 @@ import torch
 import numpy as np
 from tqdm import tqdm
 from datasets import load_metric
-from transformers import AutoConfig, AutoModelForMaskedLM, AutoTokenizer
-
 import torch_aie
-from torch_aie import _enums
 
 
-def build_tokenizer(tokenizer_name):
-    tokenizer_kwargs = {
-        'cache_dir': None,
-        'use_fast': True,
-        'revision': 'main',
-        'use_auth_token': None
-    }
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, **tokenizer_kwargs)
-    return tokenizer
-
-def build_base_model(tokenizer, model_path, config_path, device):
-    config_kwargs = {
-        'cache_dir': None,
-        'revision': 'main',
-        'use_auth_token': None
-    }
-    config = AutoConfig.from_pretrained(config_path, **config_kwargs)
-    model = AutoModelForMaskedLM.from_pretrained(
-        model_path,
-        config=config,
-        revision='main',
-        use_auth_token=None
-    )
-    model.to(device=device)
-    model.eval()
-    model.resize_token_embeddings(len(tokenizer))
-    return model
-
-class RefineModel(torch.nn.Module):
-    def __init__(self, tokenizer, model_path, config_path, device="cpu"):
-        super(RefineModel, self).__init__()
-        self._base_model = build_base_model(tokenizer, model_path, config_path, device)
-
-    def forward(self, input_ids, attention_mask, token_type_ids):
-        x = self._base_model(input_ids, attention_mask, token_type_ids)
-        return x[0].argmax(dim=-1)
-    
 def compute_metrics(preds, labels, eval_metric_path="./accuracy.py"):
     metric = load_metric(eval_metric_path)
     labels = labels.reshape(-1)
     preds = preds.reshape(-1)
     mask = labels != -100
-    labels = labels[mask] # 返回labels当中值不等于 -100的所有元素组成的列表
+    labels = labels[mask] # 返回labels当中值不等于-100的所有元素组成的列表
     preds = preds[mask]
-
     return metric.compute(predictions=preds, references=labels)
 
 
@@ -82,7 +41,7 @@ def load_datasets(input_dir, gt_dir, batch_size, seq_length):
     token_type_ids_list = []
     all_labels_list = []
 
-    num_datas = len(os.listdir(gt_dir)) # 真实值：12800
+    num_datas = len(os.listdir(gt_dir))
 
     for step in tqdm(range(num_datas)):
         input_bin_path = os.path.join(input_dir, "input_ids", "{}.bin".format(step))
@@ -117,7 +76,7 @@ def inference(torchaie_model, datasets):
     attention_mask_list = datasets['attention_mask_list']
     token_type_ids_list = datasets['token_type_ids_list']
     num_datas = datasets['num_datas']
-    
+
     all_logits_list = []
     inference_time = []
     count = 0
@@ -149,22 +108,20 @@ def run(torchaie_model, input_dir, gt_dir, batch_size, seq_length):
     num_datas = datasets['num_datas']
     all_labels_list = datasets['all_labels_list']
 
-    start = time.time()
+    start_time = time.time()
     all_logits_list = inference(torchaie_model, datasets)
-    end = time.time()
-    times = end - start
-    performance = times / num_datas
-    print('end2end performance=', performance * 1000, 'ms')
+    end_time = time.time()
+    total_time = end_time - start_time
+    average_time = total_time / num_datas
+    print('average e2e model inference performance=', average_time * 1000)
 
     all_logits_array = np.concatenate(all_logits_list, axis=0)
     all_labels_array = np.concatenate(all_labels_list, axis=0)
-
     metric = compute_metrics(all_logits_array, all_labels_array)
     print('metric=', metric)
-    
+
 
 if __name__ == '__main__':
-    
     parser = argparse.ArgumentParser(description="Description of your script")
     parser.add_argument("--input_dir", type=str, default="./input_data")
     parser.add_argument("--gt_dir", type=str, help="Path to the model directory", default="./input_data/labels")
@@ -187,7 +144,7 @@ if __name__ == '__main__':
     torchaie_model = torch_aie.compile(
         ts_model,
         inputs=input_info,
-        precision_policy=torch_aie.PrecisionPolicy.PREF_FP32, # 这里必须使用混合精度才不会掉精度！
+        precision_policy=torch_aie.PrecisionPolicy.PREF_FP32,
         truncate_long_and_double=True,
         require_full_compilation=True,
         allow_tensor_replace_int=True,
