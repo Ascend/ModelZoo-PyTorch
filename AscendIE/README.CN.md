@@ -115,6 +115,17 @@ CV-detection
     </tr>
     <tr>
         <td>
+        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/Yolov3">  Yolov3 </a>
+        </td>
+        <td>coco2017</td>
+        <td>  </td>
+        <td>  </td>
+        <td>  </td>
+        <td>24.727(4)</td>
+	<td> bs x 3 x 640 x 640 </td>
+    </tr>
+    <tr>
+        <td>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/Yolov5">  Yolov5s </a>
         </td>
         <td>coco2017</td>
