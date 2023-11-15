@@ -67,8 +67,6 @@ model_name=HRNet-W18-C
 
    ```
    git clone https://github.com/HRNet/HRNet-Image-Classification.git
-   cd HRNet-Image-Classification
-   cd ..
    ```
 
 2. 安装依赖。
@@ -105,7 +103,7 @@ bash valprep.sh
 
    使用PyTorch将模型权重文件.pth转换为.pt文件。
 
-   1. 获取权重文件。
+   1. 获取权重文件。并将权重文件放在当前目录下。
 
        下载链接：
 
@@ -133,7 +131,7 @@ bash valprep.sh
 
 3. 运行模型评估脚本，测试ImageNet验证集推理精度
        ```
-       python3 eval.py --model_path ./hrnet.ts --data_path ./imagenet/val --batch_size 1 --image_size 224
+       python3 eval.py --model_path ./hrnet.pt --data_path ./imagenet/val --batch_size 1 --image_size 224
        ```
        运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 86.4520% 和 98.0560%。
        ```
