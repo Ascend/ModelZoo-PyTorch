@@ -74,7 +74,7 @@ def validate(model, args):
 def parse_args():
     parser = argparse.ArgumentParser(description='Vision Transformer Evaluation.')
     parser.add_argument('--data_path', type=str, help='Evaluation dataset path')
-    parser.add_argument('--model_path', type=str, default='./inceptionv3.ts',
+    parser.add_argument('--model_path', type=str, default='./inceptionv3.pt',
                         help='Original TorchScript model path')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--image_size', type=int, default=299, help='Image size')
