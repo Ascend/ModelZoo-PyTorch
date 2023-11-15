@@ -39,6 +39,7 @@
   | Torch_Version      | 三方库依赖版本                                 |
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.11 | diffusers==0.18.1 accelerate==0.20.3 |
+  | PyTorch 2.1 | diffusers==0.18.1 accelerate==0.20.3 |
   
 - 环境准备指导。
 
@@ -149,7 +150,13 @@
      bash test/train_performance_8p_text_to_image_sd2-1_fp32.sh # 8卡性能，SD2.1，fp32
      ```
      
-   - 跑fp16不带FA时，由于attention模块中bmm算子走fp16会有溢出，需修改以下代码，使bmm算子走fp32计算：（适配FA后不走bmm算子，因此不会溢出）
+   - 单机8卡预训练
+   
+     ```
+     bash test/pretrain_full_8p_text_to_image_sd2-1_fp16_fa.sh # 8卡精度，SD2.1，fp16+FA
+     ```
+     
+   - 注意：跑fp16不带FA时，由于attention模块中bmm算子走fp16会有溢出，需修改以下代码，使bmm算子走fp32计算：（适配FA后不走bmm算子，因此不会溢出）
    
      将src/diffusers/models/attention_processor.py中get_attention_scores方法里的
    
@@ -165,6 +172,10 @@
      修改为：
    
      ```
+     if self.upcast_attention:
+         query = query.float()
+         key = key.float()
+     
      with torch.cuda.amp.autocast(enabled=False):
          if attention_mask is None:
              attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
@@ -195,12 +206,13 @@
    --num_train_epochs                  //训练epoch数
    --gradient_accumulation_steps       //梯度累计步数
    --mixed_precision                   //精度模式
-   --use_megatron_npu_adamW            //使用megatron优化器
+   --use_megatron_npu_adamW            //使用megatron优化器，仅Pytorch1.11支持
    --use_npu_fuse_adamW                //使用NPU融合优化器
    --use_clip_grad_norm_fused          //使用融合CLIP操作（必须搭配NPU融合优化器使用）
    --enable_npu_flash_attention        //使能Flash Attention大kernel融合算子（目前仅fp16支持FA）
    --enable_pin_memory                 //使能数据加载时的pin_memory
    --enable_persistent_workers         //使能数据加载时的persistent_workers
+   --release_part_gradient_checkpointing //显存足够的情况下，可关闭部分模块的重计算，可提升训练速度
    ```
    
    训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
@@ -212,11 +224,13 @@
 |   NAME   | sd版本 | FPS  | batch_size | AMP_Type | Torch_Version |
 | :------: | :---: | :--: | :------: | :-----------: | :-----------: |
 | 8p-竞品A | 2.1 | 10 | 4 | fp32 |      1.13      |
-|  8p-NPU-910  | 2.1 | 15 | 4 | fp32 |      1.11      |
+|  8p-NPU-910  | 2.1 | 16.67 | 4 | fp32 |      1.11      |
 | 8p-竞品A | 2.1 | 22 | 4 | fp16 |      1.13      |
-|  8p-NPU-910  | 2.1 | 16 | 4 | fp16 |      1.11      |
+|  8p-NPU-910  | 2.1 | 18.28 | 4 | fp16 |      1.11      |
 | 8p-竞品A+FA | 2.1 | 65.5 | 24 | fp16 | 1.13 |
-| 8p-NPU-910+FA | 2.1 | 51.3 | 24 | fp16 | 1.11 |
+| 8p-NPU-910+FA | 2.1 | 59.12 | 24 | fp16 | 1.11 |
+| 8p-竞品A+FA | 2.1 | 73.8 | 24 | fp16 | 2.1 |
+| 8p-NPU-910+FA | 2.1 | 57 | 24 | fp16 | 2.1 |
 
 **表3** 训练支持场景
 

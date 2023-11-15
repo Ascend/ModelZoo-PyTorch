@@ -57,8 +57,7 @@ import time
 import torch_npu
 from torch_npu.optim import NpuFusedAdamW
 from torch_npu.contrib import transfer_to_npu
-
-
+import itertools
 
 # Allow NPU Conv_operator hostapi
 torch.npu.config.allow_internal_format = False
@@ -620,14 +619,13 @@ def main():
             args.pretrained_model_name_or_path, subfolder="vae", revision=args.revision
         )
 
-    UNet2DConditionModel._release_part_gradient_checkpointing = args.release_part_gradient_checkpointing
     unet = UNet2DConditionModel.from_pretrained(
         args.pretrained_model_name_or_path, subfolder="unet", revision=args.non_ema_revision
     )
 
     # Freeze vae and text_encoder
     vae.requires_grad_(False)
-    text_encoder.requires_grad_(False)
+    text_encoder.requires_grad_(True)
 
     # Create EMA for the unet.
     if args.use_ema:
@@ -751,8 +749,9 @@ def main():
     else:
         optimizer_cls = torch.optim.AdamW
 
+    params_to_update = itertools.chain(text_encoder.parameters(), unet.parameters())
     optimizer = optimizer_cls(
-        unet.parameters(),
+        params_to_update,
         lr=args.learning_rate,
         betas=(args.adam_beta1, args.adam_beta2),
         weight_decay=args.adam_weight_decay,
@@ -883,8 +882,8 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
-    unet, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-        unet, optimizer, train_dataloader, lr_scheduler
+    unet, text_encoder, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+        unet, text_encoder, optimizer, train_dataloader, lr_scheduler
     )
 
     if args.use_ema:
@@ -901,7 +900,6 @@ def main():
         args.mixed_precision = accelerator.mixed_precision
 
     # Move text_encode and vae to gpu and cast to weight_dtype
-    text_encoder.to(accelerator.device, dtype=weight_dtype)
     vae.to(accelerator.device, dtype=weight_dtype)
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
@@ -962,6 +960,7 @@ def main():
 
     for epoch in range(first_epoch, args.num_train_epochs):
         unet.train()
+        text_encoder.train()
         train_loss = 0.0
         step_end_time = time.time()
         for step, batch in enumerate(train_dataloader):
@@ -1040,7 +1039,8 @@ def main():
                     if args.use_npu_fuse_adamW and args.use_clip_grad_norm_fused:
                         optimizer.optimizer.clip_grad_norm_fused_(args.max_grad_norm)
                     else:
-                        accelerator.clip_grad_norm_(unet.parameters(), args.max_grad_norm)
+                        params_to_clip = itertools.chain(text_encoder.parameters(), unet.parameters())
+                        accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
                 
                 optimizer.step()
                 lr_scheduler.step()
@@ -1048,6 +1048,7 @@ def main():
                     optimizer.zero_grad()
                 else:
                     optimizer.zero_grad(set_to_none=True)
+
 
                 # Gather the losses across all processes for logging (if we use distributed training).
                 avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
@@ -1098,7 +1099,7 @@ def main():
         
             logger.info(f"step_train_time: {step_total_time}")
             logger.info(f"step_data_time: {step_data_time}")
-            logger.info(f"FPS: {args.train_batch_size * accelerator.num_processes/(step_total_time-step_data_time)}")
+            logger.info(f"FPS: {args.train_batch_size * accelerator.num_processes/step_total_time}")
             
             step_end_time = time.time()
 

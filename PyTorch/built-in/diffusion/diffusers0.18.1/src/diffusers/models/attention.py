@@ -16,8 +16,9 @@ from typing import Any, Dict, Optional
 import torch
 import torch.nn.functional as F
 from torch import nn
+import torch_npu
 
-from ..utils import maybe_allow_in_graph
+from ..utils import maybe_allow_in_graph, is_torch_version
 from .activations import get_activation
 from .attention_processor import Attention
 from .embeddings import CombinedTimestepLabelEmbeddings
@@ -301,8 +302,12 @@ class GEGLU(nn.Module):
         return F.gelu(gate.to(dtype=torch.float32)).to(dtype=gate.dtype)
 
     def forward(self, hidden_states):
-        hidden_states, gate = self.proj(hidden_states).chunk(2, dim=-1)
-        return hidden_states * self.gelu(gate)
+        if is_torch_version("==", "1.11") and hidden_states.dtype == torch.float16:
+            hidden_states = self.proj(hidden_states)
+            return torch_npu.npu_geglu(hidden_states, dim=-1, approximate=1)[0]
+        else:
+            hidden_states, gate = self.proj(hidden_states).chunk(2, dim=-1)
+            return hidden_states * self.gelu(gate)
 
 
 class ApproximateGELU(nn.Module):

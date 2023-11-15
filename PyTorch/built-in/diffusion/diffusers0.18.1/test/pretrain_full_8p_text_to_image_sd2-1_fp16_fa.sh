@@ -63,7 +63,7 @@ start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
 python3 -m torch.distributed.launch --nproc_per_node 8 --use_env \
-  examples/text_to_image/train_text_to_image.py \
+  examples/text_to_image/pretrain_text_to_image.py \
   --pretrained_model_name_or_path=$model_name \
   --dataset_name=$dataset_name \
   --resolution=$resolution --center_crop --random_flip \
@@ -81,8 +81,7 @@ python3 -m torch.distributed.launch --nproc_per_node 8 --use_env \
   --use_megatron_npu_adamW \
   --enable_pin_memory \
   --enable_persistent_workers \
-  --release_part_gradient_checkpointing \
-  --output_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+  --output_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/pretrain_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait
 
