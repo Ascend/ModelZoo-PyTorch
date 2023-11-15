@@ -11,24 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import argparse
 
 import torch
-import torch_aie
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from torch_aie import _enums
 from tqdm.auto import tqdm
 
-
-def parse_args():
-    parser = argparse.ArgumentParser(description='HRNet Evaluation.')
-    parser.add_argument('--data_path', type=str, help='Evaluation dataset path')
-    parser.add_argument('--model_path', type=str, default='./hrnet.ts',
-                        help='Original TorchScript model path')
-    parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
-    parser.add_argument('--image_size', type=int, default=224, help='Image size')
-    return parser.parse_args()
+import torch_aie
+from torch_aie import _enums
 
 
 def compute_acc(y_pred, y_true, topk_list=(1, 5)):
@@ -47,25 +39,28 @@ def compute_acc(y_pred, y_true, topk_list=(1, 5)):
 
 
 def validate(model, args):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    img_resize = args.model_config[args.image_size]['resize']
+    img_centercrop = args.model_config[args.image_size]['centercrop']
+    mean, std = args.model_config[args.image_size]['mean'], args.model_config[args.image_size]['std']
 
-    valid_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(args.data_path, transforms.Compose([
-            transforms.Resize(int(args.image_size / 0.875)),
-            transforms.CenterCrop(args.image_size),
+    val_dataset = datasets.ImageFolder(
+        args.data_path,
+        transforms.Compose([
+            transforms.Resize(img_resize),
+            transforms.CenterCrop(img_centercrop),
             transforms.ToTensor(),
-            normalize,
-        ])),
+            transforms.Normalize(mean=mean, std=std),
+        ]))
+
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset,
         batch_size=args.batch_size,
-        shuffle=False,
-        pin_memory=True
-    )
+        drop_last=True)
 
     avg_top1, avg_top5 = 0, 0
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
-    for i, (images, target) in tqdm(enumerate(valid_loader), total=len(valid_loader)):
+    for i, (images, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
         pred = model(images.to("npu:0")).to("cpu")
         acc = compute_acc(pred, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
@@ -76,17 +71,43 @@ def validate(model, args):
             print(f'top1 is {avg_top1 / step}, top5 is {avg_top5 / step}, step is {step}')
 
 
-if __name__ == '__main__':
+def parse_args():
+    parser = argparse.ArgumentParser(description='Vision Transformer Evaluation.')
+    parser.add_argument('--data_path', type=str, help='Evaluation dataset path')
+    parser.add_argument('--model_path', type=str, default='./hrnet.pt',
+                        help='Original TorchScript model path')
+    parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
+    parser.add_argument('--image_size', type=int, default=224, help='Image size')
+    return parser.parse_args()
+
+def main():
     args = parse_args()
-    ts_model = torch.jit.load(args.model_path)
-    min_shape = (1, 3, 224, 224)
-    max_shape = (32, 3, 224, 224)
-    input_info = [torch_aie.Input(min_shape=(1, 3, 224, 224), max_shape=(32, 3, 224, 224))]
-    torchaie_model = torch_aie.compile(
-        ts_model,
+    args.model_config = {
+        224: {
+            'resize': 256,
+            'centercrop': 224,
+            'mean': [0.485,0.456,0.406],
+            'std': [0.299,0.224,0.225],
+        }
+    }
+
+    torch_aie.set_device(0)
+
+    model = torch.jit.load(args.model_path)
+    model.eval()
+
+    input_info = [torch_aie.Input((args.batch_size, 3, args.image_size, args.image_size))]
+    print('Start compiling model.')
+    compiled_model = torch_aie.compile(
+        model,
         inputs=input_info,
-        precision_policy=_enums.PrecisionPolicy.FP32,
-        soc_version='Ascend310P3'
-    )
-    torchaie_model.eval()
-    validate(torchaie_model, args)
+        precision_policy=_enums.PrecisionPolicy.FP16,
+        allow_tensor_replace_int=True,
+        soc_version="Ascend310P3")
+    print('Model compiled successfully.')
+
+    validate(compiled_model, args)
+
+
+if __name__ == '__main__':
+    main()
