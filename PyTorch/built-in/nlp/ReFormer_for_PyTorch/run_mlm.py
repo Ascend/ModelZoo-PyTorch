@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 # Copyright 2020 The HuggingFace Team All rights reserved.
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +21,10 @@ Here is the full list of checkpoints on the hub that can be fine-tuned by this s
 https://huggingface.co/models?filter=fill-mask
 """
 # You can also adapt this script on your own masked language modeling task. Pointers for this are left as comments.
+
+import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
 
 import logging
 import math
@@ -140,6 +145,13 @@ class DataTrainingArguments:
     validation_file: Optional[str] = field(
         default=None,
         metadata={"help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
+    )
+    debug_file: Optional[str] = field(
+        default=None,
+        metadata={"help": "An optional input debug data file to evaluate the perplexity on (a text file)."},
+    )
+    debug_mode: bool = field(
+        default=False,
     )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached training and evaluation sets"}
@@ -304,10 +316,10 @@ def main():
     else:
         data_files = {}
         if data_args.train_file is not None:
-            data_files["train"] = data_args.train_file
+            data_files["train"] = data_args.train_file if not data_args.debug_mode else data_args.debug_file
             extension = data_args.train_file.split(".")[-1]
         if data_args.validation_file is not None:
-            data_files["validation"] = data_args.validation_file
+            data_files["validation"] = data_args.validation_file if not data_args.debug_mode else data_args.debug_file
             extension = data_args.validation_file.split(".")[-1]
         if extension == "txt":
             extension = "text"
@@ -359,6 +371,9 @@ def main():
             logger.info(f"Overriding config: {model_args.config_overrides}")
             config.update_from_string(model_args.config_overrides)
             logger.info(f"New config: {config}")
+    
+    config.is_decoder = False
+    config.axial_pos_embds = False
 
     tokenizer_kwargs = {
         "cache_dir": model_args.cache_dir,
@@ -601,11 +616,6 @@ def main():
             kwargs["dataset"] = f"{data_args.dataset_name} {data_args.dataset_config_name}"
         else:
             kwargs["dataset"] = data_args.dataset_name
-
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
 
 
 def _mp_fn(index):
