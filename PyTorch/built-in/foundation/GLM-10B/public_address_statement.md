@@ -19,4 +19,34 @@
 | 开源代码引入 | https://github.com/THUDM/GLM/blob/4f61ed7237a3b0187f4d62062429348276a78c84/model/modeling_bert.py  | GLM-10B/model/modeling_bert.py | https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual-uncased.tar.gz               | 下载权重文件  |
 | 开源代码引入 | https://github.com/THUDM/GLM/blob/4f61ed7237a3b0187f4d62062429348276a78c84/model/modeling_bert.py  | GLM-10B/model/modeling_bert.py | https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual-cased.tar.gz              | 下载权重文件  |
 | 开源代码引入 | https://github.com/THUDM/GLM/blob/4f61ed7237a3b0187f4d62062429348276a78c84/model/modeling_bert.py  | GLM-10B/model/modeling_bert.py | https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-chinese.tar.gz              | 下载权重文件  |
-
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/model/modeling_bert.py|GLM-10B/model/modeling_bert.py	| https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-cased.tar. | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/model/modeling_bert.py|GLM-10B/model/modeling_bert.py	| https://www.tensorflow.org/instal | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/model/modeling_bert.py|GLM-10B/model/modeling_bert.py	| https://www.github.com/nvidia/ap | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/model/modeling_bert.py|GLM-10B/model/modeling_bert.py	| https://github.com/pytorch/pytorch/pull/56 | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/fp16/fp16util.py|GLM-10B/fp16/fp16util.py	| http://on-demand.gputechconf.com/gtc/2018/video/S8101 | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/fp16/fp16util.py|GLM-10B/fp16/fp16util.py	| http://pytorch.org/docs/master/_modules/torch/_utils.ht | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/fp16/fp16.py|GLM-10B/fp16/fp16.py	| https://github.com/pytorch/pytorch/issues/77 | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/fp16/fp16.py|GLM-10B/fp16/fp16.py	| http://pytorch.org/docs/master/optim.html#optimizer-step-closu | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda112.dockerfile	| http://www.mellanox.com/downloads/ofed/MLNX_OFE | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda112.dockerfile	| https://download.open-mpi.org/release/open-mpi | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda112.dockerfile	| https://github.com/pytorch/vision.g | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda112.dockerfile	| https://stackoverflow.com/a/539268 | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda102.dockerfile	| http://www.mellanox.com/downloads/ofed/MLNX_OFE | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda102.dockerfile	| https://download.open-mpi.org/release/open-mpi | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda102.dockerfile	| https://github.com/pytorch/vision.g | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/docker/cuda102.dockerfile|GLM-10B/docker/cuda102.dockerfile	| https://stackoverflow.com/a/539268 | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/wordpiece.py|GLM-10B/data_utils/wordpiece.py	| https://github.com/huggingface/pytorch-pretrained-BERT/blob/master/pytorch_pretrained_bert/tokenization. | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/wordpiece.py|GLM-10B/data_utils/wordpiece.py	| https://en.wikipedia.org/wiki/CJK_Unified_Ideograph | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/tokenization.py|GLM-10B/data_utils/tokenization.py	| https://github.com/huggingface/transformers/pull/27 | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/tokenization.py|GLM-10B/data_utils/tokenization.py	| https://github.com/huggingface/transformers/issues/37 | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/tokenization.py|GLM-10B/data_utils/tokenization.py	| https://github.com/huggingface/transformers/pull/27 | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/tokenization.py|GLM-10B/data_utils/tokenization.py	| https://github.com/huggingface/transformers/issues/37 | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/sp_tokenizer.py|GLM-10B/data_utils/sp_tokenizer.py	| https://github.com/openai/gpt- | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/sp_tokenizer.py|GLM-10B/data_utils/sp_tokenizer.py	| https://github.com/google/sentencepie | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/sp_tokenizer.py|GLM-10B/data_utils/sp_tokenizer.py	| https://github.com/google/sentencepiece.g | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/file_utils.py|GLM-10B/data_utils/file_utils.py	| https://github.com/huggingface/pytorch-pretrained-BE | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/file_utils.py|GLM-10B/data_utils/file_utils.py	| https://github.com/allenai/allenn | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/datasets.py|GLM-10B/data_utils/datasets.py	| https://github.com/google-research/bert/blob/master/create_pretraining_data.py#L248-L2 | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/datasets.py|GLM-10B/data_utils/datasets.py	| https://github.com/google-research/bert/blob/master/create_pretraining_data.py#L3 | 源码实现 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/datasets.py|GLM-10B/data_utils/datasets.py	| https://arxiv.org/pdf/1810.04805.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/THUDM/GLM/blob/master/data_utils/datasets.py|GLM-10B/data_utils/datasets.py	| https://github.com/google-research/bert/blob/master/create_pretraining_data.py#L | 源码实现 |
