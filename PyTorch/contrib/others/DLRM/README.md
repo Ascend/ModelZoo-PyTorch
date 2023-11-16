@@ -153,7 +153,9 @@ DLRM（Deep Learning Recommendation Model）是深度学习推荐模型的实现
 
 
 
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md
 
 
 
