@@ -67,6 +67,6 @@ if __name__ == '__main__':
 
     # save torch script model
     input_data = torch.ones(1, 3, 224, 224)
-    ts_model = torch.jit.script(model, input_data)
+    ts_model = torch.jit.trace(model, input_data)
     ts_model.save(opts.ts_save_path)
     print(f'HRNet torch script model saved to {opts.ts_save_path}')
