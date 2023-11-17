@@ -62,7 +62,7 @@ def validate(model, args):
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
     for i, (images, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
-        pred = model(images).cpu()
+        pred = model(images)
         acc = compute_acc(pred, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
         avg_top5 += acc[1].item()
@@ -87,7 +87,7 @@ def main():
         224: {
             'resize': 256,
             'centercrop': 224,
-            'mean': [0.485, 0.456, 0.06],
+            'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
         },
         384: {
