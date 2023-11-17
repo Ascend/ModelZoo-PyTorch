@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import copy
 import numpy as np
 import os
 import time
@@ -21,58 +22,131 @@ import torch_npu
 import torch_aie
 from tqdm import tqdm
 
+import sys
 
-def main():
+sys.path.append("./lightweight-human-pose-estimation.pytorch")
+from models.with_mobilenet import PoseEstimationWithMobileNet
+from modules.load_state import load_state
+
+
+def parse_args():
     parser = argparse.ArgumentParser(description="inference")
-    parser.add_argument("--processed-img-path", default="datasets/coco/processed_img")
-    parser.add_argument("--result-folder", default="output/aie_inference_result")
-    parser.add_argument("--ts-path", default="output/human-pose-estimation.ts")
+    parser.add_argument("--input_path", default="datasets/coco/processed_img")
+    parser.add_argument("--output_path", default="output/aie_inference_result")
+    parser.add_argument("--save_output", type=bool, default=True)
+    parser.add_argument("--input_shape", nargs="+", type=int, default=[1, 3, 368, 640])
+    parser.add_argument("--device", default="npu:0")
+    parser.add_argument("--warmup_num", type=int, default=5)
+    parser.add_argument(
+        "--ckpt_path",
+        default="./weights/checkpoint_iter_370000.pth",
+    )
     args = parser.parse_args()
+    return args
 
-    processed_img_path = args.processed_img_path
-    result_folder = args.result_folder
-    if not os.path.exists(result_folder):
-        os.makedirs(result_folder)
-    ts_model_path = args.ts_path
 
-    torch_npu.npu.set_device("npu:0")
+def compile_model(args):
+    net = PoseEstimationWithMobileNet()
+    checkpoint = torch.load(args.ckpt_path, map_location=torch.device("cpu"))
+    load_state(net, checkpoint)
 
-    torch_script_model = torch.jit.load(ts_model_path)
-    compile_input = [torch_aie.Input((1, 3, 368, 640), dtype=torch.float)]
-    print("Start compiling the aie model...")
-    torch_aie_model = torch_aie.compile(torch_script_model, inputs=compile_input)
-    print("Compilation finished.")
+    net_input = torch.randn(args.input_shape)
+    ts_model = torch.jit.trace(net.eval(), net_input)
+
+    compile_input = [torch_aie.Input(args.input_shape, dtype=torch.float)]
+    torch_aie_model = torch_aie.compile(
+        ts_model,
+        inputs=compile_input,
+        precision_policy=torch_aie.PrecisionPolicy.FP16,
+    )
+    return torch_aie_model
+
+
+def get_input_info(args):
+    batch = args.input_shape[0]
+    file_path_list = []
+    file_name_list = []
+    for dir_path, _, file_names in os.walk(args.input_path):
+        for file_name in file_names:
+            file_path_list.append(os.path.join(dir_path, file_name))
+            file_name_list.append(file_name)
+
+    file_nums = len(file_path_list)
+    iters = (file_nums + batch - 1) // batch
+    pad = iters * batch - file_nums
+    return file_path_list, file_name_list, iters, pad
+
+
+def create_data_generator(args, file_path_list, file_name_list, iters, pad):
+    batch = args.input_shape[0]
+    file_nums = len(file_path_list)
+
+    for i in range(iters):
+        batch_data = []
+        batch_names = []
+        for j in range(batch):
+            idx = batch * i + j
+            if idx == file_nums:
+                break
+            batch_data.append(
+                torch.from_numpy(np.fromfile(file_path_list[idx], np.float32)).view(
+                    [1, *args.input_shape[1:]]
+                )
+            )
+            batch_names.append(file_name_list[idx])
+            idx += 1
+        if (i == (iters - 1)) and (pad > 0):
+            for _ in range(pad):
+                batch_data.append(copy.deepcopy(batch_data[-1]))
+                batch_names.append(file_name_list[-1])
+        yield torch.cat(batch_data).to(args.device), batch_names
+
+
+def inference(args, torch_aie_model):
+    output_path = args.output_path
+    batch = args.input_shape[0]
+    if args.save_output and (not os.path.exists(output_path)):
+        os.makedirs(output_path, mode=640)
+
+    file_path_list, file_name_list, iters, pad = get_input_info(args)
+    data_gernerator = create_data_generator(
+        args, file_path_list, file_name_list, iters, pad
+    )
 
     cumulated_time = 0
-    warmup_num = 5
     counted_num = 0
-    for dir_path, _, file_names in os.walk(processed_img_path):
-        for file_name in tqdm(file_names):
-            counted_num += 1
-            file_path = os.path.join(dir_path, file_name)
-            x = (
-                torch.from_numpy(np.fromfile(file_path, np.float32))
-                .view(1, 3, 368, 640)
-                .to("npu:0")
-            )
+    for x, x_names in tqdm(data_gernerator, total=iters):
+        counted_num += 1
+        stream = torch_aie.npu.Stream(args.device)
+        with torch_aie.npu.stream(stream):
+            stream.synchronize()
+            ts = time.time()
+            ret = torch_aie_model.forward(x)
+            stream.synchronize()
+            duration = time.time() - ts
+            if counted_num > args.warmup_num:
+                cumulated_time += duration
 
-            stream = torch_aie.npu.Stream("npu:0")
-            with torch_aie.npu.stream(stream):
-                stream.synchronize()
-                ts = time.time()
-                ret = torch_aie_model.forward(x)
-                stream.synchronize()
-                duration = time.time() - ts
-                if counted_num > warmup_num:
-                    cumulated_time += duration
-
-            _, __, pcm, paf = [output.detach().to("cpu").numpy() for output in ret]
-            pcm.tofile(os.path.join(result_folder, file_name.replace(".bin", "_0.bin")))
-            paf.tofile(os.path.join(result_folder, file_name.replace(".bin", "_1.bin")))
+        _, __, pcm, paf = [output.detach().to("cpu").numpy() for output in ret]
+        if args.save_output:
+            for i in range(batch):
+                pcm[i, ...].tofile(
+                    os.path.join(output_path, x_names[i].replace(".bin", "_0.bin"))
+                )
+                paf[i, ...].tofile(
+                    os.path.join(output_path, x_names[i].replace(".bin", "_1.bin"))
+                )
 
     print(
-        f"Pure inference performance: {(counted_num - warmup_num) / cumulated_time} fps"
+        f"Pure inference performance: {batch * (counted_num - args.warmup_num) / cumulated_time} FPS"
     )
+
+
+def main():
+    args = parse_args()
+    torch_npu.npu.set_device(args.device)
+    torch_aie_model = compile_model(args)
+    inference(args, torch_aie_model)
 
 
 if __name__ == "__main__":
