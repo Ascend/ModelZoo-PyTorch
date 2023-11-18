@@ -142,7 +142,6 @@ class OptimizerNames(ExplicitEnum):
     ADAMW_ANYPRECISION = "adamw_anyprecision"
     SGD = "sgd"
     ADAGRAD = "adagrad"
-    ADAMW_TORCH_NPU_FUSED = "adamw_torch_npu_fused"
 
 
 @dataclass

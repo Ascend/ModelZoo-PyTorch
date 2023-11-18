@@ -1202,14 +1202,6 @@ class Trainer:
             optimizer_cls = torch.optim.SGD
         elif args.optim == OptimizerNames.ADAGRAD:
             optimizer_cls = torch.optim.Adagrad
-        elif args.optim == OptimizerNames.ADAMW_TORCH_NPU_FUSED:
-            try:
-                from torch_npu.optim import NpuFusedAdamW
-
-                optimizer_cls = NpuFusedAdamW
-                optimizer_kwargs.update(adam_kwargs)
-            except ImportError:
-                raise ValueError("Trainer failed to import NpuFusedAdamW from torch_npu.optim.")
         else:
             raise ValueError(f"Trainer cannot instantiate unsupported optimizer: {args.optim}")
         return optimizer_cls, optimizer_kwargs
