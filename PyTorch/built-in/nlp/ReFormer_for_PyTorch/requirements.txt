@@ -1,0 +1,8 @@
+datasets
+evaluate
+numpy
+sympy
+scikit-learn
+setuptools
+accelerate >= 0.12.0
+transformers==4.28.1

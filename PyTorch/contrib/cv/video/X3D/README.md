@@ -210,3 +210,8 @@ Iessues and PRs about this project
 - optimizer error https://gitee.com/ascend/pytorch-develop/pulls/2438
 - pyav install on CentOS arm  https://gitee.com/ascend/modelzoo/issues/I48AP3
 - scikit-learn cannot allocate memory in static TLS https://gitee.com/ascend/modelzoo/issues/I48QNY
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

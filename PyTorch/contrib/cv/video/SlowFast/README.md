@@ -78,3 +78,8 @@ Log Path:
 |  30.24 (30 epochs)   | 86  |    256   |    O1    |  8p Gpu  |
 
 注：源仓库模型单 view 测试为 70.19 (256 epochs)，30 views 测试为 77.0（256 epochs）
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -1,0 +1,27 @@
+| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
+| ---- | ------------ | ------ | ------------------------------------ | -------- |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/eval_lib/eval.pyx	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/eval_lib/eval.pyx|Vehicle_Re-Identification/PAMTRI/torchreid/eval_lib/eval.pyx	| https://en.wikipedia.org/wiki/Evaluation_measures_ | 模型相关说明 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/eval_lib/setup.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/eval_lib/test_cython_eval.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/losses/cross_entropy_loss.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/losses/hard_mine_triplet_loss.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/losses/hard_mine_triplet_loss.py|Vehicle_Re-Identification/PAMTRI/torchreid/losses/hard_mine_triplet_loss.py	| https://github.com/Cysu/open-reid/blob/master/reid/loss/triplet.py | 源码实现 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/models/densenet.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/models/resnet.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/utils/avgmeter.py|Vehicle_Re-Identification/PAMTRI/torchreid/utils/avgmeter.py	| https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262 | 源码实现 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/utils/iotools.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/utils/logger.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/utils/reidtools.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/utils/logger.py|Vehicle_Re-Identification/PAMTRI/torchreid/utils/logger.py	| https://github.com/Cysu/open-reid/blob/master/reid/utils/logging.py | 源码实现 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/utils/torchtools.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/test.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/train_1p.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/train_8p.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/dataset_loader.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/data_manager.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/eval_metrics.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/optimizers.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/eval_lib/eval.pyx|Vehicle_Re-Identification/PAMTRI/torchreid/eval_metrics.py	| https://en.wikipedia.org/wiki/Evaluation_measures_ | 模型相关说明 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/samplers.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/NVlabs/PAMTRI/blob/master/MultiTaskNet/torchreid/dataset_loader.py|Vehicle_Re-Identification/PAMTRI/torchreid/transforms.py	| tangzhengthomas@gmail.com | 开发者邮箱配置 |

@@ -56,7 +56,7 @@ start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
 python3 \
-  .\examples\text_to_image\train_text_to_image_lora_sdxl.py \
+  ./examples/text_to_image/train_text_to_image_lora_sdxl.py \
   --pretrained_model_name_or_path=$model_name \
   --pretrained_vae_model_name_or_path=$vae_name \
   --dataset_name=$dataset_name --caption_column="text" \

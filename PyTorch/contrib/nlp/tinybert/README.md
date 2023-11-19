@@ -120,3 +120,9 @@ Result
 |<center>NPU|<center>90.85|<center>90.04|<center>94.54|<center>554.09|
 |<center>baseline(TinyBERT<sub>4</sub>)|<center>92.6|<center>None|<center>None|<center>None|
 |<center>requirement|<center>87.6|<center>None|<center>None|<center>None|
+
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

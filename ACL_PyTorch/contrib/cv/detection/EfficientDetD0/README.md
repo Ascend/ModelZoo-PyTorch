@@ -136,7 +136,8 @@ EfficientDet是在EfficientNet基础上提出来的目标检测模型，它将Ef
 
    1. 获取权重文件。
 
-       请在本项目下下载pth文件
+       请在本项目下下载 [pth文件](https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/EffcientDet-D0/PTH/d0.pth)。
+       
 
    2. 导出onnx文件。
 

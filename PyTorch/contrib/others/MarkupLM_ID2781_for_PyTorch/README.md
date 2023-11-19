@@ -98,4 +98,6 @@ NPU
 | 0.9175 | 0.8426 | 0.8818 | 1.54 |
 
 
+# Statement
 
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

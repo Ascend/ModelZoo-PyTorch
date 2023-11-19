@@ -1,0 +1,30 @@
+| 类型   | 开源代码地址 | 文件名     | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
+|------|--------|---------|------------------------|--------|
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/component/random_process.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/network/network_utils.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/utils/normalizer.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/utils/schedule.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/utils/torch_utils.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开发引入 | / | DQN/Dockerfile | https://www.roboti.us/download/mujoco200_linux.zip | 下载链接 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/agent/DQN_agent.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/Dockerfile | DQN/Dockerfile | https://github.com/ShangtongZhang/dm_control2gym.git@scalar_fix | 邮箱地址 |
+| 开发引入 | / | DQN/Dockerfile | https://conda.anaconda.org/angloyna | 相关说明 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/deep_rl/utils/torch_utils.py | DQN/deep_rl/utils/torch_utils.py | https://discuss.pytorch.org/t/batch-of-diagonal-matrix/13560 | 相关说明 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/deep_rl/component/envs.py | DQN/deep_rl/component/envs.py | https://github.com/ikostrikov/pytorch-a2c-ppo-acktr/blob/master/envs.py | 源码实现 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/network/network_bodies.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/deep_rl/network/network_utils.py | DQN/deep_rl/network/network_utils.py | https://github.com/saj1919/RL-Adventure/blob/master/5.noisy%20dqn.ipynb | 源码实现 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/Dockerfile | DQN/Dockerfile | https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | 相关依赖 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/component/envs.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/deep_rl/utils/sum_tree.py | DQN/deep_rl/utils/sum_tree.py | https://github.com/rlcode/per/blob/master/SumTree.py | 源码实现 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/setup.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/examples.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/setup.py | https://github.com/ShangtongZhang/DeepRL | 源码实现 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/utils/logger.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开发引入 | / | DQN/Dockerfile | https://www.roboti.us/download/mjpro150_linux.zip | 下载链接 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/utils/misc.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/component/replay.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/deep_rl/utils/torch_utils.py | DQN/deep_rl/utils/torch_utils.py | https://github.com/pytorch/pytorch/issues/12160 | 相关说明 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/agent/BaseAgent.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/utils/config.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/ShangtongZhang/DeepRL/setup.py | DQN/deep_rl/network/network_heads.py | zhangshangtong.cpp@gmail.com | 邮箱地址 |
+

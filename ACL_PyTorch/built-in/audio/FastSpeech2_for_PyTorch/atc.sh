@@ -38,25 +38,25 @@ fi
 echo "1) 导出om：encoder"
 atc --framework=5 --input_format=ND --log=error --soc_version=${soc} \
     --model=${onnx_path}/encoder.onnx --output=${om_path}/encoder_bs${bs} \
-    --input_shape="texts:[${bs},1~${max_src_len}];src_masks:[${bs},1~${max_src_len}]"
+    --input_shape_range="texts:[${bs},1~${max_src_len}];src_masks:[${bs},1~${max_src_len}]"
 mv ${om_path}/encoder_bs${bs}* ${om_path}/encoder_bs${bs}.om
 
 echo "2) 导出om：variance_adaptor"
 atc --framework=5 --input_format=ND --log=error --soc_version=${soc} \
     --model=${onnx_path}/variance_adaptor.onnx --output=${om_path}/variance_adaptor_bs${bs} \
-    --input_shape="enc_output:[${bs},1~${max_src_len},256];src_masks:[${bs},1~${max_src_len}]"
+    --input_shape_range="enc_output:[${bs},1~${max_src_len},256];src_masks:[${bs},1~${max_src_len}]"
 mv ${om_path}/variance_adaptor_bs${bs}* ${om_path}/variance_adaptor_bs${bs}.om
 
 echo "3) 导出om：decoder"
 atc --framework=5 --input_format=ND --log=error --soc_version=${soc} \
     --model=${onnx_path}/decoder.onnx --output=${om_path}/decoder_bs${bs} \
-    --input_shape="output:[${bs},1~${max_mel_len},256];mel_masks:[${bs},1~${max_mel_len}]"
+    --input_shape_range="output:[${bs},1~${max_mel_len},256];mel_masks:[${bs},1~${max_mel_len}]"
 mv ${om_path}/decoder_bs${bs}* ${om_path}/decoder_bs${bs}.om
 
 echo "4) 导出om：postnet"
 atc --framework=5 --input_format=ND --log=error --soc_version=${soc} \
     --model=${onnx_path}/postnet.onnx --output=${om_path}/postnet_bs${bs} \
-    --input_shape="dec_output:[${bs},1~${max_mel_len},256]"
+    --input_shape_range="dec_output:[${bs},1~${max_mel_len},256]"
 mv ${om_path}/postnet_bs${bs}* ${om_path}/postnet_bs${bs}.om
 
 echo "5) 导出om：hifigan"

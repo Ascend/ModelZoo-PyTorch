@@ -3,6 +3,7 @@
 # 网络名称，同目录名称
 Network="GLIP_for_PyTorch"
 BATCH_SIZE=8
+TEST_BATCH_SIZE=8
 USE_AMP=False
 early_stop_iteration=2500
 LOAD_FROM="pretrain/glip_tiny_model_o365_goldg_cc_sbu.pth"
@@ -79,7 +80,8 @@ do
         DATASETS.TRAIN '("coco_grounding_train", )' \
         MODEL.BACKBONE.FREEZE_CONV_BODY_AT -1 SOLVER.IMS_PER_BATCH ${BATCH_SIZE} \
         SOLVER.USE_AMP ${USE_AMP} SOLVER.MAX_EPOCH 24 \
-        TEST.DURING_TRAINING False TEST.IMS_PER_BATCH 16 \
+        TEST.DURING_TRAINING False TEST.IMS_PER_BATCH ${TEST_BATCH_SIZE} \
+        TEST.AFTER_TRAINING True SOLVER.TEST_WITH_INFERENCE True \
         SOLVER.FIND_UNUSED_PARAMETERS False SOLVER.BASE_LR 0.00001 \
         SOLVER.LANG_LR 0.00001 SOLVER.STEPS \(0.67,0.89\) \
         DATASETS.DISABLE_SHUFFLE True MODEL.DYHEAD.SCORE_AGG "MEAN" \
@@ -103,6 +105,11 @@ echo "------------------ Final result ------------------"
 FPS=`grep -a 'fps' ${WORK_DIR}/train_${ASCEND_DEVICE_ID}.log|awk -F "fps: " '{print $2}'|awk -F "(" '{print $1}'| tail -2400 | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
 # 打印，不需要修改
 echo "Final Performance images/sec : $FPS"
+
+# 输出训练精度,需要模型审视修改
+train_accuracy=$(grep -a ".inference INFO: OrderedDict" ${WORK_DIR}/train_${ASCEND_DEVICE_ID}.log|tail -1 |awk -F "'AP', " '{print $2}' |awk -F ")" '{print $1}' |awk '{a+=$1} END {printf("%.3f",a)}')
+# 打印，不需要修改
+echo "Final Train Accuracy : ${train_accuracy}"
 echo "E2E Training Duration sec : $e2e_time"
 
 
@@ -125,6 +132,7 @@ echo "RankSize = ${WORLD_SIZE}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${Ca
 echo "BatchSize = ${BatchSize}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "DeviceType = ${DeviceType}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "CaseName = ${CaseName}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
+echo "TrainAccuracy = ${train_accuracy}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
 echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/$ASCEND_DEVICE_ID/${CaseName}_perf_report.log

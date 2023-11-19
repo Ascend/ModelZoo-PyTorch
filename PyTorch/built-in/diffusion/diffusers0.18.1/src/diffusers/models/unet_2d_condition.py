@@ -152,6 +152,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
     """
 
     _supports_gradient_checkpointing = True
+    _release_part_gradient_checkpointing = False
 
     @register_to_config
     def __init__(
@@ -454,6 +455,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 resnet_out_scale_factor=resnet_out_scale_factor,
                 cross_attention_norm=cross_attention_norm,
                 attention_head_dim=attention_head_dim[i] if attention_head_dim[i] is not None else output_channel,
+                release_part_gradient_checkpointing=UNet2DConditionModel._release_part_gradient_checkpointing
             )
             self.down_blocks.append(down_block)
 
@@ -543,6 +545,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 resnet_out_scale_factor=resnet_out_scale_factor,
                 cross_attention_norm=cross_attention_norm,
                 attention_head_dim=attention_head_dim[i] if attention_head_dim[i] is not None else output_channel,
+                release_part_gradient_checkpointing=UNet2DConditionModel._release_part_gradient_checkpointing
             )
             self.up_blocks.append(up_block)
             prev_output_channel = output_channel

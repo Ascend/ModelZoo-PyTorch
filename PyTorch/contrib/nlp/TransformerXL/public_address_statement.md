@@ -1,0 +1,11 @@
+| 类型     | 开源代码地址 | 文件名                                                            | 公网IP地址/公网URL地址/域名/邮箱地址                                                                                                                       | 用途说明   |
+|--------|---|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|--------|
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz | 数据集地址 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | http://mattmahoney.net/dc/enwik8.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/pytorch/utils/log_uniform_sampler.py | TransformerXL/utils/log_uniform_sampler.py | https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/ops/candidate_sampling_ops.py | 源码实现 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | http://mattmahoney.net/dc/text8.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-v1.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-2-v1.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz | 数据集地址 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | https://raw.githubusercontent.com/salesforce/awd-lstm-lm/master/data/enwik8/prep_enwik8.py | 源码实现 |
+| 开源代码引入 | https://github.com/kimiyoung/transformer-xl/tree/master/pytorch/getdata.sh | TransformerXL/getdata.sh | https://github.com/rafaljozefowicz/lm/raw/master/1b_word_vocab.txt | 数据集地址 |

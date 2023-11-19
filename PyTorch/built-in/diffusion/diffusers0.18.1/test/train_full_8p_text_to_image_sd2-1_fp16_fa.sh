@@ -78,9 +78,10 @@ python3 -m torch.distributed.launch --nproc_per_node 8 --use_env \
   --enable_npu_flash_attention \
   --mixed_precision=$mixed_precision \
   --dataloader_num_workers=8 \
-  --use_npu_fuse_adamW \
+  --use_megatron_npu_adamW \
   --enable_pin_memory \
   --enable_persistent_workers \
+  --release_part_gradient_checkpointing \
   --output_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 
 wait

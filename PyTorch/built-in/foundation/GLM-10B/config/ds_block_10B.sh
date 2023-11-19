@@ -37,6 +37,9 @@ gpt_options=" \
        --warmup 0.04 \
        --checkpoint-activations \
        --deepspeed-activation-checkpointing \
+       --hidden-dropout 0. \
+       --attention-dropout 0. \
+       --output-dropout 0. \
 "
        # --fp16 \
 

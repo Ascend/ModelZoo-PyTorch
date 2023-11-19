@@ -15,6 +15,7 @@
 import argparse
 import numpy as np
 import os
+import time
 import torch
 import torch_npu
 import torch_aie
@@ -34,13 +35,27 @@ def inference(args):
     compile_input = [torch_aie.Input((1, 3, 1000, 1000), dtype=torch.float)]
     torch_aie_model = torch_aie.compile(torch_script_model, inputs=compile_input)
 
-    for _, __, file_names in os.walk(img_folder):
+    cumulated_time = 0
+    warmup_num = 5
+    counted_num = 0
+    for dir_path, _, file_names in os.walk(img_folder):
         for file_name in tqdm(file_names):
-            file_path = os.path.join(img_folder, file_name)
-            x = torch.from_numpy(np.load(file_path))
+            counted_num += 1
+            file_path = os.path.join(dir_path, file_name)
+            x = torch.from_numpy(np.load(file_path)).to("npu:0")
+
+            stream = torch_aie.npu.Stream("npu:0")
+            with torch_aie.npu.stream(stream):
+                stream.synchronize()
+                ts = time.time()
+                ret = torch_aie_model.forward(x)
+                stream.synchronize()
+                duration = time.time() - ts
+                if counted_num > warmup_num:
+                    cumulated_time += duration
+
             boxes, confidence, key_points_shifts = [
-                output.detach().to("cpu").numpy()
-                for output in torch_aie_model.forward(x)
+                output.detach().to("cpu").numpy() for output in ret
             ]
             boxes.tofile(
                 os.path.join(result_folder, file_name.replace(".npy", "_2.bin"))
@@ -51,6 +66,10 @@ def inference(args):
             key_points_shifts.tofile(
                 os.path.join(result_folder, file_name.replace(".npy", "_0.bin"))
             )
+
+    print(
+        f"Pure inference performance: {(counted_num - warmup_num) / cumulated_time} fps"
+    )
 
 
 if __name__ == "__main__":

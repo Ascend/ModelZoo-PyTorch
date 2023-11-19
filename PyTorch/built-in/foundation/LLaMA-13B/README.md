@@ -263,3 +263,7 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

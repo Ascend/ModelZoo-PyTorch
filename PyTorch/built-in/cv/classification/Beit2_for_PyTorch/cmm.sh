@@ -10,7 +10,7 @@ source  /home/xxx/ascend-toolkit/set_env.sh
 data_path=/home/xxx/coco2017
 output_dir=/home/xxxx/result
 log_dir=/home/xxx/result
-# 根据下方链接下载后放到一个固定目录，无需每次下载。
+# Download the tokenizer weight from the following http link, and modify tokenizer_weight  to the file path
 tokenizer_weight=/home/xxx/tokenizer_model/vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth
 #tokenizer_weight='https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D'
 

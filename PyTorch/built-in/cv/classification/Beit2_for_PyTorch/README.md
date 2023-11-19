@@ -57,6 +57,7 @@ git clone https://github.com/NVIDIA/apex
 cd apex
 pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
 ```
+**Second, download the bpe_simple_vocab_16e6.txt.gz file under unilm/tree/master/beit2/vqkd_teacher/clip from the above model link address, and then put it in the same path.**
 
 ## Fine-tuning on ImageNet-1k (Image Classification)
 

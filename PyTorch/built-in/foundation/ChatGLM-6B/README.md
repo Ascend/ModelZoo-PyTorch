@@ -231,6 +231,9 @@ bash preprocess.sh
 
 2023.6.25：首次发布。
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
 ## FAQ
 
 1. 报错提示deepspeed.py需要版本大于等于0.6.5

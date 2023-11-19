@@ -44,6 +44,9 @@ import modeling_vqkd
 torch_npu.npu.set_compile_mode(jit_compile=True)
 torch_npu.npu.config.allow_internal_format = False
 
+option = {"FORCE_ACLNN_OP_LIST": "copy_"}
+torch.npu.set_option(option)
+
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     MixedPrecision,

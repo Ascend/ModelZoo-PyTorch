@@ -31,8 +31,6 @@ DeepRemaster是一个能够对老电影进行修复和上色的半交互式框�
 
 
 ## 准备数据集
-测试集下载地址：链接：https://pan.baidu.com/s/1or0HTBqOBvcEFnapJjDF-g 
-提取码：HWDR
 
 注：下载后请保存在源码包目录下的example文件夹中，如下所示。
 

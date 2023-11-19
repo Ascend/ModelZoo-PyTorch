@@ -23,7 +23,7 @@ Wenet模型是一个使用Conformer结构的ASR（语音识别）模型，具有
 - 参考实现：
 
   ```
-  url=https://github.com/Slyne/ctc_decoder.git 
+  url=https://github.com/wenet-e2e/wenet.git
   branch=v2.0.1
   model_name=Wenet
   ```

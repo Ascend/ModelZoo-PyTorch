@@ -193,3 +193,7 @@ VOLO是一种分类网络，VOLO采用两阶段架构设计，同时考虑了更
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

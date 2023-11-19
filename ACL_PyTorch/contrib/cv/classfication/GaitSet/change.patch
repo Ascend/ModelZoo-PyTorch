@@ -17,7 +17,7 @@ index 3f0737c..3056a1b 100644
 +++ b/model/model.py
 @@ -1,20 +1,77 @@
 -import math
-+锘縤mport math
++import math
  import os
  import os.path as osp
  import random
