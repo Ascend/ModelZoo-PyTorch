@@ -132,3 +132,8 @@ bash ./test/train_eval_1p.sh --data_path=./datasets
 | NPU-1p | -     | 3.76 fps  |
 | GPU-8p | -     | 19.14 fps |
 | NPU-8p | -     | 13.79 fps |
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

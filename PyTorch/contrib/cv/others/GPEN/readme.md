@@ -121,3 +121,8 @@ GPEN模型的训练需要FFHQ数据集，在[Data Preparation](#data-preparation
 code:  [yangxy/GPEN (github.com)](https://github.com/yangxy/GPEN) 
 
 paper: [GPEN](https://arxiv.org/pdf/2105.06070.pdf) 
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
