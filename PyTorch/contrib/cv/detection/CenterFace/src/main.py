@@ -98,12 +98,14 @@ def main(opt, qtepoch=[0,]):
   print('Setting up data...')
   if opt.distributed_launch:
     train_sampler = torch.utils.data.distributed.DistributedSampler(Dataset(opt, 'train'))
+  kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
   val_loader = torch.utils.data.DataLoader(
       Dataset(opt, 'val'), 
       batch_size=1, 
       shuffle=False,
       num_workers=1,
-      pin_memory=True
+      pin_memory=True,
+      **kwargs
   )
 
   if opt.test:
@@ -119,7 +121,8 @@ def main(opt, qtepoch=[0,]):
       sampler=train_sampler if opt.distributed_launch else None,
       pin_memory=True,
       drop_last=True,
-      collate_fn=Multiposebatch
+      collate_fn=Multiposebatch,
+      **kwargs
   )
 
   print('Starting training...')
