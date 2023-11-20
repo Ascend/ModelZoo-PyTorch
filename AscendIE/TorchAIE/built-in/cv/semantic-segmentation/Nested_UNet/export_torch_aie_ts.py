@@ -29,8 +29,8 @@ def export_torch_aie(opt_args):
     torchaie_model = torch_aie.compile(
         trace_model,
         inputs=inputs,
-        # precision_policy=_enums.PrecisionPolicy.FP16,
-        precision_policy=_enums.PrecisionPolicy.PREF_FP32,
+        precision_policy=_enums.PrecisionPolicy.FP16,
+        # precision_policy=_enums.PrecisionPolicy.PREF_FP32,
         truncate_long_and_double=True,
         require_full_compilation=False,
         allow_tensor_replace_int=False,

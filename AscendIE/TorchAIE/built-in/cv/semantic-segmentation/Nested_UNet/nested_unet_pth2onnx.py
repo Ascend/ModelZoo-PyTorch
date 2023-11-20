@@ -38,6 +38,8 @@ def convert():
                       output_names=output_names, opset_version=11, verbose=True)
 
     ts_model = torch.jit.trace(model, dummy_input)
+    res = ts_model(dummy_input)
+    print("res11111", res)
     # model.to_torchscript(method="trace", example_inputs=input_data)
     output_model = 'nested_unet.torchscript.pt'
     ts_model.save(output_model)

@@ -15,12 +15,15 @@
 import os
 import yaml
 import json
+import cv2
 import argparse
 import numpy as np
 import torch
 import torch_aie
 from torch_aie import _enums
 from torch.utils.data import DataLoader, Dataset, dataloader, distributed
+from albumentations.augmentations import transforms
+from albumentations.core.composition import Compose
 
 from ais_bench.infer.interface import InferSession
 
@@ -109,11 +112,29 @@ def collate_fn(batch):
 
 def create_dataloader(data_path, batch_size, workers=8):
     dataset = []
-    data_file_list = os.listdir(data_path)
-    for fname in data_file_list:
-        with open(os.path.join(data_path, fname), "rb") as f:
-            res = f.read()
-            dataset.append(res)
+    # data_file_list = os.listdir(data_path)
+    # for fname in data_file_list:
+    #     with open(os.path.join(data_path, fname), "rb") as f:
+    #         res = f.read()
+    #         dataset.append(res)
+
+    file = open("./pytorch-nested-unet/val_ids.txt")
+    val_ids = file.read().split('\n')
+
+    val_transform = Compose([
+        transforms.Resize(96, 96),
+        transforms.Normalize(),
+    ])
+
+    for img_id in val_ids:
+        if len(img_id) == 0: continue
+        img = cv2.imread(os.path.join("./pytorch-nested-unet/inputs/dsb2018_96/images", img_id + '.png'))
+        augmented = val_transform(image=img)
+        img = augmented['image']
+        img = img.astype('float32') / 255
+        img = img.transpose(2, 0, 1)
+        # img.tofile(os.path.join(output_dir, img_id + ".bin"))
+        dataset.append(img)
 
     batch_size = min(batch_size, len(dataset))
     loader = InfiniteDataLoader  # only DataLoader allows for attribute updates
@@ -153,8 +174,10 @@ def main(opt):
     # inference & nms
     pred_results = forward_nms_script(model, dataloader, opt.batch_size, opt.device_id)
     data_file_list = os.listdir(opt.data_path)
-    for index, input_fname in enumerate(data_file_list):
-        result_fname = input_fname
+    file = open("./pytorch-nested-unet/val_ids.txt")
+    val_ids = file.read().split('\n')
+    for index, input_fname in enumerate(val_ids):
+        result_fname = input_fname + '.bin'
         # print(pred_results[index])
         # print(pred_results[index].tolist())
         np.array(pred_results[index].numpy().tofile(os.path.join("result/res_tmp", result_fname)))
