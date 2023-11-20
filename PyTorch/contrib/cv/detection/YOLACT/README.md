@@ -154,3 +154,7 @@ YOLACT是2019年发表在ICCV上面的一个实时实例分割的模型，它主
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

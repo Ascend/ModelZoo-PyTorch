@@ -7,10 +7,22 @@
 | 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/9135e104a7a51ea9effa9c6676a2fcffe6a6a2e6/modeling/backbone/mobilenet.py | DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/mobilenet.py | http://jeff95.me/models/mobilenet_v2-6a65762b.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/9135e104a7a51ea9effa9c6676a2fcffe6a6a2e6/modeling/backbone/resnet.py | DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/resnet.py | https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/9135e104a7a51ea9effa9c6676a2fcffe6a6a2e6/modeling/backbone/xception.py | DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/xception.py | http://data.lip6.fr/cadene/pretrainedmodels/xception-b5690688.pth | 下载权重文件 |
-
-
-
-
-
-
-
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/doc/deeplab_resnet.py|DeepLabv3+_ID1695_for_PyTorch/doc/deeplab_resnet.py	| https://download.pytorch.org/models/resnet101-5d3b4d8f.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/doc/deeplab_xception.py|DeepLabv3+_ID1695_for_PyTorch/doc/deeplab_xception.py	| http://data.lip6.fr/cadene/pretrainedmodels/xception-b5690688.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/utils/lr_scheduler.py|DeepLabv3+_ID1695_for_PyTorch/utils/lr_scheduler.py	| zhang.hang@rutgers.e | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/backbone/drn.py|DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/drn.py	| http://dl.yf.io/dr | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/backbone/drn.py|DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/drn.py	| https://download.pytorch.org/models/resnet50-19c8e357.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/backbone/mobilenet.py|DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/mobilenet.py	| http://jeff95.me/models/mobilenet_v2-6a65762b.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/batchnorm.py	| maojiayuan@gmail.c | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/batchnorm.py	| https://github.com/vacancy/Synchronized-BatchNorm-PyTor | 源码实现 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/doc/deeplab_resnet.py|DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/resnet.py	| https://download.pytorch.org/models/resnet101-5d3b4d8f.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/batchnorm.py	| http://tetexiao.co | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/comm.py	| maojiayuan@gmail.c | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/comm.py	| https://github.com/vacancy/Synchronized-BatchNorm-PyTor | 源码实现 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/replicate.py	| maojiayuan@gmail.c | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/replicate.py	| https://github.com/vacancy/Synchronized-BatchNorm-PyTor | 源码实现 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/doc/deeplab_xception.py|DeepLabv3+_ID1695_for_PyTorch/modeling/backbone/xception.py	| http://data.lip6.fr/cadene/pretrainedmodels/xception-b5690688.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/unittest.py	| maojiayuan@gmail.c | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/unittest.py	| https://github.com/vacancy/Synchronized-BatchNorm-PyTor | 源码实现 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/__init__.py	| maojiayuan@gmail.c | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/jfzhang95/pytorch-deeplab-xception/blob/master/modeling/sync_batchnorm/batchnorm.py|DeepLabv3+_ID1695_for_PyTorch/modeling/sync_batchnorm/__init__.py	| https://github.com/vacancy/Synchronized-BatchNorm-PyTor | 源码实现 |
