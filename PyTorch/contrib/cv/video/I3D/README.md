@@ -225,3 +225,7 @@ I3D是一种新型的基于二维卷积网络膨胀生成的双流三位卷积�
    ```
    https://github.com/dmlc/decord/blob/master/README.md
    ```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md   
