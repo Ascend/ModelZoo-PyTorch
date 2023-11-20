@@ -78,3 +78,8 @@ Please consider citing this paper if you find the code and data useful in your r
 	year={2019}
 }
 ```
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

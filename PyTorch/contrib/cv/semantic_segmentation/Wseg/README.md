@@ -52,3 +52,8 @@ bash test/train_finetune_1P.sh --data_path=real_data_path --pth_path=real_pre_tr
 | :------: | :------:  | :------: | :------: | :------: |
 | -        | 4.5       | 1        | 24        | O1       |
 | 57.0 | 32 | 8        | 24      | O1       |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
