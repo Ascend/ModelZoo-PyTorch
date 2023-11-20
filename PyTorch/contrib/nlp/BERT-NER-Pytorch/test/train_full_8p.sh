@@ -55,10 +55,10 @@ end_time=$(date +%s)
 e2e_time=$(( $end_time - $start_time ))
 
 echo "------------------ Final result ------------------"
-lines=$(grep -P "\[Training\] \d+/\d+.*ms/step" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log)
+lines=$(grep -P "\[Training\] \d+/\d+.*s/step" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train.log)
 nlines=10
 use_lines=$(echo "${lines}" | tail -n ${nlines})
-perfs=$(echo "${use_lines}" | sed -E 's/.*\[Training\].*\[=+\] ([0-9]+\.[0-9]+)ms.*/\1/')
+perfs=$(echo "${use_lines}" | sed -E 's/.*\[Training\].*\[=+\] ([0-9]+\.[0-9]+)([m]*)s.*/\1/')
 sum=$(echo "${perfs}" | tr '\n' '+' | sed -E 's/(.*)\+$/\1/')
 sum=$(echo "${sum}" | bc -l)
 avg=$(echo "${sum} / 10" | bc -l)
