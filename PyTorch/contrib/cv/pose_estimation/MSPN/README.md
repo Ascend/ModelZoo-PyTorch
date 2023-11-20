@@ -110,3 +110,7 @@ the ***gpu_num*** is the number of gpus, and ***iter_num*** is the iteration num
 | -     | 64.727 | 1        | 4      | O1       |
 | 74.5  | 341.4  | 8        | 4      | O1       |
 
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
