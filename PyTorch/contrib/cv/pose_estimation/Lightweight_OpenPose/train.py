@@ -153,7 +153,7 @@ def main():
     checkpoints_folder = '{}_checkpoints'.format(args.experiment_name)
     print("checkpoint_folder : ", checkpoints_folder)
     if not os.path.exists(checkpoints_folder) and not args.evaluate:
-        os.makedirs(checkpoints_folder)
+        os.makedirs(checkpoints_folder, exist_ok=True)
     args.checkpoints_folder = checkpoints_folder
     args.process_device_map = device_id_to_process_device_map(args.device_list)
 
