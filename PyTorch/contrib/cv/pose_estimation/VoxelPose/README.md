@@ -43,3 +43,8 @@ Log path:
 | 名称    | 精度       | FPS | AMP_Type   |
 | :------: | :------:  | :------: | :------: |
 |  NPU-8p  |   97.10    |    1.267     |   O1    |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
