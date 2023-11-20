@@ -97,7 +97,9 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
   ```
 
   
+# 公网地址说明
 
+代码涉及公网地址参考 public_address_statement.md 
 # 版本说明
 
 ## 变更
@@ -110,3 +112,5 @@ StableDiffusion 是 StabilityAI公司于2022年提出的图片生成的预训练
 2. `requests.exceptions.SSLError:HttpSConnectionPool(host='huggingface.co', port=443)`错误
 
    可以修改当前环境的`requests`包下的sessions.py文件的684行，增加`kwargs["verify"] = False`，一般路径在`conda_path/envs/conda_name/lib/python*/site-packages/requests/sessions.py`，查看`requests`包的所在路径可以通过`pip show requests`查看
+
+

@@ -157,3 +157,5 @@ python train.py \
 
 * step3.启动验证脚本，计算rouge精度(`bash ../test/train_eval_8p.sh`)
 
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md 
