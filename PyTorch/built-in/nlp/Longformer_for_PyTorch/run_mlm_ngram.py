@@ -21,7 +21,7 @@ https://huggingface.co/models?filter=masked-lm
 
 import torch
 import torch_npu
-from optimum.ascend import transfor_to_npu
+from torch_npu.contrib import transfer_to_npu
 
 import numpy as np
 import random
@@ -357,7 +357,7 @@ def main():
     else:
         config = CONFIG_MAPPING[model_args.model_type]()
         logger.warning("You are instantiating a new config instance from scratch.")
-
+    config.hidden_act = "gelu_python"
     tokenizer_kwargs = {
         "cache_dir": model_args.cache_dir,
         "use_fast": model_args.use_fast_tokenizer,

@@ -1202,6 +1202,15 @@ class Trainer:
             optimizer_cls = torch.optim.SGD
         elif args.optim == OptimizerNames.ADAGRAD:
             optimizer_cls = torch.optim.Adagrad
+            optimizer_cls = torch.optim.Adagrad
+        elif args.optim == OptimizerNames.ADAMW_TORCH_NPU_FUSED:
+            try:
+                from torch_npu.optim import NpuFusedAdamW
+
+                optimizer_cls = NpuFusedAdamW
+                optimizer_kwargs.update(adam_kwargs)
+            except ImportError:
+                raise ValueError("Trainer failed to import NpuFusedAdamW from torch_npu.optim.")
         else:
             raise ValueError(f"Trainer cannot instantiate unsupported optimizer: {args.optim}")
         return optimizer_cls, optimizer_kwargs
@@ -1899,6 +1908,7 @@ class Trainer:
             step = -1
             step_start_time = time.time()
             for step, inputs in enumerate(epoch_iterator):
+                data_load_time = time.time() - step_start_time
                 total_batched_samples += 1
                 if rng_to_sync:
                     self._load_rng_state(resume_from_checkpoint)
@@ -2011,9 +2021,16 @@ class Trainer:
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
-                if torch.distributed.get_rank() == 0:
-                    print("time cost: {}".format(time.time() - step_start_time))
-                    step_start_time = time.time()
+
+                step_time = time.time() - step_start_time
+
+                if (self.args.world_size > 1 and torch.distributed.get_rank() == 0) or self.args.world_size == 1:
+                    fps = batch_size * self.args.world_size / step_time
+                    print(f"step: {step}, step_time: {step_time}, "
+                          f"data_load_time: {data_load_time}, loss: {tr_loss_step}, fps: {fps}")
+
+                step_start_time = time.time()
+
             if step < 0:
                 logger.warning(
                     "There seems to be not a single sample in your epoch_iterator, stopping training at step"

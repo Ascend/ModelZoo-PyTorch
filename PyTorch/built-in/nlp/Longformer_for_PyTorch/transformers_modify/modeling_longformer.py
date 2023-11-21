@@ -921,7 +921,10 @@ class LongformerSelfAttention(nn.Module):
             chunked_value_stride[1],
             chunked_value_stride[2],
         )
-        chunked_value = padded_value.as_strided(size=chunked_value_size, stride=chunked_value_stride)
+
+        value1 = padded_value.unsqueeze(1)[:, :, :(3*window_overlap), :]
+        value2 = padded_value.unsqueeze(1)[:, :, (padded_value.shape[1] - (3*window_overlap)):, :]
+        chunked_value = torch.cat([value1, value2], 1)
 
         chunked_attn_probs = self._pad_and_diagonalize(chunked_attn_probs)
 
