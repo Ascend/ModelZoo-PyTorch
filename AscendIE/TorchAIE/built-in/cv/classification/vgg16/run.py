@@ -51,7 +51,8 @@ def validate(model, args):
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
     for i, (images, target) in tqdm(enumerate(valid_loader), total=len(valid_loader)):
-        pred = model(images)
+        images = images.to("npu:0")
+        pred = model(images).to("cpu")
         acc = compute_acc(pred, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
         avg_top5 += acc[1].item()
