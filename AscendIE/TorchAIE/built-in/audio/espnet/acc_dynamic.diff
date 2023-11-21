@@ -1,0 +1,250 @@
+diff --git a/egs/aishell/asr1/RESULTS.md b/egs/aishell/asr1/RESULTS.md
+old mode 100644
+new mode 100755
+diff --git a/egs/aishell/asr1/cmd.sh b/egs/aishell/asr1/cmd.sh
+old mode 100644
+new mode 100755
+diff --git a/egs/aishell/asr1/conf/decode.yaml b/egs/aishell/asr1/conf/decode.yaml
+deleted file mode 120000
+index 1f358f011..000000000
+--- a/egs/aishell/asr1/conf/decode.yaml
++++ /dev/null
+@@ -1 +0,0 @@
+-tuning/decode_pytorch_transformer.yaml
+\ No newline at end of file
+diff --git a/egs/aishell/asr1/conf/train.yaml b/egs/aishell/asr1/conf/train.yaml
+deleted file mode 120000
+index 5e11a9c3d..000000000
+--- a/egs/aishell/asr1/conf/train.yaml
++++ /dev/null
+@@ -1 +0,0 @@
+-tuning/train_pytorch_conformer_kernel15.yaml
+\ No newline at end of file
+diff --git a/egs/aishell/asr1/path.sh b/egs/aishell/asr1/path.sh
+old mode 100644
+new mode 100755
+diff --git a/espnet/asr/pytorch_backend/asr.py b/espnet/asr/pytorch_backend/asr.py
+index d487380bd..951d04a89 100644
+--- a/espnet/asr/pytorch_backend/asr.py
++++ b/espnet/asr/pytorch_backend/asr.py
+@@ -1131,6 +1131,7 @@ def recog(args):
+                     else [feat[idx][0] for idx in range(model.num_encs)]
+                 )
+                 if args.streaming_mode == "window" and args.num_encs == 1:
++                    #
+                     logging.info(
+                         "Using streaming recognizer with window size %d frames",
+                         args.streaming_window,
+@@ -1146,6 +1147,7 @@ def recog(args):
+                     logging.info("Offline attention decoder finished")
+                     nbest_hyps = se2e.retrieve_recognition()
+                 elif args.streaming_mode == "segment" and args.num_encs == 1:
++                    #
+                     logging.info(
+                         "Using streaming recognizer with threshold value %d",
+                         args.streaming_min_blank_dur,
+@@ -1175,14 +1177,17 @@ def recog(args):
+                                 nbest_hyps[n]["yseq"].extend(hyps[n]["yseq"])
+                                 nbest_hyps[n]["score"] += hyps[n]["score"]
+                 elif hasattr(model, "is_transducer"):
++                    #
+                     nbest_hyps = model.recognize(feat, beam_search_transducer)
+                 else:
++                    #
+                     nbest_hyps = model.recognize(
+                         feat, args, train_args.char_list, rnnlm
+                     )
+                 new_js[name] = add_results_to_json(
+                     js[name], nbest_hyps, train_args.char_list
+                 )
++                exit(0)
+
+     else:
+
+@@ -1237,11 +1242,12 @@ def recog(args):
+                                 nbest_hyps[n]["yseq"].extend(hyps[n]["yseq"])
+                                 nbest_hyps[n]["score"] += hyps[n]["score"]
+                     nbest_hyps = [nbest_hyps]
++                    #
+                 else:
+                     nbest_hyps = model.recognize_batch(
+                         feats, args, train_args.char_list, rnnlm=rnnlm
+                     )
+-
++                    #
+                 for i, nbest_hyp in enumerate(nbest_hyps):
+                     name = names[i]
+                     new_js[name] = add_results_to_json(
+diff --git a/espnet/asr/pytorch_backend/recog.py b/espnet/asr/pytorch_backend/recog.py
+index 6c6d4ce11..dc150b4a5 100644
+--- a/espnet/asr/pytorch_backend/recog.py
++++ b/espnet/asr/pytorch_backend/recog.py
+@@ -4,6 +4,7 @@ from distutils.version import LooseVersion
+ import json
+ import logging
+
++import numpy as np
+ import torch
+
+ from espnet.asr.asr_utils import add_results_to_json
+@@ -18,9 +19,64 @@ from espnet.nets.scorer_interface import BatchScorerInterface
+ from espnet.nets.scorers.length_bonus import LengthBonus
+ from espnet.utils.deterministic_utils import set_deterministic_pytorch
+ from espnet.utils.io_utils import LoadInputsAndTargets
++from pyacl.acl_infer import AclNet
++import acl
++def _pad_sequence(sequences, batch_first=False, padding_value=0, mul_shape = None):
++    r"""Pad a list of variable length Tensors with ``padding_value``
+
++    ``pad_sequence`` stacks a list of Tensors along a new dimension,
++    and pads them to equal length. For example, if the input is list of
++    sequences with size ``L x *`` and if batch_first is False, and ``T x B x *``
++    otherwise.
+
++    `B` is batch size. It is equal to the number of elements in ``sequences``.
++    `T` is length of the longest sequence.
++    `L` is length of the sequence.
++    `*` is any number of trailing dimensions, including none.
++
++    Example:
++        >>> from torch.nn.utils.rnn import pad_sequence
++        >>> a = torch.ones(25, 300)
++        >>> b = torch.ones(22, 300)
++        >>> c = torch.ones(15, 300)
++        >>> pad_sequence([a, b, c]).size()
++        torch.Size([25, 3, 300])
++
++    Note:
++        This function returns a Tensor of size ``T x B x *`` or ``B x T x *``
++        where `T` is the length of the longest sequence. This function assumes
++        trailing dimensions and type of all the Tensors in sequences are same.
++
++    Arguments:
++        sequences (list[Tensor]): list of variable length sequences.
++        batch_first (bool, optional): output will be in ``B x T x *`` if True, or in
++            ``T x B x *`` otherwise
++        padding_value (float, optional): value for padded elements. Default: 0.
++
++    Returns:
++        Tensor of size ``T x B x *`` if :attr:`batch_first` is ``False``.
++        Tensor of size ``B x T x *`` otherwise
++    """
++
++    # assuming trailing dimensions and type of all the Tensors
++    # in sequences are same and fetching those from sequences[0]
++
++    max_size = sequences.shape[0]
++    max_len = max_size
++    if mul_shape is not None:
++        for in_shape in mul_shape:
++            if max_len < in_shape:
++                max_len = in_shape
++                break
++
++    out_dims = (max_len, sequences.shape[1])
++
++    out_tensor = sequences[0].data.new(*out_dims).fill_(padding_value)
++
++    out_tensor[:max_size, ...] = sequences
++    return out_tensor
+ def recog_v2(args):
++    total_t = 0
+     """Decode with custom models that implements ScorerInterface.
+
+     Notes:
+@@ -32,6 +88,10 @@ def recog_v2(args):
+         See py:func:`espnet.bin.asr_recog.get_parser` for details
+
+     """
++    ret = acl.init()
++    ret = acl.rt.set_device(0)
++    context, ret = acl.rt.create_context(0)
++    acl_model = AclNet(model_path = "encoder.om", device_id = 0, output_data_shape=93696)
+     logging.warning("experimental API for custom LMs is selected by --api v2")
+     if args.batchsize > 1:
+         raise NotImplementedError("multi-utt batch decoding is not implemented")
+@@ -163,12 +223,28 @@ def recog_v2(args):
+     with open(args.recog_json, "rb") as f:
+         js = json.load(f)["utts"]
+     new_js = {}
++    real_shape = {}
++    with open("encoder_out_shape.json", 'r') as load_f:
++        real_shape = json.load(load_f)
+     with torch.no_grad():
+         for idx, name in enumerate(js.keys(), 1):
+             logging.info("(%d/%d) decoding " + name, idx, len(js.keys()))
+             batch = [(name, js[name])]
+             feat = load_inputs_and_targets(batch)[0][0]
+-            enc = model.encode(torch.as_tensor(feat).to(device=device, dtype=dtype))
++            #ori_length = feat.shape[0]
++            #feat = torch.as_tensor(feat)
++            #feat = _pad_sequence(feat, mul_shape=[262, 326, 390, 454, 518, 582, 646, 710, 774, 838, 902, 966, 1028, 1284, 1478])
++            #dims = {'dimCount': 2, 'name': '', 'dims': [feat.shape[0], 83]}
++            #feat = feat.numpy()
++            input = np.array(feat)
++            enc, exe_t = acl_model([input])
++            total_t += exe_t
++            enc = torch.from_numpy(enc[0]).squeeze(0)
++            #enc = enc[:real_shape[str(ori_length)], :]
++            #print("enc.shape:", enc.shape)
++            #print("exe_t:", exe_t)
++
++            #enc = model.encode(torch.as_tensor(feat).to(device=device, dtype=dtype))
+             nbest_hyps = beam_search(
+                 x=enc, maxlenratio=args.maxlenratio, minlenratio=args.minlenratio
+             )
+@@ -178,7 +254,6 @@ def recog_v2(args):
+             new_js[name] = add_results_to_json(
+                 js[name], nbest_hyps, train_args.char_list
+             )
+-
+     with open(args.result_label, "wb") as f:
+         f.write(
+             json.dumps(
+diff --git a/espnet/bin/asr_recog.py b/espnet/bin/asr_recog.py
+index 3275ecf22..5d32a5066 100755
+--- a/espnet/bin/asr_recog.py
++++ b/espnet/bin/asr_recog.py
+@@ -370,14 +370,15 @@ def main(args):
+     if args.num_spkrs == 1:
+         if args.backend == "chainer":
+             from espnet.asr.chainer_backend.asr import recog
+-
++            #
+             recog(args)
+         elif args.backend == "pytorch":
+             if args.num_encs == 1:
+                 # Experimental API that supports custom LMs
+                 if args.api == "v2":
+-                    from espnet.asr.pytorch_backend.recog import recog_v2
+
++                    from espnet.asr.pytorch_backend.recog import recog_v2
++                    #
+                     recog_v2(args)
+                 else:
+                     from espnet.asr.pytorch_backend.asr import recog
+@@ -386,6 +387,7 @@ def main(args):
+                         raise NotImplementedError(
+                             f"`--dtype {args.dtype}` is only available with `--api v2`"
+                         )
++                    #
+                     recog(args)
+             else:
+                 if args.api == "v2":
+@@ -394,14 +396,14 @@ def main(args):
+                     )
+                 else:
+                     from espnet.asr.pytorch_backend.asr import recog
+-
++                    #
+                     recog(args)
+         else:
+             raise ValueError("Only chainer and pytorch are supported.")
+     elif args.num_spkrs == 2:
+         if args.backend == "pytorch":
+             from espnet.asr.pytorch_backend.asr_mix import recog
+-
++            #
+             recog(args)
+         else:
+             raise ValueError("Only pytorch is supported.")

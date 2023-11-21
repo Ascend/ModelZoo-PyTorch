@@ -163,9 +163,8 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
 
       首先修改acc.diff文件中的om模型路径（约162行）为生成的om路径
 
-      ```
+      ```shell
       cd espnet
-      git checkout .
       git checkout v.0.10.5
       patch -p1 < acc.diff
       cd espnet/egs/aishell/asr1
@@ -176,10 +175,10 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
 
       首先修改acc_dynamic.diff文件中的om模型路径（约162行）为生成的om路径
 
-      ```
+      ```shell
       cd espnet
-      git checkout .
       git checkout v.0.10.5
+      patch -p1 -R < acc.diff  # 恢复上一个patch的影响
       patch -p1 < acc_dynamic.diff
       cd espnet/egs/aishell/asr1
       bash acc.sh
@@ -202,6 +201,6 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
 调用aclruntime推理计算，性能精度参考下列数据。
 
 | 模型              | 310P性能             | 310P精度(Err) |
-|-----------------|--------------------|----------|
-| Espnet_conformer | 分档：358fps；动态：55fps | |
+|-----------------|--------------------|-------------|
+| Espnet_conformer | 分档：358fps；动态：55fps | 5.4%        |
 
