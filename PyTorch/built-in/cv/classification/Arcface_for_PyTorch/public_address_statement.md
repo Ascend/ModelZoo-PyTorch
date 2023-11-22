@@ -1,0 +1,6 @@
+| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
+| ---- | ------------ | ------ | ------------------------------------ | -------- |
+| 开源代码引入 | https://github.com/deepinsight/insightface/blob/master/recognition/arcface_torch/losses.py|ModelZoo-PyTorch/PyTorch/built-in/cv/classification/Arcface_for_PyTorch/losses.py	| https://arxiv.org/pdf/1801.07698v1.p | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/deepinsight/insightface/blob/master/README.md|ModelZoo-PyTorch/PyTorch/built-in/cv/classification/Arcface_for_PyTorch/partial_fc.py	| https://arxiv.org/abs/2203.155 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/deepinsight/insightface/blob/master/recognition/arcface_torch/losses.py|ModelZoo-PyTorch/PyTorch/built-in/cv/classification/Arcface_for_PyTorch/partial_fc.py	| https://arxiv.org/pdf/1801.07698v1.p | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/deepinsight/insightface/blob/master/recognition/arcface_torch/backbones/mobilefacenet.py|ModelZoo-PyTorch/PyTorch/built-in/cv/classification/Arcface_for_PyTorch/backbones/mobilefacenet.py	| https://github.com/cavalleria/cavaface.pytorch/blob/master/backbone/mobilefacenet. | 源码实现 |

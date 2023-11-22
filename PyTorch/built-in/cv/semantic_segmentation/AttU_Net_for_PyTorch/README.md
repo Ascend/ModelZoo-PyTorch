@@ -162,3 +162,7 @@ Attention U-Net 将注意力机制应用于UNet分割网络中，可以实现对
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

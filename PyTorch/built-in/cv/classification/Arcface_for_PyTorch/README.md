@@ -175,3 +175,7 @@ Arcface-Torch可以高效快速地训练大规模目标识别训练集。本模�
    cd ../
    python -m pip install --user -e ./python
    ```
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
