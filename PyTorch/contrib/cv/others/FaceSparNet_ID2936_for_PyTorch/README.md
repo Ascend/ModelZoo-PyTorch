@@ -216,3 +216,8 @@ pip3 install requirements.txt
 
 如果要进行SparNet网络训练，请先把训练数据和测试数据放到对应的路径下面。之后运行newtrain.py文件即可
 		训练SparNet网络，该网络设置的npu卡号为0，请根据实际需要修改卡号。
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

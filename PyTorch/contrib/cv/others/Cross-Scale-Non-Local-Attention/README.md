@@ -43,3 +43,8 @@ bash ../test/train_full_8p.sh --data_path=xxx
 | :----: | ----- | ---- | -------- |
 | NPU-1p | -     | 0.67  | O2       |
 | NPU-8p | 36.979 | 4.5 | O2       |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

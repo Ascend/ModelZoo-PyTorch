@@ -128,3 +128,7 @@ python3 demo.py --pth_path ./models/mnist/CGAN/CGAN_G.pth --save_path ./demo
 
 对比GPU和NPU生成的图片和loss曲线，两者差异不大，精度达标。
 
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
