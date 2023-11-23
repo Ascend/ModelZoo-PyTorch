@@ -34,7 +34,7 @@ class BackgroundRuntime:
         device_id: int,
         model_path: str,
         io_info: RuntimeIOInfo,
-        parse_onnx: bool = False,
+        engine: aie.Engine,
     ):
         # Create a pipe for process synchronization
         self.sync_pipe, sync_pipe_peer = mp.Pipe(duplex=True)
@@ -55,11 +55,11 @@ class BackgroundRuntime:
                 output_spaces, io_info.output_shapes, io_info.output_dtypes)
         ]
 
-        mp.set_start_method('spawn', force=True)
+        mp.set_start_method('fork', force=True)
         self.p = mp.Process(target=self.run_infer,
                             args=[
                                 sync_pipe_peer, input_spaces, output_spaces,
-                                io_info, device_id, model_path, parse_onnx
+                                io_info, device_id, model_path, engine
                             ])
         self.p.start()
 
@@ -125,29 +125,13 @@ class BackgroundRuntime:
         io_info: RuntimeIOInfo,
         device_id: int,
         model_path: str,
-        parse_onnx: bool,
+        engine: aie.Engine,
     ) -> None:
         # The sub process function
 
         # Create a runtime
         ret = aie.set_device(device_id)
         runtime = aie.Runtime.get_instance()
-        if parse_onnx:
-            builder = aie.Builder.create_builder(b'Ascend310P3')
-            logging.info("finish create builder")
-            network = builder.create_network()
-            logging.info("finish create network")
-            parser = aie.OnnxModelParser()
-            if not parser.parse_model(network, model_path):
-                logging.error("parse false")
-            logging.info("finish parse network")
-            builder_config = aie.BuilderConfig()
-            model_data = builder.build_model(network, builder_config)
-            if not model_data:
-                logging.error("build model failed")
-            engine = runtime.deserialize_engine_from_mem(model_data)
-        else:
-            engine = runtime.deserialize_engine_from_file(model_path)
         context = engine.create_context()
         buffer_binding = aie.IO_binding(engine, context)
 
@@ -168,7 +152,7 @@ class BackgroundRuntime:
         # Keep looping until recived a 'STOP'
         while sync_pipe.recv() != 'STOP':
             input_data_unet = [
-                input_array.tobytes() for input_array in input_arrays
+                input_array for input_array in input_arrays
             ]
             output_data = aie.execute(input_data_unet, buffer_binding, context)
 
@@ -188,9 +172,9 @@ class BackgroundRuntime:
         # then use them to create a BackgroundRuntime
         io_info = cls.get_io_info_from_engine(engine)
         if model_path[-2:] == "om":
-            return cls(device_id, model_path, io_info)
+            return cls(device_id, model_path, io_info, engine)
         else:
-            return cls(device_id, model_path, io_info, True) 
+            return cls(device_id, model_path, io_info, engine)
 
         
     def infer_asyn(self, feeds: List[np.ndarray]) -> None:

@@ -86,7 +86,7 @@ Ascend-inference的python接口需要在python3.9环境使用
 3. 开始推理验证
   - 加载om模型，执行推理脚本
       ```bash
-      # 普通方式
+      # 普通方式：需要2batch的unet模型
       python3.9 aie_stable_diffusion_pipeline.py
               --model ${model_base} \
               --om_model_dir ${om_model_path} \
@@ -95,8 +95,8 @@ Ascend-inference的python接口需要在python3.9环境使用
               --save_dir ./results \
               --steps 50
 
-      # 并行方式
-      python3.9 aie_stable_diffusion_pipeline.py --device 0,1
+      # 并行方式：需要1batch的unet模型
+      python3.9 aie_stable_diffusion_pipeline.py
               --model ${model_base} \
               --om_model_dir ${om_model_path} \
               --prompt_file ./prompts.txt \
@@ -106,7 +106,7 @@ Ascend-inference的python接口需要在python3.9环境使用
       ```
   - 加载onnx模型，执行推理脚本
       ```bash
-      # 普通方式
+      # 普通方式：需要2batch的unet模型
       python3.9 aie_stable_diffusion_pipeline.py
               --model ${model_base} \
               --onnx_model_dir ${onnx_model_path} \
@@ -116,8 +116,8 @@ Ascend-inference的python接口需要在python3.9环境使用
               --steps 50
               --use_onnx_parser
 
-      # 并行方式
-      python3.9 aie_stable_diffusion_pipeline.py --device 0,1
+      # 并行方式：需要1batch的unet模型
+      python3.9 aie_stable_diffusion_pipeline.py
               --model ${model_base} \
               --onnx_model_dir ${onnx_model_path} \
               --prompt_file ./prompts.txt \
@@ -167,7 +167,7 @@ Ascend-inference的python接口需要在python3.9环境使用
       # 或者访问https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/blob/main/open_clip_pytorch_model.bin，将权重下载并放到这个目录下
       ```
 
-   2. 使用推理脚本读取Parti数据集，生成图片
+   3. 使用推理脚本读取Parti数据集，生成图片
       ```bash
       # 普通方式
       python3 aie_stable_diffusion_pipeline.py \
@@ -224,3 +224,83 @@ Ascend-inference的python接口需要在python3.9环境使用
       - --model_weights_path: Clip模型权重文件路径。
 
       执行完成后会在屏幕打印出精度计算结果。
+
+## 动态分档
+
+   支持生成不同分辨率的图片，目前支持三种分辨率，高和宽分别是 512,512/576,768/768,576。
+
+   pipeline权重和config信息可参考模型推理章节获取。
+
+   1. 准备动态onnx模型。动态分辨率只与unet和vae模型有关，需要导出H、W维是动态的unet与vae模型。
+
+   2. 修改模型路径
+   - om模型：
+   根据模型路径修改输入参数中的om_model_dir
+   - onnx模型：
+   根据模型路径修改输入参数中的onnx_model_dir
+
+   3. 开始推理验证
+  - 加载om模型，执行推理脚本
+      ```bash
+      # 普通方式: 需要2batch的unet动态模型，1batch的vae动态模型
+      python3.9 pipeline_dynamic.py
+              --model ${model_base} \
+              --om_model_dir ${om_model_path} \
+              --prompt_file ./prompts.txt \
+              --device 0 \
+              --save_dir ./results \
+              --steps 50 \
+              --use_dynamic_dims \
+              --resolution 576,768
+
+      # 并行方式: 需要1batch的unet动态模型，1batch的vae动态模型
+      python3.9 pipeline_dynamic.py
+              --model ${model_base} \
+              --om_model_dir ${om_model_path} \
+              --prompt_file ./prompts.txt \
+              --device 0,1 \
+              --save_dir ./results \
+              --steps 50 \
+              --use_dynamic_dims \
+              --resolution 576,768
+      ```
+  - 加载onnx模型，执行推理脚本
+      ```bash
+      # 普通方式:需要2batch的unet动态模型，1batch的vae动态模型
+      python3.9 pipeline_dynamic.py
+              --model ${model_base} \
+              --onnx_model_dir ${onnx_model_path} \
+              --prompt_file ./prompts.txt \
+              --device 0 \
+              --save_dir ./results \
+              --steps 50 \
+              --use_onnx_parser \
+              --use_dynamic_dims \
+              --resolution 576,768
+
+      # 并行方式:需要1batch的unet动态模型，1batch的vae动态模型
+      python3.9 pipeline_dynamic.py
+              --model ${model_base} \
+              --onnx_model_dir ${onnx_model_path} \
+              --prompt_file ./prompts.txt \
+              --device 0,1 \
+              --save_dir ./results \
+              --steps 50 \
+              --use_onnx_parser \
+              --use_dynamic_dims \
+              --resolution 576,768
+      ```
+      参数说明：
+      - --model：模型名称或本地模型目录的路径。
+      - --om_model_dir：存放om模型的目录。
+      - --onnx_model_dir：存放onnx模型的目录。
+      - --prompt_file：输入文本文件，按行分割。
+      - --save_dir：生成图片的存放目录。
+      - --batch_size：模型batch size。
+      - --steps：生成图片迭代次数。
+      - --device：推理设备ID；可用逗号分割传入两个设备ID，此时会使用**并行方式**进行推理。
+      - --use_onnx_parser：是否使用onnx parser解析模型。不设置时，加载om模型。设置时，使用onnx parser加载onnx模型
+      - --use_dynamic_dims：是否使用动态挡位。不设置时，需要将onnx路径设置为静态模型的路径。设置时，需要将onnx路径设置为动态模型的路径，使用动态挡位，加载动态模型。
+      - --resolution：图片分辨率；可用逗号分割图片的高和宽，目前仅支持三种分辨率**512,512/576,768/768,576**。
+      
+      执行完成后在`./results`目录下生成推理图片。
