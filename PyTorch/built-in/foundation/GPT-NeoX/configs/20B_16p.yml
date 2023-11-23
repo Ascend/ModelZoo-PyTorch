@@ -6,18 +6,19 @@
   # Tokenizer /  checkpoint settings - you will need to change these to the location you have them saved in
   "vocab-file": "./tokenizer/20B_tokenizer.json",
   "save": "./20B_checkpoints",
-  "load": "./20B_checkpoints",
+  "load": "./20B_checkpoints",  
   "use_wandb": false,
   "use_shared_fs": false,
-
+  
+  
   # If finetuning, edit the following to the location of your finetuning dataset:
-  "data-path": "./data_process/pile_HF_text_document",
-
+  "data-path": "/home/GPT-NeoX/datasets/pile/pile2_text_document",
   # parallelism settings ( you will want to change these based on your cluster setup, ideally scheduling pipeline stages
   # across the node boundaries )
-  "pipe-parallel-size": 2,
+  "pipe-parallel-size": 1,
   "model-parallel-size": 4,
-
+  
+  "hostfile": "./hostfile",
   # model settings
   "num-layers": 44,
   "hidden-size": 6144,
@@ -61,7 +62,7 @@
   },
 
   # batch / data settings (assuming 96 GPUs)
-  "train_micro_batch_size_per_gpu": 4,
+  "train_micro_batch_size_per_gpu": 2,
   "gradient_accumulation_steps": 64,
   "data-impl": "mmap",
   "split": "995,4,1",
@@ -69,7 +70,7 @@
   # activation checkpointing
   "checkpoint-activations": false,
   "checkpoint-selective": true,
-  "checkpoint-full-layers": 8,
+  "checkpoint-full-layers": 10,
   "checkpoint-num-layers": 1,
   "partition-activations": false,
   "synchronize-each-layer": true,
@@ -113,5 +114,4 @@
   "tokenizer_type": "HFTokenizer", //slim:20B-tokenizer
   "tensorboard-dir": "./tensorboard",
   "log-dir": "./logs",
-
 }

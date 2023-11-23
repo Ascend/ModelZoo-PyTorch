@@ -10,7 +10,6 @@
   "use_wandb": false,
   "use_shared_fs": false,
   
-  "hostfile": "./hostfile",
   
   # If finetuning, edit the following to the location of your finetuning dataset:
   "data-path": "./data/pile_20B_tokenizer/pile_20B_tokenizer_text_document",
@@ -110,7 +109,8 @@
   "wall_clock_breakdown": false,
 
   ### NEW DATA: ####
-#  "tokenizer_type": "HFTokenizer",
+  #"tokenizer_type": "HFTokenizer", //gpt-vocab
+  "tokenizer_type": "HFTokenizer", //slim:20B-tokenizer
   "tensorboard-dir": "./tensorboard",
   "log-dir": "./logs",
 

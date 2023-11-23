@@ -64,6 +64,7 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
+  cd requirements
   pip install -r requirements.txt  # PyTorch1.11版本
   ```
 2. 安装deepspeed_npu插件
@@ -72,7 +73,7 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
   # adaptor分支
   git clone https://gitee.com/ascend/DeepSpeed.git
   cd Deepspeed
-  pip3 install ./
+  pip install ./
   ```
 3. 安装pdsh插件
 
@@ -112,8 +113,11 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
    Vocab: https://the-eye.eu/public/AI/models/GPT-NeoX-20B/slim_weights/20B_tokenizer.json
     
    ```
-3. 数据预处理（按需处理所需要的数据集）。
+3. 数据预处理（按需处理所需要的数据集）
+
    ```
+   Demo示例参考：https://gitee.com/l30040116/gpt-neo-x-data_process
+   
    依赖包：ujson、lm-dataformat、ftfy
    source_path="定义数据路径"
    out_path="输出路径"
@@ -146,6 +150,27 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
    备注：
    1、预计处理时间：36h
    2、官方训练使用：HFTokenizer
+
+   ```
+4. Finetuning
+   ```
+   GPT-NeoX加载.pt格式进行微调
+   1、Finetuning时，在yml配置文件中添加配置添加
+   "finetune":"True"
+   参考：https://github.com/EleutherAI/gpt-neox/blob/v2.0/configs/neox_arguments.md
+   
+   2、微调加载ckpt:No optimizer states, for inference or finetuning, 39GB：
+   https://the-eye.eu/public/AI/models/GPT-NeoX-20B/slim_weights/
+   wget --cut-dirs=5 -nH -r --no-parent --reject "index.html*" https://the-eye.eu/public/AI/models/GPT-NeoX-20B/slim_weights/ -P 20B_checkpoints
+   
+   3、微调加载ckpt:Including optimizer states, 268GB
+   https://the-eye.eu/public/AI/models/GPT-NeoX-20B/full_weights/
+   wget --cut-dirs=5 -nH -r --no-parent --reject "index.html*" https://the-eye.eu/public/AI/models/GPT-NeoX-20B/full_weights/ -P 20B_checkpoints
+   
+   4、Hugging Face可加载格式的转换：
+   python ./tools/convert_to_hf.py --input_dir /path/to/model/global_stepXXX --config_file your_config.yml --output_dir hf_model/save/location
+    
+    
    ```
 
 # 适配代码
@@ -160,6 +185,7 @@ GPT-NeoX-20B 是由EleutherAI和Hugging face合作开发的一个超大规模的
                 #]   
                 inputs_grad_tail = [elt.grad for elt in inputs[1:]]  # 修改后
    ```
+   
 ## 模型代码修复
 
 1. megatron/training.py:621 #deepspeed配置
