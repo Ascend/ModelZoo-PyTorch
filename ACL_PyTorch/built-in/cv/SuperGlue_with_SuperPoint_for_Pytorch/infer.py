@@ -181,7 +181,7 @@ def infer_dymShape(om_path, input_datas, outputSizes, device_id=0):
     for input_data in tqdm(input_datas):
         outputs = session.infer(input_data, mode='dymshape', custom_sizes=outputSizes)
         outputs_list.append(outputs)
-    print('dymshape infer avg:{} ms'.format(np.mean(session.sumary().exec_time_list)))
+    print('dymshape infer avg:{} ms'.format(np.mean(session.summary().exec_time_list)))
     return outputs_list
 
 

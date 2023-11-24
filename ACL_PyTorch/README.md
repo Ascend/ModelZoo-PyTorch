@@ -717,9 +717,9 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/SuperGlue_with_SuperPoint_for_Pytorch"> SuperGlue-SuperPoint </a>
         </td>
         <td>YFCC100M</td>
-    <td>75.04%</td>
-        <td>97.85%</td>
-    <td>0.174(e2e)</td>
+    <td>74.72%</td>
+        <td>97.80%</td>
+    <td>1.4(e2e)</td>
     <td nowrap="nowrap">1 x 1 x 1200 x 1600</td>
 </table>
 
