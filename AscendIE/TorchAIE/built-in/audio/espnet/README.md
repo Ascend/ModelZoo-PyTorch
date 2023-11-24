@@ -86,9 +86,6 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
 安装依赖。
 
-   ```
-   pip3 install -r requirements.txt
-   ```
    om_gener安装
 
    ```
@@ -141,16 +138,16 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
         
    2. 导出torchscript模型，用于编译优化。
 
-      1. 首先将export_ts.py放在espnet根目录下，运行以下生成espnet_trace.ts
+      1. 首先将export.py放在espnet根目录下，运行以下生成espnet_trace.ts
          ```
-         python export_ts.py --model_path egs/aishell/asr1/exp/train_sp_pytorch_train_pytorch_conformer_kernel15_specaug/results/model.last10.avg.best
+         python3 export.py --model_path egs/aishell/asr1/exp/train_sp_pytorch_train_pytorch_conformer_kernel15_specaug/results/model.last10.avg.best
          ```
-      2. 运行以下命令编译模型
+      2. 运行以下命令编译模型 (注意：编译aie模型依赖的环境和espnet运行环境不同；编译环境参考“推理环境准备”)
          ```shell
          # 分档模型
-         python compile.py --model_path=./espnet_trace.ts --flag=gear
+         python3 compile.py --model_path=./espnet_trace.ts --flag=gear
          # 动态shape模型
-         python compile.py --model_path=./espnet_trace.ts --flag=dynamic
+         python3 compile.py --model_path=./espnet_trace.ts --flag=dynamic
          ```
          执行结束，会在当前目录下生成espnet_gear.ts, espnet_dynamic.ts, espnet_gear.om, espnet_dynamic.om文件。
          两个ts文件用于后续性能测试，两个om文件用于后续精度测试。
@@ -189,9 +186,9 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
    2. 性能测试
       ```shell
       # 分档模型
-      python perf_test.py --model_path=./espnet_gear.ts
+      python3 perf_test.py --model_path=./espnet_gear.ts
       # 动态shape模型
-      python perf_test.py --model_path=./espnet_dynamic.ts
+      python3 perf_test.py --model_path=./espnet_dynamic.ts
       ```
       执行结束，会打印出性能结果。
 
