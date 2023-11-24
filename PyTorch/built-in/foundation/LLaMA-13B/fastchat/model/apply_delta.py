@@ -1,18 +1,3 @@
-# coding=utf-8
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Apply the delta weights on top of a base model.
 
@@ -47,35 +32,35 @@ def split_files(model_path, tmp_path, split_size):
     files = glob.glob(file_pattern)
 
     part = 0
-    for file_path in tqdm(files):
-        state_dict = torch.load(file_path)
-        new_state_dict = {}
-
-        current_size = 0
     try:
-        for name, param in state_dict.items():
-            param_size = param.numel() * param.element_size()
+        for file_path in tqdm(files):
+            state_dict = torch.load(file_path)
+            new_state_dict = {}
 
-            if current_size + param_size > split_size:
-                new_file_name = f"pytorch_model-{part}.bin"
-                new_file_path = os.path.join(tmp_path, new_file_name)
-                torch.save(new_state_dict, new_file_path)
-                current_size = 0
-                new_state_dict = None
-                gc.collect()
-                new_state_dict = {}
-                part += 1
+            current_size = 0
+            for name, param in state_dict.items():
+                param_size = param.numel() * param.element_size()
 
-            new_state_dict[name] = param
-            current_size += param_size
+                if current_size + param_size > split_size:
+                    new_file_name = f"pytorch_model-{part}.bin"
+                    new_file_path = os.path.join(tmp_path, new_file_name)
+                    torch.save(new_state_dict, new_file_path)
+                    current_size = 0
+                    new_state_dict = None
+                    gc.collect()
+                    new_state_dict = {}
+                    part += 1
 
-        new_file_name = f"pytorch_model-{part}.bin"
-        new_file_path = os.path.join(tmp_path, new_file_name)
-        torch.save(new_state_dict, new_file_path)
-        new_state_dict = None
-        gc.collect()
-        new_state_dict = {}
-        part += 1
+                new_state_dict[name] = param
+                current_size += param_size
+
+            new_file_name = f"pytorch_model-{part}.bin"
+            new_file_path = os.path.join(tmp_path, new_file_name)
+            torch.save(new_state_dict, new_file_path)
+            new_state_dict = None
+            gc.collect()
+            new_state_dict = {}
+            part += 1
     except Exception as e:
         print(f"An error occurred during split_files: {e}")
         shutil.rmtree(tmp_path)
@@ -83,8 +68,8 @@ def split_files(model_path, tmp_path, split_size):
 
 
 def apply_delta_low_cpu_mem(base_model_path, target_model_path, delta_path):
-    base_tokenizer = AutoTokenizer.from_pretrained(base_model_path, use_fast=False)
-    base_config = AutoConfig.from_pretrained(base_model_path)
+    delta_tokenizer = AutoTokenizer.from_pretrained(delta_path, use_fast=False)
+    delta_config = AutoConfig.from_pretrained(delta_path)
 
     if os.path.exists(target_model_path):
         shutil.rmtree(target_model_path)
@@ -95,7 +80,7 @@ def apply_delta_low_cpu_mem(base_model_path, target_model_path, delta_path):
     with tempfile.TemporaryDirectory() as tmp_base_path, tempfile.TemporaryDirectory() as tmp_delta_path:
         print(f"Split files for the base model to {tmp_base_path}")
         split_files(base_model_path, tmp_base_path, split_size)
-        print(f"Split files for the delta model to {tmp_delta_path}")
+        print(f"Split files for the delta weights to {tmp_delta_path}")
         split_files(delta_path, tmp_delta_path, split_size)
 
         base_pattern = os.path.join(tmp_base_path, "pytorch_model-*.bin")
@@ -133,20 +118,20 @@ def apply_delta_low_cpu_mem(base_model_path, target_model_path, delta_path):
             )
 
     print(f"Saving the target model to {target_model_path}")
-    base_tokenizer.save_pretrained(target_model_path)
-    base_config.save_pretrained(target_model_path)
+    delta_tokenizer.save_pretrained(target_model_path)
+    delta_config.save_pretrained(target_model_path)
 
 
 def apply_delta(base_model_path, target_model_path, delta_path):
+    print(f"Loading the delta weights from {delta_path}")
+    delta_tokenizer = AutoTokenizer.from_pretrained(delta_path, use_fast=False)
+    delta = AutoModelForCausalLM.from_pretrained(
+        delta_path, torch_dtype=torch.float16, low_cpu_mem_usage=True
+    )
+
     print(f"Loading the base model from {base_model_path}")
     base = AutoModelForCausalLM.from_pretrained(
         base_model_path, torch_dtype=torch.float16, low_cpu_mem_usage=True
-    )
-    base_tokenizer = AutoTokenizer.from_pretrained(base_model_path, use_fast=False)
-
-    print(f"Loading the delta from {delta_path}")
-    delta = AutoModelForCausalLM.from_pretrained(
-        delta_path, torch_dtype=torch.float16, low_cpu_mem_usage=True
     )
 
     print("Applying the delta")
@@ -156,7 +141,7 @@ def apply_delta(base_model_path, target_model_path, delta_path):
 
     print(f"Saving the target model to {target_model_path}")
     base.save_pretrained(target_model_path)
-    base_tokenizer.save_pretrained(target_model_path)
+    delta_tokenizer.save_pretrained(target_model_path)
 
 
 if __name__ == "__main__":

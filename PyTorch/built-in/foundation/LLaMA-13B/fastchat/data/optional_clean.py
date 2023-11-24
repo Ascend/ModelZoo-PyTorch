@@ -1,18 +1,3 @@
-# coding=utf-8
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 Do optional cleaning (e.g., remove some languages).
 
@@ -21,7 +6,7 @@ python3 -m fastchat.data.optional_clean --in input.json --out output.json --keep
 python3 -m fastchat.data.optional_clean --in input.json --out output.json --skip-lang en
 
 Requirement:
-pip3 install polyglot icu pyicu pycld2 morfessor
+pip3 install polyglot pyicu pycld2
 """
 import argparse
 import json
@@ -101,5 +86,5 @@ if __name__ == "__main__":
         if not skip(conv, args):
             new_content.append(conv)
 
-    print(f"return {len(new_content)} out of {len(content)}, start dump ...")
-    json.dump(new_content, open(out_file, "w"), indent=2)
+    print(f"#in: {len(content)}, #out: {len(new_content)}")
+    json.dump(new_content, open(out_file, "w"), indent=2, ensure_ascii=False)

@@ -6,22 +6,16 @@
 -   [训练结果展示](训练结果展示.md)
 -   [版本说明](版本说明.md)
 
-
-
 # 概述
-
 ## 简述
 
-LLaMA是由Meta AI发布的大语言系列模型，完整的名字是Large Language Model Meta 
-AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LLaMA-30B与LLaMA-65B。LLaMA
-模型的效果极好，LLaMA-13B在大多数基准测试中的表现都优于GPT-3（175B
-），且无需使用专门的数据集，只使用公开可用的数据集即可至训练至最优。本工程基于FastChat仓，主要聚焦于LLaMA-7B/13B模型。
+LLaMA是由Meta AI发布的大语言系列模型，完整的名字是Large Language Model Meta AI。LLaMA按照参数量的大小具有不同的型号。LLaMA模型的效果极好，无需使用专门的数据集，只使用公开可用的数据集即可至训练至最优。本工程基于FastChat仓，主要聚焦于LLaMA-7B/13B/33B模型。
 
 - 参考实现：
 
   ```
-  url=https://github.com/lm-sys/FastChat.git
-  commit_id=76f0424d1add61aadc8e5bdeed5ebe540f266ba3
+  url=https://github.com/lm-sys/FastChat/tree/v0.2.31
+  commit_id=9db21434b30a5355eb4723acc6562709f5ccc2c1
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -30,79 +24,36 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
   url=https://gitee.com/ascend/ModelZoo-PyTorch.git
   code_path=PyTorch/built-in/foundation
   ```
-
 # 准备训练环境
-
-## 准备环境
-
-默认配置需要每张卡有60G以上空闲内存。
-- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
-
-  **表 1**  版本支持表
-
-  | Torch_Version      | 三方库依赖版本                                 |
-  | :--------: | :----------------------------------------------: |
-  | PyTorch 1.11 | deepspeed 0.9.2 |
-
 - 环境准备指导
 
-  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-  
-- 安装依赖
+ - 请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
 
-  在模型源码包根目录下执行以下命令，安装依赖。
+     **表 1**  环境配置表
 
-  ```
-  pip3 install --upgrade pip
-  pip3 install einops sympy regex decorator scipy setuptools-scm prompt-toolkit
-  ```
-- 编译安装fschat
+    |  Software | Version  |
+    | ------------ | ------------ |
+    |  Pytorch |  2.1.0 |
 
-  在模型源码包根目录下执行命令，安装fachat库。
-  
-  ```
-  pip3 install -e.
-  ```
+- 这里要替换transformers库中的部分文件，使用下面命令时注意修改安装环境的路径。
+   ```bash
+    conda create -n test python==3.8
+    conda activate test
 
-- 安装deepspeed及对应deepspeed_npu插件。
-  
-  在模型源码包根目录下执行以下命令，安装deepspeed。
-  
-  ```
-  pip3 install deepspeed==0.9.2 
-  git clone https://gitee.com/ascend/DeepSpeed.git
-  cd DeepSpeed
-  python setup.py develop
+    pip install torch==2.1.0
+    pip install torch_npu-2.1.0xxxxx
 
-- 替换transformers库中相关文件
-  
-  将源码包根目录下transformers_modify文件夹中的各个文件分别替换到transformers
-  安装目录下的对应位置（基于transformers 4.28.1版本）：
-  ```
-  training_args.py -> transformers/training_args.py
-  trainer.py -> transformers/trainer.py
-  versions.py -> utils/versions.py
-  modeling_llama.py -> transformers/models/llama/modeling_llama.py
-  ```
+    pip3 install --upgrade pip  # enable PEP 660 support
+    pip3 install -e ".[model_worker,webui]"
 
-- 安装pdsh（多机训练需要）
-
-  deepspeed的多机训练需要安装pdsh，下载链接：https://github.com/chaos/pdsh/releases/download/pdsh-2.34/pdsh-2.34.tar.gz.
-
-  安装方法如下：
-  ```
-  chmod 777 configure
-  ./configure --with-ssh --build=arm-linux
-  make
-  make install
+    cp transformers_modify/modeling_llama.py /home/miniconda3/envs/test/lib/python3.8/site-packages/transformers/models/llama
+    cp transformers_modify/training_args.py /home/miniconda3/envs/test/lib/python3.8/site-packages/transformers/
+    cp transformers_modify/trainer.py /home/miniconda3/envs/test/lib/python3.8/site-packages/transformers/
+    cp accelerate_modify/accelerator.py /home/miniconda3/envs/test/lib/python3.8/site-packages/accelerate
+    cp accelerate_modify/dataclasses.py /home/miniconda3/envs/test/lib/python3.8/site-packages/accelerate/utils/
   ```
 ## 准备数据集
-
-1. 获取数据集
-
-   该任务以基于gpt3问答的数据集进行finetuning训练。
-
-   以[alpaca-data-conversation](https://github.com/lm-sys/FastChat/blob/v0.1.10/playground/data/alpaca-data-conversation.json)数据集为例，数据集结构参考如下所示。
+该任务以基于问答形式的数据集进行finetuning训练。 以alpaca数据集为例，数据集结构参考如下所示。注意保存数据集的路径，训练时修改脚本中的数据集路径。
 
    ```
    [
@@ -137,49 +88,12 @@ AI。LLaMA按照参数量的大小分为四个型号：LLaMA-7B、LLaMA-13B、LL
 
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
-
-2. 数据预处理
-   
-   基于上述格式的数据集无需预处理即可训练，若为其他对话数据集，则需修改为上述格式。
-
 ## 获取预训练模型
+这里可以参考原始仓库上的readme.md通过权重转换获取预训练模型，也可以从huggingface上获取预训练模型。注意保存预训练模型的位置，训练时修改脚本中的预训练模型路径。
 
-参考链接：原始仓库上的[README.md](https://github.com/lm-sys/FastChat/blob/76f0424d1add61aadc8e5bdeed5ebe540f266ba3/README.md)
-
-### Vicuna预训练参数介绍
-
-Vicuna预训练参数以增量权重的形式发布，以符合LLaMA模型的license。用户可以通过将该增量权重叠加到
-LLaMA原始权重上实现来使用，主要分为如下两步：
-
-1. 通过该[链接](https://huggingface.co/docs/transformers/main/model_doc/llama)获取huggingface形式的llama原始模型参数；
-2. 使用下面步骤获取Vicuna增量权重，它会自动从[huggingface](https://huggingface.co/lmsys)上下载增量权重；
-
-#### Vicuna-7B
-
-在源码包根目录下执行下列命令获得7B预训练模型（下载7B预训练模型大概需要占用30GB的CPU RAM空间）。
-  ```
-  python3 -m fastchat.model.apply_delta \
-  --base-model-path /path/to/llama-7b \
-  --target-model-path /output/path/to/vicuna-7b \
-  --delta-path lmsys/vicuna-7b-delta-v0
-  ```
-
-#### Vicuna-13B
-
-在源码包根目录下执行下列命令获得13B预训练模型（下载7B预训练模型大概需要占用60GB的CPU RAM空间）。
-  ```
-  python3 -m fastchat.model.apply_delta \
-  --base-model-path /path/to/llama-13b \
-  --target-model-path /output/path/to/vicuna-13b \
-  --delta-path lmsys/vicuna-13b-delta-v0
-  ```
-
-下载完毕后，可以在源码包根目录下找到对应的预训练参数文件夹。
-
+参考预训练模型（huggingface上获取）：
+   llama-7b:lmsys/vicuna-7b-v1.5；llama-13b:lmsys/vicuna-13b-v1.5。
 # 开始训练
-
-## 训练模型
-
 1. 进入解压后的源码包根目录。
 
    ```
@@ -188,27 +102,37 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
 
 2. 运行训练脚本。
 
-   该模型支持单机8卡训练和双机16卡训练。
-   - 将数据集置于源码包根目录下playground/data文件夹内（若路径不存在请用户自行创建）。
+   模型支持单机8卡训练和双机16卡训练，重复训练时要删除之前训练保存的权重。
 
-   - 单机八卡训练（LLaMA-7B）
-
-     ```
-     bash ./7B_finetune.sh    
-     ```
-
-   - 双机16卡训练（LLaMA-13B）
+   - LLaMA-7B训练（单机8卡）
 
      ```
-     bash ./13B_finetune.sh  
+     bash ./scripts/train_vicuna_7b.sh    
      ```
 
-   模型训练脚本参数说明如下。
+   - LLaMA-13B训练（单机8卡）
+
+     ```
+     bash ./scripts/train_vicuna_13b.sh
+     ```
+   - LLaMA-13B双机训练要修改scripts/train_vicuna_13b.sh脚本
+
+     ```
+     torchrun --nproc_per_node=8 --master_port=20001 --nproc_per_node=8 --nnodes=2 --node_rank=0 --master_addr=90.90.3.79 fastchat/train/train_mem.py
+     ```
+     --nnodes：节点数；
+     --node_rank：节点顺序(如0，1)；
+     --master_addr：主节点ip。
+   - 训练前注意修改环境变量路径，source环境信息
+     ```
+     source set_env.sh
+     ```
+    模型训练脚本参数说明如下，训练前注意修改预训练参数路径、数据集路径。
 
    ```
     --model_name_or_path                       // 预训练参数路径 
     --data_path                                // 数据集路径 
-    --fp16                                     // 参数使用fp16保存
+    --bf16                                     // 参数使用bf16保存
     --num_train_epochs                         // 训练epoch数
     --per_device_train_batch_size              // 每张卡上的训练batch size
     --per_device_eval_batch_size               // 每张卡上的评估batch size
@@ -222,48 +146,39 @@ LLaMA原始权重上实现来使用，主要分为如下两步：
     --warmup_ratio                             // warmup步数的比例
     --lr_scheduler_type                        // 学习率衰减方式
     --logging_steps                            // 训练日志打印间隔步数
-    --tf32 False                               // 使用tf32训练，npu暂不支持  
+    --tf32 True                                // 使用tf32训练
     --model_max_length                         // 模型训练的sequence length
     --gradient_checkpointing                   // 是否开启重计算 
-    --deepspeed                                // deepspeed配置脚本路径
-   ```
-   
-   deepspeed参数说明如下。
+3. llama-33b 多机启动脚本配置（使用vicuna权重）
 
-   ```
-    --fp16                                     // 混合精度训练相关配置 
-    --optimizer                                // 优化器相关配置
-    --zero_optimization                        // zero优化器相关配置
-    --gradient_accumulation_steps              // 梯度累积步数
-    --gradient_clipping                        // 梯度裁剪
-    --train_batch_size                         // 训练batch size
-    --train_micro_batch_size_per_gpu           // 训练micro batch size
-
-   ```
+   多机微调启动脚本：`scripts/train_vicuna_33b_nnodes.sh`
    
-   训练完成后，权重文件保存在output_dir下，并输出模型训练精度和性能信息。
+   其中，部分配置参数需要根据实际情况进行配置：
+    - `--nnodes`：要使用的机器数量；
+    - `--nproc_per_node`：每台机器使用的NPU设备数量；
+    - `--master_addr`：需要替换为主节点机器的IP地址；
+    - `--node_rank`：主节点需要设置为0，其他节点`--node_rank`按顺序设置不重复即可；
+    - `--master_port`：主节点的服务监听端口，可根据需要自行设置。
+
+   启动时，各个节点都要执行`train_vicuna_33b_nnodes.sh`脚本来拉起微调任务。
 
 # 训练结果展示
+**表 2** 训练结果展示表
 
-**表 2**  训练结果展示表
 
-| NAME    | Acc@1 | FPS(tokens/s/p) | Epochs | Zero_Type |
-|---------|-------|----------------:|--------|----------:|
-| 7B-竞品A   | -     |            2452 | 3      |     zero1 |
-| 7B-NPU  | -     |            2990 | 3      |     zero1 |
-| 13B-竞品A  | -     |            1386 | 3      |     zero2 |
-| 13B-NPU | -     |            1498 | 3      |     zero2 |
+|  NAME | FPS(tokens/s/p)  | Epochs  |
+| ------------ | ------------ | ------------ |
+|  7B-NPU |  3120 | 3  |
+|   7B-竞品A| 3120  |  3 |
+| 13B-NPU(单机20层) | 1730 | 3  |
+|  13B-竞品A(单机20层) | 1896  |  3 |
 
 # 版本说明
 
 ## 变更
 
-2023.07.05 首次发布。
+2023.11.23 首次发布。
 
 ## FAQ
 
 无。
-
-# 公网地址说明
-
-代码涉及公网地址参考 public_address_statement.md

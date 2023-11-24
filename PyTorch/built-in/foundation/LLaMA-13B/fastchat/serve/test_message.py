@@ -1,28 +1,10 @@
-# coding=utf-8
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+"""Send a test message."""
 import argparse
 import json
 
 import requests
 
-from fastchat.conversation import (
-    get_default_conv_template,
-    compute_skip_echo_len,
-    SeparatorStyle,
-)
+from fastchat.model.model_adapter import get_conversation_template
 
 
 def main():
@@ -45,37 +27,40 @@ def main():
         print(f"worker_addr: {worker_addr}")
 
     if worker_addr == "":
+        print(f"No available workers for {model_name}")
         return
 
-    conv = get_default_conv_template(model_name).copy()
+    conv = get_conversation_template(model_name)
     conv.append_message(conv.roles[0], args.message)
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
 
-    headers = {"User-Agent": "fastchat Client"}
-    pload = {
+    headers = {"User-Agent": "FastChat Client"}
+    gen_params = {
         "model": model_name,
         "prompt": prompt,
-        "max_new_tokens": args.max_new_tokens,
         "temperature": args.temperature,
-        "stop": conv.sep if conv.sep_style == SeparatorStyle.SINGLE else conv.sep2,
+        "max_new_tokens": args.max_new_tokens,
+        "stop": conv.stop_str,
+        "stop_token_ids": conv.stop_token_ids,
+        "echo": False,
     }
     response = requests.post(
         worker_addr + "/worker_generate_stream",
         headers=headers,
-        json=pload,
+        json=gen_params,
         stream=True,
     )
 
     print(f"{conv.roles[0]}: {args.message}")
-    for chunk in response.iter_lines(
-        chunk_size=8192, decode_unicode=False, delimiter=b"\0"
-    ):
+    print(f"{conv.roles[1]}: ", end="")
+    prev = 0
+    for chunk in response.iter_lines(decode_unicode=False, delimiter=b"\0"):
         if chunk:
-            data = json.loads(chunk.decode("utf-8"))
-            skip_echo_len = compute_skip_echo_len(model_name, conv, prompt)
-            output = data["text"][skip_echo_len:].strip()
-            print(f"{conv.roles[1]}: {output}", end="\r")
+            data = json.loads(chunk.decode())
+            output = data["text"].strip()
+            print(output[prev:], end="", flush=True)
+            prev = len(output)
     print("")
 
 
@@ -85,7 +70,7 @@ if __name__ == "__main__":
         "--controller-address", type=str, default="http://localhost:21001"
     )
     parser.add_argument("--worker-address", type=str)
-    parser.add_argument("--model-name", type=str, default="facebook/opt-350m")
+    parser.add_argument("--model-name", type=str, required=True)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--max-new-tokens", type=int, default=32)
     parser.add_argument(
