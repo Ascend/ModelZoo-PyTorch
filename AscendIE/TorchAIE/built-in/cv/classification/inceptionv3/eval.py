@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import argparse
 
 import torch
@@ -60,15 +61,33 @@ def validate(model, args):
     avg_top1, avg_top5 = 0, 0
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
+    stream = torch_aie.npu.Stream("npu:0")
+    inference_time = []
     for i, (images, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
-        pred = model(images.to("npu:0")).to("cpu")
-        acc = compute_acc(pred, target, topk_list=(top1, top5))
+        image_npu = images.to("npu:0")
+        with torch_aie.npu.stream(stream):
+            inf_start = time.time()
+            output_npu = model(image_npu)
+            stream.synchronize()
+            inf_end = time.time()
+            inf = inf_end - inf_start
+            if i < 5:
+                continue
+            inference_time.append(inf)
+
+        output = output_npu.to('cpu')
+        acc = compute_acc(output, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
         avg_top5 += acc[1].item()
 
         step = i + 1
         if step % 100 == 0:
             print(f'top1 is {avg_top1 / step}, top5 is {avg_top5 / step}, step is {step}')
+
+    avg_inf_time = sum(inference_time) / len(inference_time)
+    print(f'Inference time is {avg_inf_time}')
+    print(f'thoughput si {args.batch_size / avg_inf_time}')
+    print(f'Final top1 is {avg_top1 / step}, top5 is {avg_top5 / step}')
 
 
 def parse_args():
