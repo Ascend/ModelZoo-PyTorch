@@ -32,7 +32,7 @@ if ACLTRANSFORMER_HOME_PATH is None:
     raise RuntimeError(
         "env ATB_SPEED_HOME_PATH not exist, source set_env.sh")
 LIB_PATH = os.path.join(ACLTRANSFORMER_HOME_PATH,
-                        "lib/libacltransformer_torch.so")
+                        "lib/libatb_speed_torch.so")
 torch.classes.load_library(LIB_PATH)
 
 
