@@ -130,13 +130,9 @@ bash valprep.sh
          获得hrnet.pt文件。
 
 3. 运行模型评估脚本，测试ImageNet验证集推理精度
-       ```
-       python3 eval.py --model_path ./hrnet.pt --data_path ./imagenet/val --batch_size 1 --image_size 224
-       ```
-       运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 86.4520% 和 98.0560%。
-       ```
-       top1 is 86.4520, top5 is 98.0560, step is 50000
-       ```
+ ```
+ python3 eval.py --model_path ./hrnet.pt --data_path ./imagenet/val --batch_size 1 --image_size 224
+ ```
 
 # 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
