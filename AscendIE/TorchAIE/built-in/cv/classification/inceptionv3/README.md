@@ -104,10 +104,6 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
     ```
     python3 eval.py --model_path ./inceptionv3.pt --data_path ./imagenet/val --batch_size 1 --image_size 299
     ```
-    运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 76.292% 和 92.95%。
-    ```
-    top1 is 76.292, top5 is 92.95, step is 50000
-    ```
 
 
 ----
@@ -115,7 +111,7 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
 
 调用torch-aie推理计算，精度参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集 | 精度                                 |
-| --------- |------------| ---------- |------------------------------------|
-| 310P3 | 1          | ImageNet | top-1: 76.292% <br>top-5: 92.95% |
+| 芯片型号 | Batch Size | 数据集 | 精度                                 |性能 |
+| --------- |------------| ---------- |------------------------------------|---|
+| 310P3 | 1          | ImageNet | top-1: 76.292% <br>top-5: 92.95% |855|
 
