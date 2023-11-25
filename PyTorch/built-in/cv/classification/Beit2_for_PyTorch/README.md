@@ -1,139 +1,172 @@
-# [BEiT v2: Masked Image Modeling with Vector-Quantized Visual Tokenizers](https://arxiv.org/abs/2208.06366)
-![](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/acc_compare.jpg?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)
+# BEiT v2 for PyTorch
 
-Official PyTorch implementation and pretrained models of **BEiT v2**. 
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-The code and pretrained models of **BEiT** can be found at [here](https://github.com/microsoft/unilm/tree/master/beit).
 
-The code and pretrained models of **BEiT-3** can be found at [here](https://github.com/microsoft/unilm/tree/master/beit3).
 
-- March, 2023: release [the code and pretrained models of **BEiT-3**](https://github.com/microsoft/unilm/tree/master/beit3)
-- March, 2023: [**BEiT-3**](https://arxiv.org/abs/2208.10442) was accepted by **CVPR 2023**.
-- Sept 2022: release [the code and pretrained models of **BEiT v2**](https://github.com/microsoft/unilm/tree/master/beit2)
-- Aug 2022: release preprint [Image as a Foreign Language: BEiT Pretraining for All Vision and Vision-Language Tasks](https://arxiv.org/abs/2208.10442)
-- Aug 2022: release preprint [BEiT v2: Masked Image Modeling with Vector-Quantized Visual Tokenizers](https://arxiv.org/abs/2208.06366)
-- June 2022: release preprint [VL-BEiT: Generative Vision-Language Pretraining](https://arxiv.org/abs/2206.01127)
-- March, 2022: add [linear probe examples](https://github.com/microsoft/unilm/blob/master/beit/get_started_for_image_classification.md#example-linear-probe-on-imagenet)
-- January, 2022: [**BEiT**](https://openreview.net/forum?id=p-BhZSz59o4) was accepted by **ICLR 2022 as Oral presentation** (54 out of 3391).
-- August 2021: [**BEiT**](https://huggingface.co/transformers/master/model_doc/beit.html) is on [HuggingFace](https://github.com/huggingface/transformers)
-- July 2021: BEiT-large achieves **[state-of-the-art results on ADE20K](https://paperswithcode.com/sota/semantic-segmentation-on-ade20k) (a big jump to 57.0 mIoU) for semantic segmentation**.
-- July 2021: BEiT-large achieves **state-of-the-art ImageNet top-1 accuracy (88.6%) under the setting without extra data other than ImageNet-22k**.
-- July 2021: release [the code and pretrained models of **BEiT**](https://github.com/microsoft/unilm/tree/master/beit)
-- June 2021: release preprint [BEiT: BERT Pre-Training of Image Transformers](https://arxiv.org/abs/2106.08254)
+# 概述
 
-## Pretrained Models
+## 简述 
+BEiT v2是基于矢量量化视觉标记的掩码图像模型
 
-We provide four BEiT weights pretrained on **ImageNet-1k**. The models were pretrained with 224x224 resolution.
 
-- `BEiT-base`: #layer=12; hidden=768; FFN factor=4x; #head=12; patch=16x16 (#parameters: 86M)
-- `BEiT-large`: #layer=24; hidden=1024; FFN factor=4x; #head=16; patch=16x16 (#parameters: 304M)
+- 参考实现：
 
-Download checkpoints that are self-supervised pretrained on ImageNet-1k and then intermediate finetuned on ImageNet-21k (**recommended**):
-- BEiT-base: [beitv2_base_patch16_224_pt1k_ft21k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft21k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)
-- BEiT-large: [beitv2_large_patch16_224_pt1k_ft21k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft21k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)
+  ```
+  url=https://github.com/microsoft/unilm/tree/master/beit2
+  ```
 
-Download checkpoints that are self-supervised pretrained on ImageNet-1k:
-- BEiT-base: [beitv2_base_patch16_224_pt1k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)
-- BEiT-large: [beitv2_large_patch16_224_pt1k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)
+- 适配昇腾 AI 处理器的实现：
 
-## Setup
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/cv/classification/Beit2_for_PyTorch
+  ```
+
+拉取模型代码到本地并下载bpe_simple_vocab_16e6.txt.gz和vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth：
+```
+mkdir /code
+cd  /code
+git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
+
+cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch/vqkd_teacher/clip/
+wget https://github.com/microsoft/unilm/blob/master/beit2/vqkd_teacher/clip/bpe_simple_vocab_16e6.txt.gz
+
+cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch/
+mkdir tokenizer_model
+cd tokenizer_model
+wget https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D
 
 ```
-alias=`whoami | cut -d'.' -f2`; docker run -it --rm --runtime=nvidia --ipc=host --privileged -v /home/${alias}:/home/${alias} pytorch/pytorch:1.7.1-cuda11.0-cudnn8-devel bash
+
+# 准备训练环境
+
+## 准备环境
+
+默认配置需要每张卡有60G空闲内存。
+
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
+
+  **表 1**  环境配置表
+
+| Software  |  Version |  Link |
+|---|---|---|
+| Python    | 3.8.18   |——|
+| driver  |  23.0.RC3.1 | [link ](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/261425590?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743)  |
+| firmware|  6.4.0.5.220 | [link ](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/261425590?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743)  |
+|  CANN  |  Ascend-cann-toolkit_7.0.0.alpha002_linux | [link](https://ascend-repo.obs.myhuaweicloud.com/CANN_Test/20231116/Ascend-cann-toolkit_7.0.0.alpha002_linux-x86_64.run) [link](https://ascend-repo.obs.myhuaweicloud.com/CANN_Test/20231116/Ascend-cann-toolkit_7.0.0.alpha002_linux-aarch64.run)  |
+| binary arithmetic package  | Ascend-cann-kernels-910b_7.0.0.alpha002_linux  | [link](https://ascend-repo.obs.myhuaweicloud.com/CANN_Test/20231116/Ascend-cann-kernels-910b_7.0.0.alpha002_linux.run)  |
+| torch  | 2.1.0  |[link](https://download.pytorch.org/whl/torch/)|
+| torch_npu  |  torch_npu-2.1.0.post20231115| [link](https://pytorch-package.obs.cn-north-4.myhuaweicloud.com/pta/Daily/v2.1.0/20231115.2/pytorch_v2.1.0_py38.tar.gz)  |
+|torchvision| 0.16.0|——|
+
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+   
+  
+- 安装流程。
+```
+    # python3.8
+    conda create -n beit2env python=3.8
+    conda activate beit2env
+
+    # install torch and torch_npu
+    pip install torch-2.1.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+    pip install torch_npu-2.1.0.post20231115-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64
+
+    # install other packages
+    cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch/
+    pip install -r requirements.txt 
 ```
 
-First, clone the repo and install required packages:
-```
-git clone https://github.com/microsoft/unilm.git
-cd unilm/beit2
-pip install -r requirements.txt
-```
+## 准备数据集
 
-The required packages including: [Pytorch](https://pytorch.org/) version 1.7.1, [torchvision](https://pytorch.org/vision/stable/index.html) version 0.8.2 and [Timm](https://github.com/rwightman/pytorch-image-models) version 0.4.12, etc.
+   下载训练数据集coco2017
 
-For mixed-precision training, please install [apex](https://github.com/NVIDIA/apex)
-```
-git clone https://github.com/NVIDIA/apex
-cd apex
-pip install -v --disable-pip-version-check --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
-```
-**Second, download the bpe_simple_vocab_16e6.txt.gz file under unilm/tree/master/beit2/vqkd_teacher/clip from the above model link address, and then put it in the same path.**
+      mkdir /dataset
+   数据集下载路径：https://www.kaggle.com/datasets/awsaf49/coco-2017-dataset?resource=download-directory
+  
 
-## Fine-tuning on ImageNet-1k (Image Classification)
+   下载并解压后将coco2017文件夹放到/dataset 下
 
-We summarize the validation results as follows. We also provide the fine-tuned weights. The detailed instructions to reproduce the results can be found at [get_started_for_image_classification.md](get_started_for_image_classification.md).
+   目录结构参考如下：
 
-| name | initialized checkpoint | resolution | acc@1 | acc@5 | #params | weight | 
-|------------|:----------------------------------------|:----------:|:-----:|:-----:|:-------:|-------------------|
-| BEiTv2-base | [beitv2_base_patch16_224_pt1k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) | 224x224 | 85.5 | 97.5 | 86.5M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) |
-| BEiTv2-base | [beitv2_base_patch16_224_pt1k_ft21k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft21k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) | 224x224 | 86.5 | 98.0 | 86.5M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft21kto1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) |
-| BEiTv2-large | [beitv2_base_patch16_224_pt1k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) | 224x224 | 87.3 | 98.2 | 304M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) |
-| BEiTv2-large | [beitv2_base_patch16_224_pt1k_ft21k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft21k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) | 224x224 | 88.4 | 98.6 | 304M | [link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft21kto1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D) |
+   ```
+   /dataset/coco2017
+  └── train2017
+      ├── 000000000009.jpg
+      ├── 000000000025.jpg
+      ├── 000000000030.jpg
+          ...
+   ```
 
-## Fine-tuning on ADE20K (Semantic Segmentation)
+# 开始训练
 
-We summarize the validation results as follows. We also provide the fine-tuned weights. The detailed instructions to reproduce the results can be found at [`semantic_segmentation/README.md`](semantic_segmentation/README.md).
+## 训练模型
 
-|name|initialized checkpoint|method|crop size|iterations|mIoU|#params|weight|
-|:-----------|:---------------------|:-------:|:---------:|:-------:|:----:|:--------------:|:-------:|
-|BEiTv2-base|[beitv2_base_patch16_224_pt1k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|UPerNet|512x512|160k|53.1| 163M|[link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ftade20k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|
-|BEiTv2-base|[beitv2_base_patch16_224_pt1k_ft21k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft21k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|UPerNet|512x512|160k| 53.5| 163M|[link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_base_patch16_224_pt1k_ft21ktoade20k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|
-|BEiTv2-large|[beitv2_large_patch16_224_pt1k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|UPerNet|512x512|160k|56.7| 441M|[link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ftade20k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|
-|BEiTv2-large|[beitv2_large_patch16_224_pt1k_ft21k](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft21k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|UPerNet|512x512|160k| 57.5| 441M|[link](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft21ktoade20k.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D)|
+1. 进入解压后的源码包根目录。
 
+   ```
+   cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch
+   ```
+1. 修改pretraining.sh
 
-## Fine-tuning on MSCOCO2017 (Object Detection)
-Under preparation.
+   ```
+    # 修改此处的xxxx为CANN包安装路径
+    source  /xxxx/ascend-toolkit/set_env.sh
+    # 修改数据集路径
+    data_path=/dataset/coco2017
+   ```
+   
+   其他参数说明如下。
+   
 
-
-## Pre-training on ImageNet-1k
-
-See [PRETRAINING.md](PRETRAINING.md) for detailed instructions.
-
-
-## Visual Tokenizer (VQ-KD) Trained on ImageNet-1k
-
-We provide the VQ-KD tokenizer trained on **ImageNet-1k**.
-- [vqkd_encoder_base_decoder_3x768x12](https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D): #encoder layer=12; #decoder layer=3; hidden=768; FFN factor=4x; #head=12; patch=16x16;
-
-See [TOKENIZER.md](TOKENIZER.md) for more details.
-
-
-## Citation
-
-If you find this repository useful, please consider citing our work:
-```
-@inproceedings{beit,
-title={{BEiT}: {BERT} Pre-Training of Image Transformers},
-author={Hangbo Bao and Li Dong and Songhao Piao and Furu Wei},
-booktitle={International Conference on Learning Representations},
-year={2022},
-url={https://openreview.net/forum?id=p-BhZSz59o4}
-}
-
-@article{beitv2,
-title={{BEiT v2}: Masked Image Modeling with Vector-Quantized Visual Tokenizers},
-author={Zhiliang Peng and Li Dong and Hangbo Bao and Qixiang Ye and Furu Wei},
-year={2022},
-eprint={2208.06366},
-archivePrefix={arXiv},
-primaryClass={cs.CV}
-}
-```
+   ```
+   公共参数：
+   --epochs                                      //训练总迭代数
+   --batch_size                                //每个epoch中iteration个数
+   --model                                        //待训练模型名称
+   --log_dir                                      // log 存放路径
+   --output_dir                                // path where to save, empty for no saving
+   --data_path                                //数据集路径
+   --layer_scale_init_value            //0.1 for base, 1e-5 for large. set 0 to disable layer scale
+   --num_mask_patches                //number of the visual tokens/patches need be masked
+   --input_size                                //images input size for backbone
+    --second_input_size                //images input size for discrete vae
+    --drop_path                                //Drop path rate (default: 0.1)
+   ```
 
 
-## Acknowledgement
+3. 运行训练脚本。
+   该模型预训练支持单机8卡训练。
 
-This repository is built using the [BEiT](https://github.com/microsoft/unilm/tree/master/beit), the [CLIP](https://github.com/openai/CLIP), the [DeiT](https://github.com/facebookresearch/deit), the [Dino](https://github.com/facebookresearch/dino) repository and the [timm](https://github.com/rwightman/pytorch-image-models) library.
+   ```
+   bash ./pretraining.sh
+   ```
 
+# 训练结果展示
 
-## License
-This project is licensed under the license found in the LICENSE file in the root directory of this source tree.
+**表 2**  训练结果展示表
 
-[Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct)
+这里使用了单机进行预训练，采用的NPU型号为910B1
 
-### Contact Information
+| NAME  | single-step time  | Iterations  | DataType|Torch_Version |
+|:-:|:-:|:-:|:-:|:-:|
+| NPU  | 4.417| 5000   | BF16|2.1.0|
+| Reference| 4.316  | 5000   |BF16|2.1.0  |
 
-For help or issues using BEiT v2 models, please submit a GitHub issue.
+精度loss5000步：
+![](raw/beit2_5b_bf16_loss_compare.png)
 
-For other communications, please contact Li Dong (`lidong1@microsoft.com`), [Furu Wei](http://gitnlp.org/) (`fuwei@microsoft.com`).
+# 版本说明
+
+## 变更
+
+2023.9.30：首次发布。
+
+2023.11.15：性能优化。
