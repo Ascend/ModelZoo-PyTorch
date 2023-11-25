@@ -27,9 +27,9 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
 - 参考实现：
 
   ```shell
-  url=https://github.com/pytorch/vision/blob/master/torchvision/models/vgg.py
+  url=https://github.com/Tianxiaomo/pytorch-YOLOv4.git
   branch=master
-  commit_id=78ed10cc51067f1a6bac9352831ef37a3f842784
+  commit_id=a65d219f9066bae4e12003bd7cdc04531860c672
   ```
 
 ## 输入输出数据<a name="section540883920406"></a>
@@ -38,15 +38,15 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
 
   | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
   | -------- | -------- | ------------------------- | ------------ |
-  | images   | RGB_FP32 | batchsize x 3 x 416 x 416 | NCHW         |
+  | input    | RGB_FP32 | batchsize x 3 x 608 x 608 | NCHW         |
 
 - 输出数据
 
-  | 输出数据    | 数据类型 | 大小       | 数据排布格式 |
-  | ----------- | -------- | ---------- | ------------ |
-  | Reshape_216 | FLOAT32  | 3x85x13x13 | NCHW         |
-  | Reshape_203 | FLOAT32  | 3x85x26x26 | NCHW         |
-  | Reshape_187 | FLOAT32  | 3x85x52x52 | NCHW         |
+  | 输出数据       | 数据类型 | 大小                       | 数据排布格式  |
+  | ------------- | -------- | ------------------------- | ------------ |
+  | feature_map_1 | FLOAT32  | batchsize x 255 x 76 x 76 | NCHW         |
+  | feature_map_2 | FLOAT32  | batchsize x 255 x 38 x 38 | NCHW         |
+  | feature_map_3 | FLOAT32  | batchsize x 255 x 38 x 38 | NCHW         |
 
 # 推理环境准备\[所有版本\]<a name="ZH-CN_TOPIC_0000001126281702"></a>
 
