@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import os
-import yaml
-import json
 import cv2
 import argparse
 import numpy as np
@@ -132,7 +130,7 @@ def main(opt):
     dataloader = create_dataloader(opt.data_path, opt.batch_size)[0]
     # inference & nms
     pred_results = forward_nms_script(model, dataloader, opt.batch_size, opt.device_id)
-    if opt.multi == 1:
+    if opt.multi == 1 and opt.batch_size == 1:
         file = open(opt.val_ids_file)
         val_ids = file.read().split('\n')
         for index, input_fname in enumerate(val_ids):
@@ -151,7 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('--val_ids_file', type=str, default="./pytorch-nested-unet/val_ids.txt",
                         help='path for val_ids.txt')
     parser.add_argument('--soc_version', type=str, default='Ascend310P3', help='soc version')
-    parser.add_argument('--model', type=str, default="nested_unet_torch_aie.pt", help='ts model path')
+    parser.add_argument('--model', type=str, default="nested_unet_torch_aie_bs1.pt", help='ts model path')
     parser.add_argument('--need_compile', action="store_true", help='if the loaded model needs to be compiled or not')
     parser.add_argument('--batch_size', type=int, default=1, help='batch size')
     parser.add_argument('--device_id', type=int, default=0, help='device id')

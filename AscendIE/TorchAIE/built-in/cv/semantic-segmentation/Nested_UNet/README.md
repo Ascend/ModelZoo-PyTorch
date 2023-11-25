@@ -187,7 +187,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
      --soc_version：处理器型号
      --model：输入模型路径
      --need_compile：是否需要进行模型编译（若参数model为export_torch_aie_ts.py输出的模型，则不用选该项）
-     --batch_size：模型batch size
+     --batch_size：模型batch size。注意，若该参数不为1，则不会存储推理结果，仅输出性能
      --device_id：硬件编号
      --multi：将数据扩展多少倍进行推理。注意，若该参数不为1，则不会存储推理结果，仅输出性能
     ```
