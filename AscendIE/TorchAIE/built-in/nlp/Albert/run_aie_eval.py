@@ -244,27 +244,26 @@ def main():
 
     # Evaluation
     results = []
-    if args.do_eval and args.local_rank in [-1, 0]:
-        tokenizer = tokenization_albert.FullTokenizer(vocab_file=args.vocab_file,
-                                                      do_lower_case=args.do_lower_case,
-                                                      spm_model_file=args.spm_model_file)
-        checkpoints = [(0,args.output_dir)]
-        if args.eval_all_checkpoints:
-            checkpoints = list(
-                os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + '/**/' + WEIGHTS_NAME, recursive=True)))
-            checkpoints = [(int(checkpoint.split('-')[-1]),checkpoint) for checkpoint in checkpoints if checkpoint.find('checkpoint') != -1]
-            checkpoints = sorted(checkpoints,key =lambda x:x[0])
-        logger.info("Evaluate the following checkpoints: %s", checkpoints)
-        for _,checkpoint in checkpoints:
-            global_step = checkpoint.split('-')[-1] if len(checkpoints) > 1 else ""
-            prefix = checkpoint.split('/')[-1] if checkpoint.find('checkpoint') != -1 else ""
-            model = torch.jit.load(args.aie_model_dir)
-            result = evaluate(args, model, tokenizer, prefix=prefix)
-            results.extend([(k + '_{}'.format(global_step), v) for k, v in result.items()])
-        output_eval_file = os.path.join(args.output_dir, "checkpoint_eval_results.txt")
-        with open(output_eval_file, "w") as writer:
-            for key,value in results:
-                writer.write("%s = %s\n" % (key, str(value)))
+    tokenizer = tokenization_albert.FullTokenizer(vocab_file=args.vocab_file,
+                                                    do_lower_case=args.do_lower_case,
+                                                    spm_model_file=args.spm_model_file)
+    checkpoints = [(0,args.output_dir)]
+    if args.eval_all_checkpoints:
+        checkpoints = list(
+            os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + '/**/' + WEIGHTS_NAME, recursive=True)))
+        checkpoints = [(int(checkpoint.split('-')[-1]),checkpoint) for checkpoint in checkpoints if checkpoint.find('checkpoint') != -1]
+        checkpoints = sorted(checkpoints,key =lambda x:x[0])
+    logger.info("Evaluate the following checkpoints: %s", checkpoints)
+    for _,checkpoint in checkpoints:
+        global_step = checkpoint.split('-')[-1] if len(checkpoints) > 1 else ""
+        prefix = checkpoint.split('/')[-1] if checkpoint.find('checkpoint') != -1 else ""
+        model = torch.jit.load(args.aie_model_dir)
+        result = evaluate(args, model, tokenizer, prefix=prefix)
+        results.extend([(k + '_{}'.format(global_step), v) for k, v in result.items()])
+    output_eval_file = os.path.join(args.output_dir, "checkpoint_eval_results.txt")
+    with open(output_eval_file, "w") as writer:
+        for key,value in results:
+            writer.write("%s = %s\n" % (key, str(value)))
 
 
 if __name__ == "__main__":
