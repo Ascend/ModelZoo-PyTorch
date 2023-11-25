@@ -14,8 +14,6 @@
 
 - [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
-- [可能遇到的问题](#ZH-CN_TOPIC_0000001172201574)
-
   ******
 
 
@@ -161,7 +159,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
     --soc_version：处理器型号。
     ```
 
-3. 保存编译优化模型（非必要，可不执行。后续执行的推理脚本包含编译优化过程）
+3. 保存编译优化模型（非必要，可不执行。若不执行，后续执行推理脚本时需要包含编译优化过程，入参加上--need_compile）
 
     ```
      python export_torch_aie_ts.py
@@ -177,23 +175,21 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 
 4. 执行推理脚本
 
-    （1）安装ais_bench推理工具。 请访问[ais_bench推理工具代码仓](https://gitee.com/link?target=https%3A%2F%2Fwww.kaggle.com%2Fc%2Fdata-science-bowl-2018)，根据readme文档进行工具安装。
+    （1）推理脚本，包含性能测试。
      ```
-      python pt_val.py --tag 9.6.0 --model=yolov3.torchscript.pt --batch_size=4
+      python3 pt_val.py --model nested_unet_torch_aie_bs4.pt --batch_size=4
      ```
    命令参数说明：
     ```
-     --data_path：验证集数据根目录，默认"coco"
-     --ground_truth_json：标注数据路径
-     --tag：yolov3标记
+     --data_path：验证集数据根目录，默认"prep_data"
+     --result_root_path：推理结果根目录，默认"result"
+     --val_ids_file：val.txt文件路径，默认"./pytorch-nested-unet/val_ids.txt"
      --soc_version：处理器型号
      --model：输入模型路径
-     --need_compile：是否需要进行模型编译（若使用export_torch_aie_ts.py输出的模型，则不用选该项）
+     --need_compile：是否需要进行模型编译（若参数model为export_torch_aie_ts.py输出的模型，则不用选该项）
      --batch_size：模型batch size
-     --img_size：推理size（像素）
-     --cfg_file：模型参数配置文件路径，默认model.yaml
      --device_id：硬件编号
-     --single_cls：是否视为单类数据集
+     --multi：将数据扩展多少倍进行推理。注意，若该参数不为1，则不会存储推理结果，仅输出性能
     ```
 5. 精度验证
 
@@ -207,38 +203,22 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
     --参数2：真值所在目录。
     ```
 
-# 模型推理性能&精度（未更新，只是样例）<a name="ZH-CN_TOPIC_0000001172201573"></a>
+# 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 
 
-| 芯片型号 | Batch Size   | 数据集    |
-| --------- | ---------------- | ---------- |
-|    Ascend310P3       |       4    |   coco2017   |
+芯片型号 Ascend310P3。
+dataloader生成未drop_last，已补满尾部batch
 
+模型精度 bs1 = 0.8385
 
-**表 2** yolov3模型精度
+**表 2** 模型推理性能
 
-| 类型 | 配置   | 精度    |
-| --------- | ---------------- | ------------|
-|Average Precision  (AP)| @[ IoU=0.50:0.95 , area=   all , maxDets=100 ] | 0.445|
-|Average Precision  (AP)| @[ IoU=0.50      , area=   all , maxDets=100 ] | 0.655|
-|Average Precision  (AP)| @[ IoU=0.75      , area=   all , maxDets=100 ] | 0.492|
-|Average Precision  (AP)| @[ IoU=0.50:0.95 , area= small , maxDets=100 ] | 0.294|
-|Average Precision  (AP)| @[ IoU=0.50:0.95 , area=medium , maxDets=100 ] | 0.494|
-|Average Precision  (AP)| @[ IoU=0.50:0.95 , area= large , maxDets=100 ] | 0.564|
-|Average Recall     (AR)| @[ IoU=0.50:0.95 , area=   all , maxDets=  1 ] | 0.348|
-|Average Recall     (AR)| @[ IoU=0.50:0.95 , area=   all , maxDets= 10 ] | 0.572|
-|Average Recall     (AR)| @[ IoU=0.50:0.95 , area=   all , maxDets=100 ] | 0.616|
-|Average Recall     (AR)| @[ IoU=0.50:0.95 , area= small , maxDets=100 ] | 0.457|
-|Average Recall     (AR)| @[ IoU=0.50:0.95 , area=medium , maxDets=100 ] | 0.660|
-|Average Recall     (AR)| @[ IoU=0.50:0.95 , area= large , maxDets=100 ] | 0.748|
-
-
-**表 3** 模型推理性能
-
-| Soc version | Batch Size | Dataset | Performance |
-| -------- | ---------- | ---------- |-------------|
-| 310P3    | 4          | coco2017 | 27.704 fps  |
-
-
-# 可能遇到的问题<a name="ZH-CN_TOPIC_0000001172201574"></a>
+| batch_size              | 性能（fps） | 数据集扩大倍数 |
+|-------------------------|---------|---------|
+| 1                       |         | 6       |
+| 4                       |         | 25      |
+| 8                       |         | 50      |
+| 16                      |         | 100     |
+| 32                      |         | 200     |
+| 64                      |         | 400     |

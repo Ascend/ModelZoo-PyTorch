@@ -19,29 +19,28 @@ import torch
 import torch_aie
 from torch_aie import _enums
 
-def export_torch_aie(opt_args):
-    trace_model = torch.jit.load(opt_args.torch_script_path)
+def export_torch_aie(opt):
+    trace_model = torch.jit.load(opt.torch_script_path)
     trace_model.eval()
 
     torch_aie.set_device(0)
     inputs = []
-    inputs.append(torch_aie.Input((1, 3, 96, 96)))
+    inputs.append(torch_aie.Input((opt.batch_size, 3, 96, 96)))
     torchaie_model = torch_aie.compile(
         trace_model,
         inputs=inputs,
         precision_policy=_enums.PrecisionPolicy.FP16,
-        # precision_policy=_enums.PrecisionPolicy.PREF_FP32,
         truncate_long_and_double=True,
         require_full_compilation=False,
         allow_tensor_replace_int=False,
         min_block_size=3,
         torch_executed_ops=[],
-        soc_version=opt_args.soc_version,
+        soc_version=opt.soc_version,
         optimization_level=0)
-    suffix = os.path.splitext(opt_args.torch_script_path)[-1]
-    saved_name = os.path.basename(opt_args.torch_script_path).split('.')[0] + f"_torch_aie" + suffix
-    torchaie_model.save(os.path.join(opt_args.save_path, saved_name))
-    print("torch aie nested_unet compiled done. saved model is ", os.path.join(opt_args.save_path, saved_name))
+    suffix = os.path.splitext(opt.torch_script_path)[-1]
+    saved_name = os.path.basename(opt.torch_script_path).split('.')[0] + f"_torch_aie_bs{opt.batch_size}" + suffix
+    torchaie_model.save(os.path.join(opt.save_path, saved_name))
+    print("torch aie nested_unet compiled done. saved model is ", os.path.join(opt.save_path, saved_name))
 
 def parse_opt():
     parser = argparse.ArgumentParser()
@@ -49,11 +48,11 @@ def parse_opt():
     parser.add_argument('--soc_version', type=str, default='Ascend310P3', help='soc version')
     parser.add_argument('--batch_size', type=int, default=1, help='batch size')
     parser.add_argument('--save_path', type=str, default='./', help='compiled model path')
-    opt_args = parser.parse_args()
-    return opt_args
+    opt = parser.parse_args()
+    return opt
 
-def main(opt_args):
-    export_torch_aie(opt_args)
+def main(opt):
+    export_torch_aie(opt)
 
 if __name__ == '__main__':
     opt = parse_opt()
