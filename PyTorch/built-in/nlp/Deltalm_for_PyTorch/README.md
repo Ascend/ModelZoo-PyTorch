@@ -158,3 +158,7 @@ Deltalm 模型是Fairseq套件中基于Transformer结构的翻译模型，在iws
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
