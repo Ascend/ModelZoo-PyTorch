@@ -186,3 +186,8 @@ SPACH是由来自Microsoft Research和中国科学技术大学的学者提出的
 
 ## FAQ
 无。
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
