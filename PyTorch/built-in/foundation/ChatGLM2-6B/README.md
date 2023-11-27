@@ -1,27 +1,32 @@
-#  Contents
-
-- [ChatGLM2-6B](#contents)
-  
-  - [Training](#pre-training)
-  - [Script](#script)
-  - [Performance](#performance)
-    - [Machine performance](#machine-performance)
-    - [Accuracy of the loss](#accuracy-of-the-loss)
-  - [FAQ](#FAQ)
-  
-  
-
 # ChatGLM2-6B
 
-## Training
 
-Here's a hardware summary of pre-training ChatGLM2-6B:
+# 概述
+
+## 简介
+ChatGLM2-6B 是开源中英双语对话模型 ChatGLM-6B 的第二代版本，在保留了初代模型对话流畅、部署门槛较低等众多优秀特性的基础之上，ChatGLM2-6B 拥有更强大的性能和更长的上下文以及更高效的推理。
+- 参考实现 ：
+  ```
+  url=https://github.com/THUDM/ChatGLM2-6B
+  ```
+
+- 适配昇腾 AI 处理器的实现：
+
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/foundation
+  ```
+
+# 训练
+## 环境配置
+
+默认配置需要每张卡有60G以上空闲内存。
+
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
 | Hardware |      Value      |
 | :------: | :-------------: |
 |   NPU    | 8 x Ascend NPUs |
-
-Here's a software summary of pre-training ChatGLM2-6B: 
 
 
 |         Software          |                 Version                  |                             link                             |
@@ -35,16 +40,16 @@ Here's a software summary of pre-training ChatGLM2-6B:
 |         torch_npu         |               1.11.0.post5               | [link](https://gitee.com/ascend/pytorch/archive/refs/tags/v5.0.rc3.1-pytorch1.11.0.tar.gz) |
 
 
-### Script
+## 安装基础依赖
 
-1. Clone the repository to your local server:
+1. 准备代码:
 ```shell
 git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
 cd ModelZoo-PyTorch/PyTorch/built-in/foundation/ChatGLM2-6B
 
 ```
 
-2. Build environment
+2. 安装依赖环境
 
 ```bash
 # python3.7
@@ -70,18 +75,13 @@ pip install -r requirements.txt
 # 使用fix文件夹下的tranining_args.py替换路径下transformers/tranining_args.py
 # cp fix/utils.py /root/miniconda3/envs/conda环境名/lib/python3.7/site-packages/transformers/generation/
 ```
-3. Prepare pretrained weights
-    1)Download the ChatGLM2-6B checkpoint from [here]([THUDM/chatglm2-6b at v1.0 (huggingface.co)](https://huggingface.co/THUDM/chatglm2-6b/tree/v1.0)) ; After downloading, place it in the "model" directory . 
-
-  2)Please Do NOT overwrite modeling_chatglm.py
-
-  The "model" directory is as follows
-
+3. 准备预训练权重
+  用户可以从[这里](https://huggingface.co/THUDM/chatglm2-6b/tree/dev)下载预训练权重和配置文件，然后将这些文件放在 "model"文件夹中，**不要覆盖 `modeling_chatglm.py`文件**。
+`model`文件夹内容如下：
 ```shell
   ├── model
       ├──config.json
       ├──configuration_chatglm.py
-      ├──ice_text.model
       ├──pytorch_model-00001-of-00007.bin
       ├──pytorch_model-00002-of-00007.bin
       ├──pytorch_model-00003-of-00007.bin
@@ -98,18 +98,16 @@ pip install -r requirements.txt
       ├──modeling_chatglm.py
 ```
 
-4. Prepare dataset
+4. 准备数据集
 
-1).Download the ChatGLM2-6B datasets from [here](https://drive.google.com/file/d/13_vf0xRTQsyneRKdD1bZIr93vBGOczrk/view?usp=sharing) ；Place the decompressed `AdvertiseGen` in the "ptuning" directory.
-The data set is as follows：
-
+1).用户可以从[这里](https://huggingface.co/datasets/shibing624/AdvertiseGen/tree/main)下载数据集，并将其放在`ptuning`路径下的`AdvertiseGen`文件夹内，该文件夹内容包括：
 ```
 ├── AdvertiseGen
       ├──train.json
       ├──dev.json
 ```
 
-2)Config ChatGLM2-6B Process script : ptuning/preprocess.sh
+2)修改数据转换脚本`tuning/preprocess.sh`
 
 ```shell
 # modify the script according to your own  ascend-toolkit path
@@ -126,7 +124,7 @@ source env_npu.sh
 --max_source_length 256 \
 --max_target_length 256
 ```
-3).Process datasets
+3).执行下面代码转换数据集
 
 ```shell
   # process datasets                              
@@ -134,7 +132,7 @@ source env_npu.sh
 ```
 
 
-5. Config ChatGLM2-6B training script : ptuning/ds_train_fintune.sh
+5. 配置ChatGLM2-6B训练脚本: `ptuning/ds_train_fintune.sh`
 
 ```shell
 # modify the script according to your own  ascend-toolkit path
@@ -146,13 +144,11 @@ source env_npu.sh
 --max_target_length 4096 \  #should align with the processed dataset
 ```
 
-6. Launch ChatGLM2-6B  training script :ptuning/ds_train_fintune.sh
+6. 启动训练
 
    该模型P-Tuning v2支持单机单卡，全参数fintune支持单机8卡。
 
 -  全参数finetune， 启动8卡微调。
-
-
 ```shell
 bash ds_train_fintune.sh
 ```
@@ -173,37 +169,111 @@ bash ds_train_fintune.sh
     bash evaluate_fintune.sh
 	```
 
-### Performance
+## 训练结果展示
 
-#### Machine performance
+### 性能结果展示
 
 The performance of ChatGLM2-6B in **Ascend NPU** and **Reference**:
 
-| Device    | Model       | total Iterations | throughput rate (samples/s/p) | throughput rate (tokens/s/p) | single-step time (s/step) | floating point operation (TFLOPs/s) |
+| Device    | Model       | total Iterations | throughput rate (samples/s) | throughput rate (tokens/s/p) | single-step time (s/step) | floating point operation (TFLOPs/s) |
 | --------- | ----------- | ---------------- | ----------------------------- | ---------------------------- | ------------------------- | ----------------------------------- |
-| NPUs      | ChatGLM2-6B | 1000             | 待补充                        | 1927                         | 4.25                      | 待补充                              |
-| Reference | ChatGLM2-6B | 1000             | 待补充                        | 1820                         | 4.5                       | 待补充                              |
+| NPUs| ChatGLM2-6B | 1000  | 1.79 |1833   | 4.46| 65.72 |
+| Reference | ChatGLM2-6B | 1000 | 1.76 | 1802| 4.54| 64.64 |
 
-评估结果展示表
 
-| 评估项  |   NPU   |   GPU   |
-| :-----: | :-----: | :-----: |
-| BLEU-4  | 8.0174  | 7.5779  |
-| ROUGE-1 | 31.5737 | 31.0244 |
-| ROUGE-2 | 7.2976  | 7.1179  |
-| ROUGE-l | 24.8196 | 24.7112 |
 
-说明：该结果是step=1000的验证结果。
+### 精度结果展示
 
-#### Accuracy of the loss
+NPU vs Reference loss对比.
 
-NPU vs Reference loss.
+绝对误差：最大值0.0740，平均值0.0135
+相对误差：最大值0.0231，平均值0.0042
 
-The NPU runs smoothly, the resource usage is stable, no errors are reported in the middle of the process, the Loss is on a decreasing trend, and the convergence speed is as expected. The relative error of the average loss is less than 2%. The precision meets the requirements.
+NPU运行平稳，资源占用稳定，中间无报错，Loss有下降趋势，收敛速度符合预期。平均损失的相对误差小于2%。精度满足要求。.
 
 ![NPU-LOSS](./images/ChatGLM2-6B_loss_compare.png)
 
-## FAQ
+# 推理
+
+## 推理环境搭建
+推理环境搭建参考上述训练环境搭建。
+
+## 推理脚本
+
+1）执行`vim infer.py`创建推理脚本，然后将下面代码写入`infer.py`文件中，然后按`Esc`键输入`:wq`退出并保存文件。
+
+```python
+from transformers import AutoTokenizer, AutoModel
+
+# 修改CHECKPOINT路径
+CHECKPOINT="./model_weight"
+tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT, trust_remote_code=True)
+model = AutoModel.from_pretrained(CHECKPOINT, trust_remote_code=True, device='cuda')
+model = model.eval()
+
+print("请输入对话")
+_input=input(">>")
+
+while _input:
+    response, history = model.chat(tokenizer, _input, history=[])
+    print(response)
+    _input=input(">>")
+```
+2）运行下面命令执行推理任务
+```python
+ python infer.py
+```
+## 推理结果展示
+```shell
+请输入对话
+>>你好
+你好👋！我是人工智能助手 ChatGLM2-6B，很高兴见到你，欢迎问我任何问题。
+>>晚上睡不着应该怎么办
+以下时是一些有助于晚上睡觉的技巧:
+
+1. 创建一个规律的睡眠时间表:每天在相同的时间上床并起床可以帮助身体建立一个规律的睡眠时间表。
+
+2. 创建一个舒适的睡眠环境:在安静、黑暗、凉爽、舒适的房间里睡觉可以帮助放松身心,更容易入睡。
+
+3. 避免使用电子设备:在睡觉前一两个小时内避免使用电子设备,如手机、电脑、平板电脑等,以免干扰睡眠。
+
+4. 放松身心:在睡觉前做些轻松的活动,如阅读、听轻柔的音乐、洗个热水澡、做些瑜伽、冥想等,有助于放松身心,减轻压力。
+
+5. 避免咖啡因和酒精:在睡觉前几个小时内避免摄入咖啡因和酒精,以免影响睡眠。
+
+6. 远离刺激:在睡觉前远离刺激,如避免摄入咖啡因、饮酒、吸烟等,以免影响睡眠。
+
+7. 远离压力:避免在睡觉前进行紧张的活动,如激烈的运动,以免影响睡眠。
+
+如果这些技巧不能解决你的问题,你可以尝试寻求医生的帮助,找到更好的解决方案。
+```
+
+
+# 评估
+## 准备数据集任务
+用户可以从 [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/e84444333b6d434ea7b0) 下载处理好的 C-Eval 数据集，解压到 `evaluation` 目录下。
+## 运行评估任务
+1）首先修改评估脚本`evaluation/evaluate_ceval.py`。
+```python
+# 修改 CHECKPOINT 路径和数据集任务路径
+CHECKPOINT= "../model"
+DATA_PATH="./CEval/test/**/*.jsonl"
+```
+2）然后运行下面代码执行评估任务。
+```python
+cd evaluation
+python evaluate_ceval.py
+```
+
+## 评估结果展示
+
+|任务|验证集|模型|昇腾值|参考值|社区值|
+| ------------ | ------------ |  ------------ | ------------ |------------ |------- |
+| CEval | test  |ChatGLM2-6B   |  0.31055 | 0.31092 |-- |
+
+
+
+# FAQ
 
 1. 报错提示deepspeed.py需要版本大于等于0.6.5
 
@@ -278,6 +348,18 @@ USE_FLASH=False
 ```
 
 ​       PS: 设置为True能提高性能
+
+
+* 规避评估错误：
+
+
+1. 任务评估过程中出现`XXXX does not appear to have a file named tokenization_chatglm.py/ configuration_chatglm.py / modeling_chatglm.py`时，将`model`路径下的`tokenization_chatglm.py/ configuration_chatglm.py / modeling_chatglm.py`拷贝到`XXXX`路径下。
+2. 任务评估过程中如果报错`RuntimeError: call aclnnFlashAttentionScore failed`，请修改`XXXX`路径下的`modeling_chatglm.py`。
+   ```python
+   # 修改modeling_chatglm.py文件:
+   USE_FLASH=False
+   ```
+
 
 # 公网地址说明
 
