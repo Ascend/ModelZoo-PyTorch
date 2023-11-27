@@ -181,7 +181,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 芯片型号 Ascend310P3。
 dataloader生成未drop_last，已补满尾部batch
 
-模型精度 bs1 = 0.8385
+模型精度 bs1 = 11.2573
 
 **表 2** 模型推理性能
 
