@@ -67,7 +67,11 @@
   | PyTorch | 2.0.1 | - |
   | Torch_AIE | 6.3.rc2 | - |
 
+- 安装依赖
 
+   ```
+   pip install -r requirements.txt
+   ```
 
 
 # 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
@@ -88,12 +92,6 @@
    git reset --hard 14ee4e67e39373cbb9c631d08afceaf3a23b72ce
    git apply ../change.patch
    cd ..
-   ```
-
-2. 安装依赖。
-
-   ```
-   pip install -r requirements.txt
    ```
 
 ## 准备数据集<a name="section183221994411"></a>
@@ -134,36 +132,33 @@
 
 ## 模型推理<a name="section741711594517"></a>
 
-1. 模型转换。
+  1. 执行推理。
 
-   将模型权重文件转换为torchscript文件。
-   ```
-   python pth2ts.py
-   ```
-   执行完成将会在当前文件夹生成gaitset_submit.ts文件。
-
-
-2. 开始推理验证。
-
-   1. 执行推理。
-
-      ```
-      python inference.py
-      ```
-      执行推理，并将计算结果保存在./result文件夹中。同时，推理结束后打印出性能数据。
+    ```
+    python inference.py
+    ```
+    推理结果保存在./result目录，推理结束后会输出当前batch的推理性能。
 
 
-   2. 精度验证。
+  2. 精度验证。
 
-      调用脚本GaitSet_postprocess.py，可以获得Accuracy数据。
+    调用脚本GaitSet_postprocess.py，可以获得Accuracy数据。
 
-      ```
-      python GaitSet_postprocess.py --output_path=./result
-      ```
+    ```
+    python GaitSet_postprocess.py --output_path=./result
+    ```
 
-      - 参数说明：
+    - 参数说明：
 
-        - output_path：推理结果保存地址
+      - output_path：推理结果保存路径
+  
+  3. 性能测试。
+
+    ```
+    python inference.py --input_shape 4 100 64 44
+    ```
+    - 参数说明：
+      - --input_shape ：推理时输入shape, 可通过修改第1维测试不同batch的推理性能。
 
 
 
@@ -173,4 +168,9 @@
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| Ascend310P3 | 1 | GaitDatasetB-silh | 95.537% | 66 |
+| Ascend310P3 | 1 | GaitDatasetB-silh | 95.512% | 796 FPS |
+| Ascend310P3 | 4 | GaitDatasetB-silh | 95.512% | 877 FPS |
+| Ascend310P3 | 8 | GaitDatasetB-silh | 95.512% | 900 FPS |
+| Ascend310P3 | 16 | GaitDatasetB-silh | 95.512% | 922 FPS |
+| Ascend310P3 | 32 | GaitDatasetB-silh | 95.512% | 941 FPS |
+| Ascend310P3 | 64 | GaitDatasetB-silh | 95.512% | 925 FPS |

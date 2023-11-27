@@ -1,5 +1,7 @@
 torch==2.0.1
-opencv-python==4.5.2.52
+opencv-contrib-python
+opencv-python
+opencv-python-headless
 xarray
 numpy
 imageio
