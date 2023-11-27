@@ -129,7 +129,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
 ## 模型推理<a name="section741711594517"></a>
 1. 获取权重文件。
     ```
-     wget https://gitee.com/link?target=https%3A%2F%2Fascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com%2Fmodel%2F1_PyTorch_PTH%2FUnet%252B%252B%2FPTH%2Fnested_unet.pth
+     wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/Unet%2B%2B/PTH/nested_unet.pth
     ```
 
 
@@ -214,11 +214,11 @@ dataloader生成未drop_last，已补满尾部batch
 
 **表 2** 模型推理性能
 
-| batch_size              | 性能（fps） | 数据集扩大倍数 |
-|-------------------------|---------|---------|
-| 1                       |         | 6       |
-| 4                       |         | 25      |
-| 8                       |         | 50      |
-| 16                      |         | 100     |
-| 32                      |         | 200     |
-| 64                      |         | 400     |
+| batch_size              | 性能（fps）   | 数据集扩大倍数 |
+|-------------------------|-----------|---------|
+| 1                       | 928.5740  | 1       |
+| 4                       | 1883.2271 | 1       |
+| 8                       | 2359.5540 | 1       |
+| 16                      | 2239.7244 | 1       |
+| 32                      | 1364.0031 | 200     |
+| 64                      | 1703.1738 | 400     |
