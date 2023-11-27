@@ -271,4 +271,5 @@ def main():
 
 if __name__ == "__main__":
     torch_npu.npu.set_compile_mode(jit_compile=False)
+    torch.npu.config.allow_internal_format = False
     main()

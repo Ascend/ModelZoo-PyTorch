@@ -6,6 +6,7 @@ tensorboardX
 ftfy
 prettytable
 pymongo
+numpy<=1.23.5
 transformers
 torch==1.11.0
 torchvision==0.12.0

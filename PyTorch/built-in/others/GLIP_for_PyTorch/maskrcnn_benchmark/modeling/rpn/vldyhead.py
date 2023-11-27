@@ -415,14 +415,14 @@ class VLFuse(torch.nn.Module):
                         embed_dim=self.embed_dim,
                         num_heads=self.n_head,
                         hidden_dim=self.i2t_hidden_dim,
-                        dropout=0.0,
+                        dropout=0.1,
                         drop_path=.0,
                         init_values=1.0 / cfg.MODEL.DYHEAD.NUM_CONVS,
                         cfg=cfg
                         )
             if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.SEPARATE_BIDIRECTIONAL and self.cfg.MODEL.DYHEAD.FUSE_CONFIG.DO_LANG_PROJ_OUTSIDE_CHECKPOINT:
                 self.shrink_lang = FeatureResizer(self.lang_dim * 5,
-                                self.lang_dim, 0.0)
+                                self.lang_dim, 0.1)
 
 
         elif cfg.MODEL.DYHEAD.FUSE_CONFIG.TYPE == "SCAN":
@@ -594,8 +594,6 @@ class VLDyHead(torch.nn.Module):
                 lang_cfg = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH)
             else:
                 lang_cfg = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE)
-            lang_cfg.hidden_dropout_prob = 0.0
-            lang_cfg.attention_probs_dropout_prob = 0.0
             print('lang_cfg: ', lang_cfg, flush=True)
         elif cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE == "clip":
             lang_cfg = cfg
