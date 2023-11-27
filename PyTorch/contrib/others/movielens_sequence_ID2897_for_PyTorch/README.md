@@ -71,3 +71,6 @@ python3 movielens_sequence.py cnn
 | b345606155070e8e29653bda47633fdf | 0.0701   | 0.0688         |
 ```
 
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md
