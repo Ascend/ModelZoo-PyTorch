@@ -93,23 +93,42 @@ def change_input_type(model):
     model.inputs[1], model.inputs[2] = model.inputs[2], model.inputs[1]
 
 
-def replace_slice(model):
+def get_index(model, init, name):
+    if name in init:
+        return model[name].value
+    else:
+        return name
+
+
+def replace_slice(model, fast):
     # find pairs of slice
     slice_pair = []
     for node in model.get_nodes('Slice'):
-        if node.name[:-2] == '_1':
-            slice_pair.append((node.name[:-2], node.name))
+        if node.name[-2:] == '_1':
+            slice_pair.append((model[node.name[:-2]], model[node.name]))
     # replace
+    init = [n.name for n in model.get_nodes('Initializer')]
     for pair in slice_pair:
-        name = pair[0][:-5] + 'Split'
-        data = pair[0].inputs[0]
-        if pair[0].inputs[1] == pair[1].inputs[2]:
-            outputs = pair[1].outputs + pair[0].outputs
-        if pair[1].inputs[1] == pair[0].inputs[2]:
-            outputs = pair[0].outputs + pair[1].outputs
-        axes = pair[0].inputs[3]
-        axis = model[axes].value[0]
-        model.add_node(name, 'Split', inputs=[data], outputs=outputs, attrs={'axis':axis})
+        next_node = model.get_next_nodes(pair[0].outputs[0])[0]
+        if fast and next_node.op_type == 'Mul':
+            name = pair[0].name[:-5] + 'SliceTransGeluMul'
+            model.add_node(name, 'SliceTransGeluMul', inputs=[pair[0].inputs[0]], outputs=next_node.outputs)
+            model.remove(next_node.name, {})
+        else:
+            name = pair[0].name[:-5] + 'Split'
+            data = pair[0].inputs[0]
+            start_0 = get_index(model, init, pair[0].inputs[1])
+            end_0 = get_index(model, init, pair[0].inputs[2])
+            start_1 = get_index(model, init, pair[1].inputs[1])
+            end_1 = get_index(model, init, pair[1].inputs[2])
+            if start_1 == end_0:
+                outputs = pair[0].outputs + pair[1].outputs
+            elif start_0 == end_1:
+                outputs = pair[1].outputs + pair[0].outputs
+
+            axes = pair[0].inputs[3]
+            axis = model[axes].value[0]
+            model.add_node(name, 'Split', inputs=[data], outputs=outputs, attrs={'axis': axis})
         model.remove(pair[0].name, {})
         model.remove(pair[1].name, {})
     model.update_map()
@@ -397,6 +416,11 @@ def parse_arguments():
         default=0,
         help="Number of TOME used in the model",
     )
+    parser.add_argument(
+        "--faster_gelu",
+        action="store_true",
+        help="Use specific gelu operation"
+    )
     return parser.parse_args()
 
 
@@ -410,7 +434,7 @@ def main():
     if args.TOME_num:
         insert_tome_block(model, args.TOME_num)
     change_input_type(model)
-    replace_slice(model)
+    replace_slice(model, args.faster_gelu)
     model.remove_unused_nodes()
     model.save(args.new_model)
 
