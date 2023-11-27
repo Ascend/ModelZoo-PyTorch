@@ -1,7 +1,3 @@
-"""
-切python2.0.1环境
-"""
-
 import argparse
 import time
 from tqdm import tqdm
@@ -14,11 +10,8 @@ from torch_aie import _enums
 
 from ais_bench.infer.interface import InferSession
 
-# OM_PATH = "/home/devkit1/cgznb1/vgg16-torchaie/vgg16_bs1.om" # revise static
-# OM_PATH = "/onnx/vgg16-torchaie/vgg16_bs1.om" # revise dynm
-# TS_PATH = "/onnx/vgg16-torchaie/vgg16.ts" # revise
-INPUT_WIDTH = 224 # revise
-INPUT_HEIGHT = 224 # revise
+INPUT_WIDTH = 224
+INPUT_HEIGHT = 224
 
 def parse_args():
     args = argparse.ArgumentParser(description="A program that operates in 'om' or 'ts' mode.")
@@ -29,6 +22,7 @@ def parse_args():
     args.add_argument('--ts_path',help='MobilenetV1 ts file path', type=str,
                         default='/onnx/vgg16-torchaie/vgg16.ts'
                         )
+    args.add_argument("--batch-size", type=int, default=4, help="batch size.")
     return args.parse_args()
 
 if __name__ == '__main__':
@@ -38,46 +32,42 @@ if __name__ == '__main__':
     opts = parse_args()
     OM_PATH = opts.om_path
     TS_PATH = opts.ts_path
+    BATCH_SIZE = opts.batch_size
 
     if opts.mode == "om":
         om_model = InferSession(0, OM_PATH)
         for _ in tqdm(range(0, infer_times)):
-            dummy_input = np.random.randn(1, 3, INPUT_WIDTH, INPUT_HEIGHT).astype(np.float32)
+            dummy_input = np.random.randn(BATCH_SIZE, 3, INPUT_WIDTH, INPUT_HEIGHT).astype(np.float32)
             start = time.time()
-            output = om_model.infer([dummy_input], 'static', custom_sizes=90000000) # revise static
-            # output = om_model.infer([dummy_input], 'dymshape', custom_sizes=4000) # revise dynm fp32为4个字节，输出为1x1000
+            output = om_model.infer([dummy_input], 'static', custom_sizes=90000000) 
             cost = time.time() - start
             om_cost += cost
 
     if opts.mode == "ts":
         ts_model = torch.jit.load(TS_PATH)
         
-        # revise static
-        input_info = [torch_aie.Input((1, 3, INPUT_WIDTH, INPUT_HEIGHT))]
+        input_info = [torch_aie.Input((BATCH_SIZE, 3, INPUT_WIDTH, INPUT_HEIGHT))]
         
         torch_aie.set_device(0)
         print("start compile")
         torchaie_model = torch_aie.compile(
             ts_model,
             inputs=input_info,
-            precision_policy=_enums.PrecisionPolicy.FP32,
-            # allow_tensor_replace_int=True,
+            precision_policy=_enums.PrecisionPolicy.FP16,
             soc_version='Ascend310P3',
-            # optimization_level=2
         )
         print("end compile")
         torchaie_model.eval()
         
-        dummy_input = np.random.randn(1, 3, INPUT_WIDTH, INPUT_HEIGHT).astype(np.float32)
+        dummy_input = np.random.randn(BATCH_SIZE, 3, INPUT_WIDTH, INPUT_HEIGHT).astype(np.float32)
         input_tensor = torch.Tensor(dummy_input)
+        input_tensor = input_tensor.to("npu:0")
         loops = 100
         warm_ctr = 10
-        batch_size = 1
         
         default_stream = torch_aie.npu.default_stream()   
         time_cost = 0
         
-        input_tensor = input_tensor.to("npu:0")
         while warm_ctr:
             _ = torchaie_model(input_tensor)
             default_stream.synchronize()
@@ -93,6 +83,11 @@ if __name__ == '__main__':
             t1 = time.time()
             time_cost += (t1 - t0)
 
-        print(f"fps: {loops} * {batch_size} / {time_cost : .3f} samples/s")
-        print("torch_aie fps: ", loops * batch_size / time_cost)
+        print(f"fps: {loops} * {BATCH_SIZE} / {time_cost : .3f} samples/s")
+        print("torch_aie fps: ", loops * BATCH_SIZE / time_cost)
+        
+        from datetime import datetime
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        print("Current Time:", formatted_time)
 
