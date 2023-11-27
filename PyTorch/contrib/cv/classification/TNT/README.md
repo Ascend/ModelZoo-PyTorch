@@ -59,3 +59,8 @@ Log path:
 - 项目交付精度要求：Acc@1 81.5%，目前在gpu中Acc@1为81.2%，已达目标精度的99%以上。
   
 > 由于跑完310个epoch训练时间过长，本项目中测试npu上79个epoch后Acc@1为71.4%，此时gpu的Acc@1为71.7%，910A（NPU）精度大于V100（GPU）精度的99%（即71.7% * 99% = 71.0%），说明精度已经对齐，符合验收标准。
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

@@ -51,3 +51,8 @@ python3 demo.py model.pth
 | :------: | :------:  | :------: | :------: | :--------: | :------: |
 | -        | 892       | 1        | 1        | 0.0125     | O2       |
 | 77.053   | 4445      | 8        | 90       | 0.1        | O2       |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

@@ -1,0 +1,19 @@
+| 类型     | 开源代码地址                                                                                                                           | 文件名                                                | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
+|--------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|-----------------------|--------|
+| 开发引入 | / | xcit/mixup.py | https://arxiv.org/abs/1710.09412 | 论文地址 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/samplers.py | xcit/samplers.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/xcit.py | xcit/xcit.py | https://github.com/facebookresearch/deit/ | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/xcit.py | xcit/xcit.py | https://arxiv.org/abs/2103.17239 | 论文地址 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/samplers.py | xcit/run_with_submitit.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开发引入 | / | xcit/npu_fused_adamw.py | https://arxiv.org/abs/1412.6980 | 论文地址 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/xcit.py | xcit/xcit.py | https://github.com/rwightman/pytorch-image-models/tree/master/timm | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/samplers.py | xcit/main.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/xcit.py | xcit/xcit.py | https://github.com/facebookresearch/detr/blob/master/models/position_encoding.py | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/samplers.py | xcit/engine.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/samplers.py | xcit/losses.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开发引入 | / | xcit/npu_fused_adamw.py | https://openreview.net/forum?id=ryQu7f-RZ | 相关说明 |
+| 开发引入 | / | xcit/mixup.py | https://arxiv.org/abs/1905.04899 | 论文地址 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/samplers.py | xcit/datasets.py | https://github.com/facebookresearch/deit | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/xcit/losses.py | xcit/losses.py | https://github.com/peterliht/knowledge-distillation-pytorch/blob/master/model/net.py#L100 | 源码实现 |
+| 开发引入 | / | xcit/npu_fused_adamw.py | https://arxiv.org/abs/1711.05101 | 论文地址 |
+| 开发引入 | / | xcit/mixup.py | https://github.com/clovaai/CutMix-PyTorch | 源码实现 |

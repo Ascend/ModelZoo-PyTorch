@@ -165,3 +165,8 @@ Twins-PCPVT使用了CPVT中的 conditional position encoding（条件位置编�
 ## FAQ
 
 无。
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
