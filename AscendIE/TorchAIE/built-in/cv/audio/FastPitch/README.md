@@ -66,7 +66,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
       ```
         git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
-        cd FastPitch
+        cd ModelZoo-PyTorch/ACL_PyTorch/contrib/audio/FastPitch
         git clone https://github.com/NVIDIA/DeepLearningExamples
         cd ./DeepLearningExamples
         git checkout master
