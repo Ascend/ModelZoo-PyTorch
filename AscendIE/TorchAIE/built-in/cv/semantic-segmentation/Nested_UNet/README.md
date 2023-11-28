@@ -69,6 +69,7 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
       ```
        1. 获取昇腾ModelZoo-PyTorch仓源码     
         git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
+        cd /home/devkit/hanyifeng/ModelZoo-PyTorch/ACL_PyTorch/contrib/cv/segmentation/Nested_UNet
        2. 在同级目录下，下载第三方源码并打补丁
         git clone https://github.com/4uiiurz1/pytorch-nested-unet
         cd pytorch-nested-unet
