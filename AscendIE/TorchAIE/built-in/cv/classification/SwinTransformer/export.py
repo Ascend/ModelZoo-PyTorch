@@ -22,12 +22,12 @@ def main():
     model = timm.create_model(args.model_name, checkpoint_path=args.checkpoint_path)
     model.eval()
 
-    input = torch.ones(1, 3, args.image_size, args.image_size)
-    output = model(input)
+    inputs = torch.ones(1, 3, args.image_size, args.image_size)
+    output = model(inputs)
     print(f'output shape: {output.shape}')
 
-    script_model = torch.jit.script(model, input)
-    script_model.save(f'{args.model_name}.ts')
+    ts_model = torch.jit.trace(model, inputs)
+    ts_model.save(f'{args.model_name}.ts')
 
 
 if __name__ == '__main__':

@@ -19,9 +19,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torchvision.transforms.functional import InterpolationMode
 from tqdm.auto import tqdm
-
 import torch_aie
-from torch_aie import _enums
 
 
 def compute_acc(y_pred, y_true, topk_list=(1, 5)):
@@ -74,11 +72,12 @@ def validate(model, args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Vision Transformer Evaluation.')
-    parser.add_argument('--data_path', type=str, help='Evaluation dataset path')
-    parser.add_argument('--model_path', type=str, default='./vit_base_patch8_224.ts',
-                        help='Original TorchScript model path')
+    parser.add_argument('--data_path', type=str, required=True, help='Evaluation dataset path')
+    parser.add_argument('--model_path', type=str, default='./vit_base_patch8_224_aie.ts',
+                        help='Compiled model path')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--image_size', type=int, default=224, help='Image size')
+    parser.add_argument('--device_id', type=int, default=0, help='NPU device id')
     return parser.parse_args()
 
 
@@ -99,22 +98,13 @@ def main():
         },
     }
 
-    torch_aie.set_device(0)
+    torch_aie.set_device(args.device_id)
 
     model = torch.jit.load(args.model_path)
     model.eval()
+    print('Model loaded successfully.')
 
-    input_info = [torch_aie.Input((args.batch_size, 3, args.image_size, args.image_size))]
-    print('Start compiling model.')
-    compiled_model = torch_aie.compile(
-        model,
-        inputs=input_info,
-        precision_policy=_enums.PrecisionPolicy.FP16,
-        allow_tensor_replace_int=True,
-        soc_version="Ascend310P3")
-    print('Model compiled successfully.')
-
-    validate(compiled_model, args)
+    validate(model, args)
 
 
 if __name__ == '__main__':
