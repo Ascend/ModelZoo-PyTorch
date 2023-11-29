@@ -178,3 +178,7 @@ RetinaFace是一个强大的单阶段目标检测器，它利用联合监督和�
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

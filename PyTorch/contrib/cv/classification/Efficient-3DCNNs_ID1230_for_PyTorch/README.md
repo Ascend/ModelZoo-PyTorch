@@ -312,3 +312,7 @@ Efficient-3DCNNs_ID1230_for_PyTorch
 - torchvision     0.2.2.post3
 - tqdm            4.62.3
 - wheel           0.32.1
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

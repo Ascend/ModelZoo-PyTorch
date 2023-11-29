@@ -144,31 +144,44 @@ bash valprep.sh
    ```
 2. 导出原始torchscript模型，用于编译优化。
     ```
-    python3 export.py --model_name vit_base_patch8_224 --checkpoint_path ./vit_base_patch8_224.npz --image_size 224
+    python export.py --model_name vit_base_patch8_224 --checkpoint_path ./vit_base_patch8_224.npz --image_size 224
     ```
     导出模型后，会在当前目录下生成vit_base_patch8_224.ts文件。
-3. 运行C++推理样例
+3. （可选）运行C++推理样例
     ```cpp
     sh build.sh
     ./build/sample ./vit_base_patch8_224.ts 224 1
     ```
     在上面的命令中，"./vit_base_patch8_224.ts"是原始torchscript模型路径，"224"是模型输入的图片尺寸大小，"1"是batch size。  
     运行结束后，可以看到命令行打印“[SUCCESS] AIE inference result is the same as JIT!"， 
-    说明AIE推理结果与torchscript原始模型推理结果一致。
-4. 运行模型评估脚本，测试ImageNet验证集推理精度
+    说明AIE推理结果与torchscript原始模型推理结果一致。若不一致，可先在数据集上测试精度，只要精度达标，可忽略模型输出的差异。
+4. 编译模型
+    ```shell
+    python compile.py --model_path ./vit_base_patch8_224.ts
     ```
-    python3 eval.py --model_path ./vit_base_patch8_224.ts --data_path ./imagenet/val --batch_size 1 --image_size 224
+    编译完成后，会在当前目录下生成 vit_base_patch8_224_aie.ts 文件。
+5. 测试ImageNet验证集推理精度
+    ```
+    python eval.py --model_path ./vit_base_patch8_224_aie.ts --data_path ./imagenet/val
     ```
     运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 85.632% 和 97.764%。
     ```
     top1 is 85.632, top5 is 97.764, step is 50000
     ```
+5. 测试模型推理性能
+   ```shell
+   python perf_test.py --model_path ./vit_base_patch8_224_aie.ts
+   ```
+   运行结束后，可以看到命令行打印如下信息，说明推理性能约为 59 fps。
+   ```
+   FPS: 58.79
+   ```
 
 # 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
-调用torch-aie推理计算，精度参考下列数据。
+调用torch-aie推理计算，精度性能参考下列数据。
 
 | 芯片型号 | 模型变体 | Batch Size | 数据集 | 精度                                   | 性能（fps） |
-| --------- |-----|------------| ---------- |------------------------------------- |--------|
-| 310P3 | vit_base_patch8_224    | 1          | ImageNet | top-1: 85.632% <br>top-5: 97.764% | 58  |
+| --------- |-----|------------| ---------- |------------------------------------- |---------|
+| 310P3 | vit_base_patch8_224    | 1          | ImageNet | top-1: 85.632% <br>top-5: 97.764% | 59      |
 

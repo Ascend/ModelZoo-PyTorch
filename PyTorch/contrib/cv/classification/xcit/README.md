@@ -47,3 +47,8 @@ test/output/devie_id/WideReesnet50_2_bs8192_8p_acc.log # 8p training accuracy re
 | :------: | :------:  | :------: | :------: | :------: |
 | -        |   173    | 1        | 1        | O1       |
 | 81.89   |  1401     | 8        | 300      | O1      |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

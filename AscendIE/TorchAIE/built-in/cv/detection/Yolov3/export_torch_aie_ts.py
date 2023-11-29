@@ -46,7 +46,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--torch_script_path', type=str, default='./yolov3.torchscript.pt', help='trace model path')
     parser.add_argument('--soc_version', type=str, default='Ascend310P3', help='soc version')
-    parser.add_argument('--batch_size', type=int, default=1, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=4, help='batch size')
     parser.add_argument('--save_path', type=str, default='./', help='compiled model path')
     opt_args = parser.parse_args()
     return opt_args

@@ -168,3 +168,8 @@ Swin-Transformer 使用层级式的transformer和移动窗口将transformer应�
 
 ## FAQ
 无。
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

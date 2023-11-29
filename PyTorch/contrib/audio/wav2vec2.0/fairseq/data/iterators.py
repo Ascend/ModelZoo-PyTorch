@@ -208,6 +208,7 @@ class StreamingEpochBatchIterator(EpochBatchIterating):
             os.environ["PYTHONWARNINGS"] = "ignore:semaphore_tracker:UserWarning"
 
         # Create data loader
+        kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
         worker_init_fn = getattr(self.dataset, "worker_init_fn", None)
         itr = torch.utils.data.DataLoader(
             self.dataset,
@@ -217,6 +218,7 @@ class StreamingEpochBatchIterator(EpochBatchIterating):
             timeout=self.timeout,
             worker_init_fn=worker_init_fn,
             pin_memory=True,
+            **kwargs
         )
 
         # Wrap with a BufferedIterator if needed
@@ -487,6 +489,7 @@ class EpochBatchIterator(EpochBatchIterating):
             os.environ["PYTHONWARNINGS"] = "ignore:semaphore_tracker:UserWarning"
 
         # Create data loader
+        kwargs = {"pin_memory_device": "npu"} if torch.__version__ >= "2.0" else {}
         itr = torch.utils.data.DataLoader(
             self.dataset,
             collate_fn=self.collate_fn,
@@ -494,6 +497,7 @@ class EpochBatchIterator(EpochBatchIterating):
             num_workers=self.num_workers,
             timeout=self.timeout,
             pin_memory=True,
+            **kwargs
         )
 
         # Wrap with a BufferedIterator if needed

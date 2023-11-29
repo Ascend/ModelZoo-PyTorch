@@ -1,0 +1,5 @@
+numpy==1.26.1
+torch==2.0.1+cpu
+torchvision==0.15.2+cpu
+transformers==4.34.0
+tqdm==4.64.0
