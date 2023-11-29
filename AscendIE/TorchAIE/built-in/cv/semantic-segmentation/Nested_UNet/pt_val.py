@@ -133,7 +133,6 @@ def main(opt):
     # inference & nms
     print("batchsize: ", opt.batch_size)
     pred_results = forward_nms_script(model, dataloader, opt.batch_size, opt.device_id)
-    print(np.array(pred_results).shape)
     if opt.multi == 1 and opt.batch_size == 1:
         file = open(opt.val_ids_file)
         val_ids = file.read().split('\n')
