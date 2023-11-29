@@ -47,12 +47,13 @@ def aie_infer_preprocessed(opts):
     for file in tqdm(in_files):
         img0 = cv2.imread(file)
         resized = cv2.resize(img0, (608, 608), interpolation=cv2.INTER_LINEAR)
-        #img_in = resized.astype(np.int8)
         img_in = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB) / 255
+        img_in = np.transpose(img_in, (2, 0, 1))
 
         img_in = np.expand_dims(img_in, axis=0)
 
-        model_input = torch.Tensor(img_in.astype(np.float16))
+        model_input = torch.Tensor(img_in)
+        model_input = model_input.contiguous()
         model_input = model_input.to('npu:0')
         output = torchaie_model(model_input)
         temp_name = file[file.rfind('/') + 1:]
@@ -329,7 +330,7 @@ def nms(conf_thresh, nms_thresh, output):
 
 
 def post_process(flags):
-    names = np.loadtxt(flags.coco_class_names, dtype='str', delimiter='\n')
+    names = np.loadtxt(flags.coco_class_names, dtype='str')
 
     # 读取bin文件用于生成预测结果
     bin_path = flags.bin_data_path

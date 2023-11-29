@@ -146,6 +146,7 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
    2. 导出ts模型文件。
 
         ```shell
+        mv ./yolov4_pth2ts.py ./pytorch-YOLOv4
         cd pytorch-YOLOv4
         python yolov4_pth2ts.py yolov4.pth 1 80 608 608
         cd ..
@@ -193,12 +194,12 @@ YOLO是一个经典的物体检查网络，将物体检测作为回归问题求�
        
         使用脚本calculate_cost_static.py脚本计算推理性能：
         ```shell
-        python3 calculate_cost_static.py --model_path=./yolov4_1_3_608_608.ts --batch_size=1
+        python3 calculate_cost_static.py --ts_path=./yolov4_1_3_608_608.ts --batch_size=1
         ```
       
         -   参数说明：
 
-            -   --model_path：模型路径
+            -   --ts_path：模型路径
             -   --batch_size：batch_size
             -   --optimization_level(可选):是否使用aoe优化
 

@@ -1,5 +1,3 @@
-from ais_bench.infer.interface import InferSession
-
 import argparse
 import time
 from tqdm import tqdm
