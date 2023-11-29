@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+import yaml
+import json
 import cv2
 import argparse
 import numpy as np
@@ -129,12 +131,14 @@ def main(opt):
     # load dataset
     dataloader = create_dataloader(opt.data_path, opt.batch_size)[0]
     # inference & nms
+    print("batchsize: ", opt.batch_size)
     pred_results = forward_nms_script(model, dataloader, opt.batch_size, opt.device_id)
+    print(np.array(pred_results).shape)
     if opt.multi == 1 and opt.batch_size == 1:
         file = open(opt.val_ids_file)
         val_ids = file.read().split('\n')
         for index, input_fname in enumerate(val_ids):
-            result_fname = input_fname + '.bin'
+            result_fname = input_fname + '_0.bin'
             result_path = os.path.join(opt.result_root_path, f"result_bs{opt.batch_size}")
             result_file = os.path.join(result_path, result_fname)
             if (os.path.exists(result_path) == False):
