@@ -47,10 +47,10 @@ def forward_nms_op(model, dataloader):
     return pred_results
 
 
-def forward_nms_script(model, dataloader, cfg, batchsize):
+def forward_nms_script(model, dataloader, cfg, batchsize, device_id):
     pred_results = []
-    num = 0
-    performance = 0
+    inference_time = []
+    loop_num = 0
     for (img, targets, paths, shapes) in tqdm(dataloader):
         img = img.float()
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -59,9 +59,8 @@ def forward_nms_script(model, dataloader, cfg, batchsize):
         img = torch.Tensor(img)
 
         # pt infer
-        result, Performance = pt_infer(model, img)
-        performance += Performance
-        num += 1
+        result, inference_time = pt_infer(model, img, device_id, loop_num, inference_time)
+        loop_num += 1
         if len(result) == 3:  # number of output nodes is 3, each shape is (bs, na, no, ny, nx)
             out = []
             for i in range(len(result)):
@@ -88,12 +87,23 @@ def forward_nms_script(model, dataloader, cfg, batchsize):
             path = Path(paths[idx])
             image_id = int(path.stem) if path.stem.isnumeric() else path.stem
             save_coco_json(pred, pred_results, image_id, coco80_to_coco91_class())
-    print('性能(毫秒)：', performance / batchsize / num * 1000)
+    avg_inf_time = sum(inference_time) / len(inference_time) / batchsize * 1000
+    print('性能(毫秒)：', avg_inf_time)
+    print("throughput(fps): ", 1000 / avg_inf_time)
+
     return pred_results
 
 
-def pt_infer(model, input_li):
-    T1 = time.time()
-    results = model.forward(input_li)
-    T2 = time.time()
-    return results, T2 - T1
+def pt_infer(model, input_li, device_id, loop_num, inference_time):
+    input_npu_li = input_li.to("npu:" + str(device_id))
+    stream = torch_aie.npu.Stream("npu:" + str(device_id))
+    with torch_aie.npu.stream(stream):
+        inf_start = time.time()
+        output_npu = model.forward(input_npu_li)
+        stream.synchronize()
+        inf_end = time.time()
+        inf = inf_end - inf_start
+        if loop_num >= 5:  # use 5 step to warmup
+            inference_time.append(inf)
+    results = tuple([output_npu[0].to("cpu"), [i.to("cpu") for i in output_npu[1]]])
+    return results, inference_time

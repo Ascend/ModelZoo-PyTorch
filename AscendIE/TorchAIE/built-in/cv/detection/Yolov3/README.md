@@ -14,6 +14,8 @@
 
 - [模型推理性能&精度](#ZH-CN_TOPIC_0000001172201573)
 
+- [可能遇到的问题](#ZH-CN_TOPIC_0000001172201574)
+
   ******
 
 
@@ -142,6 +144,7 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
      bash pth2onnx.sh --tag 9.6.0 --model yolov3 --nms_mode nms_script
      source /usr/local/Ascend/ascend-toolkit/set_env.sh
      bash onnx2om.sh --tag 9.6.0 --model yolov3 --nms_mode nms_script --bs 4 --soc Ascend310P3
+     export ASCENDIE_HOME="xxxx/xxxx/xxx" 设置该环境变量，为后续PT编译做准备
     ```
     
     atc命令参数说明（参数见onnx2om.sh）：
@@ -161,7 +164,7 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
 3. 保存编译优化模型（非必要，可不执行。后续执行的推理脚本包含编译优化过程）
 
     ```
-     python export_torch_aie_ts.py --batch_size=1
+     python export_torch_aie_ts.py --batch_size=4
     ```
    命令参数说明（参数见onnx2om.sh）：
     ```
@@ -190,10 +193,25 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
      --need_compile：是否需要进行模型编译（若使用export_torch_aie_ts.py输出的模型，则不用选该项）
      --batch_size：模型batch size
      --img_size：推理size（像素）
-     --cfg_file：模型参数配置文件路径
+     --cfg_file：模型参数配置文件路径，默认model.yaml
      --device_id：硬件编号
      --single_cls：是否视为单类数据集
     ```
+   使用的model.yaml配置：
+    ```
+     # parameters
+     img_size: [640, 640]  # height, width
+     class_num: 80  # number of classes
+     conf_thres: 0.001  # object confidence threshold, conf>0.1 for nms_op
+     iou_thres: 0.6  # IOU threshold for NMS
+        
+     # anchors
+     anchors:
+       - [10,13, 16,30, 33,23]  # P3/8
+       - [30,61, 62,45, 59,119]  # P4/16
+       - [116,90, 156,198, 373,326]  # P5/32
+     stride: [8, 16, 32]
+         ```
 # 模型推理性能&精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 
@@ -221,9 +239,13 @@ YOLO是一个经典的目标检测网络，将目标检测作为回归问题求�
 |Average Recall     (AR)| @[ IoU=0.50:0.95 , area= large , maxDets=100 ] | 0.748|
 
 
-**表 3** 模型推理精度
+**表 3** 模型推理性能
 
 | Soc version | Batch Size | Dataset | Performance |
-| -------- | ---------- | ---------- | ---------- |
-| 310P3    | 4          | coco2017 | 22.26 ms/pic |
-| 310P3    | 10          | coco2017 | 22.01 ms/pic |
+| -------- | ---------- | ---------- |-------------|
+| 310P3    | 4          | coco2017 | 162.31 fps  |
+
+
+# 可能遇到的问题<a name="ZH-CN_TOPIC_0000001172201574"></a>
+1. AttributeError: 'Upsample' object has no attribute 'recompute_scale_factor' 解决方法参考[该链接](https://zhuanlan.zhihu.com/p/545926241)
+2. libGL.so.1: cannot open shared object file: No such file or directory 解决方法参考[该链接](https://zhuanlan.zhihu.com/p/498478991)

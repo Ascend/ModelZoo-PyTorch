@@ -32,7 +32,7 @@ def main(opt, cfg):
     torch_aie.set_device(opt.device_id)
     if opt.need_compile:
         inputs = []
-        inputs.append(torch_aie.Input((opt.batch_size, 3, 640, 640)))
+        inputs.append(torch_aie.Input((opt.batch_size, 3, opt.img_size, opt.img_size)))
         model = torch_aie.compile(
             model,
             inputs=inputs,
@@ -49,7 +49,7 @@ def main(opt, cfg):
     single_cls = False if opt.tag == '9.6.0' else opt
     dataloader = create_dataloader(f"{opt.data_path}/val2017.txt", opt.img_size, opt.batch_size, max(cfg["stride"]), single_cls, pad=0.5)[0]
     # inference & nms
-    pred_results = forward_nms_script(model, dataloader, cfg, opt.batch_size)
+    pred_results = forward_nms_script(model, dataloader, cfg, opt.batch_size, opt.device_id)
 
     pred_json_file = f"{opt.model.split('.')[0]}_{opt.tag}_predictions.json"
     print(f'saving results to {pred_json_file}')
@@ -67,9 +67,9 @@ if __name__ == '__main__':
                         help='annotation file path')
     parser.add_argument('--tag', type=str, default='9.6.0', help='yolov3 tags')
     parser.add_argument('--soc_version', type=str, default='Ascend310P3', help='soc version')
-    parser.add_argument('--model', type=str, default="yolov3.torchscript.pt", help='ts model path')
+    parser.add_argument('--model', type=str, default="yolov3_torch_aie.pt", help='ts model path')
     parser.add_argument('--need_compile', action="store_true", help='if the loaded model needs to be compiled or not')
-    parser.add_argument('--batch_size', type=int, default=1, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=4, help='batch size')
     parser.add_argument('--img_size', nargs='+', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--cfg_file', type=str, default='model.yaml', help='model parameters config file')
     parser.add_argument('--device_id', type=int, default=0, help='device id')
