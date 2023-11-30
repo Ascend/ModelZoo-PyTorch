@@ -1,26 +1,21 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ============================================================================
 
 import argparse
 import models
 import sys
-from pathlib import Path
 import torch
-import torch_aie
-from torch_aie import _enums
-import os
 
 from waveglow import model as glow
 
@@ -157,15 +152,9 @@ def load_and_setup_model(model_name, parser, checkpoint, amp, device,
     return model.to(device)
 
 
-def pth2onnx(model, dummy_input, output_file):
-    model.eval()
-    input_names = ["input"]
-    output_names = ['mel_out', 'dec_lens', 'dur_pred', 'pitch_pred', 'energy_pred']
-    torch.onnx.export(model, dummy_input, output_file, dynamic_axes={'input': {0: 'bs'}}, input_names=input_names, output_names=output_names, opset_version=11, verbose=False)
+def pth2ts(model, dummy_input, output_file):
     model.eval()
     ts_model = torch.jit.trace(model, dummy_input)
-    # model.to_torchscript(method="trace", example_inputs=input_data)
-    output_file = 'fastpitch.torchscript.pt'
     ts_model.save(output_file)
     print(f"FastPitch torch script model saved to {output_file}.")
 
@@ -191,17 +180,15 @@ def main():
             'FastPitch', parser, args.fastpitch, args.amp, device,
             unk_args=unk_args, forward_is_infer=True, ema=args.ema,
             jitable=args.torchscript)
-
         if args.torchscript:
             generator = torch.jit.script(generator)
     else:
         generator = None
-
     bs = args.batch_size
 
     text_padded = torch.LongTensor(bs, 200)
     text_padded.zero_()
-    pth2onnx(model=generator, dummy_input=text_padded, output_file=f"FastPitch.onnx")
+    pth2ts(model=generator, dummy_input=text_padded, output_file=f"fastpitch.torchscript.pt")
 
 if __name__ == '__main__':
     main()

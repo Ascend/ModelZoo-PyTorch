@@ -94,7 +94,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
       wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
       tar -xvjf LJSpeech-1.1.tar.bz2
     ```
-2. 数据预处理，计算Pitch
+2. 数据预处理，计算Pitch(此处torch==1.8.0，其余torch可取torch==2.0.1)
     ```
    python3 DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/prepare_dataset.py --wav-text-filelists DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/filelists/ljs_audio_text_val.txt --n-workers 16 --batch-size 1 --dataset-path ./LJSpeech-1.1 --extract-mels --f0-method pyin
     ```
@@ -126,11 +126,10 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
     ```
 
 
-2. 生成trace模型(onnx, ts)
+2. 生成trace模型
    
-    首先使用本代码提供的pth2onnx.py替换原代码的同名脚本
     ```
-    python3 pth2onnx.py -i phrases/tui_val100.tsv --fastpitch nvidia_fastpitch_210824.pt --waveglow nvidia_waveglow256pyt_fp16.pt --energy-conditioning --batch-size 1
+    python3 pth2ts.py -i phrases/tui_val100.tsv --fastpitch nvidia_fastpitch_210824.pt --waveglow nvidia_waveglow256pyt_fp16.pt --energy-conditioning --batch-size 1
     ```
 
 3. 保存编译优化模型（非必要，可不执行。若不执行，后续执行推理脚本时需要包含编译优化过程，入参加上--need_compile）
@@ -149,16 +148,16 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
 4. 执行推理脚本
 
-    （1）推理脚本，包含性能测试。
+    推理脚本，包含性能测试。
      ```
       python3 pt_val.py  -i phrases/tui_val100.tsv --dataset_path=./LJSpeech-1.1 --fastpitch ./nvidia_fastpitch_210824.pt --batch_size=4 --model="fastpitch_torch_aie_bs4.pt"
      ```
    命令参数说明：
     ```
-   -i 输入text的完整路径，默认phrases/tui_val100.tsv 
-   --dataset_path 数据集路径，默认./LJSpeech-1.1 
-   --fastpitch checkpoint的完整路径，默认./nvidia_fastpitch_210824.pt 
-   --model 模型路径
+     -i 输入text的完整路径，默认phrases/tui_val100.tsv 
+     --dataset_path 数据集路径，默认./LJSpeech-1.1 
+     --fastpitch checkpoint的完整路径，默认./nvidia_fastpitch_210824.pt 
+     --model 模型路径
      --soc_version：处理器型号
      --need_compile：是否需要进行模型编译（若参数model为export_torch_aie_ts.py输出的模型，则不用选该项）
      --batch_size：模型batch size。注意，若该参数不为1，则不会存储推理结果，仅输出性能
@@ -167,7 +166,11 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
     ```
 5. 精度验证
 
-    调用脚本分别对比input中创建的mel_tgt_pth输入数据和ais_bench推理结果./result/{}，以及pthm模型mel_out_pth输出数据，可以分别获得om和pth模型的Accuracy数据。
+    复用原工程自带infer_test.py脚本。
+    
+    调用脚本分别对比input中创建的mel_tgt_pth输入数据和推理结果./result/{}，以及pthm模型mel_out_pth输出数据，可以获得模型的Accuracy数据。
+
+    其中“om”下为我们的aie模型的精度，“pth”所示精度可不予参考
      ```
     python3 infer_test.py ./result/
     ```
@@ -183,15 +186,15 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 芯片型号 Ascend310P3。
 dataloader生成未drop_last，已补满尾部batch
 
-模型精度 bs1 = 11.2573
+模型精度 bs1 = 11.2545（衡量指标为loss，值小意味着精度高）
 
 **表 2** 模型推理性能
 
-| batch_size              | 性能（fps） | 数据集扩大倍数 |
-|-------------------------|---------|---------|
-| 1                       | 25.4367 | 8       |
-| 4                       | 58.792  | 32      |
-| 8                       | 70.5458 | 64      |
-| 16                      | 68.4412 | 128     |
-| 32                      | 71.5593 | 256     |
-| 64                      | 70.0225 | 512     |
+| batch_size              | 性能（fps）  | 数据集扩大倍数 |
+|-------------------------|----------|---------|
+| 1                       | 199.2952 | 8       |
+| 4                       | 284.5063 | 32      |
+| 8                       | 309.6944 | 64      |
+| 16                      | 296.2289 | 128     |
+| 32                      | 287.7684 | 256     |
+| 64                      | 285.2141 | 512     |

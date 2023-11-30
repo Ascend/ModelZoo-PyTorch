@@ -1,4 +1,4 @@
-# Copyright 2022 Huawei Technologies Co., Ltd
+# Copyright(C) 2023. Huawei Technologies Co.,Ltd. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,24 +22,16 @@ def forward_nms_script(model, dataloader, batchsize, device_id):
     pred_results = []
     inference_time = []
     loop_num = 0
-    for img in tqdm(dataloader):
-        # print(torch.tensor(img).shape)
-        img_input = torch.tensor([i[0].float().numpy().tolist() for i in img])
-        # print("input:", img_input.shape)
+    for snd in tqdm(dataloader):
+        snd_input = torch.tensor([i[0].float().numpy().tolist() for i in snd])
         # pt infer
-        result, inference_time = pt_infer(model, img_input, device_id, loop_num, inference_time)
+        result, inference_time = pt_infer(model, snd_input, device_id, loop_num, inference_time)
         pred_results.append(result)
         loop_num += 1
 
-    # print(batchsize, inference_time)
     avg_inf_time = sum(inference_time) / len(inference_time) / batchsize * 1000
-    print('性能(毫秒)：', avg_inf_time)
+    print('cost_per_input(ms)：', avg_inf_time)
     print("throughput(fps): ", 1000 / avg_inf_time)
-    # print("0", pred_results[0][0].shape)
-    # print("1", pred_results[0][1].shape)
-    # print("2", pred_results[0][2].shape)
-    # print("3", pred_results[0][3].shape)
-    # print("4", pred_results[0][4].shape)
     return pred_results
 
 def pt_infer(model, input_li, device_id, loop_num, inference_time):
@@ -54,9 +46,4 @@ def pt_infer(model, input_li, device_id, loop_num, inference_time):
         if loop_num >= 5:   # use 5 step to warmup
             inference_time.append(inf)
     results = tuple([i.to("cpu") for i in output_npu])
-    # t = torch.tensor(results[0])
-    # print(len(results))
-    # print(t.shape)
-    # print("results:", results)
-    # print("shape:", np.array(results).shape)
     return results, inference_time
