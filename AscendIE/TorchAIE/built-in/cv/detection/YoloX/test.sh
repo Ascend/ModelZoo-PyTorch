@@ -17,6 +17,7 @@
 # Create: 2023/10/20
 
 soc_version="Ascend310P3"
+device_id=0
 data_root="/data/dataset/coco"
 batch=1
 
@@ -48,15 +49,16 @@ if [ ! -f "yolox.torchscript.pt" ]; then
 fi
 
 if [ ! -f "yoloxb${batch}_torch_aie.pt" ]; then
-    echo "[INFO] AIE Compiling"
+    echo "[INFO] Torch-AIE Compiling"
     python yolox_export_torch_aie_ts.py \
         --torch-script-path ./yolox.torchscript.pt \
         --batch-size ${batch} \
         --soc-version ${soc_version}
 fi
 
-echo "[INFO] Start AIE evaluation"
-python yolox_eval.py \
+echo "[INFO] Start Torch-AIE evaluation"
+python yolox_inference.py \
    --dataroot ${data_root} \
    --batch ${batch} \
-   --ts ./yoloxb${batch}_torch_aie.pt
+   --ts ./yoloxb${batch}_torch_aie.pt \
+   --device-id ${device_id} \

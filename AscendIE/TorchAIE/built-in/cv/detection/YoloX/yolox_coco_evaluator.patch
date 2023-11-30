@@ -57,7 +57,7 @@ index 96eb56a..64827fc 100644
          # Evaluate the Dt (detection) json comparing with the ground truth
          if len(data_dict) > 0:
              cocoGt = self.dataloader.dataset.coco
-@@ -216,6 +217,7 @@ class COCOEvaluator:
+@@ -216,6 +217,6 @@ class COCOEvaluator:
              with contextlib.redirect_stdout(redirect_string):
                  cocoEval.summarize()
              info += redirect_string.getvalue()

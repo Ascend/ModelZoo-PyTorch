@@ -209,3 +209,8 @@ YOLOX是基于往年对YOLO系列众多改进而产生的目标检测模型，�
 
    解决方法：
    export LD_PRELOAD=$LD_PRELOAD:{报错信息中的路径}
+
+# Citations 数据集引用
+
+```
+https://cocodataset.org/#termsofuse
