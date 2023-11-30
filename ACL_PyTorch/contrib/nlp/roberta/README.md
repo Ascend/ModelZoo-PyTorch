@@ -91,7 +91,7 @@
    git clone https://github.com/pytorch/fairseq.git fairseq_workspace
    cd fairseq_workspace
    git checkout c1624b27
-   git apply ../roberta-infer.patch
+   patch -p1 < ../roberta-infer.patch
    pip3 install --editable ./
    ```
 

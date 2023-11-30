@@ -13,8 +13,8 @@ PyYAML==5.4.1
 regex==2021.7.6
 sacrebleu==1.5.1
 tabulate==0.8.9
-torch==1.5.0
+torch==1.8.0
 tqdm==4.62.2
 typing-extensions==3.10.0.2
 zipp==3.5.0
-onnx-simplifier==0.3.6
+onnx-simplifier==0.4.17

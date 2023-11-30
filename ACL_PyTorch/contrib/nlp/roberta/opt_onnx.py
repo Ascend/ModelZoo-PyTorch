@@ -35,46 +35,29 @@ def pattern_select(
         candidate_nodes = graph.get_nodes(candidate_nodes)
     
     for node in candidate_nodes:
-        pattern_check = True
+        pattern_check = False
         current_node = node
         for p in preorders[::-1]:
-            if isinstance(p, str):
-                op_type = p
-                input_idx = 0
- 
-            elif isinstance(p, tuple):
-                op_type, input_idx = p
- 
-            else:
-                raise TypeError(f"Invalid preorder type: {type(p)}!")
- 
-            current_node = graph.get_prev_node(current_node.inputs[input_idx])
-            if not current_node or current_node.op_type != op_type:
-                pattern_check = False
+            for input_name in current_node.inputs:
+                current_node = graph.get_prev_node(input_name)
+                if current_node and current_node.op_type == p:
+                    pattern_check = True
+                    break
+            if not pattern_check:
                 break
- 
-        if not pattern_check:
-            continue
         
         current_node = node
         for s in successors:
-            output_idx = 0
-            if isinstance(s, str):
-                op_type = s
- 
-            elif isinstance(s, tuple):
-                op_type, output_idx = s
-                
-            else:
-                raise TypeError(f"Invalid successor type: {type(s)}!")
- 
-            next_nodes = graph.get_next_nodes(current_node.outputs[output_idx])
             pattern_check = False
-            for next_node in next_nodes:
-                if next_node.op_type == op_type:
-                    current_node = next_node
-                    pattern_check = True
-                    break
+            for output_name in current_node.outputs:
+                next_nodes = graph.get_next_nodes(output_name)
+                for next_node in next_nodes:
+                    if next_node.op_type == s:
+                        current_node = next_node
+                        pattern_check = True
+                        break
+                    if pattern_check:
+                        break
  
             if not pattern_check:
                 break
