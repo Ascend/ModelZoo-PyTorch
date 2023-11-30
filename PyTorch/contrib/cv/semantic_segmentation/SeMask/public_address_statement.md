@@ -1,0 +1,17 @@
+| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
+| ---- | ------------ | ------ | ------------------------------------ | -------- |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/decode_heads/branch_fpn_head.py|SeMask/mmseg/models/decode_heads/branch_fpn_head.py	| https://arxiv.org/abs/1901.02446 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FAPN/SeMask-Mask2Former/mask2former/modeling/backbone/semask_swin.py|SeMask/mmseg/models/backbones/swin_transformer.py	| https://arxiv.org/pdf/2103.14030 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/decode_heads/branch_fpn_head.py|SeMask/mmseg/models/decode_heads/fpn_head.py	| https://arxiv.org/abs/1901.02446 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/losses/lovasz_loss.py|SeMask/mmseg/models/losses/lovasz_loss.py	| https://github.com/bermanmaxim/LovaszSoftmax/blob/master/pytor | 源码实现 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FAPN/SeMask-Mask2Former/mask2former/modeling/backbone/semask_swin.py|SeMask/mmseg/models/backbones/semask_swin_transformer.py	| https://arxiv.org/pdf/2103.14030 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/losses/lovasz_loss.py|SeMask/mmseg/models/losses/lovasz_loss.py	| https://arxiv.org/abs/1705.08790 | 模型相关说明 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/necks/fpn.py|SeMask/mmseg/models/necks/fpn.py	| https://arxiv.org/abs/1612.03144 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/segmentors/base.py|SeMask/mmseg/models/segmentors/base.py	| https://github.com/open-mmlab/mmdetection/issues/5844 | 模型相关说明 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/utils/make_divisible.py|SeMask/mmseg/models/utils/make_divisible.py	| https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py | 源码实现 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/models/utils/self_attention_block.py|SeMask/mmseg/models/utils/self_attention_block.py	| https://arxiv.org/abs/1706.03762 | 引用参考论文地址 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/core/seg/sampler/ohem_pixel_sampler.py|SeMask/mmseg/core/seg/sampler/ohem_pixel_sampler.py	| https://github.com/pytorch/pytorch/issues/22812 | 模型相关说明 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/setup.py|SeMask/setup.py	| http://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-platform-specific-dependencies | 模型相关说明 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/setup.py|SeMask/setup.py	| openmmlab@gmail.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/setup.py|SeMask/setup.py	| http://github.com/open-mmlab/mmsegmentation | 源码实现 |
+| 开源代码引入 | https://github.com/Picsart-AI-Research/SeMask-Segmentation/blob/main/SeMask-FPN/mmseg/datasets/builder.py|SeMask/mmseg/datasets/builder.py	| https://github.com/pytorch/pytorch/issues/973 | 模型相关说明 |

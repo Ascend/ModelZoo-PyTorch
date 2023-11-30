@@ -12,3 +12,12 @@
 | 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext_isotropic.py | ConvNeXt/models/convnext_isotropic.py | https://dl.fbaipublicfiles.com/convnext/convnext_iso_small_1k_224_ema.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext_isotropic.py | ConvNeXt/models/convnext_isotropic.py | https://dl.fbaipublicfiles.com/convnext/convnext_iso_base_1k_224_ema.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext_isotropic.py | ConvNeXt/models/convnext_isotropic.py | https://dl.fbaipublicfiles.com/convnext/convnext_iso_large_1k_224_ema.pth | 下载权重文件 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/semantic_segmentation/backbone/convnext.py | ConvNeXt/models/convnext.py | https://arxiv.org/pdf/2201.03545.pdf | 论文地址 |
+| 开发引入 | / | ConvNeXt/timm_need/mixup.py | https://arxiv.org/abs/1905.04899 | 论文地址 |
+| 开发引入 | / | ConvNeXt/timm_need/mixup.py | https://github.com/clovaai/CutMix-PyTorch | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/semantic_segmentation/backbone/convnext.py | ConvNeXt/models/convnext_isotropic.py | https://arxiv.org/pdf/2201.03545.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/optim_factory.py | ConvNeXt/optim_factory.py | https://github.com/microsoft/unilm/blob/master/beit/optim_factory.py | 源码实现 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/semantic_segmentation/backbone/convnext.py | ConvNeXt/object_detection/mmdet/models/backbones/convnext.py | https://arxiv.org/pdf/2201.03545.pdf | 论文地址 |
+| 开发引入 | / | ConvNeXt/timm_need/model_ema.py | https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage | 相关说明 |
+| 开源代码引入 | https://github.com/facebookresearch/ConvNeXt/blob/main/semantic_segmentation/backbone/convnext.py | ConvNeXt/semantic_segmentation/backbone/convnext.py | https://arxiv.org/pdf/2201.03545.pdf | 论文地址 |
+| 开发引入 | / | ConvNeXt/timm_need/mixup.py | https://arxiv.org/abs/1710.09412 | 论文地址 |

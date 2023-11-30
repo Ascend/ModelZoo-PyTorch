@@ -1,0 +1,33 @@
+| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
+| ---- | ------------ | ------ | ------------------------------------ | -------- |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/losses.py|FairMOT/src/lib/models/losses.py	| https://github.com/princeton-vl/CornerNet | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/common.py|FairMOT/src/lib/models/common.py	| https://arxiv.org/abs/2010.11929 | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/common.py|FairMOT/src/lib/models/common.py	| https://arxiv.org/abs/2010.11929 | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/common.py|FairMOT/src/lib/models/common.py	| https://github.com/WongKinYiu/CrossStagePartialNetworks | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/losses.py|FairMOT/src/lib/models/losses.py	| https://github.com/Cysu/open-reid/blob/master/reid/loss/triplet.py | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/yolo.py|FairMOT/src/lib/models/yolo.py	| https://github.com/ultralytics/yolov5/pull/2953 | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/tracking_utils/evaluation.py|FairMOT/src/lib/tracking_utils/evaluation.py	| https://github.com/longcw/py-motmetrics | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/tracking_utils/utils.py|FairMOT/src/lib/tracking_utils/utils.py	| https://github.com/rafaelpadilla/Object-Detection-Metrics | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/tracking_utils/utils.py|FairMOT/src/lib/tracking_utils/utils.py	| https://github.com/rbgirshick/py-faster-rcnn | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/utils/image.py	| Bin.Xiao@microsoft.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/tracking_utils/utils.py|FairMOT/src/lib/tracking_utils/utils.py	| https://storage.googleapis.com/ultralytics/yolov3/results_v1.txt | 模型参数相关配置 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/tracking_utils/utils.py|FairMOT/src/lib/utils/utils.py	| https://github.com/rafaelpadilla/Object-Detection-Metrics | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/tracking_utils/utils.py|FairMOT/src/lib/utils/utils.py	| https://github.com/rbgirshick/py-faster-rcnn | 源码实现 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/datasets/dataset/jde.py|FairMOT/src/lib/datasets/dataset/jde.py	| https://medium.com/uruvideo/dataset-augmentation-with-random-homographies-a8f4b44830d4 | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/dlav0.py|FairMOT/src/lib/models/networks/dlav0.py	| http://dl.yf.io/dla/models | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/dlav0.py|FairMOT/src/lib/models/networks/pose_dla_conv.py	| http://dl.yf.io/dla/models | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/datasets/dataset/jde_yolov5.py|FairMOT/src/lib/datasets/dataset/jde_yolov5.py	| https://github.com/ultralytics/yolov3/issues/232 | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/datasets/dataset/jde.py|FairMOT/src/lib/datasets/dataset/jde_yolov5.py	| https://medium.com/uruvideo/dataset-augmentation-with-random-homographies-a8f4b44830d4 | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/dlav0.py|FairMOT/src/lib/models/networks/pose_dla_dcn.py	| http://dl.yf.io/dla/models | 模型相关说明 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_dcn.py	| Bin.Xiao@microsoft.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_dcn.py	| https://download.pytorch.org/models/resnet18-5c106cde.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_dcn.py	| https://download.pytorch.org/models/resnet34-333f7ec4.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_dcn.py	| https://download.pytorch.org/models/resnet50-19c8e357.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_dcn.py	| https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_dcn.py	| https://download.pytorch.org/models/resnet152-b121ed2d.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_fpn_dcn.py	| Bin.Xiao@microsoft.com | 开发者邮箱配置 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_fpn_dcn.py	| https://download.pytorch.org/models/resnet18-5c106cde.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_fpn_dcn.py	| https://download.pytorch.org/models/resnet34-333f7ec4.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_fpn_dcn.py	| https://download.pytorch.org/models/resnet50-19c8e357.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_fpn_dcn.py	| https://download.pytorch.org/models/resnet101-5d3b4d8f.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/ifzhang/FairMOT/blob/master/src/lib/models/networks/resnet_dcn.py|FairMOT/src/lib/models/networks/resnet_fpn_dcn.py	| https://download.pytorch.org/models/resnet152-b121ed2d.pth | 预训练模型 |

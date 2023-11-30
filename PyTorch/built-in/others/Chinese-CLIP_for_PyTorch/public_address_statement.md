@@ -1,0 +1,25 @@
+| 类型 | 开源代码地址 | 文件名 | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明 |
+| ---- | ------------ | ------ | ------------------------------------ | -------- |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/deployment.md|Chinese-CLIP_for_PyTorch/setup.py	| https://github.com/OFA-Sys/Chinese-CL | 源码实现 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/training/params.py|Chinese-CLIP_for_PyTorch/cn_clip/training/params.py	| https://arxiv.org/pdf/2103.00020.p | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/training/main.py|Chinese-CLIP_for_PyTorch/cn_clip/training/main.py	| https://github.com/openai/CLIP/issues/ | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/eval/extract_features.py|Chinese-CLIP_for_PyTorch/cn_clip/training/main.py	| https://discuss.pytorch.org/t/valueerror-attemting-to-unscale-fp16-gradients/813 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/eval/extract_features.py|Chinese-CLIP_for_PyTorch/cn_clip/eval/zeroshot_evaluation.py	| https://discuss.pytorch.org/t/valueerror-attemting-to-unscale-fp16-gradients/813 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/eval/imagenet_zeroshot_templates.py|Chinese-CLIP_for_PyTorch/cn_clip/eval/imagenet_zeroshot_templates.py	| https://github.com/mlfoundations/open_clip/blob/main/src/training/imagenet_zeroshot_data. | 源码实现 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/eval/imagenet_zeroshot_templates.py|Chinese-CLIP_for_PyTorch/cn_clip/eval/imagenet_zeroshot_templates.py	| https://gitee.com/mindspore/models/tree/master/research/mm/wuko | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/eval/extract_features.py|Chinese-CLIP_for_PyTorch/cn_clip/eval/extract_features.py	| https://discuss.pytorch.org/t/valueerror-attemting-to-unscale-fp16-gradients/813 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/deploy/tensorrt_utils.py|Chinese-CLIP_for_PyTorch/cn_clip/deploy/tensorrt_utils.py	| https://github.com/NVIDIA/TensorRT/issues/11 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/deploy/tensorrt_utils.py|Chinese-CLIP_for_PyTorch/cn_clip/deploy/tensorrt_utils.py	| https://github.com/onnx/onnx-tensorrt/issues/8 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/deploy/tensorrt_utils.py|Chinese-CLIP_for_PyTorch/cn_clip/deploy/tensorrt_utils.py	| https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#opt_profiles_bindin | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/utils.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/utils.py	| https://github.com/openai/CL | 源码实现 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/utils.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/utils.py	| https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/clip_cn_vit-b-16. | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/utils.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/utils.py	| https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/clip_cn_vit-l-14. | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/utils.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/utils.py	| https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/clip_cn_vit-l-14-336. | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/utils.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/utils.py	| https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/clip_cn_vit-h-14. | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/utils.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/utils.py	| https://clip-cn-beijing.oss-cn-beijing.aliyuncs.com/checkpoints/clip_cn_rn50. | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/modeling_bert.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/modeling_bert.py	| https://arxiv.org/abs/1606.084 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/modeling_bert.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/modeling_bert.py	| https://arxiv.org/abs/1606.084 | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/modeling_bert.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/modeling_bert.py	| https://github.com/pytorch/pytorch/pull/56 | 源码实现 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/model.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/model.py	| https://github.com/HazyResearch/flash-attention/issues/ | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/cn_clip/clip/bert_tokenizer.py|Chinese-CLIP_for_PyTorch/cn_clip/clip/bert_tokenizer.py	| https://en.wikipedia.org/wiki/CJK_Unified_Ideograph | 模型相关说明 |
+| 开源代码引入 | https://github.com/OFA-Sys/Chinese-CLIP/blob/master/assets/Chinese_CLIP_logo_tp_path.svg|Chinese-CLIP_for_PyTorch/assets/Chinese_CLIP_logo_tp_path.svg	| http://www.w3.org/2000/s | 模型相关说明 |

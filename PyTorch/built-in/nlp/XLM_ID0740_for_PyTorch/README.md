@@ -40,6 +40,7 @@ XLM模型是transformer的改进模型，其克服了信息不互通的难题，
   | PyTorch 1.5 | - |
   | PyTorch 1.8 | - |
   | PyTorch 1.11   | - |
+  | PyTorch 2.1   | - |
   
 - 环境准备指导。
 

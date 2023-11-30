@@ -24,21 +24,6 @@ from ..utils.import_utils import is_xformers_available
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
-class NpuLinear(torch.nn.Linear):
-    def forward(self, x):
-        if not x.is_npu:
-            return super(NpuLinear, self).forward(x)
-        input_shape = x.size()
-        if x.dim() == 3:
-            x = x.reshape(-1, self.in_features)
-            return torch.npu_linear(x, self.weight, self.bias).view(input_shape[0],
-                                                                    input_shape[1], self.out_features)
-        elif x.dim() == 2:
-            return torch.npu_linear(x, self.weight, self.bias)
-        else:
-            raise RuntimeError('not support this dim')
-
-nn.Linear = NpuLinear
 
 if is_xformers_available():
     import xformers

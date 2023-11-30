@@ -11,3 +11,10 @@
 | 开源代码引入 | https://github.com/RebornL/RFCN-pytorch.1.0/blob/master/lib/model/faster_rcnn/resnet.py | RFCN_ID0418_for_PyTorch/lib/model/faster_rcnn/resnet.py | https://s3.amazonaws.com/pytorch/models/resnet101-5d3b4d8f.pth | 下载权重文件 |
 | 开源代码引入 | https://github.com/RebornL/RFCN-pytorch.1.0/blob/master/lib/model/faster_rcnn/resnet.py | RFCN_ID0418_for_PyTorch/lib/model/faster_rcnn/resnet.py | https://s3.amazonaws.com/pytorch/models/resnet152-b121ed2d.pth | 下载权重文件 |
 | 开发引入   | /                                                                                       | constant.py                                             | 127.0.0.1                                                      | 本机IP地址 |
+| 开发引入 | / | RFCN_ID0418_for_PyTorch/lib/model/rpn/proposal_target_layer_cascade.py | https://github.com/pytorch/pytorch/issues/1868 | 相关说明 |
+| 开发引入 | / | RFCN_ID0418_for_PyTorch/lib/model/rpn/anchor_target_layer.py | https://github.com/pytorch/pytorch/issues/1868 | 相关说明 |
+| 开源代码引入 | https://github.com/RebornL/RFCN-pytorch.1.0/blob/master/lib/datasets/tools/mcg_munge.py | RFCN_ID0418_for_PyTorch/lib/datasets/tools/mcg_munge.py | http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/mcg/ | 相关说明 |
+| 开源代码引入 | https://github.com/RebornL/RFCN-pytorch.1.0/blob/master/lib/model/utils/net_utils.py | RFCN_ID0418_for_PyTorch/lib/model/utils/net_utils.py | https://github.com/ruotianluo/pytorch-faster-rcnn | 源码实现 |
+| 开源代码引入 | https://github.com/RebornL/RFCN-pytorch.1.0/blob/master/lib/model/utils/logger.py | RFCN_ID0418_for_PyTorch/lib/model/utils/logger.py | https://gist.github.com/gyglim/1f8dfb1b5c82627ae3efcfbbadb9f514 | 相关说明 |
+| 开发引入 | / | RFCN_ID0418_for_PyTorch/lib/datasets/tools/mcg_munge.py | http://www.mpi-inf.mpg.de/departments/computer-vision-and-multimodal- | 相关说明 |
+| 开源代码引入 | https://github.com/RebornL/RFCN-pytorch.1.0/blob/master/lib/model/csrc/cuda/PSROIAlign_cuda.cu | RFCN_ID0418_for_PyTorch/lib/model/csrc/cuda/PSROIAlign_cuda.cu | http://blog.prince2015.club/2018/07/13/R-FCN/ | 相关说明 |

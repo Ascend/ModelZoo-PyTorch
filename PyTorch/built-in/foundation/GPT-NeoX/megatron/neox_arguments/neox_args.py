@@ -240,17 +240,17 @@ class NeoXArgsModel(NeoXArgsTemplate):
     Enable fusion of query_key_value_scaling time (upper diagonal) masking and softmax.
     """
 
-    scaled_masked_softmax_fusion: bool = False
+    scaled_masked_softmax_fusion: bool = True
     """
     Enable fusion of query_key_value_scaling general masking and softmax.
     """
 
-    async_tensor_model_parallel_allreduce: bool = False
+    async_tensor_model_parallel_allreduce: bool = True
     """
 	Enable hidden allreduce
 	"""
 
-    use_triangle_attn: bool = False
+    use_triangle_attn: bool = True
     """
 	enable use triangle attention
 	"""
@@ -917,6 +917,14 @@ class NeoXArgsTraining(NeoXArgsTemplate):
     Checkpoint activation to allow for training with larger models, sequences, and batch sizes.
     """
 
+    checkpoint_selective: bool = False
+    """
+    selective checkpointing
+    """
+    checkpoint_full_layers: int = 0
+    """
+    selective checkpointing layers, default full recompute
+    """
     checkpoint_num_layers: int = 1
     """
     Chunk size (number of layers) for checkpointing.

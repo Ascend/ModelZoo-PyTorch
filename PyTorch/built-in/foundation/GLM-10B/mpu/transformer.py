@@ -17,10 +17,12 @@
 """Transformer."""
 
 import math
+import os
 
 import torch
 import torch.nn.init as init
 from torch.nn import LayerNorm
+import torch_npu
 
 from .initialize import get_model_parallel_world_size
 from .layers import ColumnParallelLinear
@@ -209,6 +211,7 @@ class ParallelSelfAttention(torch.nn.Module):
         # different outputs on different number of parallel partitions but
         # on average it should not be partition dependent.
         self.attention_dropout = torch.nn.Dropout(attention_dropout_prob)
+        self.attention_dropout_prob = attention_dropout_prob
 
         # Output.
         self.dense = RowParallelLinear(hidden_size,
@@ -221,6 +224,7 @@ class ParallelSelfAttention(torch.nn.Module):
             global get_cuda_rng_tracker, checkpoint
             get_cuda_rng_tracker = deepspeed.checkpointing.get_cuda_rng_tracker
             checkpoint = deepspeed.checkpointing.checkpoint
+        self.use_flash_attn = os.environ['ASCEND_USE_FLASH_ATTN']
 
     def _transpose_for_scores(self, tensor):
         """Transpose a 3D tensor [b, s, np*hn] into a 4D tensor with
@@ -255,7 +259,7 @@ class ParallelSelfAttention(torch.nn.Module):
         # ltor_mask: [1, 1, s, s]
 
         # Attention heads. [b, s, hp]
-        query_length = hidden_states.size(1)
+        b, s, h = hidden_states.size()
 
         if mem is None:
             mixed_x_layer = self.query_key_value(hidden_states)
@@ -268,60 +272,88 @@ class ParallelSelfAttention(torch.nn.Module):
             (mixed_query_layer,
              mixed_key_layer,
              mixed_value_layer) = split_tensor_along_last_dim(mixed_x_layer, 3)
-            mixed_query_layer = mixed_query_layer[:, -query_length:]
+            mixed_query_layer = mixed_query_layer[:, -s:]
 
-        # Reshape and transpose [b, np, s, hn]
-        query_layer = self._transpose_for_scores(mixed_query_layer)
-        key_layer = self._transpose_for_scores(mixed_key_layer)
-        value_layer = self._transpose_for_scores(mixed_value_layer)
-        if self.relative_encoding:
-            relative_layer = self.relative(position_embeddings)
-            relative_layer = self._transpose_for_scores(relative_layer)  # 1 (bsz) x n_head x klen x d_head
-            # Raw attention scores. [b, np, qs, ks]
-            rw_head_q = query_layer + r_w_bias.unsqueeze(1)
-            ac_score = torch.matmul(rw_head_q, key_layer.transpose(-1, -2))
-            rr_head_q = query_layer + r_r_bias.unsqueeze(1)
-            bd_score = torch.matmul(rr_head_q, relative_layer.transpose(-1, -2))
-            bd_score = self._rel_shift(bd_score)  # qlen x klen x bsz x n_head
-            # bd_score = bd_score.permute(2, 3, 0, 1) # bsz n_head qlen klen
+        if self.use_flash_attn:
+            pad_s = (s + 127) // 128 * 128
+            pad_dtype = mixed_query_layer.dtype
+            pad_device = mixed_query_layer.device
 
-            attention_scores = ac_score + bd_score
-            attention_scores = attention_scores / math.sqrt(self.hidden_size_per_attention_head)
+            pad_q = torch.zeros([b, pad_s, h], dtype=pad_dtype, device=pad_device)
+            pad_k = torch.zeros([b, pad_s, h], dtype=pad_dtype, device=pad_device)
+            pad_v = torch.zeros([b, pad_s, h], dtype=pad_dtype, device=pad_device)
+            pad_m = torch.zeros([b, 1, pad_s, pad_s], dtype=pad_dtype, device=pad_device)
+
+            pad_q[:, :s, :] = mixed_query_layer
+            pad_k[:, :s, :] = mixed_key_layer
+            pad_v[:, :s, :] = mixed_value_layer
+            pad_m[:, :, :s, :s] = ltor_mask
+
+            context_layer = torch_npu.npu_fusion_attention(
+                pad_q.contiguous(),
+                pad_k.contiguous(),
+                pad_v.contiguous(), 64, "BSH",
+                pse=None,
+                padding_mask=None,
+                atten_mask=(1 - pad_m).bool(),
+                scale=(1. / math.sqrt(self.hidden_size_per_attention_head)),
+                pre_tockens=65536,
+                next_tockens=0,
+                keep_prob=1. - self.attention_dropout_prob,
+                sync=False)[0][:, :s, :]
         else:
-            if self.attention_scale > 1.0:
-                # Raw attention scores. [b, np, s, s]
-                attention_scores = torch.matmul(query_layer / math.sqrt(self.attention_scale),
-                                            key_layer.transpose(-1, -2) / math.sqrt(
-                                                self.hidden_size_per_attention_head * self.attention_scale))
+            # Reshape and transpose [b, np, s, hn]
+            query_layer = self._transpose_for_scores(mixed_query_layer)
+            key_layer = self._transpose_for_scores(mixed_key_layer)
+            value_layer = self._transpose_for_scores(mixed_value_layer)
+            if self.relative_encoding:
+                relative_layer = self.relative(position_embeddings)
+                relative_layer = self._transpose_for_scores(relative_layer)  # 1 (bsz) x n_head x klen x d_head
+                # Raw attention scores. [b, np, qs, ks]
+                rw_head_q = query_layer + r_w_bias.unsqueeze(1)
+                ac_score = torch.matmul(rw_head_q, key_layer.transpose(-1, -2))
+                rr_head_q = query_layer + r_r_bias.unsqueeze(1)
+                bd_score = torch.matmul(rr_head_q, relative_layer.transpose(-1, -2))
+                bd_score = self._rel_shift(bd_score)  # qlen x klen x bsz x n_head
+                # bd_score = bd_score.permute(2, 3, 0, 1) # bsz n_head qlen klen
+
+                attention_scores = ac_score + bd_score
+                attention_scores = attention_scores / math.sqrt(self.hidden_size_per_attention_head)
             else:
-                attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2) / math.sqrt(
-                    self.hidden_size_per_attention_head))
+                if self.attention_scale > 1.0:
+                    # Raw attention scores. [b, np, s, s]
+                    attention_scores = torch.matmul(query_layer / math.sqrt(self.attention_scale),
+                                                key_layer.transpose(-1, -2) / math.sqrt(
+                                                    self.hidden_size_per_attention_head * self.attention_scale))
+                else:
+                    attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2) / math.sqrt(
+                        self.hidden_size_per_attention_head))
 
-        # Apply the left to right attention mask.
-        attention_scores = torch.mul(attention_scores, ltor_mask)
-        if self.attention_scale > 1.0:
-            max_attention_scores = attention_scores.max(dim=-1, keepdim=True)[0]
-            attention_scores -= max_attention_scores
-            attention_scores *= self.attention_scale
-        # if torch.distributed.get_rank() == 0:
-        #     print(min_attention_scores, attention_scores.max().item())
-        attention_scores = attention_scores + (-10000.0) * (1.0 - ltor_mask)
-        # Attention probabilities. [b, np, s, s]
-        attention_probs = torch.nn.Softmax(dim=-1)(attention_scores)
-        # This is actually dropping out entire tokens to attend to, which might
-        # seem a bit unusual, but is taken from the original Transformer paper.
-        with get_cuda_rng_tracker().fork():
-            attention_probs = self.attention_dropout(attention_probs)
+            # Apply the left to right attention mask.
+            attention_scores = torch.mul(attention_scores, ltor_mask)
+            if self.attention_scale > 1.0:
+                max_attention_scores = attention_scores.max(dim=-1, keepdim=True)[0]
+                attention_scores -= max_attention_scores
+                attention_scores *= self.attention_scale
+            # if torch.distributed.get_rank() == 0:
+            #     print(min_attention_scores, attention_scores.max().item())
+            attention_scores = attention_scores + (-10000.0) * (1.0 - ltor_mask)
+            # Attention probabilities. [b, np, s, s]
+            attention_probs = torch.nn.Softmax(dim=-1)(attention_scores)
+            # This is actually dropping out entire tokens to attend to, which might
+            # seem a bit unusual, but is taken from the original Transformer paper.
+            with get_cuda_rng_tracker().fork():
+                attention_probs = self.attention_dropout(attention_probs)
 
-        # Context layer.
-        # [b, np, s, hn]
-        context_layer = torch.matmul(attention_probs, value_layer)
-        # [b, s, np, hn]
-        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + \
-                                  (self.hidden_size_per_partition,)
-        # [b, s, hp]
-        context_layer = context_layer.view(*new_context_layer_shape)
+            # Context layer.
+            # [b, np, s, hn]
+            context_layer = torch.matmul(attention_probs, value_layer)
+            # [b, s, np, hn]
+            context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
+            new_context_layer_shape = context_layer.size()[:-2] + \
+                                      (self.hidden_size_per_partition,)
+            # [b, s, hp]
+            context_layer = context_layer.view(*new_context_layer_shape)
 
         # Output. [b, s, h]
         output = self.dense(context_layer)
@@ -333,7 +365,7 @@ class ParallelSelfAttention(torch.nn.Module):
 @torch.jit.script
 def gelu_impl(x):
     """OpenAI's gelu implementation."""
-    return torch.fast_gelu(x)
+    return torch_npu.fast_gelu(x)
 
 
 def gelu(x):

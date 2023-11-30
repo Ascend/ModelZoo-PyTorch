@@ -1,18 +1,3 @@
-# coding=utf-8
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 """
 - Convert html to markdown with basic data cleaning.
 - Deduplication.
@@ -21,6 +6,7 @@ Usage:
 python3 -m fastchat.data.clean_sharegpt --in sharegpt_html.json --out sharegpt_clean.json
 """
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 import json
 import logging
 import re
@@ -28,7 +14,7 @@ from typing import Dict, Union
 
 import bs4
 import markdownify  # == 0.11.6
-import tqdm
+from tqdm import tqdm
 
 
 div_pattern = re.compile("<div.*?>")
@@ -74,101 +60,129 @@ def html_to_markdown(val: str) -> str:
     # Strip
     val = val.replace("\n\n\n", "\n").strip()
 
-    if args.debug:
-        print(val)
-        exit()
-
     return val
 
 
-def should_filter(val: str) -> bool:
-    black_list = ["openai", "chatgpt"]
-    for w in black_list:
+def contain_blocked_words(val: str) -> bool:
+    blocked_words = ["openai", "chatgpt"]
+    for w in blocked_words:
         if w in val.lower():
             return True
     return False
 
 
-def clean_html_source(content, begin, end, check_tag, check_num):
-    """
-    Clean the input json content.
+def clean_html_one_sample(sample):
+    roles = ["human", "gpt"]
 
-    Args:
-        content: json file loaded in memory.
-        check_tag: a debug purpose arg. If a conversation contains the tag, log
-          it before and after cleaning.
-        check_num: number of matched conversations logged.
+    if len(sample["conversations"]) <= 1:
+        return (sample, 1)
+
+    # Adjust the offset for cases like https://sharegpt.com/c/VyaZlh4
+    if sample["conversations"][0]["from"] != "human":
+        sample["conversations"] = sample["conversations"][1:]
+    if len(sample["conversations"]) <= 1:
+        return (sample, 1)
+
+    if sample["conversations"][-1]["from"] == "human":
+        sample["conversations"] = sample["conversations"][:-1]
+    if len(sample["conversations"]) <= 1:
+        return (sample, 1)
+
+    char_count = 0
+    new_conversations = []
+    for i, c in enumerate(sample["conversations"]):
+        if c["from"] != roles[i % 2]:
+            return (sample, 2)
+
+        if contain_blocked_words(c["value"]):
+            return (sample, 3)
+
+        try:
+            new_val = html_to_markdown(c["value"])
+        except (bs4.builder.ParserRejectedMarkup, AssertionError):
+            return (sample, 4)
+
+        # Filter empty answers like https://sharegpt.com/c/mrllZ6u
+        if not new_val or not new_val[0].isprintable():
+            break
+
+        char_count += len(new_val)
+        new_conversations.append(
+            {
+                "from": c["from"],
+                "value": new_val,
+            }
+        )
+
+    new_conversations = new_conversations[: len(new_conversations) // 2 * 2]
+    sample["conversations"] = new_conversations
+
+    if char_count < 16 or len(sample["conversations"]) <= 0:
+        return (sample, 1)
+
+    return (sample, 0)
+
+
+def clean_html_all(content, begin, end):
     """
-    BARRIER = "\n" + "=" * 20 + "\n"
+    Clean the source html files.
+    """
     cnt_skip = 0
+    cnt_blocked_words = 0
+    cnt_wrong_format = 0
+    cnt_parser_error = 0
     cnt_too_short = 0
     cnt_id_duplication = 0
     cnt_value_duplication = 0
-    cnt_filter = 0
+    cnt_plugin = 0
     cnt_tag = 0
-    visited = {}
 
     content = content[begin:end]
+    processed = []
+    with ProcessPoolExecutor() as executor:
+        for result in tqdm(
+            executor.map(clean_html_one_sample, content), total=len(content)
+        ):
+            processed.append(result)
+
+    visited = {}
     new_content = []
-
-    for sample in tqdm.tqdm(content):
-        skipped = False
+    for sample, error_code in processed:
         cid = sample["id"]
+        skipped = True
 
-        if len(sample["conversations"]) <= 1:
-            print(f"id {cid} is too short")
-            cnt_too_short += 1
-            skipped = True
+        if error_code != 0:
+            if error_code == 1:
+                print(f"id {cid} is too short")
+                cnt_too_short += 1
+            elif error_code == 2:
+                print(f"id {cid} has a wrong format")
+                cnt_wrong_format += 1
+            elif error_code == 3:
+                print(f"id {cid} contains blocked words")
+                cnt_blocked_words += 1
+            elif error_code == 4:
+                print(f"id {cid} contains parser errors")
+                cnt_parser_error += 1
+            else:
+                raise ValueError(f"Invalid error_code: {error_code}")
         elif cid in visited:
             print(f"id {cid} is an id duplication of {visited[cid]}")
             cnt_id_duplication += 1
-            skipped = True
-        elif (
-            sample["conversations"][1]["value"],
-            len(sample["conversations"]),
-        ) in visited:
-            key = (sample["conversations"][1]["value"], len(sample["conversations"]))
-            print(f"id {cid} is a value duplication of {visited[key]}")
-            cnt_value_duplication += 1
-            skipped = True
+        elif sample.get("plugins", None) is not None:
+            print(f"id {cid} contains plugin")
+            cnt_plugin += 1
         else:
-            key = (sample["conversations"][1]["value"], len(sample["conversations"]))
-            visited[cid] = visited[key] = cid
-
-            for c in sample["conversations"]:
-                if should_filter(c["value"]):
-                    print(f"id {cid} is filtered out")
-                    cnt_filter += 1
-                    skipped = True
-                    break
-
-                try:
-                    new_val = html_to_markdown(c["value"])
-                except (bs4.builder.ParserRejectedMarkup, AssertionError):
-                    skipped = True
-                    break
-
-                c["value"] = new_val
-
-                # Debug
-                if (
-                    check_tag is not None
-                    and check_tag in c["value"]
-                    and cnt_tag < check_num
-                ):
-                    logging.debug(
-                        BARRIER
-                        + c["value"]
-                        + "\n"
-                        + BARRIER
-                        + new_val
-                        + "\n"
-                        + BARRIER
-                        + "\n"
-                    )
-                    cnt_tag += 1
-                    if cnt_tag == check_num:
-                        break
+            key = (
+                sample["conversations"][0]["value"],
+                sample["conversations"][1]["value"],
+            )
+            if key in visited:
+                print(f"id {cid} is a value duplication of {visited[key]}")
+                cnt_value_duplication += 1
+            else:
+                visited[cid] = visited[key] = cid
+                skipped = False
 
         if not skipped:
             new_content.append(sample)
@@ -177,8 +191,10 @@ def clean_html_source(content, begin, end, check_tag, check_num):
 
     print(
         f"total: {len(content)}, skip: {cnt_skip}, new: {len(new_content)}, "
+        f"cnt_blocked_words: {cnt_blocked_words}, cnt_parser_error: {cnt_parser_error}, "
+        f"cnt_wrong_format: {cnt_wrong_format}, "
         f"cnt_too_short: {cnt_too_short}, cnt_id_duplication: {cnt_id_duplication}, "
-        f"cnt_value_duplication: {cnt_value_duplication}, cnt_filter: {cnt_filter}"
+        f"cnt_value_duplication: {cnt_value_duplication}, cnt_plugin: {cnt_plugin}"
     )
 
     return new_content
@@ -186,10 +202,8 @@ def clean_html_source(content, begin, end, check_tag, check_num):
 
 def main(args):
     content = json.load(open(args["in_file"], "r"))
-    content = clean_html_source(
-        content, args["begin"], args["end"], args["check_tag"], args["check_num"]
-    )
-    json.dump(content, open(args["out_file"], "w"), indent=2)
+    content = clean_html_all(content, args["begin"], args["end"])
+    json.dump(content, open(args["out_file"], "w"), indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":
@@ -199,7 +213,5 @@ if __name__ == "__main__":
     parser.add_argument("--begin", type=int)
     parser.add_argument("--end", type=int)
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--check-tag", type=str)
-    parser.add_argument("--check-num", type=int, default=1)
     args = parser.parse_args()
     main(vars(args))

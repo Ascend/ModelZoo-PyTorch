@@ -5,3 +5,16 @@
 | 开源代码引入 | https://github.com/nrupatunga/goturn-pytorch/blob/master/src/scripts/download_data.sh | GOTURN_for_PyTorch/src/scripts/download_data.sh | http://isis-data.science.uva.nl/alov/alov300++_frames.zip            | 下载数据集 |
 | 开源代码引入 | https://github.com/nrupatunga/goturn-pytorch/blob/master/src/scripts/download_data.sh | GOTURN_for_PyTorch/src/scripts/download_data.sh | http://isis-data.science.uva.nl/alov/alov300++GT_txtFiles.zip        | 下载数据集 |
 | 开发引入   | /                                                                                     | url.ini                                         | https://github.com/Lightning-AI/lightning.git                        | 下载三方库 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/lightning.py | https://pytorch.org/docs/stable/tensors.html | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_parts.py | https://medium.com/@_willfalcon/9-tips-for-training-lightning-fast-neural-networks-in-pytorch-8e63a502f565 | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_data_parallel.py | https://williamfalcon.github.io/test-tube/hpc/SlurmCluster | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_data_parallel.py | https://williamfalcon.github.io/test-tube/hyperparameter_optimization/HyperOptArgumentParser/ | 相关说明 |
+| 开源代码引入 | https://github.com/nrupatunga/goturn-pytorch/blob/master/src/scripts/train.py | GOTURN_for_PyTorch/src/goturn/dataloaders/sampler.py | nrupatunga.s@byjus.com | 邮箱地址 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_data_parallel.py | http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf | 论文地址 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_parts.py | https://github.com/NVIDIA/apex | 源码实现 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_parts.py | https://git.io/Jv87p | 相关说明 |
+| 开源代码引入 | https://github.com/nrupatunga/goturn-pytorch/blob/master/src/goturn/helper/image_io.py | GOTURN_for_PyTorch/src/goturn/helper/image_io.py | https://github.com/python-pillow/Pillow/issues/835 | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/lightning.py | https://pytorch.org/docs/stable/torch.html#torch.load | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_parts.py | https://williamfalcon.github.io/test-tube/hpc/SlurmCluster | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_parts.py | https://github.com/NVIDIA/apex/issues/227 | 相关说明 |
+| 开发引入 | / | GOTURN_for_PyTorch/src/goturn/tools/distrib_parts.py | https://williamfalcon.github.io/test-tube/hyperparameter_optimization/HyperOptArgumentParser | 相关说明 |

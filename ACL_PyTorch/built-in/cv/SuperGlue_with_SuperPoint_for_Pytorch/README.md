@@ -120,13 +120,8 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
    `-- superpoint_pth2onnx.py         # superpoint onnx导出脚本
    ```
 
-3. 对源码进行修改。
 
-   ```
-   patch -p1 < SuperGlue.patch
-   ```
-
-4. 安装必要依赖。
+3. 安装必要依赖。
 
    ```
    pip3 install -r requirements.txt
@@ -196,14 +191,8 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
         - --superpoint：选择加载 indoor/outdoor 场景的权重。
         - --image_size：输入图像的大小（宽度和高度）。
 
-   3. 简化onnx文件。
-
-      ```python
-      # superglue
-      python3 -m onnxsim superglue.onnx superglue_sim.onnx --dynamic-input-shape --input-shape keypoints0:1,40,2 scores0:1,40 descriptors0:1,256,40 keypoints1:1,40,2 scores1:1,40 descriptors1:1,256,40
-      ```
       
-   4. 使用ATC工具将ONNX模型转OM模型。
+   3. 使用ATC工具将ONNX模型转OM模型。
    
       1. 配置环境变量。
    
@@ -229,14 +218,17 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
          +===================+=================+======================================================+
          ```
    
-   5. 执行ATC命令。
+   4. 执行ATC命令。
    
       ```shell
       # superpoint
       atc --model superpoint.onnx --output superpoint --framework 5 --log=error --soc_version Ascend310P3
       
       # superglue
-      atc --model superglue_sim.onnx --output superglue --framework 5 --log=error --soc_version Ascend310P3 --input_shape "keypoints0:[1,-1,2];scores0:[1,-1];descriptors0:[1,256,-1];keypoints1:[1,-1,2];scores1:[1,-1];descriptors1:[1,256,-1]"
+      atc --model superglue.onnx --output superglue --framework 5 --log=error --soc_version Ascend310P3 --input_shape "keypoints0:1,-1,2;scores0:1,-1;descriptors0:1,256,-1;keypoints1:1,-1,2;scores1:1,-1;descriptors1:1,256,-1"
+
+      mv superpoint*.om superpoint.om
+      mv superglue*.om superglue.om
       ```
    
       参数说明：
@@ -250,9 +242,9 @@ SuperGlue网络用于特征匹配与外点剔除，其使用图神经网络对�
    
 2. 开始推理验证。
 
-   1. 调用ais-bench工具的推理接口进行推理。
+   1. 推理工具安装。
 
-      ais-bench工具获取及使用方式请点击查看[[ais_bench 推理工具使用文档](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)]
+      参考[此页面](https://gitee.com/ascend/ait/blob/master/ait/docs/install/README.md)安装推理工具，推理工具的使用方法请参考[ait benchmark使用指南](https://gitee.com/ascend/ait/tree/master/ait/docs/benchmark)。
 
    2. 执行推理。
 
@@ -281,4 +273,4 @@ SuperPoint + SuperGlue 模型的性能和精度参考下列数据。
 
 | 芯片型号    | Batch Size | 数据集   | pth精度（ AUC@20 \| Prec ） | NPU精度（ AUC@20 \| Prec ) | E2E性能 |
 | ----------- | ---------- | -------- | --------------------------- | -------------------------- | ------- |
-| Ascend310P3 | 1          | YFCC100M | 75.08 \| 98.55              | 75.04 \| 97.85             | 0.174fps   |
+| Ascend310P3 | 1          | YFCC100M | 75.08 \| 98.55              | 74.72 \| 97.80             | 1.4 fps |

@@ -1,0 +1,13 @@
+torch==2.0.1
+opencv-contrib-python
+opencv-python
+opencv-python-headless
+xarray
+numpy
+imageio
+sympy
+six
+wheel
+decorator
+mpmath
+tqdm

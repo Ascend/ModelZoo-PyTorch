@@ -28,7 +28,7 @@ log_config = dict( # config to register logger hook
 dist_params = dict(backend='hccl')
 data = dict(
     samples_per_gpu=8,
-    workers_per_gpu=8
+    workers_per_gpu=20
 )
 
 optimizer_config = dict(_delete_=True, grad_clip=dict(max_norm=10, norm_type=2))

@@ -66,6 +66,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    torch.use_deterministic_algorithms(True)
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,

@@ -1,0 +1,19 @@
+| 类型   | 开源代码地址 | 文件名     | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
+|------|--------|---------|------------------------|--------|
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | http://files.grouplens.org/datasets/movielens/ml-1m.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | https://static.preferred.ai/cornac/datasets/movielens/ml_plot.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/data/text.py | Vaecf_ID2903_for_PyTorch/cornac/data/text.py | https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/feature_extraction/text.py#L790 | 源码实现 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/metrics/ranking.py | Vaecf_ID2903_for_PyTorch/cornac/metrics/ranking.py | https://en.wikipedia.org/wiki/Mean_reciprocal_rank | 相关说明 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | http://files.grouplens.org/datasets/movielens/ml-10m.zip | 数据集地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/utils/init_utils.py | Vaecf_ID2903_for_PyTorch/cornac/utils/init_utils.py | http://www.jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/metrics/ranking.py | Vaecf_ID2903_for_PyTorch/cornac/metrics/ranking.py | https://en.wikipedia.org/wiki/Discounted_cumulative_gain | 相关说明 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/utils/common.py | Vaecf_ID2903_for_PyTorch/cornac/utils/common.py | https://github.com/scikit-learn/scikit-learn/blob/1495f69242646d239d89a5713982946b8ffcf9d9/sklearn/preprocessing/data.py#L1553 | 源码实现 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | https://grouplens.org/datasets/movielens/ | 数据集地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/data/text.py | Vaecf_ID2903_for_PyTorch/cornac/data/text.py | https://github.com/scikit-learn/scikit-learn/blob/d6d1d63fa6b098c72953a6827aae475f611936ed/sklearn/feature_extraction/text.py#L1451 | 源码实现 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/examples/propensity_stratified_evaluation_example.py | Vaecf_ID2903_for_PyTorch/cornac/eval_methods/propensity_stratified_evaluation.py | https://arxiv.org/abs/2104.08912 | 论文地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/metrics/ranking.py | Vaecf_ID2903_for_PyTorch/cornac/metrics/ranking.py | https://arxiv.org/ftp/arxiv/papers/1205/1205.2618.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | http://files.grouplens.org/datasets/movielens/ml-100k/u.data | 数据集地址 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/utils/common.py | Vaecf_ID2903_for_PyTorch/cornac/utils/common.py | https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/utils/__init__.py | 源码实现 |
+| 开发引入 | / | Vaecf_ID2903_for_PyTorch/cornac/metrics/ranking.py | https://en.wikipedia.org/wiki/Evaluation_measures_ | 相关说明 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | http://dm.postech.ac.kr/~cartopy/ConvMF/ | 相关说明 |
+| 开源代码引入 | https://github.com/PreferredAI/cornac.git/cornac/datasets/movielens.py | Vaecf_ID2903_for_PyTorch/cornac/datasets/movielens.py | http://files.grouplens.org/datasets/movielens/ml-20m.zip | 数据集地址 |

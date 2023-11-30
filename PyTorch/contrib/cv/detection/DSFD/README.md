@@ -102,3 +102,7 @@ Reference:
 | 参考精度        | E:0.951 M:0.936 H:0.837      |
 | GPU 8P 自测精度 | E 0.9473, M 0.9362, H 0.8651 |
 
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

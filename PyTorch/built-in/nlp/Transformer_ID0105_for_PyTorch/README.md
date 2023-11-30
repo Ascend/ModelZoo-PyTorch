@@ -160,3 +160,7 @@ Transformer模型通过跟踪序列数据中的关系来学习上下文并因此
 ## FAQ
 
 无。
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -22,8 +22,11 @@ import torch.utils.data
 from transformers import AutoTokenizer, AutoModel
 from tqdm import tqdm
 
-tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True)
-model = AutoModel.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True).bfloat16().cuda()
+CHECKPOINT= "THUDM/chatglm2-6b"
+DATA_PATH="./CEval"
+
+tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT, trust_remote_code=True)
+model = AutoModel.from_pretrained(CHECKPOINT, trust_remote_code=True).bfloat16().cuda()
 
 choices = ["A", "B", "C", "D"]
 choice_tokens = [tokenizer.encode(choice, add_special_tokens=False)[0] for choice in choices]
@@ -37,7 +40,7 @@ extraction_prompt = '综上所述，ABCD中正确的选项是：'
 
 accuracy_dict, count_dict = {}, {}
 with torch.no_grad():
-    for entry in glob.glob("./CEval/val/**/*.jsonl", recursive=True):
+    for entry in glob.glob(DATA_PATH, recursive=True):
         dataset = []
         with open(entry, encoding='utf-8') as file:
             for line in file:

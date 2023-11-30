@@ -1,0 +1,11 @@
+decorator==5.1.0
+protobuf==3.19.1
+sympy==1.9
+numpy==1.21.4
+Pillow==9.1.0
+timm==0.4.5
+torchvision==0.16.0
+tensorboard==1.15.0
+tensorboard-data-server==0.6.1
+tensorboard-plugin-wit==1.8.0
+tensorboardX==2.4.1

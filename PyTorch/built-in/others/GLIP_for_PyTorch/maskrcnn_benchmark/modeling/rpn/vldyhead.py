@@ -590,7 +590,11 @@ class VLDyHead(torch.nn.Module):
         self.cfg = cfg
         # bert_cfg = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE)
         if cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE == "bert-base-uncased":
-            lang_cfg = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE)
+            if cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH:
+                lang_cfg = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH)
+            else:
+                lang_cfg = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE)
+            print('lang_cfg: ', lang_cfg, flush=True)
         elif cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE == "clip":
             lang_cfg = cfg
         else:

@@ -145,3 +145,6 @@ MaskRCNN是一个实例分割（Instance segmentation）框架，通过增加不
 
 无。
    
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

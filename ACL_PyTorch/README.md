@@ -717,9 +717,9 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/cv/SuperGlue_with_SuperPoint_for_Pytorch"> SuperGlue-SuperPoint </a>
         </td>
         <td>YFCC100M</td>
-    <td>75.04%</td>
-        <td>97.85%</td>
-    <td>0.174(e2e)</td>
+    <td>74.72%</td>
+        <td>97.80%</td>
+    <td>1.4(e2e)</td>
     <td nowrap="nowrap">1 x 1 x 1200 x 1600</td>
 </table>
 
@@ -833,7 +833,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td></td>
         <td></td>
         <td>99.93%</td>
-    <td>1682(bs64)</td>
+    <td>1484(bs64)</td>
     <td nowrap="nowrap">bs x 1800 x 24</td>
     </tr>
     <tr>
@@ -1023,32 +1023,6 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
     <td>19(bs16)</td>
         <td></td>
     <td>bs x 3 x 736 x 1280</td>
-    </tr>
-</table>
-
-<p>foundation_models</p>
-<table align="center">
-    <tr>
-        <th rowspan=2>ID</th>
-        <th rowspan=2>Name</th>
-        <th rowspan=2>Dataset</th>
-        <th align="center" colspan=1>精度</th>
-        <th colspan=1>最优性能（对应bs）</th>
-        <th rowspan=2>输入shape</th>
-    </tr>
-    <tr>
-        <td>retrieval_recall@5</td>
-        <td>910B4</td>
-    </tr>
-    <tr>
-        <td> 100398 </td>
-        <td>
-        <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/ACL_PyTorch/built-in/foundation_models/OpenCLIP"> OpenCLIP </a>
-        </td>
-        <td> flickr30k </td>
-        <td> image: 0.8841 <br> text: 0.9620 </td>
-        <td> vision: 326(bs64)<br> text: 4502(bs64)</td>
-        <td> vision: bs x 3 x 224 x 224 <br> text: bs x 77 </td>
     </tr>
 </table>
 
@@ -1482,7 +1456,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>99.7%</td>
         <td></td>
         <td></td>
-        <td></td>
+        <td>1432(bs16)</td>
         <td>746(bs16)</td>
         <td>bs x 3 x 112 x 112</td>
     </tr>
@@ -4592,7 +4566,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td></td>
         <td>0.9991</td>
         <td></td>
-    <td>1536(bs4)</td>
+    <td>1654(bs4)</td>
         <td></td>
     <td nowrap="nowrap">bs x 80 x 200</td>
     </tr>
@@ -4718,7 +4692,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td>4.68%</td>
         <td></td>
         <td></td>
-    <td>150.28(bs1)</td>
+    <td>154.8(bs1)</td>
         <td></td>
     <td nowrap="nowrap">多尺度</td>
 </table>

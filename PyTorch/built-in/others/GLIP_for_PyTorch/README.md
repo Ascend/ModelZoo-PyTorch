@@ -33,9 +33,10 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
 
   ****表 1**** 版本支持表
 
-  | Torch_Version | 三方库依赖版本  |
-  |---------------|:---------:    |
-  | PyTorch 1.11  |  mmcv-full==1.7.1; |
+  | Torch_Version |                       三方库依赖版本                        |
+  |---------------|:----------------------------------------------------:|
+  | PyTorch 1.11  | mmcv-full==1.7.1; torchvision==0.12.0; numpy<=1.23.5 |
+
 
 - 环境准备指导。
 
@@ -49,6 +50,17 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
   pip install -r requirements.txt
   python setup.py build develop
   ```
+- 注意 mmcv-full 需要拉取1.x分支的最新代码源码编译，不要使用pip安装方式。(如果环境中有mmcv，请先卸载再编译安装)
+
+  ```bash
+  git clone -b 1.x https://github.com/open-mmlab/mmcv.git
+  cd mmcv
+  MMCV_WITH_OPS=1 MAX_JOBS=8 FORCE_NPU=1 python setup.py build_ext
+  pip install -r requirements/runtime.txt
+  MMCV_WITH_OPS=1 FORCE_NPU=1 python setup.py develop
+  ```
+- 如果环境中自动安装了torch和torchvision，请先卸载再安装正确依赖版本
+
   
 ## 准备训练数据集
 
@@ -72,6 +84,7 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
 
 ## 准备预训练模型
 - 下载预训练模型glip_tiny_model_o365_goldg_cc_sbu.pth，路径为/${模型文件夹名称}/pretrain/glip_tiny_model_o365_goldg_cc_sbu.pth。
+- 下载预训练语言模型文件夹bert-base-uncased，路径为/${模型文件夹名称}/bert-base-uncased。
 
 # 开始训练
 
@@ -107,32 +120,42 @@ GLIP是一种用于视觉定位的语言-图像预训练模型，可以学习对
      bash test/train_performance_8p.sh   #多卡性能测试
      ```
 
+   --batch_size                      //训练批次大小
+
+   --load_from                       //加载的预训练参数路径
+
+   --fp32                            //开启fp32模式
+
+   --fp16                            //开启fp16模式
+
+
    模型训练脚本参数说明如下。
 
    ```bash
       --config-file                  //配置文件
       --override_output_dir          //结果保存路径
+      --early_stop_iteration         //早停训练迭代数
       MODEL.WEIGHT                   //预训练权重路径
+      MODEL.LANGUAGE_BACKBONE.TOKENIZER_PATH   //分词模型路径
+      MODEL.LANGUAGE_BACKBONE.MODEL_PATH       //预训练bert权重路径
       SOLVER.IMS_PER_BATCH           //训练批次大小
       SOLVER.USE_AMP                 //使能混精训练
       SOLVER.MAX_EPOCH               //训练epoch数
    ```  
     
-   训练完成后，权重文件保存在OUTPUT路径下，并输出模型训练精度和性能信息。
+   训练完成后，权重文件保存在/${模型文件夹名称}/test/output路径下，并输出模型训练精度和性能信息。
      
 
 # 训练结果展示
 
 **表 2**  训练结果展示表
 
-| NAME   | mAP  |  FPS   | Epochs | Batch Size |
-|--------|:----:|:------:|--------|------------| 
-| 1p-NPU |  -   |        | -      | 1          |
-| 1p-竞品V |  -   |        | -      | 1          |
-| 1p-竞品A |  -   | 1.1303 | -      | 1          |
-| 8p-NPU | 54.5 | 6.6492 | 3      | 8          |
-| 8p-竞品V | 54.6 | 6.5472 | 3      | 8          |
-| 8p-竞品A | 54.7 | 8.1739 | 3      | 8          |
+| NAME   | mAP  |  FPS  | USE AMP | Iterations | Batch Size |Torch_Version |
+|--------|:----:|:-----:|---------|------------|------------| ---------------|
+| 8p-NPU | 54.5 | 6.941 | False   | 35000      | 8          |1.11          |
+| 8p-竞品A | 54.5 | 8.023 | False   | 35000      | 8          |1.9           |
+| 8p-NPU | 54.7 | 6.737 | True   | 35000      | 8          |1.11          |
+| 8p-竞品A | 54.4 | 7.371 | True   | 35000      | 8          |1.9           |
 
 
 

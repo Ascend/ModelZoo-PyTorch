@@ -53,3 +53,8 @@ python3 demo.py
 | :----: | ----- | ---- | -------- |
 | NPU-1p | -     | 10.3 | O1       |
 | NPU-8p | 23.98 | 56.2 | O1       |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

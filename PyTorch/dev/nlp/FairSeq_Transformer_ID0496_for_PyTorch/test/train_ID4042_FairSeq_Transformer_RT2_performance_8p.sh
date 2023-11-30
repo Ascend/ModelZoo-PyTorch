@@ -44,7 +44,8 @@ profiling=False
 autotune=False
 bin_mode=False
 bin_analysis=False
-
+#关闭INF/NAN
+export INF_NAN_MODE_ENABLE=0
 # 帮助信息，不需要修改
 if [[ $1 == --help || $1 == -h ]];then
     echo"usage:./train_full_1p.sh <args>"

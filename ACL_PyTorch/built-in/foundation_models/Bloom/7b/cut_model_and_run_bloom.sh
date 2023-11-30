@@ -27,7 +27,7 @@ cd $MODELING_PATH
 patch -p1 < performance.patch
 cd $CODE_PATH
 echo "Weight directory exists, runing......"
-torchrun --nproc_per_node 2 run_bloom_half_parallel_loadPartModel.py --load_path $output_dir
+torchrun --nproc_per_node 2 run_bloom_parallel.py --load_path $output_dir
 
 cp $UTILS_PATH/utils.py.bak $UTILS_PATH/utils.py
 cp $MODELING_PATH/modeling_bloom.py.bak $MODELING_PATH/modeling_bloom.py

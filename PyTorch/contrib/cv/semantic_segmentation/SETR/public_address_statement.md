@@ -1,0 +1,25 @@
+| 类型   | 开源代码地址 | 文件名     | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
+|------|--------|---------|------------------------|--------|
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/setup.py | SETR/setup.py | http://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-platform-specific-dependencies | 相关依赖 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p16_384-83fb41ba.pth | 预训练模型 |
+| 开发引入 | / | SETR/tools/analyze_logs.py | https://github.com/open- | 源码实现 |
+| 开发引入 | / | SETR/demo.py | https://bbs-img.huaweicloud.com/blogs/img/thumb/1591951315139_8989_1363.png | 图片地址 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/vit_base_p16_224-4e355ebd.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/datasets/builder.py | SETR/mmseg/datasets/builder.py | https://github.com/pytorch/pytorch/issues/973 | 相关说明 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_p16_384-b3be5167.pth | 预训练模型 |
+| 开发引入 | / | SETR/mmseg/core/seg/sampler/ohem_pixel_sampler.py | https://github.com/pytorch/pytorch/issues/22812 | 相关说明 |
+| 开发引入 | / | SETR/mmseg/models/utils/self_attention_block.py | https://arxiv.org/abs/1706.03762 | 论文地址 |
+| 开发引入 | / | SETR/tools/accuracy_comparision.py | https://github.com/NVIDIA/apex/tree/master/examples/imagenet | 源码实现 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/docker/Dockerfile | SETR/docker/Dockerfile | https://download.openmmlab.com/mmcv/dist/index.html | 相关依赖 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://dl.fbaipublicfiles.com/deit/deit_base_distilled_patch16_384-d0272ac0.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/setup.py | SETR/setup.py | openmmlab@gmail.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/decode_heads/vit_up_head.py | SETR/mmseg/models/decode_heads/vit_up_head.py | https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/vit_small_p16_224-15ec54c9.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/decode_heads/vit_up_head.py | SETR/mmseg/models/backbones/vit.py | https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf | 论文地址 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_p32_384-9b920ba8.pth | 预训练模型 |
+| 开发引入 | / | SETR/tools/train.py | https://github.com/NVIDIA/apex/tree/master/examples/imagenet | 源码实现 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/mmseg/models/backbones/vit_mla.py | SETR/mmseg/models/backbones/vit.py | https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p32_384-830016f5.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/fudan-zvg/SETR/setup.py | SETR/setup.py | http://github.com/open-mmlab/mmsegmentation | 源码实现 |
+| 开发引入 | / | SETR/mmcv-need/fp16_utils.py | https://github.com/NVIDIA/apex/blob/master/apex/fp16_utils/loss_scaler.py | 源码实现 |
+| 开发引入 | / | SETR/docker/Dockerfile | https://github.com/open-mmlab/mmsegmenation.git | 源码实现 |
+| 开发引入 | / | SETR/mmcv-need/optimizer.py | https://arxiv.org/abs/1710.03740 | 论文地址 |

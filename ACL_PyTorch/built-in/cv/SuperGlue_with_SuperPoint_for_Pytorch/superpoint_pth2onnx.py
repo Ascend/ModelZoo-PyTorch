@@ -49,7 +49,7 @@ def pth2onnx(cfg, opt):
     model = SuperPoint(cfg.get('superpoint', {})).eval()
 
     w, h = opt.image_size[0], opt.image_size[1]
-    input_data = torch.randn(1, 1, h, w)
+    input_data = {'image': torch.randn(1, 1, h, w)}
     input_names = ['image']
     output_names = ['keypoints', 'scores', 'descriptors']
 
@@ -60,13 +60,13 @@ def pth2onnx(cfg, opt):
     }
     torch.onnx.export(
         model,
-        input_data,
+        (input_data, {}),
         opt.output_file,
         input_names=input_names,
         output_names=output_names,
         dynamic_axes=dynamic_axes,
-        verbose=True,
-        opset_version=11,
+        verbose=False,
+        opset_version=16,
     )
 
 

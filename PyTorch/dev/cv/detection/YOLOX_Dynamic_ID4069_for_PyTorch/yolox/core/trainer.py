@@ -26,7 +26,7 @@ from loguru import logger
 import torch
 import torch_npu
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 
 # from apex import amp
 

@@ -53,3 +53,8 @@ Log path:
 | GPU-8P |   -   | 12944.0177 |
 | NPU-1P |   -   | 5736.3541  |
 | NPU-8P | 36.62 | 13953.0316 | 
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

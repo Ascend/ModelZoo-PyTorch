@@ -1,0 +1,26 @@
+| 类型     | 开源代码地址                                                                                                                           | 文件名                                                | 公网IP地址/公网URL地址/域名/邮箱地址 | 用途说明   |
+|--------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|-----------------------|--------|
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/detection/blazeface/blazeface_detector.py | FAN/face_alignment/detection/blazeface/blazeface_detector.py | https://github.com/hollance/BlazeFace-PyTorch/blob/master/blazeface.pth?raw=true | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/setup.py | FAN/setup.py | https://github.com/pytorch/vision/blob/master/setup.py | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/setup.py | FAN/face_alignment/__init__.py | adrian@adrianbulat.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/setup.py | FAN/setup.py | https://github.com/1adrianb/face-alignment | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/setup.py | FAN/setup.py | adrian@adrianbulat.com | 邮箱地址 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/Dockerfile | FAN/Dockerfile | https://github.com/pytorch/pytorch/blob/master/Dockerfile | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/3DFAN4_1.5-176570af4d.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/detection/dlib/dlib_detector.py | FAN/face_alignment/detection/dlib/dlib_detector.py | https://www.adrianbulat.com/downloads/dlib/mmod_human_face_detector.dat | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/detection/blazeface/blazeface_detector.py | FAN/face_alignment/detection/blazeface/blazeface_detector.py | https://github.com/hollance/BlazeFace-PyTorch/blob/master/anchors.npy?raw=true | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/depth-6c4283c0e0.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/depth_1.6-2aa3f18772.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/setup.py | FAN/Dockerfile | https://github.com/1adrianb/face-alignment | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/detection/sfd/sfd_detector.py | FAN/face_alignment/detection/sfd/sfd_detector.py | https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pth | 预训练模型 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/2DFAN4_1.5-a60332318a.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/2DFAN4-cd938726ad.zip | 下载链接 |
+| 开发引入 | / | FAN/face_alignment/detection/blazeface/net_blazeface.py | https://github.com/tkat0/PyTorch_BlazeFace/ | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/3DFAN4-4a694010b9.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/2DFAN4_1.6-c827573f02.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/Dockerfile | FAN/Dockerfile | https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/detection/blazeface/net_blazeface.py | FAN/face_alignment/detection/blazeface/net_blazeface.py | https://github.com/google/mediapipe/ | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/3DFAN4_1.6-ec5cf40a1d.zip | 下载链接 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/detection/blazeface/net_blazeface.py | FAN/face_alignment/detection/blazeface/net_blazeface.py | https://github.com/amdegroot/ssd.pytorch/blob/master/layers/box_utils.py | 源码实现 |
+| 开源代码引入 | https://github.com/1adrianb/face-alignment/face_alignment/api.py | FAN/face_alignment/api.py | https://www.adrianbulat.com/downloads/python-fan/depth_1.5-bc10f98e39.zip | 下载链接 |
+| 开发引入 | / | FAN/face_alignment/FAN.py | https://github.com/1adrianb/face-alignment/blob/master/face_alignment/models.py | 源码实现 |

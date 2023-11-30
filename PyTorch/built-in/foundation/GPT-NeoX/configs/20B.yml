@@ -4,12 +4,14 @@
 
 {
   # Tokenizer /  checkpoint settings - you will need to change these to the location you have them saved in
-  "vocab-file": "./20B_checkpoints/20B_tokenizer.json",
+  "vocab-file": "./tokenizer/20B_tokenizer.json",
   "save": "./20B_checkpoints",
   "load": "./20B_checkpoints",
+  "use_wandb": false,
+  "use_shared_fs": false,
 
   # If finetuning, edit the following to the location of your finetuning dataset:
-  "data-path": "./data/pile_20B_tokenizer/pile_20B_tokenizer_text_document",
+  "data-path": "./data_process/pile_HF_text_document",
 
   # parallelism settings ( you will want to change these based on your cluster setup, ideally scheduling pipeline stages
   # across the node boundaries )
@@ -34,10 +36,6 @@
   # init methods
   "init_method": "small_init",
   "output_layer_init_method": "wang_init",
-
-  "scaled_masked_softmax_fusion":true,
-  "async_tensor_model_parallel_allreduce":true,
-  "use_triangle_attn":true,
 
   # optimizer settings
   "optimizer": {
@@ -64,15 +62,18 @@
 
   # batch / data settings (assuming 96 GPUs)
   "train_micro_batch_size_per_gpu": 4,
-  "gradient_accumulation_steps": 32,
+  "gradient_accumulation_steps": 64,
   "data-impl": "mmap",
   "split": "995,4,1",
 
   # activation checkpointing
-  "checkpoint-activations": true,
+  "checkpoint-activations": false,
+  "checkpoint-selective": true,
+  "checkpoint-full-layers": 8,
   "checkpoint-num-layers": 1,
   "partition-activations": false,
   "synchronize-each-layer": true,
+  "zero_allow_untested_optimizer": true,
 
   # regularization
   "gradient_clipping": 1.0,
@@ -97,7 +98,7 @@
 
   "distributed-backend": "nccl",
   "lr-decay-style": "cosine",
-  "warmup": 0.01,
+  "warmup": 0.02,
   "checkpoint-factor": 500, # this variable previously called `save-interval`
   "eval-interval": 1000,
   "eval-iters": 10,
@@ -108,7 +109,8 @@
   "wall_clock_breakdown": false,
 
   ### NEW DATA: ####
-#  "tokenizer_type": "HFTokenizer",
+  #"tokenizer_type": "HFTokenizer", //gpt-vocab
+  "tokenizer_type": "HFTokenizer", //slim:20B-tokenizer
   "tensorboard-dir": "./tensorboard",
   "log-dir": "./logs",
 

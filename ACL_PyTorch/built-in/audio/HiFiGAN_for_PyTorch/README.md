@@ -97,14 +97,14 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
 将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
 
 1. 获取权重文件  
-   下载[权重文件及相应的配置文件](https://drive.google.com/drive/folders/1-eEYTB5Av9jNql0WGBlRoi-WH2J7bp5Y?usp=sharing)，以`generator_v1`为例，
-   将下载的模型文件`generator_v1`和配置文件`config.json`放在`hifi-gan`目录下。
+   下载[权重文件及相应的配置文件](https://drive.google.com/drive/folders/1-eEYTB5Av9jNql0WGBlRoi-WH2J7bp5Y?usp=sharing)，以`LJ_FT_T2_V2`为例，
+   将下载的模型文件`generator_v2`和配置文件`config.json`放在`hifi-gan`目录下。
 
 2. 导出`ONNX`模型  
    运行`pth2onnx.py`导出`ONNX`模型，结果默认保存在`output`文件夹下。  
    ```
    python3 pth2onnx.py --output_dir output \
-                       --checkpoint_file generator_v1 \
+                       --checkpoint_file generator_v2 \
                        --config_file config.json
    ```
 
@@ -162,14 +162,14 @@ HiFiGAN是一种基于GAN的声码器，HiFiGAN同时拥有多尺度判别器（
    ```
    python3 om_val.py --input_wavs_dir LJSpeech-1.1/wavs \
                      --output_wavs_dir output/gen_wavs \
-                     --om output/generator_v1_bs1.om \
+                     --om output/generator_v2_bs1.om \
                      --config_file config.json --batch 1
    ```
 
 3. 性能验证  
    可使用`ais_bench`推理工具的纯推理模式验证不同`batch_size`的`OM`模型的性能，参考命令如下：
    ```
-   python3 -m ais_bench --model output/generator_v1_bs${bs}.om --loop 1000 --batchsize ${bs} --dymDims "mel_spec:${bs},80,1,${mel_len}" --outputSize "10000000"
+   python3 -m ais_bench --model output/generator_v2_bs${bs}.om --loop 1000 --batchsize ${bs} --dymDims "mel_spec:${bs},80,1,${mel_len}" --outputSize "10000000"
    ```
    其中，`bs`为模型`batch_size`，`mel_len`为输入数据的长度。
 

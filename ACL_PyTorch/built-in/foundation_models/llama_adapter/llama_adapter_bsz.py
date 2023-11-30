@@ -27,12 +27,12 @@ from .llama import ModelArgs, Transformer
 from .tokenizer import Tokenizer
 from .utils import sample_top_p, _download
 
-ACLTRANSFORMER_HOME_PATH = os.environ.get("ACLTRANSFORMER_HOME_PATH")
+ACLTRANSFORMER_HOME_PATH = os.environ.get("ATB_SPEED_HOME_PATH")
 if ACLTRANSFORMER_HOME_PATH is None:
     raise RuntimeError(
-        "env ACLTRANSFORMER_HOME_PATH not exist, source set_env.sh")
+        "env ATB_SPEED_HOME_PATH not exist, source set_env.sh")
 LIB_PATH = os.path.join(ACLTRANSFORMER_HOME_PATH,
-                        "lib/libacltransformer_torch.so")
+                        "lib/libatb_speed_torch.so")
 torch.classes.load_library(LIB_PATH)
 
 
@@ -98,9 +98,9 @@ class LLaMA_adapter(nn.Module):
 
         # acl modelV2
         self.acl_decoder_model = torch.classes.ModelTorch.ModelTorch(
-            "LlamaAdapter7BDecoderModel")
+            "llama_adapter_decoder_model")
         self.acl_encoder_model = torch.classes.ModelTorch.ModelTorch(
-            "LlamaAdapter7BEncoderModel")
+            "llama_adapter_encoder_model")
 
         self.acl_param_de = json.dumps({"headNum": model_args.n_heads, 
                                         "rmsNormEps": model_args.norm_eps,
@@ -300,13 +300,12 @@ class LLaMA_adapter(nn.Module):
 
             e_forward = time.time()
 
-            logits = logits.float().cpu()
             if temperature > 0:
-                probs = torch.nn.functional.softmax(logits / temperature, dim=-1)
+                probs = torch.softmax(logits / temperature, dim=-1)
                 next_token = sample_top_p(probs, top_p)
             else:
                 next_token = torch.argmax(logits, dim=-1)
-            next_token = next_token.reshape(-1).npu()
+            next_token = next_token.reshape(-1)
 
             next_token = torch.where(
                 input_text_mask[:, cur_pos], tokens[:, cur_pos], next_token

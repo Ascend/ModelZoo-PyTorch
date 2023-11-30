@@ -153,3 +153,8 @@ SpanBERT在BERT的基础上，采用Geometric Spans的遮盖方案并加入Span 
    spanbert-base-cased:  https://dl.fbaipublicfiles.com/fairseq/models/spanbert_hf_base.tar.gz
    spanbert-large-cased: https://dl.fbaipublicfiles.com/fairseq/models/spanbert_hf.tar.gz
    ```
+
+   
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

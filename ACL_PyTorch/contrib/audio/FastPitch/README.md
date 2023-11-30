@@ -101,14 +101,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
    tar -xvjf LJSpeech-1.1.tar.bz2
    ```
 
-2. 数据预处理，将原始数据集转换为模型输入的数据。
-
-   生成输入数据，并准备输出标签和pth权重的输出数据。本模型的验证集大小为100，具体信息在phrases/tui_val100.tsv文件中。
-
-   - FastPitch模型的输入数据是由文字编码组成，输入长度不等，模型已经将其补零成固定长度200。将输入数据转换为bin文件方便后续推理，存入test/input_bin文件夹下，且生成生成数据集预处理后的bin文件以及相应的info文件。
-   - 在语音合成推理过程中，输出为mel图谱，本模型的输出维度为batch_size×900×80。将其输出tensor存为pth文件存入test/mel_tgt_pth文件夹下。
-   
-   以上步骤均执行下面指令完成：
+2. 数据预处理，计算 Pitch。
    
    ```
    python3 DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/prepare_dataset.py --wav-text-filelists DeepLearningExamples/PyTorch/SpeechSynthesis/FastPitch/filelists/ljs_audio_text_val.txt --n-workers 16 --batch-size 1 --dataset-path ./LJSpeech-1.1 --extract-mels --f0-method pyin
@@ -137,7 +130,8 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
       ```
       （waveglow为语音生成器，不在本模型范围内, 但为了确保代码能正常运行，需要下载）
 
-   2. 获取pt输出
+   2. 保存模型输入、输出数据
+   
       为了后面推理结束后将om模型推理精度与原pt模型精度进行对比，脚本运行结束会在test文件夹下创建mel_tgt_pth用于存放pth模型输入数据，mel_out_pth用于存放pth输出数据，input_bin用于存放二进制数据集，input_bin_info.info用于存放二进制数据集的相对路径信息
 
       ```

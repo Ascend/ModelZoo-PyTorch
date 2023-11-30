@@ -185,3 +185,6 @@ Attention R2U-Net是基于U-Net模型的循环残差卷积神经网络 (RRCNN)�
    # 源码参考链接
    https://github.com/pytorch/vision
    ```
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

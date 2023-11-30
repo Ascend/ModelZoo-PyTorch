@@ -84,3 +84,7 @@ Log Path:
 |  83.27   | 638.85 |    75   |    O2    |  8p Npu  |
 |    -     |  59.88  |    1    |    O2    |  1p Gpu  |
 |  82.29   | 958.66 |    75   |    O2    |  8p Gpu  |
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

@@ -57,3 +57,7 @@ If you use our code/models in your research, please cite our paper:
   year={2019}
 }
 ```
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

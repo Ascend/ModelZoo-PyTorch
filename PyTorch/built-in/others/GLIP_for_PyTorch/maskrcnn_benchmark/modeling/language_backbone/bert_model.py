@@ -1,3 +1,16 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from copy import deepcopy
 import numpy as np
 import torch
@@ -15,9 +28,16 @@ class BertEncoder(nn.Module):
         print("LANGUAGE BACKBONE USE GRADIENT CHECKPOINTING: ", self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT)
 
         if self.bert_name == "bert-base-uncased":
-            config = BertConfig.from_pretrained(self.bert_name)
-            config.gradient_checkpointing = self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT
-            self.model = BertModel.from_pretrained(self.bert_name, add_pooling_layer=False, config=config)
+            if cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH:
+                config = BertConfig.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH)
+                config.gradient_checkpointing = self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT
+                print('config: ', config, flush=True)
+                self.model = BertModel.from_pretrained(cfg.MODEL.LANGUAGE_BACKBONE.MODEL_PATH,
+                                                       add_pooling_layer=False, config=config)
+            else:
+                config = BertConfig.from_pretrained(self.bert_name)
+                config.gradient_checkpointing = self.cfg.MODEL.LANGUAGE_BACKBONE.USE_CHECKPOINT
+                self.model = BertModel.from_pretrained(self.bert_name, add_pooling_layer=False, config=config)
             self.language_dim = 768
         elif self.bert_name == "roberta-base":
             config = RobertaConfig.from_pretrained(self.bert_name)

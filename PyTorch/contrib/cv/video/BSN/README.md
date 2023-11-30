@@ -152,3 +152,7 @@ bash ./test/train_performance_8p.sh --data_path=./data/activitynet_feature_cuhk/
 
 ## 
 
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

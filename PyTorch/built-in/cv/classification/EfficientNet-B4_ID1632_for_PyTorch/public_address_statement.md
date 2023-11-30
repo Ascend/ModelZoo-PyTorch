@@ -19,3 +19,15 @@
 | 开源代码引入 | https://github.com/lukemelas/EfficientNet-PyTorch.git | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/utils.py | https://github.com/lukemelas/EfficientNet-PyTorch/releases/download/1.0/adv-efficientnet-b8-22a8fe65.pth | 下载预训练模型 |
 | 开源代码引入 | https://github.com/lukemelas/EfficientNet-PyTorch.git | EfficientNet-B4_ID1632_for_PyTorch/setup.py                      | https://github.com/lukemelas/EfficientNet-PyTorch                                                        | 下载源码    |
 | 开源代码引入 | https://github.com/lukemelas/EfficientNet-PyTorch.git | EfficientNet-B4_ID1632_for_PyTorch/setup.py                      | lmelaskyriazi@college.harvard.edu                                                                        | 邮箱      |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/model.py | https://arxiv.org/abs/1801.04381 | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/auto_augment.py | https://arxiv.org/abs/1805.09501 | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/model.py | https://arxiv.org/abs/1704.04861 | 论文地址 |
+| 开源代码引入 | https://github.com/lukemelas/EfficientNet-PyTorch.git/tf_to_pytorch/convert_tf_to_pt/original_tf/efficientnet_model.py | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/model.py | https://arxiv.org/abs/1905.11946 | 论文地址 |
+| 开源代码引入 | https://github.com/lukemelas/EfficientNet-PyTorch.git/setup.py | EfficientNet-B4_ID1632_for_PyTorch/setup.py | https://pypi.python.org/pypi?%3Aaction=list_classifiers | 相关依赖 |
+| 开源代码引入 | https://github.com/lukemelas/EfficientNet-PyTorch.git/tf_to_pytorch/convert_tf_to_pt/original_tf/efficientnet_model.py | EfficientNet-B4_ID1632_for_PyTorch/hubconf.py | https://arxiv.org/abs/1905.11946 | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/rmsprop_tf.py | https://arxiv.org/pdf/1308.0850v5.pdf | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/rmsprop_tf.py | http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/auto_augment.py | https://arxiv.org/abs/1912.02781 | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/auto_augment.py | https://github.com/google-research/augmix/blob/master/imagenet.py | 源码实现 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/model.py | https://arxiv.org/abs/1905.02244 | 论文地址 |
+| 开发引入 | / | EfficientNet-B4_ID1632_for_PyTorch/efficientnet_pytorch/rmsprop_tf.py | https://arxiv.org/abs/1711.05101 | 论文地址 |

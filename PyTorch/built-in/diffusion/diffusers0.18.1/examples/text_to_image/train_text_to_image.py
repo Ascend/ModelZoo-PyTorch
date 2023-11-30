@@ -45,7 +45,7 @@ import diffusers
 from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, UNet2DConditionModel
 from diffusers.optimization import get_scheduler
 from diffusers.training_utils import EMAModel
-from diffusers.utils import check_min_version, deprecate, is_wandb_available
+from diffusers.utils import check_min_version, deprecate, is_wandb_available, is_torch_version
 from diffusers.utils.import_utils import is_xformers_available
 
 
@@ -506,6 +506,15 @@ def parse_args():
     parser.add_argument(
         "--enable_npu_flash_attention", action="store_true", help="Whether or not to use npu flash-attention."
     )
+    parser.add_argument(
+        "--enable_pin_memory", action="store_true", help="Whether or not to enable pin_memory in dataloader."
+    )
+    parser.add_argument(
+        "--enable_persistent_workers", action="store_true", help="Whether or not to enable persistent_workers in dataloader."
+    )
+    parser.add_argument(
+        "--release_part_gradient_checkpointing", action="store_true", help="Whether or not to release part gradient checkpointing, that can occupy some NPU memory."
+    )
 
     args = parser.parse_args()
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
@@ -611,6 +620,7 @@ def main():
             args.pretrained_model_name_or_path, subfolder="vae", revision=args.revision
         )
 
+    UNet2DConditionModel._release_part_gradient_checkpointing = args.release_part_gradient_checkpointing
     unet = UNet2DConditionModel.from_pretrained(
         args.pretrained_model_name_or_path, subfolder="unet", revision=args.non_ema_revision
     )
@@ -644,13 +654,10 @@ def main():
         if args.mixed_precision == "fp16":
             logger.info("NPU flash-attention is activated successfully")
             unet.enable_npu_flash_attention()
-            enable_drop_last = True
-        else:   
+        else:
             raise NotImplementedError(
                 "NPU flash-attention activated failed, it only supports fp16 now"
             )
-    else:
-        enable_drop_last = False      
 
     def compute_snr(timesteps):
         """
@@ -725,8 +732,11 @@ def main():
 
     # Initialize the optimizer
     if args.use_megatron_npu_adamW:
-        from megatron_npu.adaptor_optimizer_optimizer import AdamW
-        optimizer_cls = AdamW
+        if is_torch_version("==", "1.11"):
+            from megatron_npu.adaptor_optimizer_optimizer import AdamW
+            optimizer_cls = AdamW
+        else:
+            raise NotImplementedError("Only Pytorch 1.11 supports Megatron now.")
     elif args.use_npu_fuse_adamW:
         optimizer_cls = NpuFusedAdamW
     elif args.use_8bit_adam:
@@ -854,7 +864,8 @@ def main():
         collate_fn=collate_fn,
         batch_size=args.train_batch_size,
         num_workers=args.dataloader_num_workers,
-        drop_last=enable_drop_last
+        pin_memory=args.enable_pin_memory,
+        persistent_workers=args.enable_persistent_workers
     )
 
     # Scheduler and math around the number of training steps.
@@ -968,7 +979,7 @@ def main():
                 latents = latents * vae.config.scaling_factor
 
                 # Sample noise that we'll add to the latents
-                noise = torch.randn_like(latents)
+                noise = torch.randn_like(latents, device=latents.device)
                 if args.noise_offset:
                     # https://www.crosslabs.org//blog/diffusion-with-offset-noise
                     noise += args.noise_offset * torch.randn(
@@ -978,8 +989,7 @@ def main():
                     new_noise = noise + args.input_perturbation * torch.randn_like(noise)
                 bsz = latents.shape[0]
                 # Sample a random timestep for each image
-                timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device)
-                timesteps = timesteps.long()
+                timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device, dtype=torch.long)
 
                 # Add noise to the latents according to the noise magnitude at each timestep
                 # (this is the forward diffusion process)
@@ -990,10 +1000,6 @@ def main():
 
                 # Get the text embedding for conditioning
                 encoder_hidden_states = text_encoder(batch["input_ids"])[0]
-                
-                # Prepare for using Npu Flash Attention
-                if args.enable_npu_flash_attention:
-                    encoder_hidden_states = torch_npu.npu_pad(encoder_hidden_states, (0, 0, 0, 3)).contiguous()
 
                 # Get the target for loss depending on the prediction type
                 if args.prediction_type is not None:
@@ -1038,7 +1044,10 @@ def main():
                 
                 optimizer.step()
                 lr_scheduler.step()
-                optimizer.zero_grad()
+                if args.use_npu_fuse_adamW or args.use_8bit_adam:
+                    optimizer.zero_grad()
+                else:
+                    optimizer.zero_grad(set_to_none=True)
 
                 # Gather the losses across all processes for logging (if we use distributed training).
                 avg_loss = accelerator.gather(loss.repeat(args.train_batch_size)).mean()
@@ -1089,7 +1098,7 @@ def main():
         
             logger.info(f"step_train_time: {step_total_time}")
             logger.info(f"step_data_time: {step_data_time}")
-            logger.info(f"FPS: {args.train_batch_size * accelerator.num_processes/step_total_time}")
+            logger.info(f"FPS: {args.train_batch_size * accelerator.num_processes/(step_total_time-step_data_time)}")
             
             step_end_time = time.time()
 

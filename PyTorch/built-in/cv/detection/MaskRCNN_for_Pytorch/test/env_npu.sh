@@ -29,6 +29,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_GLOBAL_EVENT_ENABLE=0
 #设置是否开启taskque,0-关闭/1-开启
 export TASK_QUEUE_ENABLE=1
+# 溢出检测,0-关闭/1-开启
+export INF_NAN_MODE_ENABLE=0
 #HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
 export HCCL_IF_IP=$(hostname -I |awk '{print $1}')

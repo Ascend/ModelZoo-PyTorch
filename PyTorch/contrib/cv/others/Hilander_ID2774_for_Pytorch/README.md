@@ -39,3 +39,8 @@ obs://cann-id2774/dataset/
 # Train
 
 python try3.py
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

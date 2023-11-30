@@ -345,17 +345,22 @@ class Attention(nn.Module):
             )
 
     def batch_to_head_dim(self, tensor):
-        head_size = self.heads
-        batch_size, seq_len, dim = tensor.shape
-        tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim)
-        tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size // head_size, seq_len, dim * head_size)
+        if len(tensor.shape) == 3:
+            head_size = self.heads
+            batch_size, seq_len, dim = tensor.shape
+            tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim)
+            tensor = torch_npu.npu_confusion_transpose(tensor, [0, 2, 1, 3],
+                                                    (batch_size // head_size, seq_len, dim * head_size), True)
+        elif len(tensor.shape) == 4:
+            batch_size, head_size, seq_len, dim = tensor.shape
+            tensor = torch_npu.npu_confusion_transpose(tensor, [0, 2, 1, 3],
+                                                    (batch_size, seq_len, dim * head_size), True)
         return tensor
 
     def head_to_batch_dim(self, tensor, out_dim=3):
         head_size = self.heads
         batch_size, seq_len, dim = tensor.shape
-        tensor = tensor.reshape(batch_size, seq_len, head_size, dim // head_size)
-        tensor = tensor.permute(0, 2, 1, 3)
+        tensor = torch_npu.npu_confusion_transpose(tensor, [0, 2, 1, 3], (batch_size, seq_len, head_size, dim // head_size), False)
 
         if out_dim == 3:
             tensor = tensor.reshape(batch_size * head_size, seq_len, dim // head_size)
@@ -364,21 +369,13 @@ class Attention(nn.Module):
 
     def get_attention_scores(self, query, key, attention_mask=None):
         dtype = query.dtype
-        if self.upcast_attention:
-            query = query.float()
-            key = key.float()
 
-        with torch.cuda.amp.autocast(enabled=False):
-            if attention_mask is None:
-                attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
-            else:
-                beta = 1
-                attention_scores = torch.add(torch.mul(beta, attention_mask),
-                                            torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
-
-
-        if self.upcast_softmax:
-            attention_scores = attention_scores.float()
+        if attention_mask is None:
+            attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
+        else:
+            beta = 1
+            attention_scores = torch.add(torch.mul(beta, attention_mask),
+                                        torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
 
         attention_probs = attention_scores.softmax(dim=-1)
         del attention_scores
@@ -432,7 +429,8 @@ class Attention(nn.Module):
         assert self.norm_cross is not None, "self.norm_cross must be defined to call self.norm_encoder_hidden_states"
 
         if isinstance(self.norm_cross, nn.LayerNorm):
-            encoder_hidden_states = self.norm_cross(encoder_hidden_states)
+            with torch.cuda.amp.autocast(enabled=False):
+                encoder_hidden_states = self.norm_cross(encoder_hidden_states)
         elif isinstance(self.norm_cross, nn.GroupNorm):
             # Group norm norms along the channels dimension and expects
             # input to be in the shape of (N, C, *). In this case, we want
@@ -1122,41 +1120,22 @@ class NpuFlashAttnProcessor:
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
 
-        cur_attention_mask = None
-        key_sequence_length = key.shape[1]
+        query = attn.head_to_batch_dim(query, out_dim=4)
+        key = attn.head_to_batch_dim(key, out_dim=4)
+        value = attn.head_to_batch_dim(value, out_dim=4)
 
-        if query.shape[1] >= 2000:
-
-            if key_sequence_length == 80:
-                cur_attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
-                cur_attention_mask = \
-                    torch.cat((cur_attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
-
-            hidden_states = torch_npu.npu_fusion_attention(
-                query, key, value, heads, input_layout="BSH",
-                pse=None,
-                atten_mask=cur_attention_mask,
-                scale=scale,
-                pre_tockens=65536,
-                next_tockens=65536,
-                keep_prob=1.,
-                sync=False,
-                inner_precise=0,
-            )[0]
-        else:
-
-            query = attn.head_to_batch_dim(query)
-            key = attn.head_to_batch_dim(key)
-            value = attn.head_to_batch_dim(value)
-            
-            if key_sequence_length == 80:
-                cur_attention_mask = torch.zeros((query.shape[1], 77)).to(query.device)
-                cur_attention_mask = \
-                    torch.cat((cur_attention_mask, torch.full((query.shape[-2], 3), 1).to(query.device)), 1)
-
-            attention_probs = attn.get_attention_scores(query, key, cur_attention_mask)
-            hidden_states = torch.bmm(attention_probs, value)
-            hidden_states = attn.batch_to_head_dim(hidden_states)
+        hidden_states = torch_npu.npu_fusion_attention(
+            query, key, value, heads, input_layout="BNSD",
+            pse=None,
+            atten_mask=attention_mask,
+            scale=scale,
+            pre_tockens=65536,
+            next_tockens=65536,
+            keep_prob=1.,
+            sync=False,
+            inner_precise=0,
+        )[0]
+        hidden_states = attn.batch_to_head_dim(hidden_states)
 
         # linear proj
         hidden_states = attn.to_out[0](hidden_states)

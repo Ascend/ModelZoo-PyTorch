@@ -68,3 +68,8 @@ test/output/{device_id}/train_eval_1p_{device_id}.txt
 | :------: | :------:  | :------: | :------: | :------: |
 | -        |62.9 step/s| 1        | 80000    | O1       |
 | 99.3     | -         | 1        | 5000000  | O1       |
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

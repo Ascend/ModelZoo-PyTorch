@@ -60,3 +60,9 @@ bash test/eval_1p.sh
 | :------: | :------:  | :------: | :------: | :------: |
 | -        | 8300      | 1        | 1        | O2       |
 | 1.09     | 44500     | 8        | 50       | O2       |
+
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

@@ -43,7 +43,9 @@ from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaL
 from .configuration_chatglm import ChatGLMConfig
 
 # flags required to enable jit fusion kernels
-USE_NPU_ROTARY=True
+
+USE_FLASH = False
+USE_SCALED_SOFTMAX = False
 if sys.platform != 'darwin':
     torch._C._jit_set_profiling_mode(False)
     torch._C._jit_set_profiling_executor(False)
@@ -175,40 +177,6 @@ class RotaryEmbedding(nn.Module):
 
 
 @torch.jit.script
-def apply_rotary_pos_emb_(x: torch.Tensor, rope_cache: torch.Tensor) -> torch.Tensor:
-    # x: [sq, b, np, hn]
-    # Tag：q, k: [sq, b, np, hn], hn=128
-    sq, b, np, hn = x.size(0), x.size(1), x.size(2), x.size(3)
-    cos, sin, q, x_pass = get_x_cos_sin_(rope_cache, sq, x)
-    x_out2 = torch_npu.npu_rotary_mul(q, cos, sin)
-    x_out2 = x_out2.flatten(3)
-    return torch.cat((x_out2, x_pass), dim=-1)
-
-
-def get_x_cos_sin(rope_cache, sq, x):
-    # torch.Size([2048, 4, 1, 64, 2])
-    rot_dim = rope_cache.shape[-2] * 2
-    x, x_pass = x[..., :rot_dim], x[..., rot_dim:]
-    # truncate to support variable sizes
-    rope_cache = rope_cache[:sq]
-    # [[q1, q2, q3, q4]]
-    rope_cache = rope_cache.view(sq, -1, 1, rot_dim // 2, 2)
-    # [cos1, cos2, cos3...]
-    cos = torch.cat([rope_cache[..., 0], rope_cache[..., 0]], dim=3)
-    sin = torch.cat([rope_cache[..., 1], rope_cache[..., 1]], dim=3)
-    return cos, sin, x, x_pass
-
-
-def get_x_cos_sin_(rope_cache, sq, x):
-    cos, sin = rope_cache
-    # torch.Size([2048, 4, 1, 64])
-    # rot_dim = cos.shape[-1]
-    # x, x_pass = x[..., :rot_dim], x[..., rot_dim:]
-    x, x_pass = torch.chunk(x, 2, dim=-1)
-    return cos, sin, x, x_pass
-
-
-@torch.jit.script
 def apply_rotary_pos_emb(x: torch.Tensor, rope_cache: torch.Tensor) -> torch.Tensor:
     # x: [sq, b, np, hn]
     # Tag：q, k: [sq, b, np, hn], hn=128
@@ -295,65 +263,82 @@ class CoreAttention(torch.nn.Module):
             context_layer = context_layer.reshape(*new_context_layer_shape)
         else:
             # Raw attention scores
-
             # [b, np, sq, sk]
             output_size = (query_layer.size(1), query_layer.size(2), query_layer.size(0), key_layer.size(0))
 
-            # [sq, b, np, hn] -> [sq, b * np, hn]
-            query_layer = query_layer.view(output_size[2], output_size[0] * output_size[1], -1)
-            # [sk, b, np, hn] -> [sk, b * np, hn]
-            key_layer = key_layer.view(output_size[3], output_size[0] * output_size[1], -1)
             alpha = (1.0 / self.norm_factor)
             query_layer = query_layer * alpha
-            # preallocting input tensor: [b * np, sq, sk]
-
-            matmul_result = torch.bmm(query_layer.transpose(0, 1), key_layer.permute(1, 2, 0))
-            # change view to [b, np, sq, sk]
-            attention_scores = matmul_result.view(*output_size)
-            # ===========================
-            # Attention probs and dropout
-            # ===========================
-
-            # attention scores and attention mask [b, np, sq, sk]
-            self.scale_mask_softmax = True
-            if self.scale_mask_softmax:
-                assert self.coeff, attention_mask
-                attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask, self.coeff,
-                                                                      False)
+            if USE_FLASH:
+                # Tag:-1表示自动计算该维度的大小, 合并维度
+                query_layer = query_layer.view(output_size[2], output_size[0], -1)
+                # (8192, 1, 4096
+                key_layer = key_layer.view(output_size[2], output_size[0], -1)
+                value_layer = value_layer.view(output_size[2], output_size[0], -1)
+                input_layout = "SBH"
+                scale = self.coeff
+                keep_prob = 1.0
+                N = output_size[1]
+                out = torch_npu.npu_flash_attention( \
+                    query_layer, key_layer, value_layer, N, \
+                    pse=None, \
+                    padding_mask=None, \
+                    atten_mask=attention_mask, \
+                    scale=scale, \
+                    keep_prob=keep_prob, \
+                    input_layout=input_layout, \
+                    pre_tockens=65536, \
+                    next_tockens=0)[0]
+                # Tag: [SBH] -> [sq, b , np, hn]
+                # (8192, 1, 4096
+                context_layer = out.view(output_size[2], output_size[0], output_size[1], -1)
             else:
-                if attention_mask is not None:
-                    attention_scores = attention_scores.masked_fill(attention_mask, float("-inf"))
-                if self.coeff is not None:
-                    attention_scores = attention_scores * self.coeff
-                attention_probs = F.softmax(attention_scores, dim=-1)
-                attention_probs = attention_probs.type_as(value_layer)
-            # This is actually dropping out entire tokens to attend to, which might
-            # seem a bit unusual, but is taken from the original Transformer paper.
-            attention_probs = self.attention_dropout(attention_probs)
-            # =========================
-            # Context layer. [sq, b, hp]
-            # =========================
+                query_layer = query_layer.view(output_size[2], output_size[0] * output_size[1], -1)
+                # [sk, b, np, hn] -> [sk, b * np, hn]
+                key_layer = key_layer.view(output_size[3], output_size[0] * output_size[1], -1)
+                # preallocting input tensor: [b * np, sq, sk]
+                matmul_result = torch.bmm(query_layer.transpose(0, 1), key_layer.permute(1, 2, 0))
+                # change view to [b, np, sq, sk]
+                attention_scores = matmul_result.view(*output_size)
+                # ===========================
+                # Attention probs and dropout
+                # ===========================
+                # attention scores and attention mask [b, np, sq, sk]
 
-            # value_layer -> context layer.
-            # [sk, b, np, hn] --> [b, np, sq, hn]
-
-            # context layer shape: [b, np, sq, hn]
-            output_size = (value_layer.size(1), value_layer.size(2), query_layer.size(0), value_layer.size(3))
-            # change view [sk, b * np, hn]
-            value_layer = value_layer.view(value_layer.size(0), output_size[0] * output_size[1], -1)
-            # change view [b * np, sq, sk]
-            attention_probs = attention_probs.view(output_size[0] * output_size[1], output_size[2], -1)
-            # matmul: [b * np, sq, hn]
-            context_layer = torch.bmm(attention_probs, value_layer.transpose(0, 1))
-            # change view [b, np, sq, hn]
-            context_layer = context_layer.view(*output_size)
-            # [b, np, sq, hn] --> [sq, b, np, hn]
-            #context_layer = context_layer.permute(2, 0, 1, 3).contiguous()
-            context_layer = torch.npu_confusion_transpose(context_layer, [2, 0, 1, 3], [*output_size], False)
-            # [sq, b, np, hn] --> [sq, b, hp]
+                if USE_SCALED_SOFTMAX:
+                    assert self.coeff, attention_mask
+                    attention_probs = torch_npu.npu_scaled_masked_softmax(attention_scores, attention_mask, self.coeff,
+                                                                          False)
+                else:
+                    if attention_mask is not None:
+                        attention_scores = attention_scores.masked_fill(attention_mask, float("-inf"))
+                    if self.coeff is not None:
+                        attention_scores = attention_scores * self.coeff
+                    attention_probs = F.softmax(attention_scores, dim=-1)
+                    attention_probs = attention_probs.type_as(value_layer)
+                # This is actually dropping out entire tokens to attend to, which might
+                # seem a bit unusual, but is taken from the original Transformer paper.
+                attention_probs = self.attention_dropout(attention_probs)
+                # =========================
+                # Context layer. [sq, b, hp]
+                # =========================
+                # value_layer -> context layer.
+                # [sk, b, np, hn] --> [b, np, sq, hn]
+                # context layer shape: [b, np, sq, hn]
+                output_size = (value_layer.size(1), value_layer.size(2), query_layer.size(0), value_layer.size(3))
+                # change view [sk, b * np, hn]
+                value_layer = value_layer.view(value_layer.size(0), output_size[0] * output_size[1], -1)
+                # change view [b * np, sq, sk]
+                attention_probs = attention_probs.view(output_size[0] * output_size[1], output_size[2], -1)
+                # matmul: [b * np, sq, hn]
+                context_layer = torch.bmm(attention_probs, value_layer.transpose(0, 1))
+                # change view [b, np, sq, hn]
+                context_layer = context_layer.view(*output_size)
+                # [b, np, sq, hn] --> [sq, b, np, hn]
+                # context_layer = context_layer.permute(2, 0, 1, 3).contiguous()
+                context_layer = torch.npu_confusion_transpose(context_layer, [2, 0, 1, 3], [*output_size], False)
+                # [sq, b, np, hn] --> [sq, b, hp]
             new_context_layer_shape = context_layer.size()[:-2] + (self.hidden_size_per_partition,)
             context_layer = context_layer.view(*new_context_layer_shape)
-
         return context_layer
 
 
@@ -452,12 +437,8 @@ class SelfAttention(torch.nn.Module):
 
         # apply relative positional encoding (rotary embedding)
         if rotary_pos_emb is not None:
-            if USE_NPU_ROTARY:
-                query_layer = apply_rotary_pos_emb_(query_layer, rotary_pos_emb)
-                key_layer = apply_rotary_pos_emb_(key_layer, rotary_pos_emb)
-            else:
-                query_layer = apply_rotary_pos_emb(query_layer, rotary_pos_emb)
-                key_layer = apply_rotary_pos_emb(key_layer, rotary_pos_emb)
+            query_layer = apply_rotary_pos_emb(query_layer, rotary_pos_emb)
+            key_layer = apply_rotary_pos_emb(key_layer, rotary_pos_emb)
 
         # adjust key and value for inference
         if kv_cache is not None:
@@ -725,7 +706,7 @@ class ChatGLMPreTrainedModel(PreTrainedModel):
         """Initialize the weights."""
         return
 
-    def get_masks_(self, input_ids):
+    def get_masks_(self, input_ids, device):
         batch_size, seq_length = input_ids.shape
         attention_mask = torch.ones(batch_size, 1, seq_length, seq_length, device=input_ids.device)
         attention_mask.tril_()
@@ -872,11 +853,11 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
                 attention_mask = torch.cat([attention_mask.new_ones((batch_size, self.pre_seq_len)),
                                             attention_mask], dim=-1)
 
-        full_attention_mask = self.get_masks_(input_ids)
-
         if full_attention_mask is None:
             if (attention_mask is not None and not attention_mask.all()) or (past_key_values and seq_length != 1):
                 full_attention_mask = self.get_masks(input_ids, past_key_values, padding_mask=attention_mask)
+            else:
+                full_attention_mask = self.get_masks_(input_ids, device=input_ids.device)
 
         # Rotary positional embeddings
         rotary_pos_emb = self.rotary_pos_emb(self.seq_length)
@@ -884,17 +865,7 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             rotary_pos_emb = rotary_pos_emb[position_ids]
         else:
             rotary_pos_emb = rotary_pos_emb[None, :seq_length]
-        if USE_NPU_ROTARY:
-            rotary_pos_emb = rotary_pos_emb.transpose(0, 1).contiguous()
-            sq = seq_length
-            rope_cache = rotary_pos_emb
-            rot_dim = rope_cache.shape[-2] * 2
-            # truncate to support variable sizes
-            # rope_cache = rope_cache[:sq]
-            rope_cache = rope_cache.view(sq, -1, 1, rot_dim // 2, 2)
-            cos = torch.cat([rope_cache[..., 0], rope_cache[..., 0]], dim=3)
-            sin = torch.cat([rope_cache[..., 1], rope_cache[..., 1]], dim=3)
-            rotary_pos_emb = (cos, sin)
+        rotary_pos_emb = rotary_pos_emb.transpose(0, 1).contiguous()
 
         # Run encoder.
         hidden_states, presents, all_hidden_states, all_self_attentions = self.encoder(

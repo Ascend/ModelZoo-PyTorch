@@ -131,7 +131,8 @@ FinalTrainingTime=`echo "scale=2;$TrainingTime / 1000" |bc`
 
 # 从train_$ASCEND_DEVICE_ID.log提取Loss到train_${CaseName}_loss.txt中，需要根据模型审视
 grep -o "total loss [0-9.]*" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F " " {print$3} >>${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt
-
+AverageLoss=`grep -o "total loss [0-9.]*" $cur_path/test/output/$ASCEND_DEVICE_ID/train_$ASCEND_DEVICE_ID.log | awk -F " " '{print$3}' | awk '{a+=$1} END {if (NR != 0) printf("%.3f",a/NR)}'`
+echo "E2E Average Training Loss: $AverageLoss"
 # # 最后一个迭代loss值，不需要修改
 # ActualLoss=$(awk 'END {print}' ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${CaseName}_loss.txt)
 

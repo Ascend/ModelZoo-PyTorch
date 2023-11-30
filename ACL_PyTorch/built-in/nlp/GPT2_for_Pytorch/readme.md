@@ -192,8 +192,8 @@ GPT-2 模型只使用了多个Masked Self-Attention和Feed Forward Neural Networ
              --input_shape=input_ids:4,512 \
              --input_format=ND \
              --log=error \
-             --soc_version=Ascend${chip_name}
-             --op_precision=op_precision.ini
+             --soc_version=Ascend${chip_name} \
+             --op_precision=op_precision.ini \
              --output_type=FP16
          ```
 

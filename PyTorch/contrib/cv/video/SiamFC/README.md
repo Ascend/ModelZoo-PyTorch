@@ -163,3 +163,8 @@ SiamFC通过全卷积的孪生网络结构实现了对视频或图像序列中�
 ## FAQ
 
 无。
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

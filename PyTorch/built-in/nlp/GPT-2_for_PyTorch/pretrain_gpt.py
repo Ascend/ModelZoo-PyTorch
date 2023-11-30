@@ -22,10 +22,10 @@ import deepspeed_npu
 import torch
 import torch_npu
 import apex
-from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU
+from deepspeed.ops.adam import FusedAdam
 from torch.optim import AdamW
 
-apex.optimizers.FusedAdam = FusedAdamNPU if 'FusedAdam' in os.environ else AdamW
+apex.optimizers.FusedAdam = FusedAdam if 'FusedAdam' in os.environ else AdamW
 
 import compression
 

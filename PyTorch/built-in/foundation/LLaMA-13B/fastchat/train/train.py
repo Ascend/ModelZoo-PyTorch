@@ -1,19 +1,5 @@
-# coding=utf-8
-# Copyright 2023 Huawei Technologies Co., Ltd
+# This code is based on tatsu-lab/stanford_alpaca. Below is the original copyright:
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Adopted from tatsu-lab@stanford_alpaca. Below is the original copyright:
 #    Copyright 2023 Rohan Taori, Ishaan Gulrajani, Tianyi Zhang, Yann Dubois, Xuechen Li
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,19 +14,21 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import copy
 from dataclasses import dataclass, field
 import json
+import math
 import pathlib
 from typing import Dict, Optional, Sequence
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 import transformers
 from transformers import Trainer
 from transformers.trainer_pt_utils import LabelSmoother
 
-from fastchat.conversation import get_default_conv_template, SeparatorStyle
+from fastchat.conversation import SeparatorStyle
+from fastchat.model.model_adapter import get_conversation_template
 
 IGNORE_TOKEN_ID = LabelSmoother.ignore_index
 
@@ -54,6 +42,9 @@ class ModelArguments:
 class DataArguments:
     data_path: str = field(
         default=None, metadata={"help": "Path to the training data."}
+    )
+    eval_data_path: str = field(
+        default=None, metadata={"help": "Path to the evaluation data."}
     )
     lazy_preprocess: bool = False
 
@@ -78,20 +69,22 @@ def rank0_print(*args):
         print(*args)
 
 
-def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: str):
-    """Collects the state dict and dump to disk."""
-    state_dict = trainer.model.state_dict()
-    if trainer.args.should_save:
-        cpu_state_dict = {key: value.cpu() for key, value in state_dict.items()}
-        del state_dict
-        trainer._save(output_dir, state_dict=cpu_state_dict)  # noqa
+def trainer_save_model_safe(trainer: transformers.Trainer):
+    from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+    from torch.distributed.fsdp import StateDictType, FullStateDictConfig
+
+    save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+    with FSDP.state_dict_type(
+        trainer.model, StateDictType.FULL_STATE_DICT, save_policy
+    ):
+        trainer.save_model()
 
 
 def preprocess(
     sources,
     tokenizer: transformers.PreTrainedTokenizer,
 ) -> Dict:
-    conv = get_default_conv_template("vicuna").copy()
+    conv = get_conversation_template("vicuna")
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
     # Apply prompt templates
@@ -118,37 +111,54 @@ def preprocess(
     ).input_ids
     targets = input_ids.clone()
 
-    assert conv.sep_style == SeparatorStyle.TWO
+    assert conv.sep_style == SeparatorStyle.ADD_COLON_TWO
 
-    # Mask targets
+    # Mask targets. Only compute loss on the assistant outputs.
     sep = conv.sep + conv.roles[1] + ": "
     for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
 
-        rounds = conversation.split(conv.sep2)
+        turns = conversation.split(conv.sep2)
         cur_len = 1
-        for i, rou in enumerate(rounds):
-            if rou == "":
+        target[:cur_len] = IGNORE_TOKEN_ID
+        for i, turn in enumerate(turns):
+            if turn == "":
                 break
+            turn_len = len(tokenizer(turn).input_ids)
 
-            parts = rou.split(sep)
+            parts = turn.split(sep)
             if len(parts) != 2:
                 break
             parts[0] += sep
-            round_len = len(tokenizer(rou).input_ids)
+            # "-2" is hardcoded for the Llama tokenizer to make the offset correct.
             instruction_len = len(tokenizer(parts[0]).input_ids) - 2
 
+            if i != 0 and not tokenizer.legacy:
+                # The legacy and non-legacy modes handle special tokens differently
+                instruction_len -= 1
+
+            # Ignore the user instructions
             target[cur_len : cur_len + instruction_len] = IGNORE_TOKEN_ID
+            cur_len += turn_len
 
-            # rank0_print(tokenizer.decode(target[cur_len+instruction_len:cur_len+round_len]))
+            if i != 0 and not tokenizer.legacy:
+                # The legacy and non-legacy modes handle special tokens differently
+                cur_len -= 1
 
-            cur_len += round_len
         target[cur_len:] = IGNORE_TOKEN_ID
+
+        if False:  # Inspect and check the correctness of masking
+            z = target.clone()
+            z = torch.where(z == IGNORE_TOKEN_ID, tokenizer.unk_token_id, z)
+            rank0_print(tokenizer.decode(z))
+            exit()
 
         if cur_len < tokenizer.model_max_length:
             if cur_len != total_len:
+                target[:] = IGNORE_TOKEN_ID
                 rank0_print(
-                    f"WARNING: tokenization mismatch " f"{cur_len} vs. {total_len}"
+                    f"WARNING: tokenization mismatch: {cur_len} vs. {total_len}."
+                    f" #turn = {len(turns) - 1}. (ignored)"
                 )
 
     return dict(
@@ -161,13 +171,11 @@ def preprocess(
 class SupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning."""
 
-    def __init__(self, data_path: str, tokenizer: transformers.PreTrainedTokenizer):
+    def __init__(self, raw_data, tokenizer: transformers.PreTrainedTokenizer):
         super(SupervisedDataset, self).__init__()
-        rank0_print("Loading data...")
-        list_data_dict = json.load(open(data_path, "r"))
 
         rank0_print("Formatting inputs...")
-        sources = [example["conversations"] for example in list_data_dict]
+        sources = [example["conversations"] for example in raw_data]
         data_dict = preprocess(sources, tokenizer)
 
         self.input_ids = data_dict["input_ids"]
@@ -188,32 +196,31 @@ class SupervisedDataset(Dataset):
 class LazySupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning."""
 
-    def __init__(self, data_path: str, tokenizer: transformers.PreTrainedTokenizer):
+    def __init__(self, raw_data, tokenizer: transformers.PreTrainedTokenizer):
         super(LazySupervisedDataset, self).__init__()
         self.tokenizer = tokenizer
 
-        rank0_print("Loading data...")
-        list_data_dict = json.load(open(data_path, "r"))
-
         rank0_print("Formatting inputs...Skip in lazy mode")
         self.tokenizer = tokenizer
-        self.list_data_dict = list_data_dict
+        self.raw_data = raw_data
+        self.cached_data_dict = {}
 
     def __len__(self):
-        return len(self.list_data_dict)
+        return len(self.raw_data)
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
-        sources = self.list_data_dict[i]
-        if isinstance(i, int):
-            sources = [sources]
-        data_dict = preprocess([e["conversations"] for e in sources], self.tokenizer)
-        if isinstance(i, int):
-            data_dict = dict(
-                input_ids=data_dict["input_ids"][0],
-                labels=data_dict["labels"][0],
-                attention_mask=data_dict["attention_mask"][0],
-            )
-        return data_dict
+        if i in self.cached_data_dict:
+            return self.cached_data_dict[i]
+
+        ret = preprocess([self.raw_data[i]["conversations"]], self.tokenizer)
+        ret = dict(
+            input_ids=ret["input_ids"][0],
+            labels=ret["labels"][0],
+            attention_mask=ret["attention_mask"][0],
+        )
+        self.cached_data_dict[i] = ret
+
+        return ret
 
 
 def make_supervised_data_module(
@@ -223,8 +230,18 @@ def make_supervised_data_module(
     dataset_cls = (
         LazySupervisedDataset if data_args.lazy_preprocess else SupervisedDataset
     )
-    train_dataset = dataset_cls(tokenizer=tokenizer, data_path=data_args.data_path)
-    return dict(train_dataset=train_dataset, eval_dataset=None)
+    rank0_print("Loading data...")
+
+    train_json = json.load(open(data_args.data_path, "r"))
+    train_dataset = dataset_cls(train_json, tokenizer=tokenizer)
+
+    if data_args.eval_data_path:
+        eval_json = json.load(open(data_args.eval_data_path, "r"))
+        eval_dataset = dataset_cls(eval_json, tokenizer=tokenizer)
+    else:
+        eval_dataset = None
+
+    return dict(train_dataset=train_dataset, eval_dataset=eval_dataset)
 
 
 def train():
@@ -235,8 +252,22 @@ def train():
     )
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
     local_rank = training_args.local_rank
+
+    # Set RoPE scaling factor
+    config = transformers.AutoConfig.from_pretrained(
+        model_args.model_name_or_path,
+        cache_dir=training_args.cache_dir,
+    )
+    orig_ctx_len = getattr(config, "max_position_embeddings", None)
+    if orig_ctx_len and training_args.model_max_length > orig_ctx_len:
+        scaling_factor = float(math.ceil(training_args.model_max_length / orig_ctx_len))
+        config.rope_scaling = {"type": "linear", "factor": scaling_factor}
+    config.use_cache = False
+
+    # Load model and tokenizer
     model = transformers.AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
+        config=config,
         cache_dir=training_args.cache_dir,
     )
     tokenizer = transformers.AutoTokenizer.from_pretrained(
@@ -248,17 +279,22 @@ def train():
     )
     tokenizer.pad_token = tokenizer.unk_token
 
+    # Load data
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
+
+    # Start trainner
     trainer = Trainer(
         model=model, tokenizer=tokenizer, args=training_args, **data_module
     )
-
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
+
+    # Save model
+    model.config.use_cache = True
     trainer.save_state()
-    safe_save_model_for_hf_trainer(trainer=trainer, output_dir=training_args.output_dir)
+    trainer_save_model_safe(trainer)
 
 
 if __name__ == "__main__":

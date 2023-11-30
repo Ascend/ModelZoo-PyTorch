@@ -174,3 +174,8 @@ SPACH-SMLP是一个经典的图像分类网络，结构简单。sMLP 模块通�
 ## FAQ
 
 无。
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

@@ -80,7 +80,7 @@ GaitSet是一个灵活、有效和快速的跨视角步态识别网络，迁移�
    git clone https://github.com/AbnerHqC/GaitSet.git
    cd GaitSet
    git reset --hard 14ee4e67e39373cbb9c631d08afceaf3a23b72ce
-   git apply ../change.patch
+   patch -p1 < ../change.patch
    ```
 
 2. 安装依赖。

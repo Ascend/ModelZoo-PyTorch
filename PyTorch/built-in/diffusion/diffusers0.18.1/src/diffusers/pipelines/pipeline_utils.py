@@ -1459,6 +1459,27 @@ class DiffusionPipeline(ConfigMixin):
         for module in modules:
             fn_recursive_set_mem_eff(module)
 
+    def enable_npu_flash_attention(self, attention_op: Optional[Callable] = None):
+        self.set_use_npu_flash_attention(True, attention_op)
+
+    def set_use_npu_flash_attention(self, valid: bool, attention_op: Optional[Callable] = None):
+        # Recursively walk through all the children.
+        # Any children which exposes the set_use_npu_flash_attention method
+        # gets the message
+        def fn_recursive_set_mem_eff(module: torch.nn.Module):
+            if hasattr(module, "set_use_npu_flash_attention"):
+                module.set_use_npu_flash_attention(valid, attention_op)
+
+            for child in module.children():
+                fn_recursive_set_mem_eff(child)
+
+        module_names, _ = self._get_signature_keys(self)
+        modules = [getattr(self, n, None) for n in module_names]
+        modules = [m for m in modules if isinstance(m, torch.nn.Module)]
+
+        for module in modules:
+            fn_recursive_set_mem_eff(module)
+
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
         r"""
         Enable sliced attention computation.

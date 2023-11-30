@@ -1,0 +1,4 @@
+torch==2.0.1
+torchVision==0.15.2
+tqdm
+timm==0.6.13

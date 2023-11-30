@@ -928,9 +928,9 @@ class SCRFDHead(AnchorHead):
             return None
         # sampled anchors of all images
         
-        x = torch.ones(pos_mask_list[0].shape[0], dtype=torch.int32, device=pos_mask_list[0].device)
-        num_total_pos = sum([max(torch.dot(mask.int(),x), 1) for mask in pos_mask_list])
-        num_total_neg = sum([max(torch.dot(mask.int(),x), 1) for mask in neg_mask_list])
+        x = torch.ones(pos_mask_list[0].shape[0], dtype=torch.float16, device=pos_mask_list[0].device)
+        num_total_pos = sum([max(torch.dot(mask.half(), x), 1) for mask in pos_mask_list])
+        num_total_neg = sum([max(torch.dot(mask.half(), x), 1) for mask in neg_mask_list])
         # split targets to a list w.r.t. multiple levels
         anchors_list = images_to_levels(all_anchors, num_level_anchors)
         labels_list = images_to_levels(all_labels, num_level_anchors)

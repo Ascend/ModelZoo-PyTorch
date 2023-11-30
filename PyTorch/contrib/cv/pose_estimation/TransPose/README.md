@@ -79,3 +79,7 @@ bash test/train_finetune_1p.sh --data_path=real_data_path --pth_path=real_pre_tr
 | NPU-1p |  -   | 0.34s/step  |    O1    |
 | NPU-8p | 72.5 | 0.95s/step  |    O1    |
 
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

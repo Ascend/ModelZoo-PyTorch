@@ -83,7 +83,6 @@ def boxlist_ml_nms(boxlist, nms_thresh, max_proposals=-1,
     else:
         keep = []
         unique_labels = torch.unique(labels)
-        print(unique_labels)
         for j in unique_labels:
             inds = (labels == j).nonzero().view(-1)
 

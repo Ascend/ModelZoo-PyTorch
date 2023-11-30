@@ -14,8 +14,8 @@ python3 main_without_tokenizer.py \
     --model_name_or_path ../model/ \
     --output_dir output/adgen-chatglm2-6b-pt-$PRE_SEQ_LEN-$LR \
     --overwrite_output_dir \
-    --max_source_length 1024 \
-    --max_target_length 1024 \
+    --max_source_length 4096 \
+    --max_target_length 4096 \
     --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
     --gradient_accumulation_steps 16 \

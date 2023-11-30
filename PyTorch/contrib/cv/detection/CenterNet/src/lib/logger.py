@@ -50,9 +50,9 @@ class Logger(object):
   def __init__(self, opt):
     """Create a summary writer logging to log_dir."""
     if not os.path.exists(opt.save_dir):
-      os.makedirs(opt.save_dir)
+      os.makedirs(opt.save_dir, exist_ok=True)
     if not os.path.exists(opt.debug_dir):
-      os.makedirs(opt.debug_dir)
+      os.makedirs(opt.debug_dir, exist_ok=True)
    
     time_str = time.strftime('%Y-%m-%d-%H-%M')
 
@@ -74,9 +74,9 @@ class Logger(object):
       self.writer = tensorboardX.SummaryWriter(log_dir=log_dir)
     else:
       if not os.path.exists(os.path.dirname(log_dir)):
-        os.mkdir(os.path.dirname(log_dir))
+        os.makedirs(os.path.dirname(log_dir), exist_ok=True)
       if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
+        os.makedirs(log_dir, exist_ok=True)
     self.log = open(log_dir + '/log.txt', 'w')
     try:
       os.system('cp {}/opt.txt {}/'.format(opt.save_dir, log_dir))

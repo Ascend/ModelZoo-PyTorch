@@ -1,0 +1,7 @@
+torch == 2.0.1+cpu
+torchvision == 0.15.2+cpu
+transformers == 4.34.0
+datasets == 2.3.0
+wikiextractor
+sklearn == 0.0
+tqdm

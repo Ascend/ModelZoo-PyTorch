@@ -76,3 +76,7 @@ Log Path:
 |  71.80   | 118  |    50   |    O1    |  8p Npu  |
 |    -     |  36  |    1    |    O1    |  1p Gpu  |
 |  72.39   | 235  |    50   |    O1    |  8p Gpu  |
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md   

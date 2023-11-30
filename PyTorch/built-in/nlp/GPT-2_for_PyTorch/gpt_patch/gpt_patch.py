@@ -32,7 +32,7 @@ from deepspeed.runtime.utils import see_memory_usage
 from deepspeed.pipe import PipelineModule, LayerSpec, TiedLayerSpec
 from deepspeed.runtime import engine
 from deepspeed.utils import logger, log_dist
-from deepspeed_npu.adaptor_ops_adam_fused_adam import FusedAdamNPU
+from deepspeed.ops.adam import FusedAdam
 from deepspeed.runtime.config import LAMB_OPTIMIZER, ONEBIT_ADAM_OPTIMIZER
 from deepspeed.runtime.fp16.fused_optimizer import FP16_Optimizer
 from deepspeed.runtime.fp16.unfused_optimizer import FP16_UnfusedOptimizer
@@ -921,7 +921,7 @@ def _configure_fp16_optimizer(self, optimizer):
     initial_dynamic_scale = self.initial_dynamic_scale()
     dynamic_loss_args = self.dynamic_loss_scale_args()
     clip_grad = self.gradient_clipping()
-    fused_opts = (FusedAdamNPU)
+    fused_opts = (FusedAdam)
 
     if isinstance(optimizer, fused_opts) \
             or self.optimizer_name() == ONEBIT_ADAM_OPTIMIZER:

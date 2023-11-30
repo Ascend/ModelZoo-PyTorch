@@ -91,3 +91,8 @@ bash test/train_eval_8p.sh --data_path=real_data_path --pth_path=real_pre_train_
 | GPU-8p | 67.1  |    1.2s/step    |
 | NPU-1p |       |     1.1s/step   |
 | GPU-1p |       |    0.7s/step|
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

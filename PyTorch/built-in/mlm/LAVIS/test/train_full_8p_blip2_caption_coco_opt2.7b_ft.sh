@@ -54,6 +54,12 @@ echo "Final Performance images/sec : $ActualFPS"
 #loss值，不需要修改
 ActualLoss=$(grep -o "loss: [0-9.]*" ${test_path_dir}/output/train_full_8p_blip2_caption_coco_opt2.7b_ft.log | awk 'END {print $NF}')
 
+#Belu_4值
+Belu_4=$(grep -o "Belu_4: [0-9.]*" ${test_path_dir}/output/train_full_8p_blip2_caption_coco_opt2.7b_ft.log | awk 'END {print $NF}')
+
+#CIDEr值
+CIDEr=$(grep -o "CIDEr: [0-9.]*" ${test_path_dir}/output/train_full_8p_blip2_caption_coco_opt2.7b_ft.log | awk 'END {print $NF}')
+
 #打印，不需要修改
 echo "Final Train Loss : ${ActualLoss}"
 echo "E2E Training Duration sec : $e2e_time"
@@ -77,4 +83,6 @@ echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${CaseName}.log
 echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/${CaseName}.log
 echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/${CaseName}.log
 echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${CaseName}.log
+echo "Belu_4 = ${Belu_4}" >>${test_path_dir}/output/${CaseName}.log
+echo "CIDEr = ${CIDEr}" >>${test_path_dir}/output/${CaseName}.log
 echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${CaseName}.log

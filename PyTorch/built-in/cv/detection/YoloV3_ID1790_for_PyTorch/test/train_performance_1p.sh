@@ -26,7 +26,8 @@ batch_size=64
 
 # 指定训练所使用的npu device卡id
 device_id=0
-
+#关闭INF/NAN
+export INF_NAN_MODE_ENABLE=0
 #适配profiling，默认为False
 profiling=False
 stop_step=100

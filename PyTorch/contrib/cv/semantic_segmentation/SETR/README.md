@@ -132,3 +132,7 @@ python demo.py --img='dtk.jpg' --checkpoint='work_dirs/77.pth'
 
   答：在新环境上可能会出现这样的问题。重新编译安装下mmcv就不会了。
 
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

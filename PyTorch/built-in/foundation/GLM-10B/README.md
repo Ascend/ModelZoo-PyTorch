@@ -159,6 +159,7 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
      ```
 
      --data_path参数填写数据集路径，若仅使用一个jsonl文件，指定到具体的文件，若使用多个，指定到上一级目录；
+     模型在tests/env_npu.sh设置ASCEND_USE_FLASH_ATTN开关，默认为True--开启FA；
 
    - 单机8卡微调
 

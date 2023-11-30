@@ -478,8 +478,6 @@ def main():
     opt_cfg = optimizer_kwargs(cfg=args)
     del opt_cfg['opt']
 
-    torch.npu.set_compile_mode(jit_compile=True)
-
     parameters = add_weight_decay(model)
     optimizer = None
     if use_amp == 'apex':

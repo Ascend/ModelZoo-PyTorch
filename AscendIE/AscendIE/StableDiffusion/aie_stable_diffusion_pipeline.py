@@ -130,7 +130,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         logging.info("finish build model")
         if not model_data:
             logging.error("build model failed")
-        with os.fdopen(os.open(onnx_path[:-5] + '.om', os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR), "wb") as f:
+        with open(onnx_path[:-5] + '_aie.om', 'wb') as f:
             f.write(model_data.data)
         del builder
         return model_data
@@ -153,7 +153,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         context3 = engine3.create_context()
         self.engines['vae'] = engine3
         self.contexts['vae'] = context3
-        if self.device_1:
+        if self.device_1 is not None:
             self.unet_bg = BackgroundRuntime.clone(self.device_1, unet_onnx_path, self.engines['unet'])
             self.use_parallel_inferencing = True
         
@@ -172,7 +172,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         context3 = engine3.create_context()
         self.engines['vae'] = engine3
         self.contexts['vae'] = context3
-        if self.device_1:
+        if self.device_1 is not None:
             self.unet_bg = BackgroundRuntime.clone(self.device_1, unet_path,
                                                    self.engines['unet'])
             self.use_parallel_inferencing = True
@@ -316,9 +316,9 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
                 ])
 
             input_data_unet = [
-                latent_model_input.numpy().tobytes(),
-                t[None].numpy().astype(np.int32).tobytes(),
-                text_embeddings.numpy().tobytes()
+                latent_model_input.numpy(),
+                t[None].numpy().astype(np.int32),
+                text_embeddings.numpy()
             ]
             output_data = aie.execute(input_data_unet, self.buffer_bindings['unet'],
                                   self.contexts['unet'])[0]
@@ -356,7 +356,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         latents = self.vae.post_quant_conv(latents)
 
         # run inference
-        input_data_vae = [latents.numpy().tobytes()]
+        input_data_vae = [latents.numpy()]
         image_buffer = aie.execute(input_data_vae, self.buffer_bindings['vae'],
                                self.contexts['vae'])[0]
         image = torch.from_numpy(
@@ -420,7 +420,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
                   f" {self.tokenizer.model_max_length} tokens: {removed_text}")
 
         # run inference
-        input_data_np = [text_input_ids.numpy().tobytes()]
+        input_data_np = [text_input_ids.numpy()]
         output_data = aie.execute(input_data_np, self.buffer_bindings['clip'],
                               self.contexts['clip'])[0]
         # SD2.1
@@ -460,7 +460,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
                                           return_tensors="pt")
 
             # run inference
-            uncond_input_data_np = [uncond_input.input_ids.numpy().tobytes()]
+            uncond_input_data_np = [uncond_input.input_ids.numpy()]
             uncond_output_data = aie.execute(uncond_input_data_np,
                                          self.buffer_bindings['clip'],
                                          self.contexts['clip'])[0]
@@ -521,18 +521,6 @@ def parse_arguments():
         type=str,
         default="prompts.txt",
         help="A prompt file used to generate images.",
-    )
-    parser.add_argument(
-        "--prompt_file_type", 
-        choices=["plain", "parti"],
-        default="plain", 
-        help="Type of prompt file.",
-    )
-    parser.add_argument(
-        "--prompt_file_type", 
-        choices=["plain", "parti"],
-        default="plain", 
-        help="Type of prompt file.",
     )
     parser.add_argument(
         "--prompt_file_type", 

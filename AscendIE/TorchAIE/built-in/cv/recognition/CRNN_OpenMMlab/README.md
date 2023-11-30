@@ -12,7 +12,7 @@
 本模块展现的是针对openmmlab中开发的crnn模型进行了适配的昇腾pytorch插件的样例。本样例展现了如何使用mmdeploy将crnn进行转换并通过昇腾pytorch插件将其赋予昇腾推理引擎的能力并在npu上高性能地运行。
 - 模型链接
     ```
-    url=https://github.com/open-mmlab/mmocr/blob/main/configs/textrecog/crnn/README.md
+    https://github.com/open-mmlab/mmocr/blob/main/configs/textrecog/crnn/README.md
     ```
 - 模型对应配置文件
     ```
@@ -30,8 +30,9 @@
 | Ascend-cann-aie       | --
 | 芯片类型               | Ascend310P3     |
 ### 配置OpenMMLab运行环境
-运行基于openmmlab推理框架的crnn等模型进行推理前，需要提前根据openmmlab的在线指导文档安装部署mmocr与mmdeploy，分别用于文字识别与模型转换。
-参考链接：
+运行基于openmmlab推理框架的crnn等模型进行推理前，需要提前根据openmmlab的在线指导文档安装部署mmocr与mmdeploy，分别用于文字识别与模型转换。现提供两种环境配置方式，官方配置方式与源码编译方式(推荐)：
+
+官方配置参考：
 https://github.com/open-mmlab/mmocr
 https://github.com/open-mmlab/mmdeploy
 根据OpenMMLab仓库mmdeploy中的get_started.md配置mmdeploy仓库。
@@ -50,8 +51,35 @@ mim install -e .
 cd ..
 pip install mmdeploy==1.2.0
 git clone -b main https://github.com/open-mmlab/mmdeploy.git
-
 ```
+
+源码编译参考(推荐)：
+通过git源码仓进行手动安装，参考命令如下：
+```
+mkdir open-mmlab
+conda create --name openmmlab python=3.9 -y
+conda activate openmmlab
+git clone https://github.com/open-mmlab/mmcv.git
+git clone https://github.com/open-mmlab/mmdetection.git
+git clone https://github.com/open-mmlab/mmdeploy.git
+git clone https://github.com/open-mmlab/mmocr.git
+cd ./mmcv
+pip install -v -e .
+#随后发现很多依赖pip并不会自动帮我们安装，手动装一下：
+pip install numpy
+...
+cd ../mmocr
+pip install -v -e .
+cd ../mmdeploy
+#当下载出现网络波动导致的错误时，可以-i指定源下载，如华为云镜像源：
+pip install -v -e . -i https://repo.huaweicloud.com/repository/pypi/simple
+cd ../mmdetection
+pip install -v -e . -i https://repo.huaweicloud.com/repository/pypi/simple
+#这样就装好了，拉取数据集的参考命令如下：
+cd mmocr
+python tools/dataset_converters/prepare_dataset.py cute80 --task textrecog
+```
+
 
 ### 配置昇腾运行环境
 下载对应版本的昇腾产品
@@ -80,7 +108,13 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
 
 
 ### 准备脚本与必要文件
-在本地的mmdeploy地址下载本代码仓中crnn_sample.py和env.sh脚本和模型权重文件。需要注意的是，脚本里的文件路径需要与实际文件路径对齐。参考目录结构：
+在本地的mmdeploy地址下载本代码仓中crnn_sample.py和env.sh脚本和模型权重文件。需要注意的是，推理脚本里的文件路径需要与实际文件路径对齐。
+
+模型权重文件链接：
+```
+https://download.openmmlab.com/mmocr/textrecog/crnn/crnn_mini-vgg_5e_mj/crnn_mini-vgg_5e_mj_20220826_224120-8afbedbb.pth
+```
+参考目录结构：
 ```
 open-mmlab/
 |-- crnn_mini-vgg_5e_mj_20220826_224120-8afbedbb.pth
@@ -105,12 +139,14 @@ open-mmlab/
 clone了mmocr仓后执行下面命令
 ```
   cd mmocr
-  python tools/dataset_coverters/prepare_dataset.py svt --task textrecog
+  python tools/dataset_converters/prepare_dataset.py svt --task textrecog
 ```
 数据集会生成在 ```mmocr/data/svt``` 中。
-注意！通过git安装的mmocr在加载数据集时可能会出现路径错误的问题，需要对mmocr目录中以下路径的数据集配置文件进行修改(data_root改为绝对路径)
+注意！通过git安装的mmocr在加载数据集时可能会出现路径错误的问题，需要对mmocr目录中以下路径的数据集配置文件进行修改(将xxx_data_root改为绝对路径),以svt数据集为例：
 ```
 cd mmocr/configs/textrecog/_base_/datasets/
+vim svt.py
+# 将svt_textrecog_data_root 相对路径值修改为svt数据集存放的绝对路径
 ```
 
 ## 快速上手 <a name="QUICK_START"></a>

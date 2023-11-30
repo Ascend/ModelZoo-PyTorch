@@ -93,7 +93,7 @@ sed -i "s|./datasets|$data_path|g" experiments/seg_detector/base_ic15.yaml
 
 taskset -c 0-23 nohup python3 -W ignore train.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml \
         --data_path ${data_path}/icdar2015 \
-        --resume ${mdoel_path}/MLT-Pretrain-ResNet50 \
+        --resume ${model_path}/MLT-Pretrain-ResNet50 \
         --seed=515 \
         --amp \
         --batch_size $batch_size \

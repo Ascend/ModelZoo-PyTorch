@@ -1,24 +1,12 @@
-# coding=utf-8
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+"""
+Hardcoded question and answers.
+"""
 import json
 
 
 def identity_questions():
     """ "
-    Adopted from https://github.com/young-geng/koala_data_pipeline/blob/main/process_hard_coded_data.py
+    Adapted from https://github.com/young-geng/koala_data_pipeline/blob/main/process_hard_coded_data.py
     """
     content = []
 
@@ -41,6 +29,8 @@ def identity_questions():
     questions = [
         "Who are you?",
         "What is your name?",
+        "Can you introduce yourself?",
+        "Can you tell me a little bit about yourself?",
         "What's your name?",
         "What are you called?",
         "What are you?",
@@ -48,6 +38,7 @@ def identity_questions():
         "Tell me about yourself.",
         "Tell me about you.",
         "Tell me who you are.",
+        "Please introduce yourself.",
     ]
     answers = [
         f"I am {name}, a language model trained by researchers from {org}.",
@@ -55,6 +46,7 @@ def identity_questions():
         f"You can call me {name}, and I was trained by {org} researchers as a language model.",
         f"As a language model, I go by the name {name} and was trained by researchers from {org}.",
         f"I'm a language model called {name}, and I was trained by {org} researchers.",
+        f"You may refer to me as {name}, a language model meticulously developed by the researchers at {org}.",
     ]
     generate_conversations(questions, answers)
 

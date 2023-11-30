@@ -16,8 +16,9 @@ from typing import Any, Dict, Optional
 import torch
 import torch.nn.functional as F
 from torch import nn
+import torch_npu
 
-from ..utils import maybe_allow_in_graph
+from ..utils import maybe_allow_in_graph, is_torch_version
 from .activations import get_activation
 from .attention_processor import Attention
 from .embeddings import CombinedTimestepLabelEmbeddings
@@ -147,7 +148,8 @@ class BasicTransformerBlock(nn.Module):
                 hidden_states, timestep, class_labels, hidden_dtype=hidden_states.dtype
             )
         else:
-            norm_hidden_states = self.norm1(hidden_states)
+            with torch.cuda.amp.autocast(enabled=False):
+                norm_hidden_states = self.norm1(hidden_states)
 
         cross_attention_kwargs = cross_attention_kwargs if cross_attention_kwargs is not None else {}
 
@@ -163,9 +165,10 @@ class BasicTransformerBlock(nn.Module):
 
         # 2. Cross-Attention
         if self.attn2 is not None:
-            norm_hidden_states = (
-                self.norm2(hidden_states, timestep) if self.use_ada_layer_norm else self.norm2(hidden_states)
-            )
+            with torch.cuda.amp.autocast(enabled=False):
+                norm_hidden_states = (
+                    self.norm2(hidden_states, timestep) if self.use_ada_layer_norm else self.norm2(hidden_states)
+                )
 
             attn_output = self.attn2(
                 norm_hidden_states,
@@ -176,7 +179,8 @@ class BasicTransformerBlock(nn.Module):
             hidden_states = attn_output + hidden_states
 
         # 3. Feed-forward
-        norm_hidden_states = self.norm3(hidden_states)
+        with torch.cuda.amp.autocast(enabled=False):
+            norm_hidden_states = self.norm3(hidden_states)
 
         if self.use_ada_layer_norm_zero:
             norm_hidden_states = norm_hidden_states * (1 + scale_mlp[:, None]) + shift_mlp[:, None]
@@ -298,8 +302,12 @@ class GEGLU(nn.Module):
         return F.gelu(gate.to(dtype=torch.float32)).to(dtype=gate.dtype)
 
     def forward(self, hidden_states):
-        hidden_states, gate = self.proj(hidden_states).chunk(2, dim=-1)
-        return hidden_states * self.gelu(gate)
+        if is_torch_version("==", "1.11") and hidden_states.dtype == torch.float16:
+            hidden_states = self.proj(hidden_states)
+            return torch_npu.npu_geglu(hidden_states, dim=-1, approximate=1)[0]
+        else:
+            hidden_states, gate = self.proj(hidden_states).chunk(2, dim=-1)
+            return hidden_states * self.gelu(gate)
 
 
 class ApproximateGELU(nn.Module):

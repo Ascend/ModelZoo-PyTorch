@@ -46,14 +46,16 @@ def parse_args():
 def pth2onnx(cfg, opt):
     model = SuperGlue(cfg.get('superglue', {})).eval()
 
-    input_data = [
-        torch.randn(1, 40, 2),
-        torch.randn(1, 40),
-        torch.randn(1, 256, 40),
-        torch.randn(1, 40, 2),
-        torch.randn(1, 40),
-        torch.randn(1, 256, 40),
-    ]
+    input_data = {
+        'keypoints0': torch.randn(1, 40, 2),
+        'scores0': torch.randn(1, 40),
+        'descriptors0': torch.randn(1, 256, 40),
+        'keypoints1': torch.randn(1, 40, 2),
+        'scores1': torch.randn(1, 40),
+        'descriptors1': torch.randn(1, 256, 40),
+        'image0': torch.randn(1, 1, opt.image_size[1], opt.image_size[0]),
+        'image1': torch.randn(1, 1, opt.image_size[1], opt.image_size[0])
+    }
     input_names = [
         'keypoints0', 'scores0', 'descriptors0',
         'keypoints1', 'scores1', 'descriptors1',
@@ -66,17 +68,17 @@ def pth2onnx(cfg, opt):
         'keypoints1': {1: "-1"},
         'scores1': {1: "-1"},
         'descriptors1': {2: "-1"},
-        }
+    }
 
     torch.onnx.export(
         model,
-        input_data,
+        (input_data, {}),
         opt.output_file,
         input_names=input_names,
         output_names=output_names,
         dynamic_axes=dynamic_axes,
-        verbose=True,
-        opset_version=11,
+        verbose=False,
+        opset_version=16,
     )
 
 

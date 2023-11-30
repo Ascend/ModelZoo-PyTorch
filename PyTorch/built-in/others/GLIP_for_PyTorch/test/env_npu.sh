@@ -22,6 +22,8 @@ export ASCEND_GLOBAL_LOG_LEVEL=3
 export ASCEND_GLOBAL_EVENT_ENABLE=0
 #设置是否开启taskque,0-关闭/1-开启
 export TASK_QUEUE_ENABLE=1
+#设置是否开启fftsplus,0-关闭/1-开启
+export ASCEND_ENHANCE_ENABLE=1
 
 #设置device侧日志登记为error
 msnpureport -g error -d 0
@@ -35,7 +37,7 @@ msnpureport -g error -d 7
 #关闭Device侧Event日志
 msnpureport -e disable
 
-path_lib=$(python3.7 -c """
+path_lib=$(python3 -c """
 import sys
 import re
 result=''
@@ -54,4 +56,4 @@ print(result)"""
 
 echo ${path_lib}
 
-export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib/:${path_lib}:$LD_LIBRARY_PATH

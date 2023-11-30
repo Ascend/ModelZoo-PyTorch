@@ -128,7 +128,7 @@ bash valprep.sh
     ```
     在上面的命令中，"./swin_base_patch4_window12_384.ts"是原始torchscript模型路径，"384"是模型输入的图片尺寸大小，"1"是batch size。  
     运行结束后，可以看到命令行打印“[SUCCESS] AIE inference result is the same as JIT!"， 
-    说明AIE推理结果与torchscript原始模型推理结果一致。
+    说明AIE推理结果与torchscript原始模型推理结果一致。若不一致，可先在数据集上测试精度，只要精度达标，可忽略模型输出的差异。
 4. 运行模型评估脚本，测试ImageNet验证集推理精度
     ```
     python3 eval.py --model_path ./swin_base_patch4_window12_384.ts --data_path ./imagenet/val --batch_size 1 --image_size 384

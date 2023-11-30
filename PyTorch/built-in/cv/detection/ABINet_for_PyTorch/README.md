@@ -157,7 +157,6 @@ python tools/data/utils/lmdb_converter.py data/mixture/Syn90k/label.txt data/mix
      bash test/train_performance_8p.sh   #多卡性能测试
      ```
      
-     
    + 脚本中调用的python命令参数说明如下：
      
       ```bash
@@ -190,7 +189,8 @@ python tools/data/utils/lmdb_converter.py data/mixture/Syn90k/label.txt data/mix
 
 2023.03.17：首次发布。
 ## FAQ
-无。
+
+1. albumentations在部分环境可能存在无法导入的问题，可以在代码导入该包的逻辑中删除try逻辑，即可正常导入。
 
 # 公网地址说明
 

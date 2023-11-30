@@ -14,3 +14,22 @@
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/BERT/modeling.py |CPM_Finetune_for_PyTorch/model/modeling.py |https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual-uncased.tar.gz|'bert-base-multilingual-uncased'模型在开源社区上的bert-base-multilingual-uncased.tar.gz的下载链接|
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/BERT/modeling.py |CPM_Finetune_for_PyTorch/model/modeling.py |https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual-cased.tar.gz|'bert-base-multilingual-cased'模型在开源社区上的bert-base-multilingual-cased.tar.gz的下载链接|
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/BERT/modeling.py |CPM_Finetune_for_PyTorch/model/modeling.py |https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-chinese.tar.gz|'bert-base-chinese'模型在开源社区上的bert-base-chinese.tar.g的下载链接|
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16.py|CPM_Finetune_for_PyTorch/mpu/random.py	| https://github.com/pytorch/pytor | 源码实现 |
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16.py|CPM_Finetune_for_PyTorch/mpu/layers.py	| https://github.com/pytorch/pytor | 源码实现 |
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16.py|CPM_Finetune_for_PyTorch/mpu/grads.py	| https://github.com/pytorch/pytor | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/model/modeling.py	| https://www.tensorflow.org/instal | 模型相关说明 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/model/modeling.py	| https://www.github.com/nvidia/ap | 模型相关说明 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/model/modeling.py	| https://github.com/pytorch/pytorch/pull/56 | 源码实现 |
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16util.py|CPM_Finetune_for_PyTorch/fp16/fp16util.py	| http://on-demand.gputechconf.com/gtc/2018/video/S8101 | 模型相关说明 |
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16util.py|CPM_Finetune_for_PyTorch/fp16/fp16util.py	| http://pytorch.org/docs/master/_modules/torch/_utils.ht | 模型相关说明 |
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16.py|CPM_Finetune_for_PyTorch/fp16/fp16.py	| https://github.com/pytorch/pytorch/issues/77 | 模型相关说明 |
+| 开源代码引入 | https://github.com/TsinghuaAI/CPM-2-Finetune/blob/main/fp16/fp16.py|CPM_Finetune_for_PyTorch/fp16/fp16.py	| http://pytorch.org/docs/master/optim.html#optimizer-step-closu | 模型相关说明 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/wordpiece.py	| https://github.com/huggingface/pytorch-pretrained-BERT/blob/master/pytorch_pretrained_bert/tokenization. | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/wordpiece.py	| https://en.wikipedia.org/wiki/CJK_Unified_Ideograph | 模型相关说明 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/file_utils.py	| https://github.com/huggingface/pytorch-pretrained-BE | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/file_utils.py	| https://github.com/allenai/allenn | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/datasets.py	| https://github.com/google-research/bert/blob/master/create_pretraining_data.py#L248-L2 | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/datasets.py	| https://github.com/google-research/bert/blob/master/create_pretraining_data.py#L3 | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/datasets.py	| https://arxiv.org/pdf/1810.04805.p | 模型相关说明 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data_utils/datasets.py	| https://github.com/google-research/bert/blob/master/create_pretraining_data.py#L3 | 源码实现 |
+| 开发引入 | / | CPM_Finetune_for_PyTorch/data/dataset_utils.py	| https://github.com/google-research/albert/blob/master/create_pretraining_data. | 源码实现 |

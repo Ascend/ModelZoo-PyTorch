@@ -1,31 +1,13 @@
-# ChatGLM2-6B for PyTorch
-
--   [概述](概述.md)
--   [准备训练环境](准备训练环境.md)
--   [开始训练](开始训练.md)
--   [训练结果展示](训练结果展示.md)
--   [版本说明](版本说明.md)
-
+# ChatGLM2-6B
 
 
 # 概述
 
-## 简述
-
-ChatGLM**2**-6B 是开源中英双语对话模型 [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) 的第二代版本，在保留了初代模型对话流畅、部署门槛较低等众多优秀特性的基础之上，ChatGLM**2**-6B 引入了如下新特性：
-
-1. **更强大的性能**：基于 ChatGLM 初代模型的开发经验，我们全面升级了 ChatGLM2-6B 的基座模型。ChatGLM2-6B 使用了 [GLM](https://github.com/THUDM/GLM) 的混合目标函数，经过了 1.4T 中英标识符的预训练与人类偏好对齐训练，[评测结果](https://github.com/THUDM/ChatGLM2-6B/tree/main#评测结果)显示，相比于初代模型，ChatGLM2-6B 在 MMLU（+23%）、CEval（+33%）、GSM8K（+571%） 、BBH（+60%）等数据集上的性能取得了大幅度的提升，在同尺寸开源模型中具有较强的竞争力。
-2. **更长的上下文**：基于 [FlashAttention](https://github.com/HazyResearch/flash-attention) 技术，我们将基座模型的上下文长度（Context Length）由 ChatGLM-6B 的 2K 扩展到了 32K，并在对话阶段使用 8K 的上下文长度训练。对于更长的上下文，我们发布了 [ChatGLM2-6B-32K](https://huggingface.co/THUDM/chatglm2-6b-32k) 模型。[LongBench](https://github.com/THUDM/LongBench) 的测评结果表明，在等量级的开源模型中，ChatGLM2-6B-32K 有着较为明显的竞争优势。
-3. **更高效的推理**：基于 [Multi-Query Attention](http://arxiv.org/abs/1911.02150) 技术，ChatGLM2-6B 有更高效的推理速度和更低的显存占用：在官方的模型实现下，推理速度相比初代提升了 42%，INT4 量化下，6G 显存支持的对话长度由 1K 提升到了 8K。
-4. **更开放的协议**：ChatGLM2-6B 权重对学术研究**完全开放**，在填写[问卷](https://open.bigmodel.cn/mla/form)进行登记后**亦允许免费商业使用**。
-
-- 参考实现：
-
+## 简介
+ChatGLM2-6B 是开源中英双语对话模型 ChatGLM-6B 的第二代版本，在保留了初代模型对话流畅、部署门槛较低等众多优秀特性的基础之上，ChatGLM2-6B 拥有更强大的性能和更长的上下文以及更高效的推理。
+- 参考实现 ：
   ```
   url=https://github.com/THUDM/ChatGLM2-6B
-  commit_id=877ef10d85c93ddfcfe945fcdc764393a52541b8
-  url=https://huggingface.co/THUDM/chatglm2-6b/tree/v1.0
-  commit_id=0ade0d38ac00258ae09450696315c2ff0b1faf12
   ```
 
 - 适配昇腾 AI 处理器的实现：
@@ -35,216 +17,266 @@ ChatGLM**2**-6B 是开源中英双语对话模型 [ChatGLM-6B](https://github.co
   code_path=PyTorch/built-in/foundation
   ```
 
-
-# 准备训练环境
-
-## 准备环境
+# 训练
+## 环境配置
 
 默认配置需要每张卡有60G以上空闲内存。
 
 - 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-  **表 1**  版本支持表
-
-  | Torch_Version      |    三方库依赖版本     |
-  |:--------------:| :----------------------------------------------------------: |
-  | PyTorch 1.11 | deepspeed 0.9.2 |
-
-- 环境准备指导。
-
-  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
-
-- 安装依赖。
-
-  1. 安装基础依赖
-
-  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
-  ```
-  pip install -r requirements.txt  # PyTorch1.11版本
-  ```
-
-  2. 安装deepspeed_npu插件
-
-  ```
-  # v0.9.2分支
-  pip3 install deepspeed==0.9.2
-  git clone https://gitee.com/ascend/DeepSpeed.git -b v0.9.2 deepspeed_npu
-  cd deepspeed_npu
-  git checkout 5c7c89930f0b70ea586d5db63f8e66477d5d9d9f
-  pip3 install .
-  ```
-
-  3. 替换transformers依赖文件
-  ```
-   # 自动替换无法替换三方库中的文件。
-   pip show transformers
-   # 获取transformers的Location路径
-   # 使用fix文件夹下的tranining_args.py替换路径下transformers/tranining_args.py
-  ```
+| Hardware |      Value      |
+| :------: | :-------------: |
+|   NPU    | 8 x Ascend NPUs |
 
 
-## 准备数据集
+|         Software          |                 Version                  |                             link                             |
+| :-----------------------: | :--------------------------------------: | :----------------------------------------------------------: |
+|          Python           |                  3.7.16                  |                              -                               |
+|          driver           |              23.0.RC3.B050               | [link](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/261159045?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743) |
+|         firmware          |              7.0.t8.0.b214               | [link](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/261159045?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743) |
+|           CANN            |   Ascend-cann-toolkit_7.0.RC1.1_linux    | [link](https://support.huawei.com/carriersoftwareapply/softwareApp?nid=PSW2001680585&pbi=PBI1-261422362&swlang=zh&supPbi=PBI1-251168373&path=PBI1-21430725/PBI1-21430756/PBI1-22892969/PBI1-23710427/PBI1-251168373) |
+| binary arithmetic package | Ascend-cann-kernels-910b_7.0.RC1.1_linux | [link](https://support.huawei.com/carriersoftwareapply/softwareApp?nid=PSW2001680596&pbi=PBI1-261422362&swlang=zh&supPbi=PBI1-251168373&path=PBI1-21430725/PBI1-21430756/PBI1-22892969/PBI1-23710427/PBI1-251168373) |
+|           torch           |                  1.11.0                  | [link](https://pytorch-package.obs.cn-north-4.myhuaweicloud.com/pta/Daily/v1.11.0/20230915.2/pytorch_v1.11.0_py37.tar.gz) |
+|         torch_npu         |               1.11.0.post5               | [link](https://gitee.com/ascend/pytorch/archive/refs/tags/v5.0.rc3.1-pytorch1.11.0.tar.gz) |
 
-1. 获取数据集。
 
-   ADGEN 数据集任务为根据输入（content）生成一段广告词（summary）。
+## 安装基础依赖
 
-   从 [Google Drive](https://drive.google.com/file/d/13_vf0xRTQsyneRKdD1bZIr93vBGOczrk/view?usp=sharing) 或者 [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/b3f119a008264b1cabd1/?dl=1) 下载处理好的 ADGEN 数据集，将解压后的 `AdvertiseGen` 目录放到ptuning目录下。
-   数据集参考目录如下
-   ```
-   ├── AdvertiseGen
-         ├──train.json
-         ├──dev.json
-   ```
-2. 预处理数据集。
-为了方便启动训练后，不用再每次重复加载处理数据集，故提前进行处理。也可以下载提前处理好的[数据集](https://pan.baidu.com/s/1hA9yfqJkKi1Ae5FB-AkJcQq)，提取码7s5i
+1. 准备代码:
 ```shell
-bash preprocess.sh
-```
-处理好的数据集位于同目录下的train_datasets文件夹下，参考目录如下
-```
-   ├── train_datasets
-         ├──data-00000-of-00008.arrow
-         ├──data-00001-of-00008.arrow
-         ├──data-00002-of-00008.arrow
-         ├──data-00003-of-00008.arrow
-         ├──data-00004-of-00008.arrow
-         ├──data-00005-of-00008.arrow
-         ├──data-00006-of-00008.arrow
-         ├──data-00007-of-00008.arrow
-         ├──dataset_info.json
-         ├──state.json
+git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
+cd ModelZoo-PyTorch/PyTorch/built-in/foundation/ChatGLM2-6B
+
 ```
 
+2. 安装依赖环境
 
-## 准备模型权重
+```bash
+# python3.7
+conda create -n test python=3.7
+conda activate test
 
-1. 获取语言识别模型和预训练权重
+# install torch and torch_npu
+pip install torch-1.11.0-cp37-cp37m-manylinux2014_aarch64.whl
+pip install torch_npu-1.11.0.post4_XXXXXX-cp37-cp37m-linux_aarch64.whl
+pip install apex-0.1_ascend_XXXXXX-cp37-cp37m-linux_aarch64.whl
 
-   用户从[链接](https://huggingface.co/THUDM/chatglm2-6b/tree/v1.0)自行获取模型文件（除了modeling_chatglm.py）和权重文件（pytorch_model-0000*-of-00007.bin
-），并放于model目录下，微调依赖该模型权重。
-   model参考目录如下
-   
-   ```
-   ├── model
-         ├──config.json
-         ├──configuration_chatglm.py
-         ├──ice_text.model
-         ├──pytorch_model-00001-of-00007.bin
-         ├──pytorch_model-00002-of-00007.bin
-         ├──pytorch_model-00003-of-00007.bin
-         ├──pytorch_model-00004-of-00007.bin
-         ├──pytorch_model-00005-of-00007.bin
-         ├──pytorch_model-00006-of-00007.bin
-         ├──pytorch_model-00007-of-00007.bin
-         ├──pytorch_model.bin.index.json
-         ├──quantization.py
-         ├──test_modeling_chatglm.py
-         ├──tokenization_chatglm.py
-         ├──tokenizer_config.json
-   ```
-
-- 替换modeling_chatglm.py文件
-
-  ```
-   
-   # 使用fix文件夹下的modeling_chatglm.py替换到您下载的model目录下
-  ```
+# install deepspeed and deepspeed_npu
+pip install deepspeed==0.9.2
+git clone https://gitee.com/ascend/DeepSpeed.git -b v0.9.2 deepspeed_npu
+cd deepspeed_npu
+pip3 install -e ./
+cd ..
 
 
-## 
+# install other packages
+pip install -r requirements.txt 
 
-# 开始训练
+# 使用fix文件夹下的tranining_args.py替换路径下transformers/tranining_args.py
+# cp fix/utils.py /root/miniconda3/envs/conda环境名/lib/python3.7/site-packages/transformers/generation/
+```
+3. 准备预训练权重
+  用户可以从[这里](https://huggingface.co/THUDM/chatglm2-6b/tree/dev)下载预训练权重和配置文件，然后将这些文件放在 "model"文件夹中，**不要覆盖 `modeling_chatglm.py`文件**。
+`model`文件夹内容如下：
+```shell
+  ├── model
+      ├──config.json
+      ├──configuration_chatglm.py
+      ├──pytorch_model-00001-of-00007.bin
+      ├──pytorch_model-00002-of-00007.bin
+      ├──pytorch_model-00003-of-00007.bin
+      ├──pytorch_model-00004-of-00007.bin
+      ├──pytorch_model-00005-of-00007.bin
+      ├──pytorch_model-00006-of-00007.bin
+      ├──pytorch_model-00007-of-00007.bin
+      ├──pytorch_model.bin.index.json
+      ├──quantization.py
+      ├──test_modeling_chatglm.py
+      ├──tokenization_chatglm.py
+      ├──tokenizer_config.json
+      ├──tokenizer.model
+      ├──modeling_chatglm.py
+```
 
-## 训练模型
+4. 准备数据集
 
-1. 进入解压后的源码包根目录。
+1).用户可以从[这里](https://huggingface.co/datasets/shibing624/AdvertiseGen/tree/main)下载数据集，并将其放在`ptuning`路径下的`AdvertiseGen`文件夹内，该文件夹内容包括：
+```
+├── AdvertiseGen
+      ├──train.json
+      ├──dev.json
+```
 
-   ```
-   cd /${模型文件夹名称}/ptuning
-   ```
-   修改ptuning目录下的env_npu.sh，修改引用的环境变量位置。
+2)修改数据转换脚本`tuning/preprocess.sh`
 
-2. 运行训练脚本。
+```shell
+# modify the script according to your own  ascend-toolkit path
+source env_npu.sh
+
+# for preprocess training datasets
+--do_train \
+--max_source_length 4096 \ #for example 
+--max_target_length 4096 \  
+```
+```shell
+# for preprocess predict datasets
+--do_predict \
+--max_source_length 256 \
+--max_target_length 256
+```
+3).执行下面代码转换数据集
+
+```shell
+  # process datasets                              
+  bash preprocess.sh
+```
+
+
+5. 配置ChatGLM2-6B训练脚本: `ptuning/ds_train_fintune.sh`
+
+```shell
+# modify the script according to your own  ascend-toolkit path
+source env_npu.sh
+
+# modify script according to your own needs
+--model_name_or_path ../model/ \  #model path
+--max_source_length 4096 \
+--max_target_length 4096 \  #should align with the processed dataset
+```
+
+6. 启动训练
 
    该模型P-Tuning v2支持单机单卡，全参数fintune支持单机8卡。
 
-   - P-Tuning v2
+-  全参数finetune， 启动8卡微调。
+```shell
+bash ds_train_fintune.sh
+```
 
-     启动P-Tuning v2。
+- P-Tuning v2
 
-     ```
-     bash train.sh
-     ```
+  启动P-Tuning v2。
 
-   - 全参数finetune
-
-     启动8卡微调。
-     可以用deepspeed.json配置deepspeed参数，目前默认使用zero2
-
-     ```
-     bash ds_train_fintune.sh
-     ```
-
-
-   模型训练参数说明如下。
-
-   ```
-   公共参数：
-   --max_source_length                       //处理后句子长度
-   --max_target_length                       //目标数据长度
-   --per_device_train_batch_size             //每卡训练批次大小
-   --gradient_accumulation_steps             //梯度更新步数
-   --max_steps                               //最大训练步数
-   --logging_steps                           //打印信息步数
-   --save_steps                              //保存参数步数
-   --learning_rate                           //学习率
-   ```
-   训练完成后，权重文件保存在当前路径下，并输出模型训练相关信息。
-
-## 验证模型
-
-1. 全参数finetune验证
+  ```
+  bash train.sh
+  ```
+7. 全参数finetune验证
 
     运行以下命令
+
     ```
     cd /${模型文件夹名称}/ptuning
     bash evaluate_fintune.sh
-    ```
-    生成结果在屏幕上显示
+	```
 
-# 训练结果展示
+## 训练结果展示
 
-**表 1**  训练结果展示表
+### 性能结果展示
+
+The performance of ChatGLM2-6B in **Ascend NPU** and **Reference**:
+
+| Device    | Model       | total Iterations | throughput rate (samples/s) | throughput rate (tokens/s/p) | single-step time (s/step) | floating point operation (TFLOPs/s) |
+| --------- | ----------- | ---------------- | ----------------------------- | ---------------------------- | ------------------------- | ----------------------------------- |
+| NPUs| ChatGLM2-6B | 1000  | 1.79 |1833   | 4.46| 65.72 |
+| Reference | ChatGLM2-6B | 1000 | 1.76 | 1802| 4.54| 64.64 |
 
 
-|     NAME      | SamplesPerSec | Iterations  | DataType  | Torch_Version | Card |
-|:-------------:|:-------------:|:-:|:-:|:-:|:----:|
-| Finetune -NPU |   (待补充)    |  (待补充)  | fp16  | 1.11  | 910B |
-| Finetune -GPU |   (待补充)    |  (待补充)  | fp16  | 1.11  | A800 |
 
-说明：P-Tuning 仅打通功能，无性能优化。
+### 精度结果展示
 
-**表 2**  评估结果展示表
+NPU vs Reference loss对比.
 
-| 评估项  |   NPU   |   GPU   |
-| :-----: | :-----: | :-----: |
-| BLEU-4  | 8.0174  | 7.5779  |
-| ROUGE-1 | 31.5737 | 31.0244 |
-| ROUGE-2 | 7.2976  | 7.1179  |
-| ROUGE-l | 24.8196 | 24.7112 |
+绝对误差：最大值0.0740，平均值0.0135
+相对误差：最大值0.0231，平均值0.0042
 
-说明：该结果是step=1000的验证结果。
+NPU运行平稳，资源占用稳定，中间无报错，Loss有下降趋势，收敛速度符合预期。平均损失的相对误差小于2%。精度满足要求。.
 
-# 版本说明
+![NPU-LOSS](./images/ChatGLM2-6B_loss_compare.png)
 
-## 变更
+# 推理
 
-2023.9.1：首次发布。
+## 推理环境搭建
+推理环境搭建参考上述训练环境搭建。
 
-## FAQ
+## 推理脚本
+
+1）执行`vim infer.py`创建推理脚本，然后将下面代码写入`infer.py`文件中，然后按`Esc`键输入`:wq`退出并保存文件。
+
+```python
+from transformers import AutoTokenizer, AutoModel
+
+# 修改CHECKPOINT路径
+CHECKPOINT="./model_weight"
+tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT, trust_remote_code=True)
+model = AutoModel.from_pretrained(CHECKPOINT, trust_remote_code=True, device='cuda')
+model = model.eval()
+
+print("请输入对话")
+_input=input(">>")
+
+while _input:
+    response, history = model.chat(tokenizer, _input, history=[])
+    print(response)
+    _input=input(">>")
+```
+2）运行下面命令执行推理任务
+```python
+ python infer.py
+```
+## 推理结果展示
+```shell
+请输入对话
+>>你好
+你好👋！我是人工智能助手 ChatGLM2-6B，很高兴见到你，欢迎问我任何问题。
+>>晚上睡不着应该怎么办
+以下时是一些有助于晚上睡觉的技巧:
+
+1. 创建一个规律的睡眠时间表:每天在相同的时间上床并起床可以帮助身体建立一个规律的睡眠时间表。
+
+2. 创建一个舒适的睡眠环境:在安静、黑暗、凉爽、舒适的房间里睡觉可以帮助放松身心,更容易入睡。
+
+3. 避免使用电子设备:在睡觉前一两个小时内避免使用电子设备,如手机、电脑、平板电脑等,以免干扰睡眠。
+
+4. 放松身心:在睡觉前做些轻松的活动,如阅读、听轻柔的音乐、洗个热水澡、做些瑜伽、冥想等,有助于放松身心,减轻压力。
+
+5. 避免咖啡因和酒精:在睡觉前几个小时内避免摄入咖啡因和酒精,以免影响睡眠。
+
+6. 远离刺激:在睡觉前远离刺激,如避免摄入咖啡因、饮酒、吸烟等,以免影响睡眠。
+
+7. 远离压力:避免在睡觉前进行紧张的活动,如激烈的运动,以免影响睡眠。
+
+如果这些技巧不能解决你的问题,你可以尝试寻求医生的帮助,找到更好的解决方案。
+```
+
+
+# 评估
+## 准备数据集任务
+用户可以从 [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/f/e84444333b6d434ea7b0) 下载处理好的 C-Eval 数据集，解压到 `evaluation` 目录下。
+## 运行评估任务
+1）首先修改评估脚本`evaluation/evaluate_ceval.py`。
+```python
+# 修改 CHECKPOINT 路径和数据集任务路径
+CHECKPOINT= "../model"
+DATA_PATH="./CEval/test/**/*.jsonl"
+```
+2）然后运行下面代码执行评估任务。
+```python
+cd evaluation
+python evaluate_ceval.py
+```
+
+## 评估结果展示
+
+|任务|验证集|模型|昇腾值|参考值|社区值|
+| ------------ | ------------ |  ------------ | ------------ |------------ |------- |
+| CEval | test  |ChatGLM2-6B   |  0.31055 | 0.31092 |-- |
+
+
+
+# FAQ
 
 1. 报错提示deepspeed.py需要版本大于等于0.6.5
+
    ```
    # 关闭版本检测（如安装0.9.2版本无需此操作）
    # 若遇到该报错
@@ -258,25 +290,77 @@ bash preprocess.sh
    ```
    删除root下的cache目录，重新运行
    ```
-4. 单卡阶段报embedding_dense_grad算子错误
+
+3. 单卡阶段报embedding_dense_grad算子错误
+
    ```
    enbedding当前版本，不支持动静合一，静态有部分shape不支持,新版本已修复
    # 若遇到该报错
    修改main.py文件
    torch.npu.set_compile_mode(jit_compile=False)
    ```
-5. 提示so文件错误
+
+4. 提示so文件错误
+
    ```
    提示so文件找不到
    # 若遇到该报错
    全局搜索so的位置，然后导入环境变量
    export LD_LIBRARY_PATH=/usr/:$LD_LIBRARY_PATH
    ```
-6. eval提示scaledsoftmax报错
-    ```
+
+5. eval提示scaledsoftmax报错
+
+   ```
    算子shape泛化性还有问题
    # 若遇到该报错
    搜索output文件夹生成的modeling_chatglm.py文件，
    self.scale_mask_softmax 设置为false
    ```
 
+```
+* 规避推理错误：
+
+`cp fix/utils.py /root/miniconda3/envs/conda环境名/lib/python3.7/site-packages/transformers/generation/`
+```
+
+1. 微调时出现AttributeError或RuntimeError
+
+   module 'torch_npu' has no attribute 'npu_rotary_mul' 或
+
+   RuntimeError:Error!, The last dimension of input tensor shoule be within the range of [32,2048] and be divisible by32
+
+   ```
+   修改modeling_chatglm.py文件:
+   USE_NPU_ROTARY=False
+   USE_SCALED_SOFTMAX=False
+   ```
+
+   PS: 设置为True能提高性能
+
+2. 如果cann不支持flash_attention
+
+    报错提示为module 'torch_npu' has no attribute 'npu_flash_attention'
+
+```
+修改modeling_chatglm.py文件:
+USE_FLASH=False
+```
+
+​       PS: 设置为True能提高性能
+
+
+* 规避评估错误：
+
+
+1. 任务评估过程中出现`XXXX does not appear to have a file named tokenization_chatglm.py/ configuration_chatglm.py / modeling_chatglm.py`时，将`model`路径下的`tokenization_chatglm.py/ configuration_chatglm.py / modeling_chatglm.py`拷贝到`XXXX`路径下。
+2. 任务评估过程中如果报错`RuntimeError: call aclnnFlashAttentionScore failed`，请修改`XXXX`路径下的`modeling_chatglm.py`。
+   ```python
+   # 修改modeling_chatglm.py文件:
+   USE_FLASH=False
+   ```
+
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

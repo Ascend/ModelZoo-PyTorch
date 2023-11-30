@@ -57,6 +57,6 @@
 - 运行源码根目录下的run.py文件即可开始训练。
 
 
+# 公网地址说明
 
-
-
+代码涉及公网地址参考 public_address_statement.md

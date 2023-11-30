@@ -42,6 +42,7 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
   | PyTorch 1.5 | torchvision==0.2.2.post3；pillow==8.4.0 |
   | PyTorch 1.8 | torchvision==0.9.1；pillow==9.1.0 |
   | PyTorch 1.11 | timm==0.4.5 |
+  | PyTorch 2.1 | timm==0.4.5 |
   
 - 环境准备指导。
 
@@ -56,6 +57,8 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
   
   pip install -r 1.11_requirements.txt  # PyTorch1.11版本
+
+  pip install -r 2.1_requirements.txt  # PyTorch2.1版本
   ```
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。
@@ -137,13 +140,13 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
     # 输出完整微调日志./output_finetune_full_8p/910A_8p_finetune_full.log、总结性日志./output_finetune_full_8p/log.txt
     bash ./test/finetune_full_8p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
 
-    # fine-tuning_large 8p performance，8p上运行1个epoch，910B运行时间约为14min
+    # fine-tuning_large 8p performance，8p上运行1个epoch，910运行时间约为14min
     bash ./test/finetune_performance_large_8p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
 
-    # fine-tuning_large 8p full，8p上运行50个epoch，910B运行时间约为12h
+    # fine-tuning_large 8p full，8p上运行50个epoch，910运行时间约为12h
     bash ./test/finetune_full_large_8p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
 
-    # fine-tuning_large 16p full，16p上运行50个epoch，910B运行时间约为6h
+    # fine-tuning_large 16p full，16p上运行50个epoch，910运行时间约为6h
     bash ./test/finetune_full_large_16p.sh --data_path=real_data_path --finetune_pth=pretrained_model_path
     
     # 8p Base_eval，运行时间约为3min
@@ -151,7 +154,7 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
     bash ./test/finetune_eval_8p.sh --data_path=real_data_path --resume_pth=finetuned_model_path
     ```
 
-    说明：MAE-Large配置在910B上进行训练，16p脚本需要在启动脚本修改节点IP
+    说明：MAE-Large配置在910上进行训练，16p脚本需要在启动脚本修改节点IP
 
    模型训练脚本参数说明如下。
 
@@ -191,7 +194,7 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
 | 8p-NPU | 83.86 | 1603 | 50 | O2 | 1.8 |
 | 16p-NPU | 85.97 | 3145 | 50 | O2 | 1.8 |
 
-说明：MAE-Large配置在910B上进行训练
+说明：MAE-Large配置在910上进行训练
 
 # 版本说明
 
@@ -204,3 +207,7 @@ MAE的设计虽然简单，但已被证明是一个强大的、可扩展的视�
 
 无。
 
+
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md

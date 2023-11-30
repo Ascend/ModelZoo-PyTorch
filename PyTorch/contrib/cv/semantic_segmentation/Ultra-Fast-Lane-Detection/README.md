@@ -56,3 +56,7 @@ bash test/train_finetune_1p.sh     --data_path=数据集路径
 |        | 122  |   1    |    O1    | 1p Gpu |
 | 95.46% | 832  |  100   |    O1    | 8p Gpu |
 
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

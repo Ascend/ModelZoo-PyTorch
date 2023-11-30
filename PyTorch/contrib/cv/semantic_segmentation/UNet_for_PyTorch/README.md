@@ -41,6 +41,8 @@ UNet在生物医学图像分割领域，得到了广泛的应用。
   | :--------: | :----------------------------------------------------------: |
   | PyTorch 1.5 | torchvision==0.2.2.post3 |
   | PyTorch 1.8 | torchvision==0.9.1 |
+  | PyTorch 1.11 | torchvision==0.12.0 |
+  | PyTorch 2.1 | torchvision==0.16.0 |
 
 - 环境准备指导。
 
@@ -53,6 +55,10 @@ UNet在生物医学图像分割领域，得到了广泛的应用。
   pip install -r 1.5_requirements.txt  # PyTorch1.5版本
   
   pip install -r 1.8_requirements.txt  # PyTorch1.8版本
+
+  pip install -r 1.11_requirements.txt # PyTorch1.11版本
+
+  pip install -r 2.1_requirements.txt  # PyTorch2.1版本
   ```
   > **说明：** 
   >只需执行一条对应的PyTorch版本依赖安装命令。

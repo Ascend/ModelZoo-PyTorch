@@ -38,7 +38,8 @@
 
   | Torch_Version      | 三方库依赖版本                                 |
   | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.8 | diffusers==0.18.1 accelerate==0.20.3 |
+  | PyTorch 1.11 | diffusers==0.18.1 accelerate==0.20.3 |
+  | PyTorch 2.1 | diffusers==0.18.1 accelerate==0.20.3 |
   
 - 环境准备指导。
 
@@ -79,38 +80,40 @@
 
 ## 准备数据集
 
-1. 获取数据集。
+1. 联网情况下，数据集会自动下载。
 
-   联网情况下，数据集会自动下载。
+2. 无网络情况下，用户需自行获取pokemon数据集，并在shell启动脚本中将`dataset_name`参数，设置为本地数据集的绝对路径，填写一级目录。
 
-   无网络情况下，用户需自行获取arrow格式的pokemon数据集，并在shell启动脚本时传入`--local_data_dir`参数，参数值为本地数据集路径，填写一级目录，数据结构如下：
+   数据结构如下：
 
    ```
    $dataset
-   ├── dataset_dict.json
-   └── train
-       ├── data-00000-of-00001.arrow
-       ├── dataset_info.json
-       └── state.json
+   ├── README.MD
+   ├── data
+   	├── dataset_infos.json
+   	└── train-0001.parquet
+   └── dataset_infos.json
    ```
-   
+
    > **说明：** 
    >该数据集的训练过程脚本只作为一种参考示例。
-   
+
    
 
 ## 获取预训练模型
 
-联网情况下，预训练模型会自动下载。无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
+1. 联网情况下，预训练模型会自动下载。
 
-```
-CompVis/stable-diffusion-v1-4
-runwayml/stable-diffusion-v1-5
-stabilityai/stable-diffusion-2
-stabilityai/stable-diffusion-2-1
-```
+2. 无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
 
-获取对应的预训练模型后，在shell启动脚本时传入`--model_name`参数，参数值为本地预训练模型路径，填写一级目录。
+   ```
+   CompVis/stable-diffusion-v1-4
+   runwayml/stable-diffusion-v1-5
+   stabilityai/stable-diffusion-2
+   stabilityai/stable-diffusion-2-1
+   ```
+
+3. 获取对应的预训练模型后，在shell启动脚本中将`model_name`参数，设置为本地预训练模型路径，填写一级目录。
 
 # 开始训练
 
@@ -140,12 +143,47 @@ stabilityai/stable-diffusion-2-1
      bash test/train_full_8p_text_to_image_sd1-5_fp16.sh  # 8卡精度，SD1.5，fp16
      bash test/train_full_8p_text_to_image_sd1-5_fp32.sh  # 8卡精度，SD1.5，fp32
      bash test/train_full_8p_text_to_image_sd2-1_fp32.sh  # 8卡精度，SD2.1，fp32
+     bash test/train_full_8p_text_to_image_sd2-1_fp16.sh  # 8卡精度，SD2.1，fp16
+     bash test/train_full_8p_text_to_image_sd2-1_fp16_fa.sh # 8卡精度，SD2.1，fp16+FA
      bash test/train_performance_8p_text_to_image_sd1-5_fp16.sh # 8卡性能，SD1.5，fp16
      bash test/train_performance_8p_text_to_image_sd1-5_fp32.sh # 8卡性能，SD1.5，fp32
      bash test/train_performance_8p_text_to_image_sd2-1_fp32.sh # 8卡性能，SD2.1，fp32
      ```
      
+   - 单机8卡预训练
+   
+     ```
+     bash test/pretrain_full_8p_text_to_image_sd2-1_fp16_fa.sh # 8卡精度，SD2.1，fp16+FA
+     ```
      
+   - 注意：跑fp16不带FA时，由于attention模块中bmm算子走fp16会有溢出，需修改以下代码，使bmm算子走fp32计算：（适配FA后不走bmm算子，因此不会溢出）
+   
+     将src/diffusers/models/attention_processor.py中get_attention_scores方法里的
+   
+     ```
+     if attention_mask is None:
+         attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
+     else:
+         beta = 1
+         attention_scores = torch.add(torch.mul(beta, attention_mask),
+                                     torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
+     ```
+   
+     修改为：
+   
+     ```
+     if self.upcast_attention:
+         query = query.float()
+         key = key.float()
+     
+     with torch.cuda.amp.autocast(enabled=False):
+         if attention_mask is None:
+             attention_scores = torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2)))
+         else:
+             beta = 1
+             attention_scores = torch.add(torch.mul(beta, attention_mask),
+                                         torch.mul(self.scale, torch.bmm(query, key.transpose(-1, -2))))
+     ```
    
    
    模型训练python训练脚本参数说明如下。
@@ -168,9 +206,13 @@ stabilityai/stable-diffusion-2-1
    --num_train_epochs                  //训练epoch数
    --gradient_accumulation_steps       //梯度累计步数
    --mixed_precision                   //精度模式
-   --use_megatron_npu_adamW            //使用megatron优化器
+   --use_megatron_npu_adamW            //使用megatron优化器，仅Pytorch1.11支持
    --use_npu_fuse_adamW                //使用NPU融合优化器
    --use_clip_grad_norm_fused          //使用融合CLIP操作（必须搭配NPU融合优化器使用）
+   --enable_npu_flash_attention        //使能Flash Attention大kernel融合算子（目前仅fp16支持FA）
+   --enable_pin_memory                 //使能数据加载时的pin_memory
+   --enable_persistent_workers         //使能数据加载时的persistent_workers
+   --release_part_gradient_checkpointing //显存足够的情况下，可关闭部分模块的重计算，可提升训练速度
    ```
    
    训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
@@ -179,32 +221,23 @@ stabilityai/stable-diffusion-2-1
 
 **表 2**  训练结果展示表
 
-|   NAME   | sd版本 | clip_score(use_ema) | FPS  | batch_size | AMP_Type | Torch_Version |
-| :------: | :---: | :---: | :--: | :------: | :-----------: | :-----------: |
-| 1p-竞品A | 1.5 | \ | 1.313 | 1 | fp32 |      1.13      |
-|  1p-NPU  | 1.5 | \ | 1.312 | 1 | fp32 |      1.8      |
-| 8p-竞品A | 1.5 | \ | 54.000 | 3 | fp16 |      1.13      |
-|  8p-NPU-910  | 1.5 | \ | 24.000 | 3 | fp16 |      1.8      |
-| 8p-竞品A | 1.5 | \ |   61.57   | 4 | fp16 |    1.13    |
-|  8p-NPU-910B  | 1.5 | \ | 35.290 | 4 | fp16 |   1.8    |
-| 8p-竞品A | 1.5 | \ |   33.82  | 4 | fp32 |   1.13    |
-|  8p-NPU-910B  | 1.5 | 0.319 | 31.000 | 4 | fp32 |   1.8      |
-|  8p-竞品A   |  2.1   | 0.321 | 8.64 | 4 | fp32 | 1.13  |
-|  8p-NPU-910B  | 2.1 | \ | 16.000 | 4 | fp32 |      1.8      |
-|  8p-NPU-910B  | 2.1 | \ | 13.47 | 4 | fp32 |      1.11      |
-
+|   NAME   | sd版本 | FPS  | batch_size | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :------: | :-----------: | :-----------: |
+| 8p-竞品A | 2.1 | 10 | 4 | fp32 |      1.13      |
+|  8p-NPU-910  | 2.1 | 16.67 | 4 | fp32 |      1.11      |
+| 8p-竞品A | 2.1 | 22 | 4 | fp16 |      1.13      |
+|  8p-NPU-910  | 2.1 | 18.28 | 4 | fp16 |      1.11      |
+| 8p-竞品A+FA | 2.1 | 65.5 | 24 | fp16 | 1.13 |
+| 8p-NPU-910+FA | 2.1 | 59.12 | 24 | fp16 | 1.11 |
+| 8p-竞品A+FA | 2.1 | 73.8 | 24 | fp16 | 2.1 |
+| 8p-NPU-910+FA | 2.1 | 57 | 24 | fp16 | 2.1 |
 
 **表3** 训练支持场景
 
-| SD版本/AMP_Type |                fp16                 |               fp32                |
-| :-------------: | :---------------------------------: | :-------------------------------: |
-|      SD1.5      | 支持，需设置--mixd_precision="fp16" | 支持，需设置--mixd_precision="no" |
-|      SD2.1      |               不支持                | 支持，需设置--mixd_precision="no" |
-
-> **说明：** 
->
-> 910A仅支持fp16训练，在训练时必须指定--mixd_precision="fp16"；910B同时支持fp16与fp32训练。
-
+| SD版本/AMP_Type |                fp16                 | fp16+FA                                                      |               fp32                |
+| :-------------: | :---------------------------------: | ------------------------------------------------------------ | :-------------------------------: |
+|      SD1.5      | 支持，需设置--mixd_precision="fp16" | 不支持                                                       | 支持，需设置--mixd_precision="no" |
+|      SD2.1      | 支持，需设置--mixd_precision="fp16" | 支持，需设置--mixd_precision="fp16"，和--enable_npu_flash_attention | 支持，需设置--mixd_precision="no" |
 
 
 # 推理
