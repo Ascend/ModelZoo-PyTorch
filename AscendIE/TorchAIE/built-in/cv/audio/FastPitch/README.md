@@ -151,7 +151,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 
     （1）推理脚本，包含性能测试。
      ```
-      python3 pt_val.py --model nested_unet_torch_aie_bs4.pt --batch_size=4
+      python3 pt_val.py  -i phrases/tui_val100.tsv --dataset_path=./LJSpeech-1.1 --fastpitch ./nvidia_fastpitch_210824.pt --batch_size=4 --model="fastpitch_torch_aie_bs4.pt"
      ```
    命令参数说明：
     ```

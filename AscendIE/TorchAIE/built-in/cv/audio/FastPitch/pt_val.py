@@ -181,20 +181,20 @@ def prepare_input_sequence(fields, device, symbol_set, text_cleaners,
                 batch[f] = batch[f].to(device)
         size_0 = batch['text'].size(0)
         # print("111", batch, type(batch), type(batch['mel']))
-        while(size_0 < batch_size):
-            # print(batch)
-            mel_li = list(batch['mel'])
-            mel_li.append(mel_li[-1])
-            batch['mel'] = tuple(mel_li)
-            batch['output'].append(batch['output'][-1])
-            text_li = batch['text'].numpy().tolist()
-            text_li.append(copy.deepcopy(text_li[-1]))
-            batch['text'] = torch.tensor(text_li)
-            lens_li = batch['text_lens'].numpy().tolist()
-            lens_li.append(lens_li[-1])
-            batch['text_lens'] = torch.tensor(lens_li)
-            # print(batch)
-            size_0 += 1
+        # while(size_0 < batch_size):
+        #     # print(batch)
+        #     mel_li = list(batch['mel'])
+        #     mel_li.append(mel_li[-1])
+        #     batch['mel'] = tuple(mel_li)
+        #     batch['output'].append(batch['output'][-1])
+        #     text_li = batch['text'].numpy().tolist()
+        #     text_li.append(copy.deepcopy(text_li[-1]))
+        #     batch['text'] = torch.tensor(text_li)
+        #     lens_li = batch['text_lens'].numpy().tolist()
+        #     lens_li.append(lens_li[-1])
+        #     batch['text_lens'] = torch.tensor(lens_li)
+        #     # print(batch)
+        #     size_0 += 1
         batches.append(batch)
 
     return batches
@@ -244,6 +244,10 @@ def main_datasets(opt, unk_args):
 
 def create_dataloader(opt, unk_args):
     dataset = main_datasets(opt, unk_args)
+    # print("111111", len(dataset), opt.batch_size)
+    while (len(dataset) % opt.batch_size != 0):
+        dataset.append(dataset[-1])
+    # print(dataset)
     loader =  InfiniteDataLoader  # only DataLoader allows for attribute updates
     nw = min([os.cpu_count() // WORLD_SIZE, opt.batch_size if opt.batch_size > 1 else 0, opt.n_workers])  # number of workers
     return loader(dataset,

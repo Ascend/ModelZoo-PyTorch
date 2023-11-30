@@ -134,30 +134,14 @@ UNet++由不同深度的U-Net组成，其解码器通过重新设计的跳接以
     ```
 
 
-2. 生成trace模型(onnx, om, ts)
+2. 生成trace模型(onnx, ts)
     ```
    首先使用本代码提供的nested_unet_pth2onnx.py替换原代码的同名脚本
    
      python3 nested_unet_pth2onnx.py ${pth_file} ${onnx_file}
    参数说明：
     --pth_file：权重文件。
-    --onnx_file：生成 onnx 文件。
-   
-     source /usr/local/Ascend/ascend-toolkit/set_env.sh
-   
-     # bs = [1, 4, 8, 16, 32, 64]
-     atc --framework=5 --model=./nested_unet.onnx --input_format=NCHW --input_shape="actual_input_1:${bs},3,96,96" --output=nested_unet_bs${bs} --log=error --soc_version=Ascend${chip_name}
-    ```
-    
-    atc命令参数说明（参数见onnx2om.sh）：
-    ```
-    --model：为ONNX模型文件。
-    --framework：5代表ONNX模型。
-    --output：输出的OM模型。
-    --input_format：输入数据的格式。
-    --input_shape：输入数据的shape。
-    --log：日志级别。
-    --soc_version：处理器型号。
+    --onnx_file：生成 onnx 文件。 
     ```
 
 3. 保存编译优化模型（非必要，可不执行。若不执行，后续执行推理脚本时需要包含编译优化过程，入参加上--need_compile）
