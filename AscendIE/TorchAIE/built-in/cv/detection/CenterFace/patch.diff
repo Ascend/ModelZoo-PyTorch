@@ -1,0 +1,19 @@
+diff --git a/src/lib/models/Backbone/centerface_mobilenet_v2_fpn.py b/src/lib/models/Backbone/centerface_mobilenet_v2_fpn.py
+index 74bcd9e..4fdafd8 100644
+--- a/src/lib/models/Backbone/centerface_mobilenet_v2_fpn.py
++++ b/src/lib/models/Backbone/centerface_mobilenet_v2_fpn.py
+@@ -1,3 +1,4 @@
++import torch
+ from torch import nn
+ import torch.utils.model_zoo as model_zoo
+ from collections import OrderedDict
+@@ -265,7 +266,8 @@ class MobileNetSeg(nn.Module):
+         ret = {}
+         for head in self.heads:
+             ret[head] = self.__getattr__(head)(x)
+-        return [ret]
++        result = torch.cat((ret['hm'], ret['wh'], ret['hm_offset'], ret['landmarks']), dim=1) # avoid torchaie partition
++        return result
+
+
+ def mobilenetv2_10(pretrained=True, **kwargs):
