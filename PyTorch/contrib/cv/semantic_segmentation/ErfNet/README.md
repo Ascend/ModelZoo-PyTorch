@@ -93,3 +93,8 @@ python demo.py
 | NPU-1p   | -        | 24.08      |
 | NPU-8p   | 71.47    | 143.15     |
 
+
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

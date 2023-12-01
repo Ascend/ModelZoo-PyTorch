@@ -177,3 +177,6 @@ LResNet100E-IR是一个目标识别网络模型，该网络提出一种新的损
 无。
 
 
+# 公网地址说明
+
+代码涉及公网地址参考 public_address_statement.md
