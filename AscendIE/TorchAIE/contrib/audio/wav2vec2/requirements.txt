@@ -1,0 +1,10 @@
+onnx==1.11.0
+onnxruntime==1.11.1
+pythainlp==3.0.8
+scipy==1.7.3
+soundfile==0.10.3.post1
+editdistance==0.6.0
+decorator==5.1.1
+sympy==1.10.1
+absl-py==1.2.0
+protobuf==3.20.*

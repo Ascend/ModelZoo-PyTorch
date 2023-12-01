@@ -212,3 +212,29 @@ Semantic Segmentation
 </table>
 
 
+
+Audio
+
+<table align="center">
+    <tr>
+        <th rowspan=2>Name</th>
+	    <th rowspan=2>Dataset</th>
+        <th align="center" colspan=2>精度</th>
+	    <th rowspan=2>310P最优性能(对应bs)</th>
+	    <th rowspan=2>输入shape</th>
+    </tr>
+    <tr>
+	    <td>Acc</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/contrib/audio/wav2vec2">  Wav2vec2 </a>
+        </td>
+        <td>LibriSpeech</td>
+	    <td>97.0%</td>
+        <td></td>
+        <td>92.25(bs8)</td>
+	    <td>bs x 100000</td>
+	</td>
+</table>
+
