@@ -43,7 +43,7 @@ class MatrixVT_Exp(BaseExp):
         optimizer = torch_npu.optim.NpuFusedAdamW(self.model.parameters(),
                                       lr=lr,
                                       weight_decay=1e-7)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 24)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [19, 23])
         return [[optimizer], [scheduler]]
 
 

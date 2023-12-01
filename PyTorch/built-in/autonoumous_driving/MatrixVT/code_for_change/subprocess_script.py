@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import subprocess
+from multiprocessing import cpu_count
 import sys
 from copy import deepcopy
 from time import sleep
@@ -125,7 +126,8 @@ class _SubprocessScriptLauncher(_Launcher):
         else:  # Script called as `python -m a.b.c`
             command = [sys.executable, "-m", __main__.__spec__.name] + sys.argv[1:]
         command_src = deepcopy(command)
-        command = ['taskset', '-c', '0-15'] + command_src
+        cpu_kernel_num = int(cpu_count() / self.num_processes / 2)
+        command = ['taskset', '-c', f'0-{cpu_kernel_num-1}'] + command_src
 
         os.environ["WORLD_SIZE"] = f"{self.num_processes * self.num_nodes}"
 
@@ -145,7 +147,7 @@ class _SubprocessScriptLauncher(_Launcher):
                     cwd = get_original_cwd()
                     os_cwd = f'"{os.getcwd()}"'
                     command += [f"hydra.run.dir={os_cwd}", f"hydra.job.name=train_ddp_process_{local_rank}"]
-            command = ['taskset', '-c', f'{local_rank * 16 * 2} - {local_rank * 16 * 2+ 15}'] + command_src
+            command = ['taskset', '-c', f'{local_rank * cpu_kernel_num}-{local_rank * cpu_kernel_num + (cpu_kernel_num-1)}'] + command_src
             subprocess.Popen(command, env=env_copy, cwd=cwd)
 
             # starting all processes at once can cause issues

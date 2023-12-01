@@ -20,8 +20,12 @@ RANK_ID_START=0
 
 # 数据集路径,保持为空,不需要修改
 data_path=""
-ckpt_path="./output/lightning_logs/version_0/19.pth"
 
+#删除outputs文件夹，不需要修改
+if [ -d ${cur_path}/outputs/ ];then
+    rm -rf ${cur_path}/outputs/
+ckpt_path="./outputs/matrixvt_bev_depth_lss_r50_256x704_128x128_24e_ema_cbgs/lightning_logs/version_0/23.pth"
+fi
 #基础参数，需要模型审视修改
 #网络名称，同目录名称
 Network="MatrixVT_for_PyTorch"
@@ -78,7 +82,7 @@ e2e_time=$(( $end_time - $start_time ))
 #结果打印，不需要修改
 echo "------------------ Final result ------------------"
 #输出性能FPS，需要模型审视修改
-step_time=`grep -o 'step_time=\s*[0-90]\+\(\.[0-9]\+\)\?\s*' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| sed 's/step_time= //g' | tail -n+2 | awk '{sum += $1} END {avg = sum / NR; print avg}'`
+step_time=`grep -o 'step_time=\s*[0-90]\+\(\.[0-9]\+\)\?\s*' $test_path_dir/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log| sed 's/step_time= //g' | tail -n 50 | awk '{sum += $1} END {avg = sum / NR; print avg}'`
 FPS=`awk 'BEGIN{printf "%d\n", '$batch_size'/'$step_time'*'$RANK_SIZE'}'`
 #排除功能问题导致计算溢出的异常，增加健壮性
 if [ x"${FPS}" == x"2147483647" ] || [ x"${FPS}" == x"-2147483647" ];then
