@@ -52,7 +52,7 @@
   | 配套                                                         | 版本    | 环境准备指导                                                 |
   | ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
   | 固件与驱动                                                   | 23.0.rc1  | [Pytorch框架推理环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/pies) |
-  | CANN                                                         | 6.3.RC1 | -                                                            |
+  | CANN                                                         | 7.0.RC1 | -                                                            |
   | Python                                                       | 3.7.5   | -                                                            |                                                           |
 
 
@@ -176,8 +176,8 @@
          参数说明：
          - --model：onnx模型路径。
          - --new_model：优化后生成的onnx模型路径。
-         - --FA_soc：使用FA算子的硬件形态。目前FlashAttention算子支持Atlas 300I Duo/Pro和Atlas 300I A2，Duo/Pro请设置参数为Duo，A2请设置参数为A2，其他不支持硬件请设置为None。默认为None。
-         - --TOME_num：插入TOME插件的数量，有效取值为[0, 5]。默认为0。Tome插件目前支持Atlas 300I Duo/Pro和Atlas 300I A2。
+         - --FA_soc：使用FA算子的硬件形态。目前FlashAttention算子支持Atlas 300I Duo/Pro，请设置参数为Duo，其他不支持硬件请设置为None。默认为None。
+         - --TOME_num：插入TOME插件的数量，有效取值为[0, 5]。Tome插件目前支持Atlas 300I Duo/Pro，其他不支持硬件请设置为0。默认为0。
 
          FA和TOME算子需通过安装与CANN版本对应的推理引擎包来获取，如未安装推理引擎或使用的版本不支持FA、TOME算子，FA_soc和TOME_num参数请使用默认配置。
 
@@ -240,17 +240,6 @@
          cd ../../
 
          # vae
-
-         # 硬件形态为A2
-         atc --framework=5 \
-             --model=./models_bs${bs}/vae/vae.onnx \
-             --output=./models_bs${bs}/vae/vae \
-             --input_format=NCHW \
-             --log=error \
-             --soc_version=Ascend${chip_name} \
-             --customize_dtypes custom_precision.cfg
-             
-         # 硬件形态为Duo
          atc --framework=5 \
              --model=./models_bs${bs}/vae/vae.onnx \
              --output=./models_bs${bs}/vae/vae \
@@ -417,10 +406,9 @@
 
 ### StableDiffusion v2.1
 
-| 硬件形态 | 迭代次数 | 平均耗时    |
-| :------: | :--: | :--------: |
-| Duo并行  |  20  |  1.322s   |
-| A2     |  20  |  0.811s   | 
+| 加速卡 | 服务器 |  运行方案 | 迭代次数 | 平均耗时    |
+| :------: | :--: | :--: | :--: | :--------: |
+| Atlas 300I Duo  |  Atlas 800 3000 + 2路处理器，处理器规格：48核3.0GHz  |  并行  |  50  |  2.047s   |
 
 迭代20次的参考精度结果如下：
 
