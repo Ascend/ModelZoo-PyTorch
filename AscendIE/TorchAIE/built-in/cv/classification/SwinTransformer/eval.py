@@ -61,7 +61,8 @@ def validate(model, args):
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
     for i, (images, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
-        pred = model(images)
+        images = images.to(f'npu:{args.device_id}')
+        pred = model(images).cpu()
         acc = compute_acc(pred, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
         avg_top5 += acc[1].item()
@@ -74,31 +75,24 @@ def validate(model, args):
 def parse_args():
     parser = argparse.ArgumentParser(description='SwinTransformer Evaluation.')
     parser.add_argument('--data_path', type=str, help='Evaluation dataset path')
-    parser.add_argument('--model_path', type=str, default='./swin_base_patch4_window12_384.ts',
+    parser.add_argument('--model_path', type=str, default='./swin_base_patch4_window12_384_aie.ts',
                         help='Original TorchScript model path')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--image_size', type=int, default=384, help='Image size')
+    parser.add_argument('--device_id', type=int, default=0, help='NPU device id')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
-    torch_aie.set_device(0)
+    torch_aie.set_device(args.device_id)
 
     model = torch.jit.load(args.model_path)
     model.eval()
+    print('Model loaded successfully.')
 
-    input_info = [torch_aie.Input((args.batch_size, 3, args.image_size, args.image_size))]
-    print('Start compiling model.')
-    compiled_model = torch_aie.compile(
-        model,
-        inputs=input_info,
-        precision_policy=_enums.PrecisionPolicy.FP16,
-        soc_version="Ascend310P3")
-    print('Model compiled successfully.')
-
-    validate(compiled_model, args)
+    validate(model, args)
 
 
 if __name__ == '__main__':
