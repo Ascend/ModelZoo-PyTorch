@@ -138,7 +138,13 @@ EspNet安装比较复杂，请参考https://espnet.github.io/espnet/installation
         
    2. 导出torchscript模型，用于编译优化。
 
-      1. 首先将export.py放在espnet根目录下，运行以下生成espnet_trace.ts
+      1. 执行以下命令修改源码
+         ```shell
+         cd espnet
+         git checkout v.0.10.5
+         patch -p1 < export_onnx.diff
+         ```
+      2. 将export.py放在espnet根目录下，运行以下生成espnet_trace.ts
          ```
          python3 export.py --model_path egs/aishell/asr1/exp/train_sp_pytorch_train_pytorch_conformer_kernel15_specaug/results/model.last10.avg.best
          ```
