@@ -1,0 +1,126 @@
+# Densenet 
+
+- [概述](#ZH-CN_TOPIC_0000001172161501)
+
+- [环境准备](#ZH-CN_TOPIC_0000001126281702)
+
+- [快速上手](#ZH-CN_TOPIC_0000001126281700)
+
+- [模型推理精度](#ZH-CN_TOPIC_0000001172201573)
+
+  ******
+
+
+
+# 概述<a name="ZH-CN_TOPIC_0000001172161501"></a>
+Densenet 针对 Resnet 的冗余结构提出了改进：让网络中的每一层和前面的所有层相连，同时把每一层设计的比较窄，使每一层学到的特征变少从而降低冗余。除了减少参数量之外，该结构还有减轻梯度消失问题、增强特征传播等优点。
+
+- 参考实现：
+
+  ```
+  url=https://github.com/pytorch/examples/tree/main/imagenet
+  ```
+
+## 输入输出数据<a name="section540883920406"></a>
+
+- 输入数据
+
+  | 输入数据 | 数据类型 | 大小                      | 数据排布格式 |
+  | -------- | -------- | ------------------------- | ------------ |
+  | input    | RGB_FP32 | batchsize x 3 x 224 x 224 | NCHW         |
+
+
+- 输出数据
+
+  | 输出数据 | 大小     | 数据类型 | 数据排布格式 |
+  | ------- | -------- | -------- | ------------ |
+  | output1  | batchsize x 1000 | FLOAT32  | ND           |
+
+
+
+# 推理环境准备<a name="ZH-CN_TOPIC_0000001126281702"></a>
+
+- 该模型需要以下依赖
+
+  **表 1**  版本配套表
+
+| 配套                    | 版本               | 
+|-----------------------|------------------| 
+| CANN                  |                  | -                                                       |
+| CANN                  | 7.0.RC1.alpha003 | -                                                       |
+| Python                | 3.9.0            |                                                           
+| PyTorch               | 2.0.1            |
+| torchVison            | 0.15.2           |-
+| Ascend-cann-torch-aie | -                
+| Ascend-cann-aie       | -                
+| 芯片类型                  | Ascend310P3      | -                                                         |
+
+# 快速上手<a name="ZH-CN_TOPIC_0000001126281700"></a>
+下载Ascend-cann-torch-aie和Ascend-cann-aie得到run包和压缩包
+## 安装Ascend-cann-aie
+ ```
+  chmod +x Ascend-cann-aie_6.3.T200_linux-aarch64.run
+  ./Ascend-cann-aie_6.3.T200_linux-aarch64.run --install
+  cd Ascend-cann-aie
+  source set_env.sh
+  ```
+## 安装Ascend-cann-torch-aie
+ ```
+ tar -zxvf Ascend-cann-torch-aie-6.3.T200-linux_aarch64.tar.gz
+ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
+ ```
+
+## 安装其他依赖
+```
+pip3 install pytorch==2.0.1
+pip3 install torchVision==0.15.2
+```
+
+
+## 准备数据集<a name="section183221994411"></a>
+
+1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+
+   本模型使用ImageNet 50000张图片的验证集，请前往ImageNet官网下载数据集
+
+    ```
+    ├── ImageNet
+    |   ├── val
+    |   |    ├── ILSVRC2012_val_00000001.JPEG
+    │   |    
+    │   |    ├── ......
+    |   ├── val_label.txt
+    ```
+
+2. 数据预处理。
+
+   ```
+   # 参考https://github.com/pytorch/examples/tree/main/imagnet/extract_ILSVRC.sh的处理。
+   执行 preprocess.sh脚本,将图片按类别分类到相同目录,会在当前路径下生成 ./imagenet/val
+   
+   ```
+## 模型推理<a name="section741711594517"></a>
+
+1. 获取权重文件。
+
+从开源仓获取权重文件[densenet121-a639ec97.pth](https://download.pytorch.org/models/densenet121-a639ec97.pth)
+
+2. 执行推理脚本
+   ```
+    python3 densenet.py --pre_trained="./resnet50-0676ba61.pth" --dataset="./imagenet/val"
+   ```
+
+
+# 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
+
+调用torch-aie推理计算，精度参考下列数据。
+
+| 芯片型号  | Batch Size | 数据集 | 精度                              | QPS  |
+|-------|------------| ---------- |---------------------------------|------|
+| 310P3 | 64         | ImageNet | top-1: 74.43% <br>top-5: 91.96% | 1081 
+| 310P3 | 32         |ImageNet| top-1: 74.43% <br>top-5: 91.96% | 1173     |
+| 310P3 | 16         |ImageNet| top-1: 74.43% <br>top-5: 91.96% |1330|
+| 310P3 | 8          |ImageNet| top-1: 74.43% <br>top-5: 91.96% |1472|
+|310P3| 4          |ImageNet| top-1: 74.43% <br>top-5: 91.96%|1585|
+|310P3| 1          |ImageNet|top-1: 74.43% <br>top-5: 91.96%|732|
+
