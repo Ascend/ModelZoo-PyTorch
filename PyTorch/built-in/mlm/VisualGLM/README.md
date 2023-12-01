@@ -50,14 +50,14 @@ VisualGLM-6B 依靠来自于 CogView 数据集的30M高质量中文图文对，�
 - 安装依赖。
   建议使用conda或者镜像环境，使用python3.7
 
-  1. 基本环境
+  ### 1. 基本环境
   在模型源码包根目录下执行命令，安装模型需要的依赖。
   ```
   conda create -n env_name python=3.7
   pip install -r requirements.txt
 
   ```
-  2. 安装deepspeed
+  ### 2. 安装deepspeed
   需要安装指定版本GCC，版本为GCC 7.5.0
 
   ```
@@ -68,16 +68,37 @@ VisualGLM-6B 依靠来自于 CogView 数据集的30M高质量中文图文对，�
 
   ```
 
-  3. 适配迁移代码
+  ### 3. 适配迁移代码
   首先通过
   ```
   pip show SwissArmyTransformer
   ```
-  找到sat的路径，设为path
-  在python安装路径，即path/sat下，找出chatglm_model.py、glm130B_model.py和rotary_embeddgins.py文件，并用code_for_change下同名文件进行替换，三个文件在sat的具体位置为：
-  sat/model/official/chatglm_model.py
-  sat/model/official/glm130B_model.py
-  sat/model/position_embedding/rotary_embeddings.py
+  复制输出的Location，设为python_path，在模型目录根目录VisualGLM下，执行：
+
+  ```
+  cp code_for_change/chatglm_model.py  python_path/sat/model/official/chatglm_model.py
+  cp code_for_change/glm130B_model.py  python_path/sat/model/official/glm130B_model.py
+  cp code_for_change/rotary_embeddings.py  python_path/sat/model/position_embedding/rotary_embeddings.py
+  ```
+  #### 注意 
+  在替换的python_path/sat/model/official/chatglm_model.py文件中，对文件中第26行的gelu_impl(x)函数，有两种实现方式：
+
+$\qquad$ **高精度模式:**
+```
+      @torch.jit.script
+      def gelu_impl(x):
+          """OpenAI's gelu implementation."""
+          return 0.5 * x * (1.0 + torch.tanh(0.7978845608028654 * x *
+                                            (1.0 + 0.044715 * x * x)))
+```
+$\qquad$ **高性能模式:**
+``` 
+      @torch.jit.script
+      def gelu_impl(x):
+          return torch.fast_gelu(x)
+```
+两种实现本质原理一致，也不会影响模型训练收敛趋势，当前默认使用高性能模式，可以根据需要选择使用。
+
 
 ## 准备预训练模型
 

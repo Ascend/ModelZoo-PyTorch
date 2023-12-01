@@ -24,7 +24,6 @@ from sat.mpu.utils import split_tensor_along_last_dim
 
 @torch.jit.script
 def gelu_impl(x):
-    """OpenAI's gelu implementation."""
     return torch.fast_gelu(x)
 
 def gelu(x):
