@@ -25,10 +25,10 @@ index 65ff0ef..67a2e71 100644
  
  class DeformRoIPoolingFunction(Function):
 diff --git a/assets/ops/dcn/modules/deform_conv.py b/assets/ops/dcn/modules/deform_conv.py
-index 50d15d1..1a31c5a 100644
+index 50d15d1..92750f6 100644
 --- a/assets/ops/dcn/modules/deform_conv.py
 +++ b/assets/ops/dcn/modules/deform_conv.py
-@@ -123,9 +123,24 @@ class ModulatedDeformConv(nn.Module):
+@@ -123,9 +123,22 @@ class ModulatedDeformConv(nn.Module):
              self.bias.data.zero_()
  
      def forward(self, x, offset, mask):
@@ -75,8 +75,23 @@ index df6e5a2..796b02f 100644
      """Constructs a ResNet-50 model with deformable conv.
      Args:
          pretrained (bool): If True, returns a model pre-trained on ImageNet
+diff --git a/structure/measurers/quad_measurer.py b/structure/measurers/quad_measurer.py
+index 8613dc6..ece8305 100644
+--- a/structure/measurers/quad_measurer.py
++++ b/structure/measurers/quad_measurer.py
+@@ -23,8 +23,8 @@ class QuadMeasurer(Configurable):
+         results = []
+         gt_polyons_batch = batch['polygons']
+         ignore_tags_batch = batch['ignore_tags']
+-        pred_polygons_batch = np.array(output[0])
+-        pred_scores_batch = np.array(output[1])
++        pred_polygons_batch = output[0]
++        pred_scores_batch = output[1]
+         for polygons, pred_polygons, pred_scores, ignore_tags in\
+                 zip(gt_polyons_batch, pred_polygons_batch, pred_scores_batch, ignore_tags_batch):
+             gt = [dict(points=polygons[i], ignore=ignore_tags[i])
 diff --git a/structure/model.py b/structure/model.py
-index 060191b..4ee5a20 100644
+index 060191b..112d7ce 100644
 --- a/structure/model.py
 +++ b/structure/model.py
 @@ -36,7 +36,7 @@ class SegDetectorModel(nn.Module):
@@ -88,6 +103,13 @@ index 060191b..4ee5a20 100644
          self.criterion = SegDetectorLossBuilder(
              args['loss_class'], *args.get('loss_args', []), **args.get('loss_kwargs', {})).build()
          self.criterion = parallelize(self.criterion, distributed, local_rank)
+@@ -63,4 +63,4 @@ class SegDetectorModel(nn.Module):
+             loss_with_metrics = self.criterion(pred, batch)
+             loss, metrics = loss_with_metrics
+             return loss, pred, metrics
+-        return pred
+\ No newline at end of file
++        return pred
 diff --git a/structure/representers/seg_detector_representer.py b/structure/representers/seg_detector_representer.py
 index a962ca1..18af012 100644
 --- a/structure/representers/seg_detector_representer.py

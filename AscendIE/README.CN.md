@@ -87,11 +87,11 @@ CV-detection
         <a href="https://gitee.com/ascend/ModelZoo-PyTorch/tree/master/AscendIE/TorchAIE/built-in/cv/detection/DBNet_MhLiao">  DBNet_MhLiao </a>
         </td>
         <td>ICDAR2015</td>
-	<td> 0.887 </td>
-        <td>0.804</td>
-        <td>0.843</td>
-    <td> 10.94(bs1)</td>
-	<td> 1 x 3 x 736 x 1280 </td>
+	<td> 0.885 </td>
+        <td>0.803</td>
+        <td>0.842</td>
+    <td> 24 </td>
+	<td> bs x 3 x 736 x 1280 </td>
     </tr>
     <tr>
         <td>

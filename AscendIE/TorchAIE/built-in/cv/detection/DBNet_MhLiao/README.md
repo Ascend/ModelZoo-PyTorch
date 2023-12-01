@@ -19,18 +19,18 @@
 
   | 输入数据 | 数据类型 | 大小                 | 数据排布 |
   | ------- | -------- | ------------------- | ------- |
-  | input   |          | bs x 3 x 736 x 1280 | NCHW    |
+  | input   | Float16 | bs x 3 x 736 x 1280 | NCHW    |
 
 - 输出数据
   
   | 输出数据 | 数据类型 | 大小                 | 数据排布 |
   | ------- | -------- | ------------------- | ------- |
-  | output  | Float32  | bs x 1 x 736 x 1280 | ND      |
+  | output  | Float16  | bs x 1 x 736 x 1280 | ND      |
 
 ## 环境准备 <a name="ENV_PREPARE"></a>
 | 配套                   | 版本            | 
 |-----------------------|-----------------| 
-| CANN                  | 6.3.RC2.alph002 |
+| CANN                  | 7.0.T10 |
 | Python                | 3.9        |                                                           
 | Torch+cpu             | 2.0.1           |
 | torchVison            | 0.15.2          | 
@@ -44,14 +44,13 @@
   git clone https://github.com/MhLiao/DB 
   cd DB
   git reset 4ac194d0357fd102ac871e37986cb8027ecf094e --hard
-  pip3 install -r requirements.txt
+  pip3 install -r requirement.txt
   ```
 - 获取运行脚本和环境  
-  下载本仓的 db.diff 和 dbnet_compile_run.py 到上方获取的 DB 路径里
+  下载本仓的 patch.diff 和 dbnet_compile_run.py 到上方获取的 DB 路径里
   ```
-  dos2unix db.diff
-  dos2unix ./backbones/resnet.py
-  patch -p1 < db.diff
+  dos2unix backbones/resnet.py
+  patch -p1 < patch.diff
   ```
 - 获取权重文件  
   权重文件同样需要在 DB 路径下存放
@@ -64,15 +63,15 @@
 #### 安装CANN包
 
 ```
-chmod +x Ascend-cann-toolkit_6.3.RC2.alpha002_linux-aarch64.run 
-./Ascend-cann-toolkit_6.3.RC2.alpha002_linux-aarch64.run --install
+chmod +x Ascend-cann-toolkit_{version}_linux-{arch}.run 
+./Ascend-cann-toolkit_{version}_linux-{arch}.run --install
 ```
 
 #### 安装推理引擎
 
 ```
-chmod +x Ascend-cann-aie_6.3.T200_linux-aarch64.run
-Ascend-cann-aie_6.3.T200_linux-aarch64.run --install
+chmod +x Ascend-cann-aie_{version}_linux-{arch}.run
+Ascend-cann-aie_{version}_linux-{arch}.run --install
 cd Ascend-cann-aie
 source set_env.sh
 ```
@@ -80,8 +79,8 @@ source set_env.sh
 #### 安装torch—aie
 
 ```
-tar -zxvf Ascend-cann-torch-aie-6.3.T200-linux_aarch64.tar.gz
-pip3 install torch-aie-6.3.T200-linux_aarch64.whl
+tar -zxvf Ascend-cann-torch-aie-{version}-linux_{arch}.tar.gz
+pip3 install torch-aie-{version}-linux_{arch}.whl
 ```
 
 ## 准备数据集 <a name="DATASET_PREPARE"></a>
@@ -90,10 +89,12 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
     url=https://rrc.cvc.uab.es/?ch=4&com=downloads
   ```
   这里我们使用的 ICDAR2015 的500张图片的测试数据集和标注。从链接中下载 Test Set Images 数据集和 Test Set Ground Truth 并根据下方排布对数据集进行处理。
+> 提示：请遵循数据集提供方要求使用。
+
 - 数据集格式
   ```
     ├── datasets
-    |   ├── icdar2015_images
+    |   ├── icdar2015
     |   |   ├── test_images
     |   |   |    ├── img_1.jpg
     |   │   |    
@@ -118,15 +119,20 @@ pip3 install torch-aie-6.3.T200-linux_aarch64.whl
 
 - trace并compile 并运行 AIE模型
   ```
-    python3 dbnet_compile_run.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume ./ic15_resnet50 --trace_compile
+  python3 dbnet_compile_run.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume ./ic15_resnet50 --batch_size 1 --device 0 --trace_compile
   ```
 
 - load 并运行 AIE模型
   ```
-    python3 dbnet_compile_run.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume ./ic15_resnet50
+  python3 dbnet_compile_run.py experiments/seg_detector/ic15_resnet50_deform_thre.yaml --resume ./ic15_resnet50 --batch_size 1 --device 0 
   ```
 
 ## 模型推理性能&精度 <a name="INFER_PERFORM"></a>
-| 芯片型号 | Batch Size | 数据集    | 性能 | 精度 |
-|---------|------------|-----------|------|------|
-| 310P3   | 1          | ICDAR2015 | 10.94qps | 0.887 |
+| 芯片型号 | Batch Size | 数据集    | 同步性能 | 异步性能(含H2D/D2H) | 精度 |
+|---------|------------|-----------|------|------|------|
+| 310P3   | 1          | ICDAR2015 | 23 | 22 | 0.8858 |
+| 310P3   | 4          | ICDAR2015 | 24 | 23 | 0.8858 |
+| 310P3   | 8          | ICDAR2015 | 24 | 24 | 0.8865 |
+| 310P3   | 16         | ICDAR2015 | 24 | 24 | 0.8865 |
+| 310P3   | 32         | ICDAR2015 | 24 | 24 | 0.8833 |
+| 310P3   | 64         | ICDAR2015 | 24 | 24 | 0.8832 |
