@@ -1,0 +1,13 @@
+diff --git a/src/model/__init__.py b/src/model/__init__.py
+index f1a1e03..2ba2c3d 100644
+--- a/src/model/__init__.py
++++ b/src/model/__init__.py
+@@ -35,7 +35,7 @@ class Model(nn.Module):
+         )
+         print(self.model, file=ckp.log_file)
+
+-    def forward(self, x, idx_scale):
++    def forward(self, x, idx_scale=0):
+         self.idx_scale = idx_scale
+         if hasattr(self.model, 'set_scale'):
+             self.model.set_scale(idx_scale)
