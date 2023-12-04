@@ -25,7 +25,7 @@ def export_torch_aie(opt_args):
 
     torch_aie.set_device(0)
     inputs = []
-    inputs.append(torch_aie.Input((opt_args.batch_size, 3, 640, 640)))
+    inputs.append(torch_aie.Input((opt_args.batch_size, 200)))
     torchaie_model = torch_aie.compile(
         trace_model,
         inputs=inputs,
@@ -38,15 +38,15 @@ def export_torch_aie(opt_args):
         soc_version=opt_args.soc_version,
         optimization_level=0)
     suffix = os.path.splitext(opt_args.torch_script_path)[-1]
-    saved_name = os.path.basename(opt_args.torch_script_path).split('.')[0] + f"_torch_aie" + suffix
+    saved_name = os.path.basename(opt_args.torch_script_path).split('.')[0] + f"_torch_aie_bs{opt.batch_size}" + suffix
     torchaie_model.save(os.path.join(opt_args.save_path, saved_name))
     print("torch aie yolov3 compiled done. saved model is ", os.path.join(opt_args.save_path, saved_name))
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--torch_script_path', type=str, default='./yolov3.torchscript.pt', help='trace model path')
+    parser.add_argument('--torch_script_path', type=str, default='./fastpitch.torchscript.pt', help='trace model path')
     parser.add_argument('--soc_version', type=str, default='Ascend310P3', help='soc version')
-    parser.add_argument('--batch_size', type=int, default=4, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=1, help='batch size')
     parser.add_argument('--save_path', type=str, default='./', help='compiled model path')
     opt_args = parser.parse_args()
     return opt_args
