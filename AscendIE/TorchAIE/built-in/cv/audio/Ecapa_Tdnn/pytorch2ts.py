@@ -21,7 +21,7 @@ from torch import optim
 from functools import partial
 
 
-def pth2onnx(checkpoint, output_file):
+def pth2ts(checkpoint, output_file):
     device = torch.device('cpu')
     model = ECAPA_TDNN(1211, device).to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-5, weight_decay=2e-5)
@@ -38,4 +38,4 @@ def pth2onnx(checkpoint, output_file):
 if __name__ == "__main__":
     checkpoint = sys.argv[1]
     save_path = sys.argv[2]
-    pth2onnx(checkpoint, save_path)
+    pth2ts(checkpoint, save_path)
