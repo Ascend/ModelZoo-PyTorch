@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
 import argparse
 import torch
 import torch_aie
+
 from torch_aie import _enums
 
 
