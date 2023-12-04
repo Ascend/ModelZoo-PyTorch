@@ -19,6 +19,7 @@ import torch
 import torch_aie
 from torch_aie import _enums
 
+
 def export_torch_aie(opt_args):
     trace_model = torch.jit.load(opt_args.torch_script_path)
     trace_model.eval()
