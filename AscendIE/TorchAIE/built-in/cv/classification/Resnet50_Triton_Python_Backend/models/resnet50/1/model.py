@@ -55,6 +55,7 @@ class TritonPythonModel:
         self.device = "cuda" if args["model_instance_kind"] == "GPU" else "cpu"
 
         # Get npu device id
+        device_id = 0
         device_id = json.loads(args["model_instance_device_id"])
         if device_id is not None:
             print(f"user npu:{device_id}")
