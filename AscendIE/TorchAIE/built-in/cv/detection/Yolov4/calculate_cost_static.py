@@ -20,7 +20,7 @@ if __name__ == '__main__':
     opts = parse_args()
     
     ts_model = torch.jit.load(opts.ts_model)
-    input_info = [torch_aie.Input((opts.batch_size,3,608,608))]
+    input_info = [torch_aie.Input((opts.batch_size, 3, 608, 608))]
     torch_aie.set_device(0)
     torchaie_model = torch_aie.compile(
         ts_model,
@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     inference_time = []
     for _ in tqdm(range(0,infer_times)):
-        dummy_input = np.random.randn(opts.batch_size,3,608,608).astype(np.float16)
+        dummy_input = np.random.randn(opts.batch_size, 3, 608, 608).astype(np.float16)
         dummy_input = torch.Tensor(dummy_input)
         input_npu = dummy_input.to("npu:0")
 

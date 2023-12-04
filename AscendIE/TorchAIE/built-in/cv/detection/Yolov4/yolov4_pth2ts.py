@@ -11,6 +11,7 @@ def transform_to_ts(weight_file, batch_size, n_classes, IN_IMAGE_H, IN_IMAGE_W):
 
     pretrained_dict = torch.load(weight_file, map_location=torch.device('cpu'))
     model.load_state_dict(pretrained_dict)
+    model.eval()
 
     ts_file_name = "yolov4_{}_3_{}_{}.ts".format(batch_size, IN_IMAGE_H, IN_IMAGE_W)
     # Export the model

@@ -35,6 +35,7 @@ def aie_infer_preprocessed(opts):
     ts_model = torch.jit.load(opts.ts_model_path).eval()
     input_info = [torch_aie.Input((opts.batch_size, 3, 608, 608))]
 
+    print('start compile model')
     torchaie_model = torch_aie.compile(
         ts_model,
         inputs=input_info,
@@ -43,12 +44,13 @@ def aie_infer_preprocessed(opts):
         soc_version='Ascend310P3',
         optimization_level=opts.optimization_level
     )
+    print('model compile success!')
 
     for file in tqdm(in_files):
         img0 = cv2.imread(file)
         resized = cv2.resize(img0, (608, 608), interpolation=cv2.INTER_LINEAR)
-        img_in = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB) / 255
-        img_in = np.transpose(img_in, (2, 0, 1))
+        img_in = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+        img_in = np.transpose(img_in, (2, 0, 1)).astype(np.float32) / 255.0
 
         img_in = np.expand_dims(img_in, axis=0)
 
@@ -58,7 +60,7 @@ def aie_infer_preprocessed(opts):
         output = torchaie_model(model_input)
         temp_name = file[file.rfind('/') + 1:]
         for i in range(len(output)):
-            output[i] = output[i].numpy()
+            output[i] = output[i].to('cpu').numpy()
             output[i].tofile(os.path.join(opts.output_path, f'{os.path.splitext(os.path.basename(temp_name))[0]}_{i}.bin'))
 
 
