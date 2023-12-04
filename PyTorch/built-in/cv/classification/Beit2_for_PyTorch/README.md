@@ -27,20 +27,16 @@ BEiT v2是基于矢量量化视觉标记的掩码图像模型
   code_path=PyTorch/built-in/cv/classification/Beit2_for_PyTorch
   ```
 
-拉取模型代码到本地并下载bpe_simple_vocab_16e6.txt.gz和vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth：
+拉取模型代码到本地并下载bpe_simple_vocab_16e6.txt.gz：
+
 ```
-mkdir /code
-cd  /code
-git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
+    git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
 
-cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch/vqkd_teacher/clip/
-wget https://github.com/microsoft/unilm/blob/master/beit2/vqkd_teacher/clip/bpe_simple_vocab_16e6.txt.gz
+    cd PyTorch/built-in/cv/classification/Beit2_for_PyTorch/vqkd_teacher/clip/
+    wget https://github.com/microsoft/unilm/blob/master/beit2/vqkd_teacher/clip/bpe_simple_vocab_16e6.txt.gz
 
-cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch/
-mkdir tokenizer_model
-cd tokenizer_model
-wget https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D
-
+    cd ../..
+    mkdir result
 ```
 
 # 准备训练环境
@@ -80,18 +76,15 @@ wget https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd
     pip install torch_npu-2.1.0.post20231115-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64
 
     # install other packages
-    cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch/
     pip install -r requirements.txt 
 ```
 
 ## 准备数据集
-
-   下载训练数据集coco2017
-
-      mkdir /dataset
+```
+    mkdir /dataset
+```
    数据集下载路径：https://www.kaggle.com/datasets/awsaf49/coco-2017-dataset?resource=download-directory
-  
-
+   
    下载并解压后将coco2017文件夹放到/dataset 下
 
    目录结构参考如下：
@@ -104,52 +97,59 @@ wget https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd
       ├── 000000000030.jpg
           ...
    ```
+## 准备权重文件
+```
+mkdir tokenizer_model
+cd tokenizer_model
+wget https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/vqkd_encoder_base_decoder_3x768x12_clip-d5036aa7.pth?sv=2021-10-04&st=2023-06-08T11%3A16%3A02Z&se=2033-06-09T11%3A16%3A00Z&sr=c&sp=r&sig=N4pfCVmSeq4L4tS8QbrFVsX6f6q844eft8xSuXdxU48%3D
+cd ..
+```
 
 # 开始训练
 
 ## 训练模型
 
-1. 进入解压后的源码包根目录。
-
-   ```
-   cd /code/PyTorch/built-in/cv/classification/Beit2_for_PyTorch
-   ```
-1. 修改pretraining.sh
+- 修改pretraining.sh
 
    ```
     # 修改此处的xxxx为CANN包安装路径
     source  /xxxx/ascend-toolkit/set_env.sh
     # 修改数据集路径
-    data_path=/dataset/coco2017
+    data_path=./dataset/coco2017
+    output_dir=./result
+    log_dir=./result
+
    ```
    
    其他参数说明如下。
    
 
    ```
-   公共参数：
-   --epochs                                      //训练总迭代数
-   --batch_size                                //每个epoch中iteration个数
-   --model                                        //待训练模型名称
-   --log_dir                                      // log 存放路径
-   --output_dir                                // path where to save, empty for no saving
-   --data_path                                //数据集路径
-   --layer_scale_init_value            //0.1 for base, 1e-5 for large. set 0 to disable layer scale
-   --num_mask_patches                //number of the visual tokens/patches need be masked
-   --input_size                                //images input size for backbone
-    --second_input_size                //images input size for discrete vae
-    --drop_path                                //Drop path rate (default: 0.1)
+    公共参数：
+    --epochs                              //训练总迭代数
+    --batch_size                          //每个epoch中iteration个数
+    --model                               //待训练模型名称
+    --log_dir                             // log 存放路径
+    --output_dir                          // path where to save, empty for no saving
+    --data_path                           //数据集路径
+    --layer_scale_init_value              //0.1 for base, 1e-5 for large. set 0 to disable layer scale
+    --num_mask_patches                    //number of the visual tokens/patches need be masked
+    --input_size                          //images input size for backbone
+    --second_input_size                   //images input size for discrete vae
+    --drop_path                           //Drop path rate (default: 0.1)
+
    ```
 
 
-3. 运行训练脚本。
+- 运行训练脚本
+
    该模型预训练支持单机8卡训练。
 
    ```
    bash ./pretraining.sh
    ```
 
-# 训练结果展示
+## 训练结果展示
 
 **表 2**  训练结果展示表
 
