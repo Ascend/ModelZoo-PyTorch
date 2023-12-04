@@ -1,0 +1,191 @@
+diff --git a/src/python_be.cc b/src/python_be.cc
+index fbd65a4995ac4d5cf495f687521e82d072686e9a..3003ce97dab85f790872b47e6c5af6c14679262c 100644
+--- a/src/python_be.cc
++++ b/src/python_be.cc
+@@ -35,6 +35,15 @@ ModelInstanceState::ModelInstanceState(
+     : BackendModelInstance(model_state, triton_model_instance)
+ {
+   log_thread_ = false;
++  if (Kind() != TRITONSERVER_INSTANCEGROUPKIND_CPU) {
++    THROW_IF_BACKEND_INSTANCE_ERROR(
++      TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INVALID_ARG,
++      std::string("To support NPU, please set instance group kind to CPU.")
++      .c_str())
++    );
++  }
++
++  THROW_IF_BACKEND_INSTANCE_ERROR(model_state->GetInstanceDeviceId(device_));
+ }
+ 
+ TRITONSERVER_Error*
+@@ -213,6 +222,11 @@ ModelInstanceState::SendMessageToStub(
+   return nullptr;  // success
+ }
+ 
++int32_t ModelInstanceState::GetNPUId()
++{
++  return device_;
++}
++
+ TRITONSERVER_Error*
+ ModelInstanceState::ReceiveMessageFromStub(
+     bi::managed_external_buffer::handle_t& message)
+@@ -394,7 +408,7 @@ ModelInstanceState::LaunchStubProcess()
+ {
+   ModelState* model_state = reinterpret_cast<ModelState*>(Model());
+   Stub() = std::make_unique<StubLauncher>(
+-      "MODEL_INSTANCE_STUB", Name(), DeviceId(),
++      "MODEL_INSTANCE_STUB", Name(), device_,
+       TRITONSERVER_InstanceGroupKindString(Kind()));
+   RETURN_IF_ERROR(Stub()->Initialize(model_state));
+   RETURN_IF_ERROR(Stub()->Setup());
+@@ -1463,10 +1477,86 @@ ModelState::Create(TRITONBACKEND_Model* triton_model, ModelState** state)
+   }
+ 
+   RETURN_IF_ERROR((*state)->ValidateModelConfig());
++  RETURN_IF_ERROR((*state)->ParseParameters());
+ 
+   return nullptr;  // success
+ }
+ 
++TRITONSERVER_Error* ModelState::ParseParameters()
++{
++  // Parse the config file to obtain the NPU device ID configuration of different instances.
++  triton::common::TritonJson::Value params;
++  bool status = model_config_.Find("parameters", &params);
++  if (!status) {
++    return TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INTERNAL,
++      std::string("Failed to find NPU device id.").c_str());
++  }
++
++  triton::common::TritonJson::Value ios;
++  RETURN_IF_ERROR(ModelConfig().MemberAsArray("instance_group", &ios));
++  for (size_t i = 0; i < ios.ArraySize(); ++i) {
++    triton::common::TritonJson::Value instance_group_para;
++    RETURN_IF_ERROR(ios.IndexAsObject(i, &instance_group_para));
++
++    uint64_t count;
++    RETURN_IF_ERROR(instance_group_para.MemberAsUInt("count", &count));
++    std::string device_config;
++    std::vector<int32_t> group_id;
++
++    try {
++      std::string dkey = "ASCEND_GROUP_";
++      dkey.append(std::to_string(i));
++      RETURN_IF_ERROR(GetParameterValue(params, dkey, &device_config));
++      char delim = ',';
++      size_t start_pos = 0;
++      size_t end_pos = device_config.find(delim, start_pos);
++      while (end_pos != device_config.npos) {
++        group_id.emplace_back(std::stoi(device_config.substr(start_pos, end_pos)));
++        start_pos = end_pos + 1;
++        end_pos = device_config.find(delim, start_pos);
++      }
++      if (start_pos < device_config.size()) {
++        group_id.emplace_back(std::stoi(device_config.substr(start_pos, device_config.size())));
++      }
++    }
++    catch (std::exception& ex) {
++      return TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INTERNAL, (
++        "Failed to convert NPU device id information: " + device_config).c_str());
++    }
++
++    if ((group_id.size() == 0 && count！= 0)
++        || (group_id.size() != 0 && count % group_id.size() != 0)) {
++          return TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INTERNAL,
++            ("The instance count " + std::to_string(count)
++            + std::string(" and device id ") + device_config
++            + " do not match.").c_str());
++    }
++
++    for (size_t i = 0; i < count; ++i) {
++      devices_.push_back(group_id[i % group_id.size()]);
++    }
++  }
++  return nullptr;
++}
++
++TRITONSERVER_Error*
++ModelState::GetInstanceDeviceId(int32_t& device)
++{
++  {
++    std::unique_lock<std::mutex> lck(mutex_);
++    if (model_count_ >= devices_.size()) {
++      return TRITONSERVER_ErrorNew(
++        TRITONSERVER_ERROR_INTERNAL,
++        std::string("Failed to load model '" + Name()
++                  + "' instance.").c_str()
++      );
++    }
++    device = devices_[model_count_];
++    model_count_++;
++  }
++  return nullptr;
++}
++
+ ModelState::ModelState(TRITONBACKEND_Model* triton_model)
+     : BackendModel(triton_model, true /* allow_optional */)
+ {
+@@ -1853,13 +1943,6 @@ TRITONBACKEND_ModelInstanceInitialize(TRITONBACKEND_ModelInstance* instance)
+   TRITONSERVER_InstanceGroupKind kind;
+   RETURN_IF_ERROR(TRITONBACKEND_ModelInstanceKind(instance, &kind));
+ 
+-  LOG_MESSAGE(
+-      TRITONSERVER_LOG_INFO,
+-      (std::string("TRITONBACKEND_ModelInstanceInitialize: ") + name + " (" +
+-       TRITONSERVER_InstanceGroupKindString(kind) + " device " +
+-       std::to_string(device_id) + ")")
+-          .c_str());
+-
+   TRITONBACKEND_Model* model;
+   RETURN_IF_ERROR(TRITONBACKEND_ModelInstanceModel(instance, &model));
+ 
+@@ -1878,7 +1961,7 @@ TRITONBACKEND_ModelInstanceInitialize(TRITONBACKEND_ModelInstance* instance)
+       TRITONSERVER_LOG_VERBOSE,
+       (std::string("TRITONBACKEND_ModelInstanceInitialize: instance "
+                    "initialization successful ") +
+-       name + " (device " + std::to_string(device_id) + ")")
++       name + " (device " + std::to_string(instance_state->GetNPUId()) + ")")
+           .c_str());
+ 
+   return nullptr;
+diff --git a/src/python_be.h b/src/python_be.h
+index bdb35b571fa87199eb48fd36284a221104570ce0..58aac598c2197e76f5b4a82165855cd126bb436a 100644
+--- a/src/python_be.h
++++ b/src/python_be.h
+@@ -241,13 +241,19 @@ class ModelState : public BackendModel {
+   // Auto-complete stub
+   std::unique_ptr<StubLauncher>& Stub() { return auto_complete_stub_; }
+ 
++  TRITONSERVER_Error* GetInstanceDeviceId(int32_t& device);
++
+  private:
+   ModelState(TRITONBACKEND_Model* triton_model);
++  TRITONSERVER_Error* ParseParameters();
+   BackendState* backend_state_;
+   std::string python_execution_env_;
+   bool force_cpu_only_input_tensors_;
+   bool decoupled_;
+   std::unique_ptr<StubLauncher> auto_complete_stub_;
++  std::mutex mutex_;
++  std::vector<int32_t> devices_;
++  size_t model_count_ = 0;
+ };
+ 
+ class ModelInstanceState : public BackendModelInstance {
+@@ -271,6 +277,7 @@ class ModelInstanceState : public BackendModelInstance {
+   std::unique_ptr<IPCMessage> received_message_;
+   std::vector<std::future<void>> futures_;
+   std::unique_ptr<boost::asio::thread_pool> thread_pool_;
++  int32_t device_;
+ 
+  public:
+   static TRITONSERVER_Error* Create(
+@@ -366,5 +373,7 @@ class ModelInstanceState : public BackendModelInstance {
+ 
+   // Start the log monitor thread
+   void StartLogMonitor();
++
++  int32_t GetNPUId();
+ };
+ }}}  // namespace triton::backend::python
