@@ -20,10 +20,10 @@ from ECAPA_TDNN.main import ECAPA_TDNN, load_checkpoint
 from torch import optim
 from functools import partial
 
-
+NUM_SPEAKERS = 1211
 def pth2ts(checkpoint, output_file):
     device = torch.device('cpu')
-    model = ECAPA_TDNN(1211, device).to(device)
+    model = ECAPA_TDNN(NUM_SPEAKERS, device).to(device)
     optimizer = optim.Adam(model.parameters(), lr=1e-5, weight_decay=2e-5)
     model, optimizer, step = load_checkpoint(model, optimizer, checkpoint, rank='cpu')
     model.forward = partial(model.forward, infer=True)

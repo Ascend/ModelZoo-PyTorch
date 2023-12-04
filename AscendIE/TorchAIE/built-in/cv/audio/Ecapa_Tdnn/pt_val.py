@@ -32,7 +32,7 @@ def load_meta(dataset, keyword='vox1'):
         test_meta = struct_meta(wav_files_test)
     return  test_meta
 
-def get_dataloader(keyword='vox1', t_thres=19, batchsize = 16, dataset = "VoxCeleb1"):
+def get_dataloader(keyword='vox1', t_thres=19, batchsize=16, dataset="VoxCeleb1"):
     test_meta = load_meta(dataset, keyword)
     test_meta_ = [meta for meta in (test_meta) if meta[2] < t_thres]
     test_meta = reduce_meta(test_meta_, speaker_num=-1)
@@ -66,7 +66,7 @@ def main(opt):
             optimization_level=0)
 
     # load dataset
-    dataloader, test_speakers = get_dataloader('vox1', 19, opt.batch_size, dataset=opt.data_path)
+    dataloader, _ = get_dataloader('vox1', 19, opt.batch_size, dataset=opt.data_path)
     # inference & nms
     pred_results = forward_nms_script(model, dataloader, opt.batch_size, opt.device_id)
     output_folder = f"result/output_bs{opt.batch_size}"
