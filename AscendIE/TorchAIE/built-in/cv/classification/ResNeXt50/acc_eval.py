@@ -47,7 +47,7 @@ def validate(model, args):
     val_dataset = datasets.ImageFolder(
         args.data_path,
         transforms.Compose([
-            transforms.Resize([img_resize, img_resize], interpolation=InterpolationMode.BICUBIC),
+            transforms.Resize([img_resize, img_resize], interpolation=InterpolationMode.BILINEAR),
             transforms.CenterCrop([img_centercrop, img_centercrop]),
             transforms.ToTensor(),
             transforms.Normalize(mean=mean, std=std),
@@ -62,7 +62,8 @@ def validate(model, args):
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
     for i, (images, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
-        pred = model(images)
+        images = images.to('npu:0')
+        pred = model(images).to('cpu')
         acc = compute_acc(pred, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
         avg_top5 += acc[1].item()
@@ -100,18 +101,32 @@ def main():
 
     torch_aie.set_device(0)
 
-    model = torch.jit.load(args.model_path)
-    model.eval()
+    ts_model = torch.jit.load(args.model_path).eval()
 
     input_info = [torch_aie.Input((args.batch_size, 3, args.image_size, args.image_size))]
     print('Start compiling model.')
     compiled_model = torch_aie.compile(
-        model,
+        ts_model,
         inputs=input_info,
         precision_policy=_enums.PrecisionPolicy.FP16,
         allow_tensor_replace_int=True,
         soc_version="Ascend310P3")
     print('Model compiled successfully.')
+
+    # print('Start export om model')
+    # torch_aie.export_engine(ts_model,
+    #                         "forward",
+    #                         "resnext_pt.om",
+    #                         inputs=input_info,
+    #                         precision_policy=torch_aie.PrecisionPolicy.FP16,
+    #                         truncate_long_and_double=True,
+    #                         require_full_compilation=False,
+    #                         allow_tensor_replace_int=False,
+    #                         min_block_size=3,
+    #                         torch_executed_ops=[],
+    #                         soc_version="Ascend310P3",
+    #                         optimization_level=0)
+    # print('Export om model successfully.')
 
     validate(compiled_model, args)
 
