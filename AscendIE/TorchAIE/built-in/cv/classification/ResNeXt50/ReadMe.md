@@ -168,7 +168,7 @@ bash valprep.sh
    
 5. 运行结束后，可以看到命令行打印如下信息，说明 top1 和 top5 精度分别为 71.35% 和 90.502%。
     ```
-    top1 is 71.35, top5 is 90.502, step is 50000
+    top1 is 77.394, top5 is 93.63, step is 50000
     ```
    
 6. 如果需要更高精度，可以尝试修改精度评估脚本acc_eval.py中的数据前处理部分，例如修改数据normalize的标准差std的值来进行调整。
