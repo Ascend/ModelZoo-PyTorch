@@ -13,9 +13,6 @@
 # limitations under the License.
 
 import os
-import yaml
-import json
-import cv2
 import argparse
 import numpy as np
 import torch
@@ -45,8 +42,7 @@ def get_dataloader(keyword='vox1', t_thres=19, batchsize = 16, dataset = "VoxCel
                               shuffle=False, num_workers=1,
                               collate_fn=partial(collate_function,
                                                  speaker_table=test_speakers,
-                                                #  max_mel_length=MAX_MEL_LENGTH),
-                                                max_mel_length=10),
+                                                 max_mel_length=200),
                               drop_last=True)
     return dataset_test, test_speakers
 
@@ -56,7 +52,7 @@ def main(opt):
     torch_aie.set_device(opt.device_id)
     if opt.need_compile:
         inputs = []
-        inputs.append(torch_aie.Input((opt.batch_size, 80, 10)))
+        inputs.append(torch_aie.Input((opt.batch_size, 80, 200)))
         model = torch_aie.compile(
             model,
             inputs=inputs,
@@ -77,11 +73,9 @@ def main(opt):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     for index, res in enumerate(pred_results):
-        # print("res", res)
         for i, r in enumerate(res):
             result_fname = 'mels' + str(index * opt.batch_size + i + 1) + '_0.bin'
             np.array(r.numpy().tofile(os.path.join(output_folder, result_fname)))
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='YOLOv3 offline model inference.')
     parser.add_argument('--data_path', type=str, default="VoxCeleb1", help='root dir for val images and annotations')

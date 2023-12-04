@@ -14,30 +14,22 @@
 
 import torch
 import torch_aie
-import numpy as np
 import time
-import os
-import cv2
 from tqdm import tqdm
-from torch_aie import _enums
-
-from pathlib import Path
-
 
 def forward_nms_script(model, dataloader, batchsize, device_id):
     pred_results = []
     inference_time = []
     loop_num = 0
-    for img, _, _ in tqdm(dataloader):
-        img = img.contiguous()
+    for snd, _, _ in tqdm(dataloader):
+        snd = snd.contiguous()
 
         # pt infer
-        result, inference_time = pt_infer(model, img, device_id, loop_num, inference_time)
+        result, inference_time = pt_infer(model, snd, device_id, loop_num, inference_time)
         pred_results.append(result)
         loop_num += 1
-    # print(batchsize, inference_time)
     avg_inf_time = sum(inference_time) / len(inference_time) / batchsize * 1000
-    print('性能(毫秒)：', avg_inf_time)
+    print('performance(ms)：', avg_inf_time)
     print("throughput(fps): ", 1000 / avg_inf_time)
 
     return pred_results

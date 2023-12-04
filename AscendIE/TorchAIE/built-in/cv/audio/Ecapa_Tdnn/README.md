@@ -116,8 +116,8 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
 
 2. 生成trace模型(ts)
     ```
-     使用与本README同目录的pytorch2onnx.py替换掉原工程同名文件
-     python3 pytorch2onnx.py checkpoint ecapa_tdnn.onnx 
+     将pytorch2ts.py放在pytorch2onnx.py同一目录下
+     python3 pytorch2ts.py checkpoint ecapa_tdnn.torchscript.pt
     ```
 
 3. 保存编译优化模型（非必要，可不执行。后续执行的推理脚本包含编译优化过程）
@@ -136,7 +136,7 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
 
 4. 执行推理脚本（包括性能验证）
 
-    将pt_val.py放在./yolov3下，model_pt.py放在./yolov3/common/util下
+    将pt_val.py与model_pt.py放在Ecapa_Tdnn下
      ```
       python pt_val.py --batch_size=64 --model="ecapa_tdnn_torch_aie_bs64.pt"
      ```
@@ -159,17 +159,17 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
 ```
     --result/output_bs1：为推理结果所在路径
     --speaker：为标签数据所在路径
-    --4：batch size
-    --4648：样本总数
+    --1（脚本内）：batch size
+    --4648（脚本内）：样本总数
 ```
 
 **表 2** ecapa_tdnn模型精度
 
-| batchsize                                      | aie性能     | aie精度  |
-|------------------------------------------------|-----------|--------|
-| bs1                                            | 894.4216  | 0.9856 |
-| bs4                                            | 2674.6597 | 0.9865 |
-| bs8                                            | 3686.8627 | /      |
-| bs16                                           | 692.3013  | /      |
-| bs32                                           | 1358.1562 | /      |
-| bs64                                           | 2645.4167 | /      |
+| batchsize                                      | aie性能    | aie精度   |
+|------------------------------------------------|----------|---------|
+| bs1                                            | 449.1879 | 0.99905 |
+| bs4                                            | 877.4901 | 0.99909 |
+| bs8                                            | 904.0024 | /       |
+| bs16                                           | 881.0279 | /       |
+| bs32                                           | 863.7933 | /       |
+| bs64                                           | 774.4264 | /       |
