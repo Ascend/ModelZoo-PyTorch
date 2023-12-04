@@ -184,9 +184,8 @@ def main():
             generator = torch.jit.script(generator)
     else:
         generator = None
-    bs = args.batch_size
 
-    text_padded = torch.LongTensor(bs, 200)
+    text_padded = torch.LongTensor(1, 200)
     text_padded.zero_()
     pth2ts(model=generator, dummy_input=text_padded, output_file=f"fastpitch.torchscript.pt")
 
