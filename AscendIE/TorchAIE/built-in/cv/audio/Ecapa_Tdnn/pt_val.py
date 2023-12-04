@@ -19,7 +19,7 @@ import torch
 import torch_aie
 from torch_aie import _enums
 from glob import glob
-from ECAPA_TDNN.prepare_batch_loader import struct_meta, write_to_csv, read_from_csv, reduce_meta, build_speaker_dict, collate_function
+from ECAPA_TDNN.prepare_batch_loader import struct_meta, reduce_meta, build_speaker_dict, collate_function
 from torch.utils.data import DataLoader
 from functools import partial
 from model_pt import forward_nms_script
