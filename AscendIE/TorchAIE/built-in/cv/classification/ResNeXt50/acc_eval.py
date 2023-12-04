@@ -113,21 +113,6 @@ def main():
         soc_version="Ascend310P3")
     print('Model compiled successfully.')
 
-    # print('Start export om model')
-    # torch_aie.export_engine(ts_model,
-    #                         "forward",
-    #                         "resnext_pt.om",
-    #                         inputs=input_info,
-    #                         precision_policy=torch_aie.PrecisionPolicy.FP16,
-    #                         truncate_long_and_double=True,
-    #                         require_full_compilation=False,
-    #                         allow_tensor_replace_int=False,
-    #                         min_block_size=3,
-    #                         torch_executed_ops=[],
-    #                         soc_version="Ascend310P3",
-    #                         optimization_level=0)
-    # print('Export om model successfully.')
-
     validate(compiled_model, args)
 
 
