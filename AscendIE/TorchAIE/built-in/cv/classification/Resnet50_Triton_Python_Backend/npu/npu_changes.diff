@@ -90,7 +90,7 @@ index fbd65a4995ac4d5cf495f687521e82d072686e9a..3003ce97dab85f790872b47e6c5af6c1
 +        "Failed to convert NPU device id information: " + device_config).c_str());
 +    }
 +
-+    if ((group_id.size() == 0 && count！= 0)
++    if ((group_id.size() == 0 && count != 0)
 +        || (group_id.size() != 0 && count % group_id.size() != 0)) {
 +          return TRITONSERVER_ErrorNew(TRITONSERVER_ERROR_INTERNAL,
 +            ("The instance count " + std::to_string(count)
