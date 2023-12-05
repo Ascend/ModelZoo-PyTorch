@@ -103,14 +103,6 @@ class Trainer(object):
             self._criterion = self._criterion.to(self.device)
             self._model = self._model.to(self.device)
 
-        self._model.encoder.embed_positions.weight.data = torch_npu.npu_format_cast(
-            self._model.encoder.embed_positions.weight.data,
-            29
-        )
-        self._model.decoder.embed_positions.weight.data = torch_npu.npu_format_cast(
-            self._model.decoder.embed_positions.weight.data,
-            29
-        )
         self.pipeline_model_parallel = args.pipeline_model_parallel
         self.last_device = None
         if self.npu and self.pipeline_model_parallel:
