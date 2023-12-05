@@ -131,12 +131,10 @@ python3 perf.py --mode ts --batch-size
 
 | 芯片型号 | Batch Size   | 数据集 | 精度 | 性能 |
 | --------- | ---------------- | ---------- | ---------- | --------------- |
-| Ascend310P3 | 1 | GaitDatasetB-silh | 95.512% | 796 FPS |
-| Ascend310P3 | 4 | GaitDatasetB-silh | 95.512% | 877 FPS |
-| Ascend310P3 | 8 | GaitDatasetB-silh | 95.512% | 900 FPS |
-| Ascend310P3 | 16 | GaitDatasetB-silh | 95.512% | 922 FPS |
-| Ascend310P3 | 32 | GaitDatasetB-silh | 95.512% | 941 FPS |
-| Ascend310P3 | 64 | GaitDatasetB-silh | 95.512% | 925 FPS |
+| Ascend310P3 | 1 | celeba | NA | 756 FPS |
+| Ascend310P3 | 4 | celeba | NA | 1108 FPS |
+| Ascend310P3 | 8 | celeba | NA | 1169 FPS |
+| Ascend310P3 | 16 | celeba | NA | 1111 FPS |
 
 精度参考如下图片：
 

@@ -53,13 +53,13 @@ if __name__ == '__main__':
         torchaie_model = torch_aie.compile(
             ts_model,
             inputs=input_info,
-            precision_policy=_enums.PrecisionPolicy.FP32,
+            precision_policy=_enums.PrecisionPolicy.FP16,
             soc_version='Ascend310P3',
         )
         print("end compile")
         torchaie_model.eval()
         
-        dummy_input = np.random.randn(BATCH_SIZE, 3, INPUT_WIDTH, INPUT_HEIGHT).astype(np.float32)
+        dummy_input = np.zeros((BATCH_SIZE, 3, INPUT_WIDTH, INPUT_HEIGHT)).astype(np.float32)
         input_tensor = torch.Tensor(dummy_input)
         input_tensor = input_tensor.to("npu:0")
         dummy_input2 = np.ones((BATCH_SIZE, 5)).astype(np.int32)
