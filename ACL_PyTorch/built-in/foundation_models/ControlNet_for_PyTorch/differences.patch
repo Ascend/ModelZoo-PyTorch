@@ -1,0 +1,125 @@
+diff -Naru a/ControlNet/cldm/ddim_hacked.py b/ControlNet/cldm/ddim_hacked.py
+--- a/ControlNet/cldm/ddim_hacked.py	2023-11-17 23:27:48.688000000 +0800
++++ b/ControlNet/cldm/ddim_hacked.py	2023-11-17 23:15:45.548000000 +0800
+@@ -16,8 +16,8 @@
+ 
+     def register_buffer(self, name, attr):
+         if type(attr) == torch.Tensor:
+-            if attr.device != torch.device("cuda"):
+-                attr = attr.to(torch.device("cuda"))
++            if attr.device != torch.device("cpu"):
++                attr = attr.to(torch.device("cpu"))
+         setattr(self, name, attr)
+ 
+     def make_schedule(self, ddim_num_steps, ddim_discretize="uniform", ddim_eta=0., verbose=True):
+@@ -56,6 +56,8 @@
+                S,
+                batch_size,
+                shape,
++               sd_session,
++               control_session,
+                conditioning=None,
+                callback=None,
+                normals_sequence=None,
+@@ -101,6 +103,8 @@
+         print(f'Data shape for DDIM sampling is {size}, eta {eta}')
+ 
+         samples, intermediates = self.ddim_sampling(conditioning, size,
++                                                    sd_session,
++                                                    control_session,
+                                                     callback=callback,
+                                                     img_callback=img_callback,
+                                                     quantize_denoised=quantize_x0,
+@@ -120,7 +124,7 @@
+         return samples, intermediates
+ 
+     @torch.no_grad()
+-    def ddim_sampling(self, cond, shape,
++    def ddim_sampling(self, cond, shape, sd_session, control_session,
+                       x_T=None, ddim_use_original_steps=False,
+                       callback=None, timesteps=None, quantize_denoised=False,
+                       mask=None, x0=None, img_callback=None, log_every_t=100,
+@@ -160,7 +164,7 @@
+                 assert len(ucg_schedule) == len(time_range)
+                 unconditional_guidance_scale = ucg_schedule[i]
+ 
+-            outs = self.p_sample_ddim(img, cond, ts, index=index, use_original_steps=ddim_use_original_steps,
++            outs = self.p_sample_ddim(img, cond, ts, sd_session, control_session, index=index, use_original_steps=ddim_use_original_steps,
+                                       quantize_denoised=quantize_denoised, temperature=temperature,
+                                       noise_dropout=noise_dropout, score_corrector=score_corrector,
+                                       corrector_kwargs=corrector_kwargs,
+@@ -178,7 +182,7 @@
+         return img, intermediates
+ 
+     @torch.no_grad()
+-    def p_sample_ddim(self, x, c, t, index, repeat_noise=False, use_original_steps=False, quantize_denoised=False,
++    def p_sample_ddim(self, x, c, t, sd_session, control_session, index, repeat_noise=False, use_original_steps=False, quantize_denoised=False,
+                       temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
+                       unconditional_guidance_scale=1., unconditional_conditioning=None,
+                       dynamic_threshold=None):
+@@ -187,8 +191,8 @@
+         if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
+             model_output = self.model.apply_model(x, t, c)
+         else:
+-            model_t = self.model.apply_model(x, t, c)
+-            model_uncond = self.model.apply_model(x, t, unconditional_conditioning)
++            model_t = self.model.apply_model(x, t, c, sd_session, control_session)
++            model_uncond = self.model.apply_model(x, t, unconditional_conditioning, sd_session, control_session)
+             model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
+ 
+         if self.model.parameterization == "v":
+diff -Naru a/ControlNet/ldm/modules/attention.py b/ControlNet/ldm/modules/attention.py
+--- a/ControlNet/ldm/modules/attention.py	2023-11-17 23:27:49.192000000 +0800
++++ b/ControlNet/ldm/modules/attention.py	2023-11-17 23:17:33.896000000 +0800
+@@ -174,7 +174,7 @@
+         if _ATTN_PRECISION =="fp32":
+             with torch.autocast(enabled=False, device_type = 'cuda'):
+                 q, k = q.float(), k.float()
+-                sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
++                sim = einsum('bid,bjd->bij', q, k) * self.scale
+         else:
+             sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+         
+@@ -189,7 +189,7 @@
+         # attention, what we cannot get enough of
+         sim = sim.softmax(dim=-1)
+ 
+-        out = einsum('b i j, b j d -> b i d', sim, v)
++        out = einsum('bij,bjd->bid', sim, v)
+         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+         return self.to_out(out)
+ 
+diff -Naru a/ControlNet/ldm/modules/diffusionmodules/util.py b/ControlNet/ldm/modules/diffusionmodules/util.py
+--- a/ControlNet/ldm/modules/diffusionmodules/util.py	2023-11-17 23:27:49.192000000 +0800
++++ b/ControlNet/ldm/modules/diffusionmodules/util.py	2023-11-17 23:23:05.404000000 +0800
+@@ -109,7 +109,7 @@
+                    explicitly take as arguments.
+     :param flag: if False, disable gradient checkpointing.
+     """
+-    if flag:
++    if flag and not torch.onnx.is_in_onnx_export():
+         args = tuple(inputs) + tuple(params)
+         return CheckpointFunction.apply(func, len(inputs), *args)
+     else:
+diff -Naru a/ControlNet/ldm/modules/encoders/modules.py b/ControlNet/ldm/modules/encoders/modules.py
+--- a/ControlNet/ldm/modules/encoders/modules.py	2023-11-17 23:27:49.192000000 +0800
++++ b/ControlNet/ldm/modules/encoders/modules.py	2023-11-17 23:20:02.000000000 +0800
+@@ -92,7 +92,7 @@
+         "pooled",
+         "hidden"
+     ]
+-    def __init__(self, version="openai/clip-vit-large-patch14", device="cuda", max_length=77,
++    def __init__(self, version="openai/clip-vit-large-patch14", device="cpu", max_length=77,
+                  freeze=True, layer="last", layer_idx=None):  # clip-vit-base-patch32
+         super().__init__()
+         assert layer in self.LAYERS
+diff -Naru a/ControlNet/models/cldm_v15.yaml b/ControlNet/models/cldm_v15.yaml
+--- a/ControlNet/models/cldm_v15.yaml	2023-11-17 23:27:49.196000000 +0800
++++ b/ControlNet/models/cldm_v15.yaml	2023-11-17 23:18:39.812000000 +0800
+@@ -1,5 +1,5 @@
+ model:
+-  target: cldm.cldm.ControlLDM
++  target: pipeline.AscendControlNet
+   params:
+     linear_start: 0.00085
+     linear_end: 0.0120
