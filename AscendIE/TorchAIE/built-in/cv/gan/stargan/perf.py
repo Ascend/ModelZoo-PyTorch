@@ -1,13 +1,11 @@
 import argparse
 import time
-from tqdm import tqdm
-from collections import OrderedDict
 
 import torch
 import numpy as np
+from tqdm import tqdm
 
 from ais_bench.infer.interface import InferSession
-
 import torch_aie
 from torch_aie import _enums
 
@@ -25,6 +23,7 @@ def parse_args():
                         )
     args.add_argument("--batch-size", type=int, default=4, help="batch size.")
     return args.parse_args()
+
 
 if __name__ == '__main__':
     infer_times = 100
@@ -92,6 +91,3 @@ if __name__ == '__main__':
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print("Current Time:", formatted_time)
-
-
-

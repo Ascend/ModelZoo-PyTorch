@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
+
+from torch.backends import cudnn
+
 from solver import Solver
 from data_loader import get_loader
-from torch.backends import cudnn
 
 
 def str2bool(v):
     return v.lower() in ('true')
+
 
 def main(config):
     # For fast training.
@@ -34,7 +36,6 @@ def main(config):
                                    config.celeba_crop_size, config.image_size, config.batch_size,
                                    'CelebA', config.mode, config.num_workers)
     
-
     # Solver for training and testing StarGAN.
     solver = Solver(celeba_loader, rafd_loader, config)
     solver.test(config.ts_model_path)
@@ -99,3 +100,4 @@ if __name__ == '__main__':
     config = parser.parse_args()
     print(config)
     main(config)
+    

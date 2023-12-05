@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 
 import torch
 import torch.nn as nn
@@ -45,18 +46,18 @@ class Generator(nn.Module):
 
         # Down-sampling layers.
         curr_dim = conv_dim
-        for i in range(2):
+        for _ in range(2):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1, bias=False))
             layers.append(nn.InstanceNorm2d(curr_dim*2, affine=True, track_running_stats=True))
             layers.append(nn.ReLU(inplace=True))
             curr_dim = curr_dim * 2
 
         # Bottleneck layers.
-        for i in range(repeat_num):
+        for _ in range(repeat_num):
             layers.append(ResidualBlock(dim_in=curr_dim, dim_out=curr_dim))
 
         # Up-sampling layers.
-        for i in range(2):
+        for _ in range(2):
             layers.append(nn.ConvTranspose2d(curr_dim, curr_dim//2, kernel_size=4, stride=2, padding=1, bias=False))
             layers.append(nn.InstanceNorm2d(curr_dim//2, affine=True, track_running_stats=True))
             layers.append(nn.ReLU(inplace=True))
@@ -85,7 +86,7 @@ class Discriminator(nn.Module):
         layers.append(nn.LeakyReLU(0.01))
 
         curr_dim = conv_dim
-        for i in range(1, repeat_num):
+        for _ in range(1, repeat_num):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
             layers.append(nn.LeakyReLU(0.01))
             curr_dim = curr_dim * 2

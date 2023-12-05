@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import os
+import random
+
+import torch
+from PIL import Image
 from torch.utils import data
 from torchvision import transforms as T
 from torchvision.datasets import ImageFolder
-from PIL import Image
-import torch
-import os
-import random
 
 
 class CelebA(data.Dataset):
     """Dataset class for the CelebA dataset."""
-
     def __init__(self, image_dir, attr_path, selected_attrs, transform, mode):
         """Initialize and preprocess the CelebA dataset."""
         self.image_dir = image_dir

@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the BSD 3-Clause License  (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model import Generator
-from model import Discriminator
-from torch.autograd import Variable
+
+import os
+
 from torchvision.utils import save_image
 import torch
-import torch.nn.functional as F
 import numpy as np
-import os
-import time
-import datetime
 
 import torch_aie
-from torch_aie import _enums
+from model import Generator
 
 
 class Solver(object):
@@ -66,8 +62,7 @@ class Solver(object):
         self.test_iters = config.test_iters
 
         # Miscellaneous.
-        self.device = torch.device('cpu') # revise
-        # self.device = "npu:0"
+        self.device = torch.device('cpu')
 
         # Directories.
         self.log_dir = config.log_dir
@@ -150,7 +145,7 @@ class Solver(object):
         torchaie_model = torch_aie.compile(
             ts_model,
             inputs=input_info,
-            precision_policy=torch_aie.PrecisionPolicy.PREF_FP32, # _enums.PrecisionPolicy.FP32
+            precision_policy=torch_aie.PrecisionPolicy.PREF_FP32,
             soc_version='Ascend310P3'
         )
         print("end_compile")
@@ -167,8 +162,6 @@ class Solver(object):
             print("data_loader has len:", len(data_loader))
             for i, (x_real, c_org) in enumerate(data_loader):
                 
-                print("current i is:", i)
-
                 # Prepare input images and target domain labels.
                 x_real_cpu = x_real.to("cpu")
                 x_real_npu = x_real.to("npu:0")
@@ -177,48 +170,16 @@ class Solver(object):
                 c_trg_list = self.create_labels(c_org, self.c_dim, self.dataset, self.selected_attrs)
 
                 # Translate images.
-                # x_fake_list = [x_real]
                 x_fake_list = []
                 for c_trg in c_trg_list:
-                    c_trg_cpu = c_trg.to("cpu")
-                    print("c_trg_cpu's dtype is:", c_trg_cpu.dtype)
-                    print("c_trg_list has length", len(c_trg_list))
-                    x_new = ts_model(x_real_cpu, c_trg_cpu)
-                    # x_new = self.G(x_real, c_trg)
-                    # x_new = x_new.to("cpu")
-                    
                     c_trg_npu = c_trg.to("npu:0")
                     x_new_aie = torchaie_model(x_real_npu, c_trg_npu)
                     x_new_aie = x_new_aie.to("cpu")
                     
-                    print("11111111111111 Cosine Similarity between torch and torch_aie is: ",torch.cosine_similarity(x_new.reshape(1,-1), x_new_aie.reshape(1,-1)))
-                    
                     x_fake_list.append(x_new_aie)
-                    
-                    # print("111111111", res.shape)
-                    # x_fake_list.append(res)
-                    
-                    # print("x_real.shape", x_real.numpy().shape)
-                    # print("x_real.dtype", x_real.dtype)
-                    # print("c_trg.shape", c_trg.numpy())
-                    # print("c_trg.dtype", c_trg.dtype)
-                    # x_real.numpy().tofile("./bin/img" + "/%d.bin" % cnt)
-                    # attr_bin_filepath = "./bin/attr" + "/%d.bin" % cnt
-                    # c_trg.numpy().tofile(attr_bin_filepath)
-                    # # print('Saved bin into ./bin/img/%d.bin...' % cnt)
-                    # # print('Saved bin into ./bin/attr/%d.bin...' % cnt)
-                    
-                    # attr_np_arr = np.fromfile(attr_bin_filepath)
-                    # print("1111111111111",attr_np_arr)
                     cnt = cnt + 1
-
-                # Save the translated images.
-                # x_concat = torch.cat(x_fake_list, dim=3)
-                # result_path = os.path.join(self.result_dir, '{}-images.jpg'.format(i+1))
-                # save_image(self.denorm(x_concat.data.cpu()), result_path, nrow=1, padding=0)
                 
                 x_concat = torch.cat(x_fake_list, dim=3)
-                print("22222222222222", x_concat.shape)
                 result_path = os.path.join(self.result_dir, '{}-images.jpg'.format(i+1))
                 save_image(self.denorm(x_concat.data.cpu()), result_path, nrow=1, padding=0)
                 print('Saved real and fake images into {}...'.format(result_path))
