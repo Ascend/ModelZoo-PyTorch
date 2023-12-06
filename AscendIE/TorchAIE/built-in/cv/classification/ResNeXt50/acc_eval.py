@@ -47,7 +47,7 @@ def validate(model, args):
     val_dataset = datasets.ImageFolder(
         args.data_path,
         transforms.Compose([
-            transforms.Resize([img_resize, img_resize], interpolation=InterpolationMode.BICUBIC),
+            transforms.Resize([img_resize, img_resize], interpolation=InterpolationMode.BILINEAR),
             transforms.CenterCrop([img_centercrop, img_centercrop]),
             transforms.ToTensor(),
             transforms.Normalize(mean=mean, std=std),
@@ -62,7 +62,8 @@ def validate(model, args):
     top1, top5 = 1, 5
     print('==================== Start Validation ====================')
     for i, (images, target) in tqdm(enumerate(val_loader), total=len(val_loader)):
-        pred = model(images).cpu()
+        images = images.to('npu:0')
+        pred = model(images).to('cpu')
         acc = compute_acc(pred, target, topk_list=(top1, top5))
         avg_top1 += acc[0].item()
         avg_top5 += acc[1].item()
@@ -87,8 +88,8 @@ def main():
         224: {
             'resize': 256,
             'centercrop': 224,
-            'mean': [0.4, 0.45, 0.48],
-            'std': [0.5, 0.5, 0.5],
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225],
         },
         384: {
             'resize': 384,
@@ -100,13 +101,12 @@ def main():
 
     torch_aie.set_device(0)
 
-    model = torch.jit.load(args.model_path)
-    model.eval()
+    ts_model = torch.jit.load(args.model_path).eval()
 
     input_info = [torch_aie.Input((args.batch_size, 3, args.image_size, args.image_size))]
     print('Start compiling model.')
     compiled_model = torch_aie.compile(
-        model,
+        ts_model,
         inputs=input_info,
         precision_policy=_enums.PrecisionPolicy.FP16,
         allow_tensor_replace_int=True,

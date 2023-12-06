@@ -35,15 +35,26 @@ if __name__ == '__main__':
     )
     torchaie_model.eval()
 
+    inference_time = []
     for _ in tqdm(range(0,infer_times)):
         dummy_input = np.random.randn(1,3,224,224).astype(np.float16)
         dummy_input = torch.Tensor(dummy_input)
-        start = time.time()
-        output = torchaie_model(dummy_input)
-        cost = time.time() - start
-        pt_cost += cost
+        input_npu = dummy_input.to("npu:0")
 
-    print(f'pt avg cost: {pt_cost/infer_times}')
+        stream = torch_aie.npu.Stream("npu:0")
+        with torch_aie.npu.stream(stream):
+            start = time.time()
+            output = torchaie_model(input_npu)
+            stream.synchronize()
+            cost = time.time() - start
+            if _ >=5:
+                inference_time.append(cost)
+
+        output = output.to("cpu")
+    avg_inf_time = sum(inference_time)/len(inference_time)
+    # the batchsize of static model is 1
+    throughput = 1 / avg_inf_time
+    print(f'the model throughput using pt-plugin is : {throughput}')
 
 
 
