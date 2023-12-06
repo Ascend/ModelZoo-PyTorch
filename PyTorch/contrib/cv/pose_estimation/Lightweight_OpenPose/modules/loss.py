@@ -22,7 +22,7 @@ def l2_loss(input, target, mask, batch_size):
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
-    def __init__(self, name, fmt=':f', start_count_index=2):
+    def __init__(self, name, fmt=':f', start_count_index=10):
         self.name = name
         self.fmt = fmt
         self.reset()
