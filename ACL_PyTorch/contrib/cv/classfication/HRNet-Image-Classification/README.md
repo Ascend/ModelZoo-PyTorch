@@ -245,9 +245,9 @@ HRNet（High-Resolution Net）是针对2D人体姿态估计（Human Pose Estimat
 
 | 芯片型号 | Batch Size | 数据集 | 精度                    | 性能   |
 | --------- |------------| ---------- |-----------------------|------|
-|   310P3        | 1          |  ImageNet          | 76.51/Top1 93.22/Top5 | 646  |
-|   310P3        | 4          |  ImageNet          | 76.51/Top1 93.22/Top5 | 1510 |
-|   310P3        | 8          |  ImageNet          | 76.51/Top1 93.22/Top5 | 1778 |
-|   310P3        | 16         |  ImageNet          | 76.51/Top1 93.22/Top5 | 2250 |
-|   310P3        | 32         |  ImageNet          | 76.51/Top1 93.22/Top5 | 1539 |
+|   310P3        | 1          |  ImageNet          | 76.51/Top1 93.22/Top5 | 616  |
+|   310P3        | 4          |  ImageNet          | 76.51/Top1 93.22/Top5 | 1447 |
+|   310P3        | 8          |  ImageNet          | 76.51/Top1 93.22/Top5 | 1621 |
+|   310P3        | 16         |  ImageNet          | 76.51/Top1 93.22/Top5 | 1986 |
+|   310P3        | 32         |  ImageNet          | 76.51/Top1 93.22/Top5 | 1519 |
 |   310P3        | 64         |  ImageNet          | 76.51/Top1 93.22/Top5 | 1320 |
