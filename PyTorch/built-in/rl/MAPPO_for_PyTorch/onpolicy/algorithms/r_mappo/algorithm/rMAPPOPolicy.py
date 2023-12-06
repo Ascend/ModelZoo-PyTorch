@@ -78,6 +78,15 @@ class R_MAPPOPolicy:
         :return rnn_states_actor: (torch.Tensor) updated actor network RNN states.
         :return rnn_states_critic: (torch.Tensor) updated critic network RNN states.
         """
+        obs = torch.from_numpy(obs).to(**self.actor.tpdv, non_blocking=True)
+        cent_obs = torch.from_numpy(cent_obs).to(**self.actor.tpdv, non_blocking=True)
+        rnn_states_actor = torch.from_numpy(rnn_states_actor).to(**self.actor.tpdv, non_blocking=True)
+        rnn_states_critic = torch.from_numpy(rnn_states_critic).to(**self.actor.tpdv, non_blocking=True)
+        masks = torch.from_numpy(masks).to(**self.actor.tpdv, non_blocking=True)
+
+        if available_actions is not None:
+            available_actions = torch.from_numpy(available_actions).to(**self.actor.tpdv, non_blocking=True)
+
         actions, action_log_probs, rnn_states_actor = self.actor(obs,
                                                                  rnn_states_actor,
                                                                  masks,

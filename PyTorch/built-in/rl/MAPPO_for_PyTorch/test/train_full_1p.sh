@@ -46,13 +46,18 @@ wait
 start_time=$(date +%s)
 echo "start_time: ${start_time}"
 
+RANK_ID=0
+KERNEL_NUM=$(($(nproc)/8))
+PID_START=$((KERNEL_NUM * RANK_ID))
+PID_END=$((PID_START + KERNEL_NUM - 1))
+
 exps=$(seq 1 10)
 for exp in $exps
 do
   #为确保性能，只允许同时运行一个mappo脚本，如有需要运行多任务请注释pkill代码
   pkill -9 mappo
   wait
-  sh train_mpe_comm.sh >> ${output_path}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+  taskset -c $PID_START-$PID_END sh train_mpe_comm.sh >> ${output_path}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
   wait
 done
 

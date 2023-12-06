@@ -2,6 +2,7 @@ absl-py==1.4.0
 attrs
 gym==0.17.2
 imageio
+numpy<=1.23.5
 protobuf==3.20.0
 seaborn==0.12.2
 setproctitle

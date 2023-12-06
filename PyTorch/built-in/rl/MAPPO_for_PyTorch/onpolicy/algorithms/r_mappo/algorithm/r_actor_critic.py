@@ -68,11 +68,12 @@ class R_Actor(nn.Module):
         :return action_log_probs: (torch.Tensor) log probabilities of taken actions.
         :return rnn_states: (torch.Tensor) updated RNN hidden states.
         """
-        obs = check(obs).to(**self.tpdv)
-        rnn_states = check(rnn_states).to(**self.tpdv)
-        masks = check(masks).to(**self.tpdv)
-        if available_actions is not None:
-            available_actions = check(available_actions).to(**self.tpdv)
+        if type(obs) == np.ndarray:
+            obs = check(obs).to(**self.tpdv, non_blocking=True)
+            rnn_states = check(rnn_states).to(**self.tpdv, non_blocking=True)
+            masks = check(masks).to(**self.tpdv, non_blocking=True)
+            if available_actions is not None:
+                available_actions = check(available_actions).to(**self.tpdv, non_blocking=True)
 
         actor_features = self.base(obs)
 
