@@ -104,14 +104,24 @@ SAM 首先会自动分割图像中的所有内容，但是如果你需要分割�
 2.  安装依赖。
 
     1. 安装基础环境
-    ```bash
-    pip3 install -r requirements.txt
-    ```
-    说明：某些库如果通过此方式安装失败，可使用pip单独进行安装。
+        ```bash
+        pip3 install -r requirements.txt
+        ```
+        说明：某些库如果通过此方式安装失败，可使用pip单独进行安装。
 
     2. 安装量化工具
 
-        参考[AMCT(ONNX)](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/70RC1alpha001/developmenttools/devtool/atlasamctonnx_16_0004.html)主页安装量化工具。
+        参考[AMCT(ONNX)](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/700alpha002/developmenttools/devtool/atlasamctonnx_16_0001.html)主页安装量化工具。
+
+        说明：AMCT工具和CANN包版本配套，建议onnxruntime用1.8.0版本。
+
+    3. 安装auto-optimizer工具
+
+        参考[auto-optimizer工具指南](https://gitee.com/ascend/msadvisor/tree/master/auto-optimizer)主页安装工具。
+
+        说明：建议onnxruntime用1.15.1版本，用到该工具时，自行切换onnxruntime推荐版本。
+
+        
 
 ## 准备数据集<a name="section183221994411"></a>
 
@@ -119,7 +129,7 @@ SAM 首先会自动分割图像中的所有内容，但是如果你需要分割�
 
    测试[数据图片下载地址](https://segment-anything.com/demo)
 
-   说明：下载图片数据后存放在segment-anything目录下自己新建的data文件。
+   说明：下载任一张图片数据，在segment-anything目录新建data文件夹，将下载的图片数据放在data目录下。
 
 
 ## 模型推理<a name="section741711594517"></a>

@@ -11,3 +11,4 @@ pycocotools
 matplotlib 
 onnxruntime 
 onnx
+onnxsim==0.4.17
