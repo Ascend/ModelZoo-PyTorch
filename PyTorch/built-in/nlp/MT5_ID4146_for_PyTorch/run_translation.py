@@ -561,6 +561,10 @@ def main():
         trainer.save_metrics("train", metrics)
         trainer.save_state()
 
+    # syncionize
+    torch.distributed.barrier()
+    torch.npu.syncionize()
+
     # Evaluation
     results = {}
     max_length = (
