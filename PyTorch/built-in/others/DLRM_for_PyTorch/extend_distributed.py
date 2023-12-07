@@ -44,7 +44,7 @@ my_rank = -1
 my_size = -1
 my_local_rank = -1
 my_local_size = -1
-alltoall_supported = False
+alltoall_supported = True 
 a2a_impl = os.environ.get("DLRM_ALLTOALL_IMPL", "")
 
 myreq = None
