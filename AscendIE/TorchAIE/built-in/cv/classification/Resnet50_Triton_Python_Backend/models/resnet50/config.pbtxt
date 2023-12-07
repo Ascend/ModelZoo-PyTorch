@@ -1,0 +1,30 @@
+name: "resnet50"
+backend: "python"
+
+input [
+  {
+    name: "INPUT"
+    data_type: TYPE_FP32
+    format: FORMAT_NCHW
+    dims: [ 4, 3, 224, 224 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT"
+    data_type: TYPE_FP32
+    dims: [ 1000 ]
+  }
+]
+
+instance_group [
+    { count: 1
+      kind: KIND_CPU
+    }
+]
+parameters [
+    {
+        key: "ASCEND_GROUP_0"
+        value: {string_value: "0"}
+    }
+]
