@@ -67,7 +67,7 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
       ```
        获取推理部署代码
         git clone https://gitee.com/ascend/ModelZoo-PyTorch.git
-        cd ModelZoo-PyTorch/ACL_PyTorch/contrib/audio/Ecapa_Tdnn/ECAPA_TDNN
+        cd ModelZoo-PyTorch/ACL_PyTorch/contrib/audio/Ecapa_Tdnn
        获取源码
         git clone --recursive https://github.com/Joovvhan/ECAPA-TDNN.git
         mv ECAPA-TDNN ECAPA_TDNN
@@ -78,6 +78,7 @@ ECAPA-TDNN基于人脸验证和计算机视觉相关领域的最新趋势，对�
 2. 安装依赖。
 
       ```
+       使用本目录下的requirements.txt替换原始requirements.txt
        pip install -r requirements.txt
       ```
 
