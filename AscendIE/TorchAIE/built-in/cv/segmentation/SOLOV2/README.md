@@ -81,7 +81,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 2. 安装依赖。
 
    ```
-   apt-get install libjpeg-dev zlig1g-dev
+   apt-get install libjpeg-dev zlib1g-dev libgl1-mesa-glx
    pip install -r requirements.txt
    ```
 
@@ -278,7 +278,7 @@ SOLOV2模型是一个box-free的实例分割模型。SOLOV2相对SOLOV1的主要
 
 | Soc version | Batch Size | Dataset | Accuracy | Performance |
 | ----------  | ---------- | ---------- | ---------- | ---------- |
-| Ascend910A  | 1  | coco2017 | Average Precision(IoU=0.50:0.95): 0.340 | 7.21 fps |
+| Ascend310P3  | 1  | coco2017 | Average Precision(IoU=0.50:0.95): 0.340 | 26.19 fps |
 
 
 # FAQ
