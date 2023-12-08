@@ -19,12 +19,15 @@ import apex
 
 import numpy as np
 import torch
+patch_flag=False
+if torch.__version__ > "1.11":
+    patch_flag = True
 if torch.__version__ >= "1.8":
     import torch_npu
 import torch.distributed as dist
 from mmcv.runner import (DistSamplerSeedHook, Fp16OptimizerHook, EpochBasedRunner,
                          build_optimizer, build_runner, get_dist_info)
-
+from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcls.core import DistEvalHook, DistOptimizerHook, EvalHook
 from mmcls.datasets import build_dataloader, build_dataset
 from mmcls.utils import (get_root_logger, wrap_distributed_model,
@@ -42,6 +45,18 @@ except ImportError:
 
         def end(self):
             pass
+
+
+def run_ddp_forward(self, *inputs, **kwargs):
+    module_to_run = self.module
+
+    if self.device_ids:
+        inputs, kwargs = self.to_kwargs(
+            inputs, kwargs, self.device_ids[0]
+        )
+        return module_to_run(*inputs[0], **kwargs[0])
+    else:
+        return module_to_run(*inputs, **kwargs)
 
 
 def train(self, data_loader, **kwargs):
@@ -149,6 +164,9 @@ def train_model(model,
             environment info and seed, which will be logged in logger hook.
             Defaults to None.
     """
+    if patch_flag:
+        MMDistributedDataParallel._run_ddp_forward = run_ddp_forward
+
     logger = get_root_logger()
 
     # prepare data loaders
@@ -175,7 +193,7 @@ def train_model(model,
     train_loader_cfg = {**loader_cfg, **cfg.data.get('train_dataloader', {})}
 
     data_loaders = [build_dataloader(ds, **train_loader_cfg) for ds in dataset]
-    optimizer = apex.optimizers.NpuFusedSGD(model.parameters(), 
+    optimizer = apex.optimizers.NpuFusedSGD(model.parameters(),
                                             lr=cfg.optimizer.lr,
                                             momentum=cfg.optimizer.momentum,
                                             weight_decay=cfg.optimizer.weight_decay
