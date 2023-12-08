@@ -20,7 +20,6 @@ import time
 from tqdm import tqdm
 import sys
 import torch
-import torch_npu
 import torch_aie
 
 sys.path.append("./st-gcn")
@@ -145,7 +144,7 @@ def inference(args, torch_aie_model):
 
 def main():
     args = parse_args()
-    torch_npu.npu.set_device(args.device)
+    torch_aie.set_device(int(args.device.split(":")[-1]))
     torch_aie_model = compile_model(args)
     inference(args, torch_aie_model)
 

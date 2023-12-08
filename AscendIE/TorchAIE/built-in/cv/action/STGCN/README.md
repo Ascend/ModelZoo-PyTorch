@@ -124,10 +124,10 @@ ST-GCN是一种图卷积神经网络，该模型可以实现对人体骨架图�
 
 | 芯片型号   | BatchSize | 数据集      | 精度            | 性能       |
 | --------- |---------- | ----------- | --------------- | --------- |
-|Ascend310P3| 1         | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 4416 fps |
-|Ascend310P3| 4         | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 13669 fps |
-|Ascend310P3| 8         | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 26010 fps |
-|Ascend310P3| 16        | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 33125 fps |
-|Ascend310P3| 32        | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 93595 fps |
-|Ascend310P3| 64        | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 120215 fps |
+|Ascend310P3| 1         | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 329 fps |
+|Ascend310P3| 4         | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 242 fps |
+|Ascend310P3| 8         | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 243 fps |
+|Ascend310P3| 16        | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 246 fps |
+|Ascend310P3| 32        | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 247 fps |
+|Ascend310P3| 64        | kinetics-skeleton | Top1@Acc=31.61%   Top5@Acc: 53.74% | 235 fps |
 

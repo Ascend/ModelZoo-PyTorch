@@ -17,7 +17,6 @@ import numpy as np
 import os
 import time
 import torch
-import torch_npu
 import torch_aie
 from tqdm import tqdm
 
@@ -29,7 +28,7 @@ def inference(args):
         os.makedirs(result_folder)
     ts_model_path = args.ts_path
 
-    torch_npu.npu.set_device("npu:0")
+    torch_aie.set_device(int(args.device.split(":")[-1]))
 
     torch_script_model = torch.jit.load(ts_model_path).eval()
     compile_input = [torch_aie.Input((1, 3, 1000, 1000), dtype=torch.float)]
