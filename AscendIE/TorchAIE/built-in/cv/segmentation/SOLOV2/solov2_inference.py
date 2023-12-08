@@ -25,7 +25,7 @@ from tqdm import tqdm
 def parse_arguments():
     parser = argparse.ArgumentParser(description="inference")
     parser.add_argument("--aie-module-path", default="./solov2_torchscriptb1_torch_aie.pt")
-    parser.add_argument("--batch-size", default=1)
+    parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--processed-dataset-path", default="./val2017_bin/")
     parser.add_argument("--output-save-path", default="./result_aie/")
     parser.add_argument("--model-input-height", type=int, default=800, help="input tensor height")

@@ -30,7 +30,7 @@ def export_torch_aie(model_path, batch_size, soc_version, save_path="./"):
         inputs=input_info,
         allow_tensor_replace_int = True,
         torch_executed_ops = [],
-        precision_policy=torch_aie.PrecisionPolicy.FP32,
+        precision_policy=torch_aie.PrecisionPolicy.FP16,
         soc_version=soc_version,
         )
     suffix = os.path.splitext(model_path)[-1]
