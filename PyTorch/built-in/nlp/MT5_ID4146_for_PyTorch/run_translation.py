@@ -21,6 +21,7 @@ Fine-tuning the library models for sequence to sequence.
 import logging
 import os
 import sys
+import torch
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -561,10 +562,6 @@ def main():
         trainer.save_metrics("train", metrics)
         trainer.save_state()
 
-    # syncionize
-    torch.distributed.barrier()
-    torch.npu.syncionize()
-
     # Evaluation
     results = {}
     max_length = (
@@ -573,6 +570,11 @@ def main():
         else data_args.val_max_target_length
     )
     num_beams = data_args.num_beams if data_args.num_beams is not None else training_args.generation_num_beams
+
+    # synchronize
+    torch.distributed.barrier()
+    torch.npu.synchronize()
+
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
 

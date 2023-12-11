@@ -43,8 +43,8 @@ export TRI_COMBINED_ENABLE=1
 export DYNAMIC_OP="ADD#MUL"
 # HCCL白名单开关,1-关闭/0-开启
 export HCCL_WHITELIST_DISABLE=1
-# HCCL默认超时时间120s较少，修改为1800s对齐PyTorch默认设置
-export HCCL_CONNECT_TIMEOUT=1800
+# HCCL默认超时时间120s较少，当前算子编译时间过长，设置为3600
+export HCCL_CONNECT_TIMEOUT=3600
 
 ulimit -SHn 512000
 
