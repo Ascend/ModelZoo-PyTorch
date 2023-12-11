@@ -292,7 +292,7 @@ def main():
         quant_mode=0,
         amp_num=0,
         use_onnx=False,
-        disable_first_layer=False,
+        disable_first_layer=True,
         quant_param_ops=['Conv'],
         atc_input_shape=input_shape[:-1],
         num_input=len(inputs)
