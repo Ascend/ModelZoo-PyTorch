@@ -78,15 +78,6 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
         ├── val_label.txt
     ```
 
-
-2. 数据预处理。
-
-   ```
-   # 参考https://github.com/pytorch/examples/tree/main/imagnet/extract_ILSVRC.sh的处理。
-   执行 preprocess.sh脚本,将图片按类别分类到相同目录,会在当前路径下生成 ./imagenet/val
-    ```
-
-
 ## 推理验证
 1. 下载PyTorch官方提供的[ **预训练模型** ](https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth) 到当前目录，可参考命令：
     ```
@@ -94,15 +85,15 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
     ```
     下载完成后，将模型权重文件放到当前目录下。
 
-2. 导出原始torchscript模型，用于编译优化。
+2. 数据预处理
     ```
-    python3 export.py --checkpoint ./inception_v3_google-1a9a5a14.pth --output inceptionv3.pt
+    python3 inceptionv3_preprocess.py --src_path /path/to/val --save_path prep_dataset
     ```
-    导出模型后，会在当前目录下生成inceptionv3.pt文件。
-
-3. 运行模型评估脚本，测试ImageNet验证集推理精度
+   
+3. 运行模型评估脚本，测试ImageNet验证集推理精度和性能
     ```
-    python3 eval.py --model_path ./inceptionv3.pt --data_path ./imagenet/val --batch_size 1 --image_size 299
+    python3 inceptionv3_eval.py --device_id 0 --prep_dataset prep_dataset --checkpoint inception_v3_google-1a9a5a14.pth 
+        --label_file /path/to/val_label.txt --batch_size 1
     ```
 
 
@@ -111,7 +102,12 @@ InceptionV3 模型是谷歌 Inception 系列里面的第三代模型，在 Incep
 
 调用torch-aie推理计算，精度参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集 | 精度                                 | 性能      |
-| --------- |------------| ---------- |------------------------------------|---------|
-| 310P3 | 1          | ImageNet | top-1: 76.292% <br>top-5: 92.95% | 855 FPS |
+| 芯片型号 | Batch Size | 数据集 | 精度                             | 性能       |
+| --------- |------------| ---------- |--------------------------------|----------|
+| 310P3 | 1          | ImageNet | top-1: 77.302% <br>top-5: 93.464% | 1058 FPS |
+| 310P3 | 4          | ImageNet |  top-1: 77.302% <br>top-5: 93.464% | 2269 FPS |
+| 310P3 | 8          | ImageNet | top-1: 77.302% <br>top-5: 93.464% | 2309 FPS |
+| 310P3 | 16         | ImageNet | top-1: 77.302% <br>top-5: 93.464% | 2066 FPS |
+| 310P3 | 32         | ImageNet |top-1: 77.302% <br>top-5: 93.464%  | 2032 FPS |
+| 310P3 | 64         | ImageNet |  top-1: 77.302% <br>top-5: 93.464% | 2007 FPS |
 
