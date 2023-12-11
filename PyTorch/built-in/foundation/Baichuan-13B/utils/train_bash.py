@@ -1,4 +1,5 @@
 from llmtuner import run_exp
+import torch
 import torch_npu
 from torch_npu.contrib import transfer_to_npu
 
@@ -29,7 +30,7 @@ def setup_seeds(seed=42):
 
 
 if __name__ == "__main__":
-	import deepspeed
+    import deepspeed
     import deepspeed_npu
 
     setup_seeds(42)

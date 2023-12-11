@@ -1,12 +1,8 @@
 #  baichuan-13B
 
+## 概述
 
- 
-  
-
-# 概述
-
-## 简介
+### 简介
 
 LLaMA Factory是一个易于使用的LLM微调框架。它使用一个简单的Web界面。用户仅需10分钟即可完成模型的自感知微调。支持LLAMA、Falcon等多种主流开源模型。此外，还提供了语言、模型路径等自定义选项。训练完成后，您可以评估模型效果，并将模型导出给其他系统使用。
 
@@ -24,30 +20,91 @@ LLaMA Factory是一个易于使用的LLM微调框架。它使用一个简单的W
   code_path=PyTorch/built-in/foundation
   ```
 
-# 准备训练环境
-## 环境配置
+## 准备训练环境
 
-默认配置需要每张卡有60G以上空闲内存。
+### 准备环境
 
 - 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-| Hardware |      Value      |
-| :------: | :-------------: |
-|   NPU    | 8 x Ascend NPUs |
+  **表 1**  版本支持表
+
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 2.0 |transformers == 4.31.0；accelerate==0.21.0|
 
 
+- 环境准备指导。
+
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》。
+  
+- 安装依赖。
+
+  在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  ```python
+  pip install -r requirements.txt
+  
+  # 使用项目`utils`目录下的`train_bash.py`文件替换`./${模型文件夹名称}/src`路径下的`train_bash.py`.
+  # 使用项目`utils`目录下的`misc.py`文件替换`./${模型文件夹名称}/src/llmtuner/extras`路径下的`misc.py`.
+  # 使用项目`utils`目录下的`modeling_baichuan.py`文件替换`./${模型文件夹名称}/model_weight`路径下的`modeling_baichuan.py`.
+  ```
+
+### 准备数据集
+
+  项目的"./data"路径下已存在预训练所需数据集。
+
+```shell
+data/
+├── alpaca_data_en_52k.json
+├── alpaca_data_zh_51k.json
+├── alpaca_gpt4_data_en.json
+├── alpaca_gpt4_data_zh.json
+├── belle_multiturn
+│   └── belle_multiturn.py
+├── comparison_gpt4_data_en.json
+├── comparison_gpt4_data_zh.json
+├── dataset_info.json
+├── example_dataset
+│   ├── example_dataset.py
+│   └── examples.json
+├── hh_rlhf_en
+│   └── hh_rlhf_en.py
+├── lima.json
+├── oaast_rm.json
+├── oaast_rm_zh.json
+├── oaast_sft.json
+├── oaast_sft_zh.json
+├── README.md
+├── README_zh.md
+├── self_cognition.json
+├── sharegpt_zh_27k.json
+├── ultra_chat
+│   └── ultra_chat.py
+└── wiki_demo.txt
+```
+
+### 准备预训练权重
+  用户从[链接](https://huggingface.co/baichuan-inc/Baichuan-13B-Base/tree/main) 自行获取模型配置文件和权重文件，并放于model 目录下，微调依赖该模型权重，文件夹内容如下：
+```shell
+├──model
+    ├── config.json
+    ├── configuration_baichuan.py
+    ├── generation_config.json
+    ├── modeling_baichuan_origin.py
+    ├── modeling_baichuan.py
+    ├── pytorch_model-00001-of-00003.bin
+    ├── pytorch_model-00002-of-00003.bin
+    ├── pytorch_model-00003-of-00003.bin
+    ├── pytorch_model.bin.index.json
+    ├── quantizer.py
+    ├── requirements.txt
+    ├── special_tokens_map.json
+    ├── tokenization_baichuan.py
+    ├── tokenizer_config.json
+    └── tokenizer.model
+```
 
 
-|         Software          |                 Version                  |                             link                             |
-| :-----------------------: | :--------------------------------------: | :----------------------------------------------------------: |
-|          Python           |      3.8.18                  |                              -                               |
-|          driver           |              23.0.RC3.B050               | [link](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/261159045?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743) |
-|         firmware          |              7.0.t8.0.b214               | [link](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743/software/261159045?idAbsPath=fixnode01%7C23710424%7C251366513%7C22892968%7C252764743) |
-|           CANN            |   Ascend-cann-toolkit_7.0.RC1.1_linux    | [link](https://support.huawei.com/carriersoftwareapply/softwareApp?nid=PSW2001680585&pbi=PBI1-261422362&swlang=zh&supPbi=PBI1-251168373&path=PBI1-21430725/PBI1-21430756/PBI1-22892969/PBI1-23710427/PBI1-251168373) |
-| binary arithmetic package | Ascend-cann-kernels-910b_7.0.RC1.1_linux | [link](https://support.huawei.com/carriersoftwareapply/softwareApp?nid=PSW2001680596&pbi=PBI1-261422362&swlang=zh&supPbi=PBI1-251168373&path=PBI1-21430725/PBI1-21430756/PBI1-22892969/PBI1-23710427/PBI1-251168373) |
-|           torch           |                  2.0.1                  | [link]() |
-|         torch_npu         |               2.0.1               | [link]() |
-## 配置双机通信环境
+### 配置双机通信环境
 
 1.安装pdsh
 url： https://github.com/chaos/pdsh/tree/pdsh-2.29
@@ -121,101 +178,7 @@ ssh root@ip1
 ssh root@ip2
 ```
 
-## 安装基础依赖
-
-1. 准备代码:
-```shell
-git clone https://github.com/hiyouga/LLaMA-Factory/tree/7a5318804870b1f2bedec8d4a676e465b48d5c3e
-cd ${模型文件夹名称}
-mkdir output_sft 
-mkdir logs
-```
-
-2. 创建conda环境
-
-```bash
-# python3.8
-conda create -n test python=3.8
-conda activate test
-
-# install torch and torch_npu
-pip install torch2.0.1-cp38-XXX.whl
-pip install torch_npu-2.0.1-XXX.whl
-pip install apex-0.1_ascend_XXX.whl
-
-# install deepspeed and deepspeed_npu
-pip install deepspeed==0.9.2
-git clone https://gitee.com/ascend/DeepSpeed.git -b v0.9.2 deepspeed_npu
-cd deepspeed_npu
-pip3 install -e ./
-cd ..
-
-
-# install other packages
-pip install -r requirements.txt 
-
-```
-3. 准备预训练权重
-
-用户从[链接](https://huggingface.co/baichuan-inc/Baichuan-13B-Base/tree/main) 自行获取模型配置文件和权重文件，并放于model_weight 目录下，微调依赖该模型权重。
-```shell
-mkdir model_weight 
-cd ./model_weight
-
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/config.json
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/configuration_baichuan.py
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/generation_config.json
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/modeling_baichuan.py
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/pytorch_model-00001-of-00003.bin
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/pytorch_model-00002-of-00003.bin
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/pytorch_model-00003-of-00003.bin
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/pytorch_model.bin.index.json
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/quantizer.py
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/special_tokens_map.json
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/tokenization_baichuan.py
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/tokenizer_config.json
-wget https://huggingface.co/baichuan-inc/Baichuan-13B-Base/resolve/main/tokenizer.model
-
-cd ..
-```
-
-4. 准备数据集
-
-项目的"./data"路径下已存在预训练所需数据集。
-
-```shell
-data/
-├── alpaca_data_en_52k.json
-├── alpaca_data_zh_51k.json
-├── alpaca_gpt4_data_en.json
-├── alpaca_gpt4_data_zh.json
-├── belle_multiturn
-│   └── belle_multiturn.py
-├── comparison_gpt4_data_en.json
-├── comparison_gpt4_data_zh.json
-├── dataset_info.json
-├── example_dataset
-│   ├── example_dataset.py
-│   └── examples.json
-├── hh_rlhf_en
-│   └── hh_rlhf_en.py
-├── lima.json
-├── oaast_rm.json
-├── oaast_rm_zh.json
-├── oaast_sft.json
-├── oaast_sft_zh.json
-├── README.md
-├── README_zh.md
-├── self_cognition.json
-├── sharegpt_zh_27k.json
-├── ultra_chat
-│   └── ultra_chat.py
-└── wiki_demo.txt
-
-```
-
-
-# 启动训练 
+## 开始训练 
 
 
 1、将项目根目录下的`run_baichuan_sft_2m.sh`、`ds_config_zero2.json`、`hostfile`文件拷贝到`${模型文件夹名称}`路径下。
@@ -247,29 +210,138 @@ sh run_baichuan_sft_2m.sh
    **注**：为确保双机训练成功，请保证双机环境及路径一致，包括项目路径、conda环境、cann和驱动等。
 训练完成后，权重文件保存`--output_dir`参数指定的路径下，并输出模型训练相关信息。
 
-# 训练结果展示
+## 训练结果展示
 
-## 性能结果展示
-**表 1**  双机16卡训练结果展示
-
-| Device    |  total epochs | train loss | train samples per second | train steps per second| 
-| --------- | ---------------- | ----------------------------- | ---------------------------- | ------------------------- | 
-| NPUs      |  10.0  | 0.9032  |  11.378     |   0.022     | 
-| Reference |  10.0  | 0.9031  |  9.3     |     0.018   | 
+**表 2**  训练结果展示表
+| Device |Torch_Version   |  total epochs | train loss | train samples per second | train steps per second| 
+| --------- | ----- | ----------- | ----------------------------- | ---------------------------- | ------------------------- | 
+| 16p-NPUs|2.0.1      |  10.0  | 0.903  |  11.378     |   0.022     | 
+| 16p-竞品 | 2.0.1| 10.0  | 0.903  |  9.3     |     0.018   | 
 
 
-## 精度结果展示
+## 推理
 
-NPU vs Reference loss对比.
+### 推理环境搭建
+1. 推理环境搭建参考上述训练环境搭建。
+2. 准备推理权重。
+用户从[链接](https://huggingface.co/baichuan-inc/Baichuan-13B-Chat/tree/main) 自行获取模型配置文件和权重文件，并放于Baichuan-13B-Chat 目录下。
+```shell
+├── config.json
+├── configuration_baichuan.py
+├── generation_config.json
+├── generation_utils.py
+├── handler.py
+├── hf_pytorch_model.bin.index.json
+├── modeling_baichuan.py
+├── pytorch_model-00001-of-00003.bin
+├── pytorch_model-00002-of-00003.bin
+├── pytorch_model-00003-of-00003.bin
+├── pytorch_model.bin.index.json
+├── quantizer.py
+├── README.md
+├── requirements.txt
+├── special_tokens_map.json
+├── tokenization_baichuan.py
+├── tokenizer_config.json
+└── tokenizer.model
 
-绝对误差：最大值0.0085，平均值0.0052
-相对误差：最大值0.0096，平均值0.0059
+```
 
-NPU运行平稳，资源占用稳定，中间无报错，Loss有下降趋势，收敛速度符合预期。平均损失的相对误差小于2%。精度满足要求。
-- 双机16卡loss对比图
-![双机16卡loss对比图](./images/loss_image.jpg)
+### 推理脚本
 
-# FAQ
+1）执行`vim infer.py`创建推理脚本，然后将下面代码写入`infer.py`文件中，然后按`Esc`键输入`:wq`退出并保存文件。
+
+```python
+import torch
+import torch_npu
+from torch_npu.contrib import transfer_to_npu
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers.generation.utils import GenerationConfig
+
+model_weight_path = 'Baichuan-13B-Chat/'
+tokenizer = AutoTokenizer.from_pretrained(model_weight_path, use_fast=False, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(model_weight_path, device_map="npu:1", torch_dtype=torch.float16, trust_remote_code=True)
+model.generation_config = GenerationConfig.from_pretrained(model_weight_path)
+messages = []
+messages.append({"role": "user", "content":"解释一下“温故而知新”" })
+response = model.chat(tokenizer, messages)
+
+print(response)
+```
+
+infer.py文件中的配置参数:
+```python
+# 指定加载的模型权重为上述下载的权重和配置文件夹。
+model_weight_path = 'Baichuan-13B-Chat/'     # 模型权重
+device_map="npu:1"                           # 指定运行的NPU卡
+``` 
+2）运行下面命令执行推理任务
+```python
+ python infer.py
+```
+## 推理结果展示
+```shell
+嘃 温故而知新,可以为师矣。 解释:温习学过的知识,从而得到新的理解和体会。也指回忆过去,能更好地认识现在。 温故而知新,可以为师矣。 解释:复习旧的知识,能够从中有新的收获。这样的人就可以做老师了。 温故而知新,可以为师矣。 解释:复习旧的知识,能够从中有新的收获。这样的人就可以做老师了。
+```
+
+
+## 评估
+
+### 准备数据集任务
+在项目的`evaluation` 目录下已经存在评估任务数据集：
+```shell
+evaluation
+├── ceval
+│   ├── ceval.py
+│   ├── ceval.zip
+│   └── mapping.json
+├── cmmlu
+│   ├── cmmlu.py
+│   ├── cmmlu.zip
+│   └── mapping.json
+└── mmlu
+    ├── mapping.json
+    ├── mmlu.py
+    └── mmlu.zip
+
+```
+
+### 运行评估任务
+
+1. 执行`vim evaluation.sh`创建推理脚本，然后将下面代码写入`evaluation.sh`文件中，然后按`Esc`键输入`:wq`退出并保存文件。
+```shell
+#!/bin/bash
+
+MODEL_NAME_OR_PATH=./model_weight
+CHECKPOINT=./model_weight
+
+
+ASCEND_RT_VISIBLE_DEVICES=1 python src/evaluate.py \
+    --model_name_or_path $MODEL_NAME_OR_PATH \
+    --finetuning_type full \
+    --checkpoint_dir $CHECKPOINT \
+    --template default \
+    --task ceval \
+    --split validation \
+    --lang en \
+    --n_shot 5 \
+    --batch_size 4
+```
+2. 然后运行下面代码执行评估任务。
+```python
+bash evaluation.sh
+```
+
+
+### 评估结果展示
+
+  **表 3**  评估结果展示表
+|任务|模型|昇腾值|参考值|社区值|
+| ------------ |  ------------ | ------------ |------------ |------- |
+| CEval |Baichuan-13B   |  43.98 | 42.72 |-- |
+
+
+## FAQ
 
 **为适配V0.2.0的代码，在配置完运行环境后做如下修改：**
 
@@ -286,6 +358,15 @@ pip install transformers_stream_generator decorator absl-py cloudpickle synr==0.
 
   - 将 `${conda环境路径}/lib/python3.8/site-packages/accelerate/accelerator.py` line296修改为`if compare_versions("deepspeed", "<", "0.9.2"):`
 
-3、使用项目`utils`目录下的`train_bash.py`文件替换`./${模型文件夹名称}/src`路径下的`train_bash.py`.
-4、使用项目`utils`目录下的`misc.py`文件替换`./${模型文件夹名称}/src/llmtuner/extras`路径下的`misc.py`.
-5、使用项目`utils`目录下的`modeling_baichuan.py`文件替换`./${模型文件夹名称}/model_weight`路径下的`modeling_baichuan.py`.
+
+
+## 引用
+
+```
+@Misc{llama-factory,
+  title = {LLaMA Factory},
+  author = {hiyouga},
+  howpublished = {\url{https://github.com/hiyouga/LLaMA-Factory}},
+  year = {2023}
+}
+```
