@@ -96,7 +96,7 @@ class TestEDSR:
     def cal_qps(self, model, batch_size, warm_up=5):
         cost_steps = []
         dataset = CustomDataset(args)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=False)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size, drop_last = True, shuffle=False)
         for index, (data, _) in enumerate(dataloader):
             print("data.shape", data.shape)
             data = data.to(self.device_name)
@@ -123,9 +123,9 @@ class TestEDSR:
         src_model.load_state_dict(torch.load(
             self.args.pth, map_location=torch.device('cpu')), strict=False)
         src_model.eval()
-        dummy_input = torch.randn(batch_size, 3, 1020, 1020)
+        dummy_input = torch.randn(1, 3, 1020, 1020)
         traced_model = torch.jit.trace(src_model, dummy_input)
-        torch_aie_model = torch_aie.compile(traced_model, inputs=[torch_aie.Input(dummy_input.shape)],
+        torch_aie_model = torch_aie.compile(traced_model, inputs=[torch_aie.Input([batch_size, 3, 1020, 1020])],
                                             precision_policy=torch_aie.PrecisionPolicy.FP16)
         if batch_size == 1:
             self.compiled_torch_aie_bs1 = torch_aie_model
