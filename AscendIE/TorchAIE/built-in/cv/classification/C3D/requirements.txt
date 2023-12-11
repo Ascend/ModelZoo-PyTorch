@@ -1,0 +1,13 @@
+numpy
+imgaug
+librosa
+lmdb
+moviepy
+onnx
+onnxruntime
+PyTurboJPEG
+timm
+matplotlib
+numpy
+opencv-contrib-python
+Pillow
