@@ -1,0 +1,10 @@
+torch==2.0.1
+torchvision==15.0.0
+numpy==1.21.4
+Pillow==8.4.0
+decorator==5.1.1
+packaging==21.3
+Cython==0.29.26
+scipy==1.7.3
+tqdm==4.64.1
+opencv-python==4.4.0.46
