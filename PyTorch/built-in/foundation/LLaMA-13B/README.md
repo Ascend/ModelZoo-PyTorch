@@ -4,6 +4,8 @@
 -   [准备训练环境](准备训练环境.md)
 -   [开始训练](开始训练.md)
 -   [训练结果展示](训练结果展示.md)
+-   [推理](推理.md)
+-   [评估](评估.md)
 -   [版本说明](版本说明.md)
 
 # 概述
@@ -172,7 +174,116 @@ LLaMA是由Meta AI发布的大语言系列模型，完整的名字是Large Langu
 |   7B-竞品A| 3120  |  3 |
 | 13B-NPU(单机20层) | 1730 | 3  |
 |  13B-竞品A(单机20层) | 1896  |  3 |
+# 推理
+## 推理环境搭建
+这里要替换transformers库中的部分文件，用于推理（评估）场景，后续如果要进行训练再更改为transformers_modify中的文件。
+```bash
+cp tasks/modeling_llama.py /home/miniconda3/envs/test/lib/python3.8/site-packages/transformers/models/llama
+```
+## 推理命令
+执行以下命令即可进入推理模式，注意修改模型路径。
+```bash
+python3 -m fastchat.serve.cli --model-path 7B-vicuna/ --device npu
+```
+## 推理结果展示
+进入推理模式后，输入文本信息就可以进行对话推理，输入内容为空则退出推理模式。
+```bash
+USER: how are you
+ASSISTANT: Hello! As an AI languagething, I don't have feelings or emotions like humans do. I am just a computer conne
+USER: What to do if I can't sleep at night
+ASSISTANT: If you can'tamarstop at night, there are a few things you can try to help yourself fall asleep:
 
+1. Create a bedtime routine:osed to do the same thing every night before bed, such as reading a book or taking a warm bath, can help signal to your body that it's time to sleep.
+2. Make your bedimages:A comfortable and inviting sleeping environment can help you fall asavigation asleep faster and stay asleep longer.
+3. Avoid screens before bed:The blue lightовых devices like phones and computers can interfere with your body's production of melatonin, a hormone that helps know when it's time to sleep.
+4. Try relaxation techniques:Gentle exercises like deep breathing, progressive muscle relaxation, or meditation can help calm your mind and body, making it easier to fall asleep.
+5. Avoid c utations that can keep you up:Avoid caffeine, nicotine, and alcohol for several hours before bedtime, as they can interfere with your métabolisme and make it harder to fall asleep.
+
+If these tips don't help, you can also speak to your doctor about other treatment options, such as sleep medications or therapy.
+USER:
+exit...
+
+```
+# 评估
+## 评估数据集准备
+这里使用的是Mmlu数据集，可以从huggingface获取。
+## 运行评估任务
+进行评估前也要进行环境准备（和推理前操作相同），然后执行以下命令。
+```bash
+bash tasks/vicuna_eval.sh
+```
+注意修改脚本中tasks目录所在路径，评估数据集路径，模型路径。
+```bash
+source /home/gpt_neox/cann1115/ascend-toolkit/set_env.sh
+   
+python /home/FastChat-master/tasks/task_eval.py   \
+       --model_path /home/FastChat-master/7B-vicuna/  \
+       --test_dir /home/FastChat-master/tasks/Mmlu/  \
+       --task Mmlu
+```
+## 评估结果展示
+
+```bash
+subject                                     question_n  acc
+0                 high_school_geography         198  0.601010
+1   high_school_government_and_politics         193  0.715026
+2          high_school_computer_science         100  0.550000
+3                       college_biology         144  0.500000
+4                      public_relations         110  0.600000
+5               professional_accounting         282  0.354610
+6                             sociology         201  0.681592
+7                high_school_psychology         545  0.655046
+8                 high_school_chemistry         203  0.334975
+9                     college_chemistry         100  0.350000
+10                  high_school_physics         151  0.337748
+11                     college_medicine         173  0.473988
+12                     security_studies         245  0.514286
+13         high_school_european_history         165  0.442424
+14                        jurisprudence         108  0.592593
+15                      moral_scenarios         895  0.252514
+16                         formal_logic         126  0.293651
+17           high_school_microeconomics         238  0.462185
+18                        miscellaneous         783  0.675607
+19               high_school_us_history         204  0.455882
+20                         econometrics         114  0.271930
+21               elementary_mathematics         378  0.285714
+22                    computer_security         100  0.560000
+23                             virology         166  0.439759
+24                          human_aging         223  0.632287
+25                            astronomy         152  0.500000
+26                      college_physics         102  0.235294
+27                    international_law         121  0.719008
+28              professional_psychology         612  0.464052
+29                   conceptual_physics         235  0.408511
+30                professional_medicine         272  0.459559
+31               electrical_engineering         145  0.475862
+32                      human_sexuality         131  0.618321
+33               high_school_statistics         216  0.277778
+34                     medical_genetics         100  0.600000
+35                    logical_fallacies         163  0.644172
+36                              anatomy         135  0.444444
+37           high_school_macroeconomics         390  0.492308
+38             college_computer_science         100  0.330000
+39                            marketing         234  0.794872
+40                           philosophy         311  0.540193
+41              high_school_mathematics         270  0.274074
+42                       moral_disputes         346  0.497110
+43                           management         103  0.669903
+44                      business_ethics         100  0.510000
+45                      world_religions         171  0.707602
+46                  college_mathematics         100  0.210000
+47                     professional_law        1534  0.272490
+48                     machine_learning         112  0.321429
+49                         global_facts         100  0.370000
+50                  high_school_biology         310  0.551613
+51                   clinical_knowledge         265  0.524528
+52            high_school_world_history         237  0.409283
+53                     abstract_algebra         100  0.280000
+54                    us_foreign_policy         100  0.750000
+55                            nutrition         306  0.473856
+56                           prehistory         324  0.580247
+57                                total       14042  0.462541
+```
 # 版本说明
 
 ## 变更
