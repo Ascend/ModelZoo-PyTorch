@@ -115,15 +115,15 @@
    - 单机单卡训练
 
      ```shell
-     bash test/train_full_1p_text_to_image_sdxl_lora_fp32.sh  # 单卡精度，SDXL_lora，fp32
-     bash test/train_performance_1p_text_to_image_sdxl_lora_fp32.sh # 单卡性能，SDXL_lora，fp32
+     bash test/train_1p_text_to_image_sdxl_lora.sh # 单卡精度，SDXL_lora，fp32
+     bash test/train_1p_text_to_image_sdxl_lora.sh --max_train_steps=200 # 单卡性能，SDXL_lora，fp32
      ```
      
    - 单机8卡训练
    
      ```shell
-     bash test/train_full_8p_text_to_image_sdxl_lora_fp32.sh  # 8卡训练 ，SDXL_lora，fp32
-     bash test/train_performance_8p_text_to_image_sdxl_lora_fp32.sh # 8卡训练 ，SDXL_lora，fp32
+     bash test/train_8p_text_to_image_sdxl_lora.sh  # 8卡精度训练 ，SDXL_lora，fp32
+     bash test/train_8p_text_to_image_sdxl_lora.sh --max_train_steps=200 # 8卡性能训练 ，SDXL_lora，fp32
      ```
      
    
