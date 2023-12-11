@@ -122,8 +122,9 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
 ## 模型推理<a name="section741711594517"></a>
 1. 获取权重文件。
     ```
-     wget https://gitee.com/link?target=https%3A%2F%2Fascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com%2Fmodel%2F1_PyTorch_PTH%2FUnet%252B%252B%2FPTH%2Fnested_unet.pth
-    ```
+     wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FastPitch/PTH/nvidia_fastpitch_210824.pt
+     wget https://ascend-repo-modelzoo.obs.cn-east-2.myhuaweicloud.com/model/1_PyTorch_PTH/FastPitch/PTH/nvidia_waveglow256pyt_fp16.pt    
+   ```
 
 
 2. 生成trace模型
@@ -156,7 +157,7 @@ Fastpitch模型由双向 Transformer 主干（也称为 Transformer 编码器）
     ```
      -i 输入text的完整路径，默认phrases/tui_val100.tsv 
      --dataset_path 数据集路径，默认./LJSpeech-1.1 
-     --fastpitch checkpoint的完整路径，默认./nvidia_fastpitch_210824.pt 
+     --fastpitch checkpoint的路径，默认./nvidia_fastpitch_210824.pt 
      --model 模型路径
      --soc_version：处理器型号
      --need_compile：是否需要进行模型编译（若参数model为export_torch_aie_ts.py输出的模型，则不用选该项）
