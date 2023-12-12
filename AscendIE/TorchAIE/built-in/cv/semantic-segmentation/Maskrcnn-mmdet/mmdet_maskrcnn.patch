@@ -1,0 +1,307 @@
+diff --git a/mmdet/__init__.py b/mmdet/__init__.py
+index 430cc55e..b3c85e41 100644
+--- a/mmdet/__init__.py
++++ b/mmdet/__init__.py
+@@ -16,7 +16,7 @@ def digit_version(version_str):
+ 
+ 
+ mmcv_minimum_version = '1.2.4'
+-mmcv_maximum_version = '1.3'
++mmcv_maximum_version = '1.6'
+ mmcv_version = digit_version(mmcv.__version__)
+ 
+ 
+diff --git a/mmdet/core/export/pytorch2onnx.py b/mmdet/core/export/pytorch2onnx.py
+index 8f9309df..b55dacc6 100644
+--- a/mmdet/core/export/pytorch2onnx.py
++++ b/mmdet/core/export/pytorch2onnx.py
+@@ -41,7 +41,7 @@ def generate_inputs_and_wrap_model(config_path, checkpoint_path, input_config):
+     one_img, one_meta = preprocess_example_input(input_config)
+     tensor_data = [one_img]
+     model.forward = partial(
+-        model.forward, img_metas=[[one_meta]], return_loss=False)
++        model.forward, img_metas=[one_meta], return_loss=False)
+ 
+     # pytorch has some bug in pytorch1.3, we have to fix it
+     # by replacing these existing op
+diff --git a/mmdet/core/post_processing/bbox_nms.py b/mmdet/core/post_processing/bbox_nms.py
+index 463fe2e4..02b45f98 100644
+--- a/mmdet/core/post_processing/bbox_nms.py
++++ b/mmdet/core/post_processing/bbox_nms.py
+@@ -4,6 +4,29 @@ from mmcv.ops.nms import batched_nms
+ from mmdet.core.bbox.iou_calculators import bbox_overlaps
+ 
+ 
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0], -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4)
++        scores = scores.reshape(1, scores.shape[0], -1)
++
++    batch_nms = torch.ops.aie.batch_nms
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = batch_nms(bboxes, scores,
++        score_threshold, iou_threshold, max_size_per_class, max_total_size)
++
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
++
++
+ def multiclass_nms(multi_bboxes,
+                    multi_scores,
+                    score_thr,
+@@ -36,13 +59,17 @@ def multiclass_nms(multi_bboxes,
+     if multi_bboxes.shape[1] > 4:
+         bboxes = multi_bboxes.view(multi_scores.size(0), -1, 4)
+     else:
+-        bboxes = multi_bboxes[:, None].expand(
+-            multi_scores.size(0), num_classes, 4)
++        bbox_shape_tensor = torch.ones(multi_scores.size(0), num_classes, 4)
++        bboxes = multi_bboxes[:, None].expand_as(bbox_shape_tensor)
+ 
+     scores = multi_scores[:, :-1]
+     if score_factors is not None:
+         scores = scores * score_factors[:, None]
+ 
++    # npu
++    dets, labels = batch_nms_op(bboxes, scores, score_thr, nms_cfg.get("iou_threshold"), max_num, max_num)
++    return dets, labels
++
+     labels = torch.arange(num_classes, dtype=torch.long)
+     labels = labels.view(1, -1).expand_as(scores)
+ 
+diff --git a/mmdet/models/dense_heads/rpn_head.py b/mmdet/models/dense_heads/rpn_head.py
+index f565d1a4..b284b830 100644
+--- a/mmdet/models/dense_heads/rpn_head.py
++++ b/mmdet/models/dense_heads/rpn_head.py
+@@ -9,6 +9,28 @@ from .anchor_head import AnchorHead
+ from .rpn_test_mixin import RPNTestMixin
+ 
+ 
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0], -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4)
++        scores = scores.reshape(1, scores.shape[0], -1)
++
++    batch_nms = torch.ops.aie.batch_nms
++
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = batch_nms(bboxes, scores,
++        score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
++
++
+ @HEADS.register_module()
+ class RPNHead(RPNTestMixin, AnchorHead):
+     """RPN head.
+@@ -132,9 +154,7 @@ class RPNHead(RPNTestMixin, AnchorHead):
+             if cfg.nms_pre > 0 and scores.shape[0] > cfg.nms_pre:
+                 # sort is faster than topk
+                 # _, topk_inds = scores.topk(cfg.nms_pre)
+-                ranked_scores, rank_inds = scores.sort(descending=True)
+-                topk_inds = rank_inds[:cfg.nms_pre]
+-                scores = ranked_scores[:cfg.nms_pre]
++                scores, topk_inds = torch.topk(scores, cfg.nms_pre)
+                 rpn_bbox_pred = rpn_bbox_pred[topk_inds, :]
+                 anchors = anchors[topk_inds, :]
+             mlvl_scores.append(scores)
+@@ -164,5 +184,6 @@ class RPNHead(RPNTestMixin, AnchorHead):
+ 
+         # TODO: remove the hard coded nms type
+         nms_cfg = dict(type='nms', iou_threshold=cfg.nms_thr)
+-        dets, keep = batched_nms(proposals, scores, ids, nms_cfg)
+-        return dets[:cfg.nms_post]
++        # npu return
++        dets, labels = batch_nms_op(proposals, scores, 0.0, nms_cfg.get("iou_threshold"), cfg.nms_post, cfg.nms_post)
++        return dets
+diff --git a/mmdet/models/detectors/base.py b/mmdet/models/detectors/base.py
+index 7c6d5e96..44ce3e2f 100644
+--- a/mmdet/models/detectors/base.py
++++ b/mmdet/models/detectors/base.py
+@@ -131,39 +131,39 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
+                 augs (multiscale, flip, etc.) and the inner list indicates
+                 images in a batch.
+         """
+-        for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
+-            if not isinstance(var, list):
+-                raise TypeError(f'{name} must be a list, but got {type(var)}')
++        # for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
++        #     if not isinstance(var, list):
++        #         raise TypeError(f'{name} must be a list, but got {type(var)}')
+ 
+-        num_augs = len(imgs)
+-        if num_augs != len(img_metas):
+-            raise ValueError(f'num of augmentations ({len(imgs)}) '
+-                             f'!= num of image meta ({len(img_metas)})')
++        # num_augs = len(imgs)
++        # if num_augs != len(img_metas):
++        #     raise ValueError(f'num of augmentations ({len(imgs)}) '
++        #                      f'!= num of image meta ({len(img_metas)})')
+ 
+         # NOTE the batched image size information may be useful, e.g.
+         # in DETR, this is needed for the construction of masks, which is
+         # then used for the transformer_head.
+-        for img, img_meta in zip(imgs, img_metas):
+-            batch_size = len(img_meta)
+-            for img_id in range(batch_size):
+-                img_meta[img_id]['batch_input_shape'] = tuple(img.size()[-2:])
+-
+-        if num_augs == 1:
+-            # proposals (List[List[Tensor]]): the outer list indicates
+-            # test-time augs (multiscale, flip, etc.) and the inner list
+-            # indicates images in a batch.
+-            # The Tensor should have a shape Px4, where P is the number of
+-            # proposals.
+-            if 'proposals' in kwargs:
+-                kwargs['proposals'] = kwargs['proposals'][0]
+-            return self.simple_test(imgs[0], img_metas[0], **kwargs)
+-        else:
+-            assert imgs[0].size(0) == 1, 'aug test does not support ' \
+-                                         'inference with batch size ' \
+-                                         f'{imgs[0].size(0)}'
+-            # TODO: support test augmentation for predefined proposals
+-            assert 'proposals' not in kwargs
+-            return self.aug_test(imgs, img_metas, **kwargs)
++        # for img, img_meta in zip(imgs, img_metas):
++        batch_size = len(img_metas)
++        for img_id in range(batch_size):
++            img_metas[img_id]['batch_input_shape'] = tuple(imgs.size()[-2:])
++
++        # if num_augs == 1:
++        # proposals (List[List[Tensor]]): the outer list indicates
++        # test-time augs (multiscale, flip, etc.) and the inner list
++        # indicates images in a batch.
++        # The Tensor should have a shape Px4, where P is the number of
++        # proposals.
++        if 'proposals' in kwargs:
++            kwargs['proposals'] = kwargs['proposals'][0]
++        return self.simple_test(imgs, img_metas, **kwargs)
++        # else:
++        #     assert imgs[0].size(0) == 1, 'aug test does not support ' \
++        #                                  'inference with batch size ' \
++        #                                  f'{imgs[0].size(0)}'
++        #     # TODO: support test augmentation for predefined proposals
++        #     assert 'proposals' not in kwargs
++        #     return self.aug_test(imgs, img_metas, **kwargs)
+ 
+     @auto_fp16(apply_to=('img', ))
+     def forward(self, img, img_metas, return_loss=True, **kwargs):
+diff --git a/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py b/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
+index 0cba3cda..f11f3c18 100644
+--- a/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
++++ b/mmdet/models/roi_heads/mask_heads/fcn_mask_head.py
+@@ -195,6 +195,8 @@ class FCNMaskHead(nn.Module):
+             scale_factor = bboxes.new_tensor(scale_factor)
+         bboxes = bboxes / scale_factor
+ 
++        return mask_pred
++
+         if torch.onnx.is_in_onnx_export():
+             # TODO: Remove after F.grid_sample is supported.
+             from torchvision.models.detection.roi_heads \
+diff --git a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+index c0eebc4a..09344d54 100644
+--- a/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
++++ b/mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+@@ -54,6 +54,10 @@ class SingleRoIExtractor(BaseRoIExtractor):
+     def forward(self, feats, rois, roi_scale_factor=None):
+         """Forward function."""
+         out_size = self.roi_layers[0].output_size
++        roi_extractor = torch.ops.aie.roi_extractor
++        roi_feats = roi_extractor(feats, rois, 1, 56, out_size[0], out_size[1], "avg", 0, 0, [0.25, 0.125, 0.0625, 0.03125])
++        return roi_feats
++
+         num_levels = len(feats)
+         if torch.onnx.is_in_onnx_export():
+             # Work around to export mask-rcnn to onnx
+diff --git a/mmdet/models/roi_heads/standard_roi_head.py b/mmdet/models/roi_heads/standard_roi_head.py
+index c530f2a5..6361bfb6 100644
+--- a/mmdet/models/roi_heads/standard_roi_head.py
++++ b/mmdet/models/roi_heads/standard_roi_head.py
+@@ -246,13 +246,12 @@ class StandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
+ 
+         det_bboxes, det_labels = self.simple_test_bboxes(
+             x, img_metas, proposal_list, self.test_cfg, rescale=rescale)
+-        if torch.onnx.is_in_onnx_export():
+-            if self.with_mask:
+-                segm_results = self.simple_test_mask(
+-                    x, img_metas, det_bboxes, det_labels, rescale=rescale)
+-                return det_bboxes, det_labels, segm_results
+-            else:
+-                return det_bboxes, det_labels
++        if self.with_mask:
++            segm_results = self.simple_test_mask(
++                x, img_metas, det_bboxes, det_labels, rescale=rescale)
++            return det_bboxes, det_labels, segm_results
++        else:
++            return det_bboxes, det_labels
+ 
+         bbox_results = [
+             bbox2result(det_bboxes[i], det_labels[i],
+diff --git a/mmdet/models/roi_heads/test_mixins.py b/mmdet/models/roi_heads/test_mixins.py
+index 0e675d6e..cebc466b 100644
+--- a/mmdet/models/roi_heads/test_mixins.py
++++ b/mmdet/models/roi_heads/test_mixins.py
+@@ -197,33 +197,18 @@ class MaskTestMixin(object):
+                     torch.from_numpy(scale_factor).to(det_bboxes[0].device)
+                     for scale_factor in scale_factors
+                 ]
+-            if torch.onnx.is_in_onnx_export():
+-                # avoid mask_pred.split with static number of prediction
+-                mask_preds = []
+-                _bboxes = []
+-                for i, boxes in enumerate(det_bboxes):
+-                    boxes = boxes[:, :4]
+-                    if rescale:
+-                        boxes *= scale_factors[i]
+-                    _bboxes.append(boxes)
+-                    img_inds = boxes[:, :1].clone() * 0 + i
+-                    mask_rois = torch.cat([img_inds, boxes], dim=-1)
+-                    mask_result = self._mask_forward(x, mask_rois)
+-                    mask_preds.append(mask_result['mask_pred'])
+-            else:
+-                _bboxes = [
+-                    det_bboxes[i][:, :4] *
+-                    scale_factors[i] if rescale else det_bboxes[i][:, :4]
+-                    for i in range(len(det_bboxes))
+-                ]
+-                mask_rois = bbox2roi(_bboxes)
+-                mask_results = self._mask_forward(x, mask_rois)
+-                mask_pred = mask_results['mask_pred']
+-                # split batch mask prediction back to each image
+-                num_mask_roi_per_img = [
+-                    det_bbox.shape[0] for det_bbox in det_bboxes
+-                ]
+-                mask_preds = mask_pred.split(num_mask_roi_per_img, 0)
++            # avoid mask_pred.split with static number of prediction
++            mask_preds = []
++            _bboxes = []
++            for i, boxes in enumerate(det_bboxes):
++                boxes = boxes[:, :4]
++                if rescale:
++                    boxes *= scale_factors[i]
++                _bboxes.append(boxes)
++                img_inds = boxes[:, :1].clone() * 0 + i
++                mask_rois = torch.cat([img_inds, boxes], dim=-1)
++                mask_result = self._mask_forward(x, mask_rois)
++                mask_preds.append(mask_result['mask_pred'])
+ 
+             # apply mask post-processing to each image individually
+             segm_results = []

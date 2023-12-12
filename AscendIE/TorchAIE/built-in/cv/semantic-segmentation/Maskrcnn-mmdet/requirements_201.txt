@@ -1,0 +1,11 @@
+torch==2.0.1
+torchvision==0.15.2
+tqdm
+decorator
+attrs
+psutil
+absl-py
+cloudpickle
+scipy
+synr==0.5.0
+tornado
