@@ -267,5 +267,5 @@
 
 | 硬件形态 | 性能 | 模型|
 | :------: | :--------: | :--------: |
-| Duo并行  | 80fps  | control |  
-| Duo并行 | 33fps | sd |
+| Duo并行  | 93fps  | control |  
+| Duo并行 | 38fps | sd |

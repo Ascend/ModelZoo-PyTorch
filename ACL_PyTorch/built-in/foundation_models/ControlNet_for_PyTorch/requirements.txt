@@ -14,7 +14,6 @@ transformers==4.19.2
 webdataset==0.2.5
 kornia==0.6
 open_clip_torch==2.0.2
-invisible-watermark>=0.1.5
 streamlit-drawable-canvas==0.8.0
 torchmetrics==0.6.0 
 timm==0.6.12

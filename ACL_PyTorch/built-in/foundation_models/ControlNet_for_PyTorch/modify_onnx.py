@@ -328,6 +328,19 @@ def change_shapes_of_reshape(model):
         shape_initializer.value = shape
 
 
+def replace_slice(model):
+    slice_list = model.get_nodes('Slice')
+    slice_pairs = [slice_list[i: i+2] for i in range(0, len(slice_list), 2)]
+    for i, node in enumerate(slice_pairs):
+        next_node = model.get_next_nodes(node[0].outputs[0])[0]
+        if next_node.op_type == 'Mul':
+            model.add_node(f'SliceTransGeluMul{i}', 'SliceTransGeluMul', inputs=[node[0].inputs[0]], outputs=next_node.outputs)
+            model.remove(next_node.name, {})
+        model.remove(node[0].name, {})
+        model.remove(node[1].name, {})
+    model.update_map()
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -350,6 +363,7 @@ def main():
     add_flash_attention(model, 'FlashAttentionTik')
     insert_tome_block(model)
     change_shapes_of_reshape(model)
+    replace_slice(model)
     model.remove_unused_nodes()
     model.save(args.new_model)
 

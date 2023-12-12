@@ -18,7 +18,6 @@ import random
 import time
 
 from PIL import Image
-from ais_bench.infer.interface import InferSession
 import cv2
 import einops
 import numpy as np
@@ -30,6 +29,7 @@ from annotator.canny import CannyDetector
 from cldm.model import create_model, load_state_dict
 from cldm.ddim_hacked import DDIMSampler
 import config
+from ais_bench.infer.interface import InferSession
 
 
 def parse_arguments():
@@ -188,12 +188,11 @@ def process(model, ddim_sampler, sd_session, control_session, input_image,
             model.low_vram_shift(is_diffusing=True)
 
         model.control_scales = [
-        	strength * (0.825 ** float(12 - i)) for i in range(13)] 
-        	if guess_mode else ([strength] * 13
-        )
+            strength * (0.825 ** float(12 - i)) for i in range(13)
+        ] if guess_mode else ([strength] * 13)
 
         samples, intermediates = ddim_sampler.sample(
-        	ddim_steps, num_samples,                  
+            ddim_steps, num_samples,                  
             shape, sd_session, control_session,
             cond, verbose=False, eta=eta,
             unconditional_guidance_scale=scale,
@@ -205,8 +204,8 @@ def process(model, ddim_sampler, sd_session, control_session, input_image,
 
         x_samples = model.decode_first_stage(samples)
         x_samples = (
-        	einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + \
-        	127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
+            einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + \
+            127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
         results = [x_samples[i] for i in range(num_samples)]
 
