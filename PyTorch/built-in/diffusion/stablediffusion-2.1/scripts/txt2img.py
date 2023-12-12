@@ -384,7 +384,7 @@ def main(opt):
         data = [batch_size * [input_t]]
         precision_scope = autocast if opt.precision == "autocast" or opt.bf16 else nullcontext
         with torch.no_grad(), \
-                precision_scope(opt.device), \
+                precision_scope("npu"), \
                 model.ema_scope():
             all_samples = list()
             for n in trange(opt.n_iter, desc="Sampling"):

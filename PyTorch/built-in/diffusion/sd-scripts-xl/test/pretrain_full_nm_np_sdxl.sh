@@ -5,7 +5,7 @@ Network="StableDiffusionXL"
 pretrain_model_path="stabilityai/stable-diffusion-xl-base-1.0"
 vae_model_path="madebyollin/sdxl-vae-fp16-fix"
 tokenizer1_path="openai/clip-vit-large-patch14"
-tokenizer2_path="laion/CLIP-VIT-bigG-14-laion2B-39B-b160k"
+tokenizer2_path="laion/CLIP-ViT-bigG-14-laion2B-39B-b160k"
 dataset_name="laion"
 batch_size=4
 max_train_epoch=120
@@ -76,8 +76,9 @@ python3 -m torch.distributed.launch --nnodes=${nnodes} --nproc_per_node=${nproc_
   --max_bucket_reso=2048 \
   --output_dir=${output_path} \
   --output_name="test_sdxl" \
-  --save_every_n_epochs=20 \
+  --save_every_n_epochs=10 \
   --save_precision=float \
+  --save_model_as="ckpt" \
   --logging_dir="./logs" \
   --max_train_epoch=${max_train_epoch} \
   --gradient_checkpointing \
@@ -110,7 +111,7 @@ e2e_time=$(($end_time - $start_time))
 echo "------------------ Final result ------------------"
 
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "FPS: " ${output_path}/train_${ASCEND_DEVICE_ID}.log | awk '{print $NF}') | sed -n '100,199p' | awk '{a+=$1}END{print a/NR}'
+FPS=$(grep "FPS: " ${output_path}/train_${ASCEND_DEVICE_ID}.log | awk '{print $NF}' | sed -n '1000,1999p' | awk '{a+=$1}END{print a/NR}')
 
 #获取性能数据，不需要修改
 #吞吐量

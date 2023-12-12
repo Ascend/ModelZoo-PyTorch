@@ -126,29 +126,22 @@ Stable Diffusion(SD)是计算机视觉领域的一个生成式大模型，能够
 
 2. 运行训练脚本。
 
-   该模型支持单机单卡训练、单机8卡和多机多卡预训练
+   该模型支持单机8卡和多机多卡预训练
 
-   - 单机单卡预训练
-
-     ```shell
-     bash test/pretrain_full_1m_1p_sdxl.sh # 1卡精度，默认为混精，带FA场景
-     bash test/pretrain_full_1m_1p_sdxl.sh --max_train_epoch=13 # 1卡性能，默认为混精，带FA场景
-     ```
-     
    - 单机8卡预训练
-   
+
      ```shell
      bash test/pretrain_full_1m_8p_sdxl.sh # 8卡精度，默认为混精，带FA场景
      bash test/pretrain_full_1m_8p_sdxl.sh --max_train_epoch=13 # 8卡性能，默认为混精，带FA场景
      ```
-     
+   
    - 多机多卡预训练
    
      ```shell
      bash test/pretrain_full_nm_np_sdxl.sh --nnodes=2 --nproc_per_node=8 --node_rank=0 --master_ip=x.x.x.x --master_port=8989 # 多卡精度，默认为混精，带FA场景
      bash test/pretrain_full_nm_np_sdxl.sh --nnodes=2 --nproc_per_node=8 --node_rank=0 --master_ip=x.x.x.x --master_port=8989 --max_train_epoch=13 # 多卡性能，默认为混精，带FA场景
      ```
-     
+   
      > 脚本参数说明：
      >
      > nnodes：机器数量。
@@ -160,7 +153,7 @@ Stable Diffusion(SD)是计算机视觉领域的一个生成式大模型，能够
      > master_ip：主机ip地址。
      >
      > master_port：主机端口号。
-     
+   
    - 模型的python训练脚本参数说明。
    
    ```shell
@@ -178,8 +171,9 @@ Stable Diffusion(SD)是计算机视觉领域的一个生成式大模型，能够
    --max_bucket_reso                   //分桶操作的最大分辨率
    --output_dir                        //输出ckpt的输出路径
    --output_name                       //输出ckpt的前缀
-   --save_every_n_epochs               //每n个epoch保存一次ckpt
-   --save_precision                    //保存ckpt的精度
+   --save_every_n_epochs               //每n个epoch保存一次权重
+   --save_precision                    //保存权重的精度
+   --save_model_as                     //保存权重的格式
    --logging_dir                       //输出日志路径
    --gradient_checkpointing            //使能重计算
    --gradient_accumulation_steps       //梯度累计步数

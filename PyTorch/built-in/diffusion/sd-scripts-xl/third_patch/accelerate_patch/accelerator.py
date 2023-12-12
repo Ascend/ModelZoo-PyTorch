@@ -1433,7 +1433,7 @@ class Accelerator:
                         device_ids, output_device = None, None
 
                     if optimizer is not None:
-                        from fairscale.nn.data_parallel.shard_ddp import ShardedDataParallel
+                        from fairscale.nn.data_parallel.sharded_ddp import ShardedDataParallel
                         model = ShardedDataParallel(model, optimizer)
                     else:
                         model = torch.nn.parallel.DistributedDataParallel(
