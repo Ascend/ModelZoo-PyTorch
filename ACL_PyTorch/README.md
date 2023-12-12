@@ -2999,7 +2999,7 @@ python3 get_modelID.py --model your_model_name</strong><br /></p>
         <td></td>
         <td></td>
         <td></td>
-    <td>890(bs64)</td>
+    <td>684(bs4)</td>
         <td></td>
         <td>bs x 3 x 640 x 640</td>
     </tr>

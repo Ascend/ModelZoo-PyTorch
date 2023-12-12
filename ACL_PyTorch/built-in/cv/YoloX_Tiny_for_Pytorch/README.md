@@ -226,9 +226,9 @@ YOLOX对YOLO系列进行了一些有经验的改进，将YOLO检测器转换为�
 
 | 芯片型号 | Batch Size | 数据集 | 精度 | 310P性能 |
 | -------- | ---------- | ------ | ---- | ---- |
-|     310P3     |   1   | coco2017 | bbox_map:0.3336 |  304.55fps  |
-|     310P3     |   4   | coco2017 | bbox_map:0.3336 |  722.44fps  |
-|     310P3     |   8   | coco2017 | bbox_map:0.3336 |  730.87fps  |
-|     310P3     |   16   | coco2017 | bbox_map:0.3336 |  694.14fps  |
-|     310P3     |   32   | coco2017 | bbox_map:0.3336 |  692.28fps  |
-|     310P3     |   64   | coco2017 | bbox_map:0.3336 |  689.18fps  |
+|     310P3     |   1   | coco2017 | bbox_map:0.3336 |  303.55fps  |
+|     310P3     |   4   | coco2017 | bbox_map:0.3336 |  684fps  |
+|     310P3     |   8   | coco2017 | bbox_map:0.3336 |  682fps  |
+|     310P3     |   16   | coco2017 | bbox_map:0.3336 |  636fps  |
+|     310P3     |   32   | coco2017 | bbox_map:0.3336 |  617fps  |
+|     310P3     |   64   | coco2017 | bbox_map:0.3336 |  621fps  |
