@@ -1,3 +1,4 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
 import argparse
 from dataclasses import (
   asdict,
@@ -527,6 +528,10 @@ def generate_dreambooth_subsets_config_by_subdirs(train_data_dir: Optional[str] 
         continue
 
       subset_config = {"image_dir": str(subdir), "num_repeats": num_repeats, "is_reg": is_reg, "class_tokens": class_tokens}
+      subsets_config.append(subset_config)
+
+    if subsets_config == []:
+      subset_config = {"image_dir": str(base_dir), "num_repeats": 1, "is_reg": is_reg, "class_tokens": str(base_dir)}
       subsets_config.append(subset_config)
 
     return subsets_config

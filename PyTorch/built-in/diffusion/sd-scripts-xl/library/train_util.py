@@ -1,3 +1,4 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
 # common functions for training
 
 import argparse
@@ -2818,8 +2819,8 @@ def add_training_arguments(parser: argparse.ArgumentParser, support_dreambooth: 
         "--max_token_length",
         type=int,
         default=None,
-        choices=[None, 150, 225],
-        help="max token length of text encoder (default for 75, 150 or 225) / text encoderのトークンの最大長（未指定で75、150または225が指定可）",
+        choices=[None, 77, 150, 225, 512],
+        help="max token length of text encoder (default for 77, 150, 225 or 512) / text encoderのトークンの最大長（未指定で75、150または225が指定可）",
     )
     parser.add_argument(
         "--mem_eff_attn",
@@ -3212,6 +3213,9 @@ def add_dataset_arguments(
         default=None,
         help="dataset class for arbitrary dataset (package.module.Class) / 任意のデータセットを用いるときのクラス名 (package.module.Class)",
     )
+    parser.add_argument("--tokenizer1_path", type=str, default=None, help="tokenizer1 path")
+    parser.add_argument("--tokenizer2_path", type=str, default=None, help="tokenizer2 path")
+    parser.add_argument("--enable_npu_flash_attention", action="store_true", help="enable npu flash attention")
 
     if support_caption_dropout:
         # Textual Inversion はcaptionのdropoutをsupportしない
@@ -3629,6 +3633,11 @@ def get_optimizer(args, trainable_params):
         print(f"use AdamW optimizer | {optimizer_kwargs}")
         optimizer_class = torch.optim.AdamW
         optimizer = optimizer_class(trainable_params, lr=lr, **optimizer_kwargs)
+    elif optimizer_type == "OSS".lower():
+        print(f"use OSS optimizer | {optimizer_kwargs}")
+        from fairscale.optim import OSS
+        optimizer_class = OSS
+        optimizer = optimizer_class(trainable_params, optim=torch.optim.AdamW, lr=lr, **optimizer_kwargs)
 
     if optimizer is None:
         # 任意のoptimizerを使う
@@ -4061,8 +4070,8 @@ def get_hidden_states_sdxl(
     # pool2 = enc_out["text_embeds"]
     pool2 = pool_workaround(text_encoder2, enc_out["last_hidden_state"], input_ids2, tokenizer2.eos_token_id)
 
-    # b*n, 77, 768 or 1280 -> b, n*77, 768 or 1280
-    n_size = 1 if max_token_length is None else max_token_length // 75
+    # b*n, tokenizer1.model_max_length, 768 or 1280 -> b, n*tokenizer1.model_max_length, 768 or 1280
+    n_size = 1 if max_token_length is None else max_token_length // (tokenizer1.model_max_length - 2)
     hidden_states1 = hidden_states1.reshape((b_size, -1, hidden_states1.shape[-1]))
     hidden_states2 = hidden_states2.reshape((b_size, -1, hidden_states2.shape[-1]))
 

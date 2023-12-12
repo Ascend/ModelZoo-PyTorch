@@ -1,3 +1,4 @@
+# Copyright 2023 Huawei Technologies Co., Ltd
 import argparse
 import gc
 import math
@@ -130,7 +131,7 @@ def _load_target_model(
 def load_tokenizers(args: argparse.Namespace):
     print("prepare tokenizers")
 
-    original_paths = [TOKENIZER1_PATH, TOKENIZER2_PATH]
+    original_paths = [args.tokenizer1_path, args.tokenizer2_path]
     tokeniers = []
     for i, original_path in enumerate(original_paths):
         tokenizer: CLIPTokenizer = None
@@ -154,6 +155,8 @@ def load_tokenizers(args: argparse.Namespace):
 
     if hasattr(args, "max_token_length") and args.max_token_length is not None:
         print(f"update token length: {args.max_token_length}")
+        for tokenizer in tokeniers:
+            tokenizer.max_token_length = args.max_token_length
 
     return tokeniers
 

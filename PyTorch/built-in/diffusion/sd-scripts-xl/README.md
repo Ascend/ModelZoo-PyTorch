@@ -1,389 +1,223 @@
-__SDXL is now supported. The sdxl branch has been merged into the main branch. If you update the repository, please follow the upgrade instructions. Also, the version of accelerate has been updated, so please run accelerate config again.__ The documentation for SDXL training is [here](./README.md#sdxl-training).
+# sd-scripts-xl for PyTorch
 
-This repository contains training, generation and utility scripts for Stable Diffusion.
+-   [概述](概述.md)
+-   [准备训练环境](准备训练环境.md)
+-   [开始训练](开始训练.md)
+-   [训练结果展示](训练结果展示.md)
+-   [版本说明](版本说明.md)
 
-[__Change History__](#change-history) is moved to the bottom of the page. 
-更新履歴は[ページ末尾](#change-history)に移しました。
 
-[日本語版READMEはこちら](./README-ja.md)
 
-For easier use (GUI and PowerShell scripts etc...), please visit [the repository maintained by bmaltais](https://github.com/bmaltais/kohya_ss). Thanks to @bmaltais!
+# 概述
 
-This repository contains the scripts for:
+## 简述
 
-* DreamBooth training, including U-Net and Text Encoder
-* Fine-tuning (native training), including U-Net and Text Encoder
-* LoRA training
-* Textual Inversion training
-* Image generation
-* Model conversion (supports 1.x and 2.x, Stable Diffision ckpt/safetensors and Diffusers)
+Stable Diffusion(SD)是计算机视觉领域的一个生成式大模型，能够进行文生图（txt2img）和图生图（img2img）等图像生成任务。sd-scripts仓适配了SD模型的训练、生成以及多个下游任务脚本，包括新版本**Stable Diffusion XL**。
 
-## About requirements.txt
+- 参考实现：
 
-These files do not contain requirements for PyTorch. Because the versions of them depend on your environment. Please install PyTorch at first (see installation guide below.) 
+  ```
+  url=https://github.com/kohya-ss/sd-scripts
+  commit_id=46cf41cc93d5856664a2835da2d92796f9344281
+  ```
 
-The scripts are tested with Pytorch 2.0.1. 1.12.1 is not tested but should work.
+- 适配昇腾 AI 处理器的实现：
 
-## Links to usage documentation
+  ```
+  url=https://gitee.com/ascend/ModelZoo-PyTorch.git
+  code_path=PyTorch/built-in/diffusion/
+  ```
 
-Most of the documents are written in Japanese.
+# 准备训练环境
 
-[English translation by darkstorm2150 is here](https://github.com/darkstorm2150/sd-scripts#links-to-usage-documentation). Thanks to darkstorm2150!
+## 准备环境
 
-* [Training guide - common](./docs/train_README-ja.md) : data preparation, options etc... 
-  * [Chinese version](./docs/train_README-zh.md)
-* [Dataset config](./docs/config_README-ja.md) 
-* [DreamBooth training guide](./docs/train_db_README-ja.md)
-* [Step by Step fine-tuning guide](./docs/fine_tune_README_ja.md):
-* [training LoRA](./docs/train_network_README-ja.md)
-* [training Textual Inversion](./docs/train_ti_README-ja.md)
-* [Image generation](./docs/gen_img_README-ja.md)
-* note.com [Model conversion](https://note.com/kohya_ss/n/n374f316fe4ad)
+- 当前模型支持的 PyTorch 版本和已知三方库依赖如下表所示。
 
-## Windows Required Dependencies
+  **表 1**  版本支持表
 
-Python 3.10.6 and Git:
+  | Torch_Version      | 三方库依赖版本                                 |
+  | :--------: | :----------------------------------------------------------: |
+  | PyTorch 1.11+python3.8 | diffusers==0.21.2 accelerate==0.23.0 fairscale==0.4.13 torchvision==0.12.0 torchvision_npu==0.12.0 |
+  
+- 环境准备指导。
 
-- Python 3.10.6: https://www.python.org/ftp/python/3.10.6/python-3.10.6-amd64.exe
-- git: https://git-scm.com/download/win
+  请参考《[Pytorch框架训练环境准备](https://www.hiascend.com/document/detail/zh/ModelZoo/pytorchframework/ptes)》搭建torch环境。
+  
+- 安装依赖。
 
-Give unrestricted script access to powershell so venv can work:
+  1. 在模型根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
+  
+     ```
+     pip install -r requirements.txt 
+     ```
+  
+  2. 参考[gitee官仓](https://gitee.com/ascend/vision/tree/v0.12.0-dev/)安装对应0.12.0版本的torchvision和torchvision_npu。
+  
+- 替换三方库补丁。
 
-- Open an administrator powershell window
-- Type `Set-ExecutionPolicy Unrestricted` and answer A
-- Close admin powershell window
+  在模型根目录下，将以下命令中`python_path`变量赋值为当前环境下的python路径，并执行：
 
-## Windows Installation
-
-Open a regular Powershell terminal and type the following inside:
-
-```powershell
-git clone https://github.com/kohya-ss/sd-scripts.git
-cd sd-scripts
-
-python -m venv venv
-.\venv\Scripts\activate
-
-pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 --index-url https://download.pytorch.org/whl/cu118
-pip install --upgrade -r requirements.txt
-pip install xformers==0.0.20
-
-accelerate config
-```
-
-__Note:__ Now bitsandbytes is optional. Please install any version of bitsandbytes as needed. Installation instructions are in the following section.
-
-<!-- 
-cp .\bitsandbytes_windows\*.dll .\venv\Lib\site-packages\bitsandbytes\
-cp .\bitsandbytes_windows\cextension.py .\venv\Lib\site-packages\bitsandbytes\cextension.py
-cp .\bitsandbytes_windows\main.py .\venv\Lib\site-packages\bitsandbytes\cuda_setup\main.py
--->
-Answers to accelerate config:
-
-```txt
-- This machine
-- No distributed training
-- NO
-- NO
-- NO
-- all
-- fp16
-```
-
-note: Some user reports ``ValueError: fp16 mixed precision requires a GPU`` is occurred in training. In this case, answer `0` for the 6th question: 
-``What GPU(s) (by id) should be used for training on this machine as a comma-separated list? [all]:`` 
-
-(Single GPU with id `0` will be used.)
-
-### Optional: Use `bitsandbytes` (8bit optimizer)
-
-For 8bit optimizer, you need to install `bitsandbytes`. For Linux, please install `bitsandbytes` as usual (0.41.1 or later is recommended.)
-
-For Windows, there are several versions of `bitsandbytes`:
-
-- `bitsandbytes` 0.35.0: Stable version. AdamW8bit is available. `full_bf16` is not available.
-- `bitsandbytes` 0.41.1: Lion8bit, PagedAdamW8bit and PagedLion8bit are available. `full_bf16` is available.
-
-Note: `bitsandbytes`above 0.35.0 till 0.41.0 seems to have an issue: https://github.com/TimDettmers/bitsandbytes/issues/659
-
-Follow the instructions below to install `bitsandbytes` for Windows.
-
-### bitsandbytes 0.35.0 for Windows
-
-Open a regular Powershell terminal and type the following inside:
-
-```powershell
-cd sd-scripts
-.\venv\Scripts\activate
-pip install bitsandbytes==0.35.0
-
-cp .\bitsandbytes_windows\*.dll .\venv\Lib\site-packages\bitsandbytes\
-cp .\bitsandbytes_windows\cextension.py .\venv\Lib\site-packages\bitsandbytes\cextension.py
-cp .\bitsandbytes_windows\main.py .\venv\Lib\site-packages\bitsandbytes\cuda_setup\main.py
-```
-
-This will install `bitsandbytes` 0.35.0 and copy the necessary files to the `bitsandbytes` directory.
-
-### bitsandbytes 0.41.1 for Windows
-
-Install the Windows version whl file from [here](https://github.com/jllllll/bitsandbytes-windows-webui) or other sources, like:
-
-```powershell
-python -m pip install bitsandbytes==0.41.1 --prefer-binary --extra-index-url=https://jllllll.github.io/bitsandbytes-windows-webui
-```
-
-## Upgrade
-
-When a new release comes out you can upgrade your repo with the following command:
-
-```powershell
-cd sd-scripts
-git pull
-.\venv\Scripts\activate
-pip install --use-pep517 --upgrade -r requirements.txt
-```
-
-Once the commands have completed successfully you should be ready to use the new version.
-
-## Credits
-
-The implementation for LoRA is based on [cloneofsimo's repo](https://github.com/cloneofsimo/lora). Thank you for great work!
-
-The LoRA expansion to Conv2d 3x3 was initially released by cloneofsimo and its effectiveness was demonstrated at [LoCon](https://github.com/KohakuBlueleaf/LoCon) by KohakuBlueleaf. Thank you so much KohakuBlueleaf!
-
-## License
-
-The majority of scripts is licensed under ASL 2.0 (including codes from Diffusers, cloneofsimo's and LoCon), however portions of the project are available under separate license terms:
-
-[Memory Efficient Attention Pytorch](https://github.com/lucidrains/memory-efficient-attention-pytorch): MIT
-
-[bitsandbytes](https://github.com/TimDettmers/bitsandbytes): MIT
-
-[BLIP](https://github.com/salesforce/BLIP): BSD-3-Clause
-
-
-## SDXL training
-
-The documentation in this section will be moved to a separate document later.
-
-### Training scripts for SDXL
-
-- `sdxl_train.py` is a script for SDXL fine-tuning. The usage is almost the same as `fine_tune.py`, but it also supports DreamBooth dataset.
-  - `--full_bf16` option is added. Thanks to KohakuBlueleaf!
-    - This option enables the full bfloat16 training (includes gradients). This option is useful to reduce the GPU memory usage. 
-    - The full bfloat16 training might be unstable. Please use it at your own risk.
-  - The different learning rates for each U-Net block are now supported in sdxl_train.py. Specify with `--block_lr` option. Specify 23 values separated by commas like `--block_lr 1e-3,1e-3 ... 1e-3`.
-    - 23 values correspond to `0: time/label embed, 1-9: input blocks 0-8, 10-12: mid blocks 0-2, 13-21: output blocks 0-8, 22: out`.
-- `prepare_buckets_latents.py` now supports SDXL fine-tuning.
-
-- `sdxl_train_network.py` is a script for LoRA training for SDXL. The usage is almost the same as `train_network.py`.
-
-- Both scripts has following additional options:
-  - `--cache_text_encoder_outputs` and `--cache_text_encoder_outputs_to_disk`: Cache the outputs of the text encoders. This option is useful to reduce the GPU memory usage. This option cannot be used with options for shuffling or dropping the captions.
-  - `--no_half_vae`: Disable the half-precision (mixed-precision) VAE. VAE for SDXL seems to produce NaNs in some cases. This option is useful to avoid the NaNs.
-
-- `--weighted_captions` option is not supported yet for both scripts.
-
-- `sdxl_train_textual_inversion.py` is a script for Textual Inversion training for SDXL. The usage is almost the same as `train_textual_inversion.py`.
-  - `--cache_text_encoder_outputs` is not supported.
-  - There are two options for captions:
-    1. Training with captions. All captions must include the token string. The token string is replaced with multiple tokens.
-    2. Use `--use_object_template` or `--use_style_template` option. The captions are generated from the template. The existing captions are ignored.
-  - See below for the format of the embeddings.
-
-- `--min_timestep` and `--max_timestep` options are added to each training script. These options can be used to train U-Net with different timesteps. The default values are 0 and 1000.
-
-### Utility scripts for SDXL
-
-- `tools/cache_latents.py` is added. This script can be used to cache the latents to disk in advance. 
-  - The options are almost the same as `sdxl_train.py'. See the help message for the usage.
-  - Please launch the script as follows:
-    `accelerate launch  --num_cpu_threads_per_process 1 tools/cache_latents.py ...`
-  - This script should work with multi-GPU, but it is not tested in my environment.
-
-- `tools/cache_text_encoder_outputs.py` is added. This script can be used to cache the text encoder outputs to disk in advance. 
-  - The options are almost the same as `cache_latents.py` and `sdxl_train.py`. See the help message for the usage.
-
-- `sdxl_gen_img.py` is added. This script can be used to generate images with SDXL, including LoRA, Textual Inversion and ControlNet-LLLite. See the help message for the usage.
-
-### Tips for SDXL training
-
-- The default resolution of SDXL is 1024x1024.
-- The fine-tuning can be done with 24GB GPU memory with the batch size of 1. For 24GB GPU, the following options are recommended __for the fine-tuning with 24GB GPU memory__:
-  - Train U-Net only.
-  - Use gradient checkpointing.
-  - Use `--cache_text_encoder_outputs` option and caching latents.
-  - Use Adafactor optimizer. RMSprop 8bit or Adagrad 8bit may work. AdamW 8bit doesn't seem to work.
-- The LoRA training can be done with 8GB GPU memory (10GB recommended). For reducing the GPU memory usage, the following options are recommended:
-  - Train U-Net only.
-  - Use gradient checkpointing.
-  - Use `--cache_text_encoder_outputs` option and caching latents.
-  - Use one of 8bit optimizers or Adafactor optimizer.
-  - Use lower dim (4 to 8 for 8GB GPU).
-- `--network_train_unet_only` option is highly recommended for SDXL LoRA. Because SDXL has two text encoders, the result of the training will be unexpected.
-- PyTorch 2 seems to use slightly less GPU memory than PyTorch 1.
-- `--bucket_reso_steps` can be set to 32 instead of the default value 64. Smaller values than 32 will not work for SDXL training.
-
-Example of the optimizer settings for Adafactor with the fixed learning rate:
-```toml
-optimizer_type = "adafactor"
-optimizer_args = [ "scale_parameter=False", "relative_step=False", "warmup_init=False" ]
-lr_scheduler = "constant_with_warmup"
-lr_warmup_steps = 100
-learning_rate = 4e-7 # SDXL original learning rate
-```
-
-### Format of Textual Inversion embeddings for SDXL
-
-```python
-from safetensors.torch import save_file
-
-state_dict = {"clip_g": embs_for_text_encoder_1280, "clip_l": embs_for_text_encoder_768}
-save_file(state_dict, file)
-```
-
-### ControlNet-LLLite
-
-ControlNet-LLLite, a novel method for ControlNet with SDXL, is added. See [documentation](./docs/train_lllite_README.md) for details.
-
-
-## Change History
-
-### Dec 3, 2023 / 2023/12/3
-
-- `finetune\tag_images_by_wd14_tagger.py` now supports the separator other than `,` with `--caption_separator` option. Thanks to KohakuBlueleaf! PR [#913](https://github.com/kohya-ss/sd-scripts/pull/913)
-- Min SNR Gamma with V-predicition (SD 2.1) is fixed. Thanks to feffy380! PR[#934](https://github.com/kohya-ss/sd-scripts/pull/934)
-  - See [#673](https://github.com/kohya-ss/sd-scripts/issues/673) for details.
-- `--min_diff` and `--clamp_quantile` options are added to `networks/extract_lora_from_models.py`. Thanks to wkpark! PR [#936](https://github.com/kohya-ss/sd-scripts/pull/936)
-  - The default values are same as the previous version.
-- Deep Shrink hires fix is supported in `sdxl_gen_img.py` and `gen_img_diffusers.py`.
-  - `--ds_timesteps_1` and `--ds_timesteps_2` options denote the timesteps of the Deep Shrink for the first and second stages.
-  - `--ds_depth_1` and `--ds_depth_2` options denote the depth (block index) of the Deep Shrink for the first and second stages.
-  - `--ds_ratio` option denotes the ratio of the Deep Shrink. `0.5` means the half of the original latent size for the Deep Shrink.
-  - `--dst1`, `--dst2`, `--dsd1`, `--dsd2` and `--dsr` prompt options are also available.
-
-- `finetune\tag_images_by_wd14_tagger.py` で `--caption_separator` オプションでカンマ以外の区切り文字を指定できるようになりました。KohakuBlueleaf 氏に感謝します。 PR [#913](https://github.com/kohya-ss/sd-scripts/pull/913)
-- V-predicition (SD 2.1) での Min SNR Gamma が修正されました。feffy380 氏に感謝します。 PR[#934](https://github.com/kohya-ss/sd-scripts/pull/934)
-  - 詳細は [#673](https://github.com/kohya-ss/sd-scripts/issues/673) を参照してください。
-- `networks/extract_lora_from_models.py` に `--min_diff` と `--clamp_quantile` オプションが追加されました。wkpark 氏に感謝します。 PR [#936](https://github.com/kohya-ss/sd-scripts/pull/936)
-  - デフォルト値は前のバージョンと同じです。
-- `sdxl_gen_img.py` と `gen_img_diffusers.py` で Deep Shrink hires fix をサポートしました。
-  - `--ds_timesteps_1` と `--ds_timesteps_2` オプションは Deep Shrink の第一段階と第二段階の timesteps を指定します。
-  - `--ds_depth_1` と `--ds_depth_2` オプションは Deep Shrink の第一段階と第二段階の深さ（ブロックの index）を指定します。
-  - `--ds_ratio` オプションは Deep Shrink の比率を指定します。`0.5` を指定すると Deep Shrink 適用時の latent は元のサイズの半分になります。
-  - `--dst1`、`--dst2`、`--dsd1`、`--dsd2`、`--dsr` プロンプトオプションも使用できます。
-
-### Nov 5, 2023 / 2023/11/5
-
-- `sdxl_train.py` now supports different learning rates for each Text Encoder.
-  - Example:
-    - `--learning_rate 1e-6`: train U-Net only
-    - `--train_text_encoder --learning_rate 1e-6`: train U-Net and two Text Encoders with the same learning rate (same as the previous version)
-    - `--train_text_encoder --learning_rate 1e-6 --learning_rate_te1 1e-6 --learning_rate_te2 1e-6`: train U-Net and two Text Encoders with the different learning rates
-    - `--train_text_encoder --learning_rate 0 --learning_rate_te1 1e-6 --learning_rate_te2 1e-6`: train two Text Encoders only 
-    - `--train_text_encoder --learning_rate 1e-6 --learning_rate_te1 1e-6 --learning_rate_te2 0`: train U-Net and one Text Encoder only
-    - `--train_text_encoder --learning_rate 0 --learning_rate_te1 0 --learning_rate_te2 1e-6`: train one Text Encoder only
-
-- `train_db.py` and `fine_tune.py` now support different learning rates for Text Encoder. Specify with `--learning_rate_te` option. 
-  - To train Text Encoder with `fine_tune.py`, specify `--train_text_encoder` option too. `train_db.py` trains Text Encoder by default.
-
-- Fixed the bug that Text Encoder is not trained when block lr is specified in `sdxl_train.py`.
-
-- Debiased Estimation loss is added to each training script. Thanks to sdbds!
-  - Specify `--debiased_estimation_loss` option to enable it. See PR [#889](https://github.com/kohya-ss/sd-scripts/pull/889) for details.
-- Training of Text Encoder is improved in `train_network.py` and `sdxl_train_network.py`. Thanks to KohakuBlueleaf! PR [#895](https://github.com/kohya-ss/sd-scripts/pull/895)
-- The moving average of the loss is now displayed in the progress bar in each training script. Thanks to shirayu! PR [#899](https://github.com/kohya-ss/sd-scripts/pull/899)
-- PagedAdamW32bit optimizer is supported. Specify `--optimizer_type=PagedAdamW32bit`. Thanks to xzuyn! PR [#900](https://github.com/kohya-ss/sd-scripts/pull/900)
-- Other bug fixes and improvements.
-
-- `sdxl_train.py` で、二つのText Encoderそれぞれに独立した学習率が指定できるようになりました。サンプルは上の英語版を参照してください。
-- `train_db.py` および `fine_tune.py` で Text Encoder に別の学習率を指定できるようになりました。`--learning_rate_te` オプションで指定してください。
-  - `fine_tune.py` で Text Encoder を学習するには `--train_text_encoder` オプションをあわせて指定してください。`train_db.py` はデフォルトで学習します。
-- `sdxl_train.py` で block lr を指定すると Text Encoder が学習されない不具合を修正しました。
-- Debiased Estimation loss が各学習スクリプトに追加されました。sdbsd 氏に感謝します。
-  - `--debiased_estimation_loss` を指定すると有効になります。詳細は PR [#889](https://github.com/kohya-ss/sd-scripts/pull/889) を参照してください。
-- `train_network.py` と `sdxl_train_network.py` でText Encoderの学習が改善されました。KohakuBlueleaf 氏に感謝します。 PR [#895](https://github.com/kohya-ss/sd-scripts/pull/895)
-- 各学習スクリプトで移動平均のlossがプログレスバーに表示されるようになりました。shirayu 氏に感謝します。 PR [#899](https://github.com/kohya-ss/sd-scripts/pull/899)
-- PagedAdamW32bit オプティマイザがサポートされました。`--optimizer_type=PagedAdamW32bit` と指定してください。xzuyn 氏に感謝します。 PR [#900](https://github.com/kohya-ss/sd-scripts/pull/900)
-- その他のバグ修正と改善。
-
-
-Please read [Releases](https://github.com/kohya-ss/sd-scripts/releases) for recent updates.
-最近の更新情報は [Release](https://github.com/kohya-ss/sd-scripts/releases) をご覧ください。
-
-### Naming of LoRA
-
-The LoRA supported by `train_network.py` has been named to avoid confusion. The documentation has been updated. The following are the names of LoRA types in this repository.
-
-1. __LoRA-LierLa__ : (LoRA for __Li__ n __e__ a __r__  __La__ yers)
-
-    LoRA for Linear layers and Conv2d layers with 1x1 kernel
-
-2. __LoRA-C3Lier__ : (LoRA for __C__ olutional layers with __3__ x3 Kernel and  __Li__ n __e__ a __r__ layers)
-
-    In addition to 1., LoRA for Conv2d layers with 3x3 kernel 
-    
-LoRA-LierLa is the default LoRA type for `train_network.py` (without `conv_dim` network arg). LoRA-LierLa can be used with [our extension](https://github.com/kohya-ss/sd-webui-additional-networks) for AUTOMATIC1111's Web UI, or with the built-in LoRA feature of the Web UI.
-
-To use LoRA-C3Lier with Web UI, please use our extension.
-
-### LoRAの名称について
-
-`train_network.py` がサポートするLoRAについて、混乱を避けるため名前を付けました。ドキュメントは更新済みです。以下は当リポジトリ内の独自の名称です。
-
-1. __LoRA-LierLa__ : (LoRA for __Li__ n __e__ a __r__  __La__ yers、リエラと読みます)
-
-    Linear 層およびカーネルサイズ 1x1 の Conv2d 層に適用されるLoRA
-
-2. __LoRA-C3Lier__ : (LoRA for __C__ olutional layers with __3__ x3 Kernel and  __Li__ n __e__ a __r__ layers、セリアと読みます)
-
-    1.に加え、カーネルサイズ 3x3 の Conv2d 層に適用されるLoRA
-
-LoRA-LierLa は[Web UI向け拡張](https://github.com/kohya-ss/sd-webui-additional-networks)、またはAUTOMATIC1111氏のWeb UIのLoRA機能で使用することができます。
-
-LoRA-C3Lierを使いWeb UIで生成するには拡張を使用してください。
-
-## Sample image generation during training
-  A prompt file might look like this, for example
-
-```
-# prompt 1
-masterpiece, best quality, (1girl), in white shirts, upper body, looking at viewer, simple background --n low quality, worst quality, bad anatomy,bad composition, poor, low effort --w 768 --h 768 --d 1 --l 7.5 --s 28
-
-# prompt 2
-masterpiece, best quality, 1boy, in business suit, standing at street, looking back --n (low quality, worst quality), bad anatomy,bad composition, poor, low effort --w 576 --h 832 --d 2 --l 5.5 --s 40
-```
-
-  Lines beginning with `#` are comments. You can specify options for the generated image with options like `--n` after the prompt. The following can be used.
-
-  * `--n` Negative prompt up to the next option.
-  * `--w` Specifies the width of the generated image.
-  * `--h` Specifies the height of the generated image.
-  * `--d` Specifies the seed of the generated image.
-  * `--l` Specifies the CFG scale of the generated image.
-  * `--s` Specifies the number of steps in the generation.
-
-  The prompt weighting such as `( )` and `[ ]` are working.
-
-## サンプル画像生成
-プロンプトファイルは例えば以下のようになります。
-
-```
-# prompt 1
-masterpiece, best quality, (1girl), in white shirts, upper body, looking at viewer, simple background --n low quality, worst quality, bad anatomy,bad composition, poor, low effort --w 768 --h 768 --d 1 --l 7.5 --s 28
-
-# prompt 2
-masterpiece, best quality, 1boy, in business suit, standing at street, looking back --n (low quality, worst quality), bad anatomy,bad composition, poor, low effort --w 576 --h 832 --d 2 --l 5.5 --s 40
-```
-
-  `#` で始まる行はコメントになります。`--n` のように「ハイフン二個＋英小文字」の形でオプションを指定できます。以下が使用可能できます。
-
-  * `--n` Negative prompt up to the next option.
-  * `--w` Specifies the width of the generated image.
-  * `--h` Specifies the height of the generated image.
-  * `--d` Specifies the seed of the generated image.
-  * `--l` Specifies the CFG scale of the generated image.
-  * `--s` Specifies the number of steps in the generation.
-
-  `( )` や `[ ]` などの重みづけも動作します。
-
+  ```
+  python_path=/path/lib/python3.8/site-packages
+  \cp $python_path/accelerate/accelerator.py $python_path/accelerate/accelerator.py_bak
+  \cp $python_path/accelerate/scheduler.py $python_path/accelerate/scheduler.py_bak
+  \cp $python_path/fairscale/optim/oss.py $python_path/fairscale/optim/oss.py_bak
+  
+  \cp ./third_patch/accelerate_patch/accelerator.py $python_path/accelerate/accelerator.py
+  \cp ./third_patch/accelerate_patch/scheduler.py $python_path/accelerate/scheduler.py
+  \cp ./third_patch/fairscale_patch/oss.py $python_path/fairscale/optim/oss.py
+  ```
+
+  
+
+
+## 准备数据集
+
+1. 联网情况下，数据集会自动下载。
+
+2. 无网络情况下，用户需自行获取laion数据集，并在shell启动脚本中将`dataset_name`参数，设置为本地数据集的绝对路径，填写一级目录。
+
+   数据结构如下：
+
+   ```
+   $dataset
+   ├── 000xx.tar
+   	├── 000xxxxx.jpg
+   	├── 000xxxxx.json
+   	└── train-0001.txt
+   ├── 000xx.parquet
+   └── 000xx_stats.json
+   ```
+   
+   > **说明：** 
+   >该数据集的训练过程脚本只作为一种参考示例。
+   
+   
+
+## 获取预训练模型
+
+1. 联网情况下，预训练模型会自动下载。
+
+2. 无网络时，用户可访问huggingface官网自行下载，文件namespace如下：
+
+   ```
+   CompVis/stable-diffusion-v1-4
+   runwayml/stable-diffusion-v1-5
+   stabilityai/stable-diffusion-2
+   stabilityai/stable-diffusion-2-1
+   ```
+
+3. 获取对应的预训练模型后，在shell启动脚本中将`model_name`参数，设置为本地预训练模型路径，填写一级目录。
+
+
+
+# 开始训练
+
+## 预训练模型
+
+本节以预训练为例，展示模型训练方法，其余下游任务txtimg、lora、controlnet、dreambooth、textual inversion等可自行参考适配预训练脚本。
+
+1. 进入解压后的源码包根目录。
+
+   ```
+   cd /${模型文件夹名称} 
+   ```
+
+2. 运行训练脚本。
+
+   该模型支持单机单卡训练、单机8卡和多机多卡预训练
+
+   - 单机单卡预训练
+
+     ```shell
+     bash test/pretrain_full_1m_1p_sdxl.sh # 1卡精度，默认为混精，带FA场景
+     bash test/pretrain_full_1m_1p_sdxl.sh --max_train_epoch=13 # 1卡性能，默认为混精，带FA场景
+     ```
+     
+   - 单机8卡预训练
+   
+     ```shell
+     bash test/pretrain_full_1m_8p_sdxl.sh # 8卡精度，默认为混精，带FA场景
+     bash test/pretrain_full_1m_8p_sdxl.sh --max_train_epoch=13 # 8卡性能，默认为混精，带FA场景
+     ```
+     
+   - 多机多卡预训练
+   
+     ```shell
+     bash test/pretrain_full_nm_np_sdxl.sh --nnodes=2 --nproc_per_node=8 --node_rank=0 --master_ip=x.x.x.x --master_port=8989 # 多卡精度，默认为混精，带FA场景
+     bash test/pretrain_full_nm_np_sdxl.sh --nnodes=2 --nproc_per_node=8 --node_rank=0 --master_ip=x.x.x.x --master_port=8989 --max_train_epoch=13 # 多卡性能，默认为混精，带FA场景
+     ```
+     
+     > 脚本参数说明：
+     >
+     > nnodes：机器数量。
+     >
+     > nproc_per_node：每台机器的卡数。
+     >
+     > node_rank：当前机器是几号机器，主机为0，其它为1,2...
+     >
+     > master_ip：主机ip地址。
+     >
+     > master_port：主机端口号。
+     
+   - 模型的python训练脚本参数说明。
+   
+   ```shell
+   sdxl_pretrain.py：
+   --max_train_steps                   //最大训练步数
+   --max_train_epoch=120               //最大训练轮数
+   --pretrained_model_name_or_path     //预训练模型名称或者绝对路径
+   --vae                               //vae模型名称或者绝对路径
+   --tokenizer1_path                   //tokenizer1名称或者绝对路径
+   --tokenizer2_path                   //tokenizer1名称或者绝对路径
+   --train_data_dir                    //数据集名称或者绝对路径
+   --resolution                        //图片分辨率
+   --enable_bucket                     //使能数据集中图片分辨率分桶操作
+   --min_bucket_reso                   //分桶操作的最小分辨率
+   --max_bucket_reso                   //分桶操作的最大分辨率
+   --output_dir                        //输出ckpt的输出路径
+   --output_name                       //输出ckpt的前缀
+   --save_every_n_epochs               //每n个epoch保存一次ckpt
+   --save_precision                    //保存ckpt的精度
+   --logging_dir                       //输出日志路径
+   --gradient_checkpointing            //使能重计算
+   --gradient_accumulation_steps       //梯度累计步数
+   --learning_rate                     //学习率
+   --train_text_encoder                //使能训练text_encoder
+   --learning_rate_te1                 //text_encode1的学习率
+   --learning_rate_te2                 //text_encode2的学习率
+   --lr_warmup_steps                   //学习率预热步数
+   --max_grad_norm                     //最大梯度归一值
+   --lr_scheduler                      //学习率策略
+   --lr_scheduler_num_cycles           //学习率策略中周期数量
+   --train_batch_size                  //设置batch_size
+   --mixed_precision                   //精度模式
+   --seed                              //随机种子
+   --caption_extension                 //caption文件的扩展名
+   --shuffle_caption                   //打乱caption
+   --keep_tokens                       //打乱caption token时保持前N个token不变（token用逗号分隔）
+   --optimizer_type                    //优化器类型
+   --max_token_length                  //最大token长度
+   --enable_npu_flash_attention        //使能npu_flash_attention，仅支持fp16精度
+   ```
+   
+   训练完成后，权重文件保存在`test/output`路径下，并输出模型训练精度和性能信息。
+
+# 训练结果展示
+
+**表 2**  训练结果展示表
+
+|   NAME   | sd版本 | FPS  | batch_size | AMP_Type | Torch_Version |
+| :------: | :---: | :--: | :------: | :-----------: | :-----------: |
+| 8p-竞品A | xl | 20.2 | 4 | fp16 |      1.13      |
+|  8p-NPU-910  | xl | 10.4 | 4 | fp16 |      1.11      |
+
+# 公网地址说明
+代码涉及公网地址参考 public_address_statement.md
+
+# 版本说明
+
+## 变更
+
+2023.12.11：首次发布。
