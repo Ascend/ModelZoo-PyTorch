@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch.utils.data as data
 
 import os
 import re
+
 import torch
 from PIL import Image
+import torch.utils.data as data
 
 
 IMG_EXTENSIONS = ['.png', '.jpg', '.jpeg']
 
 
 def natural_key(string_):
-    """See http://www.codinghorror.com/blog/archives/001018.html"""
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_.lower())]
 
 

@@ -1,13 +1,17 @@
 # MobileNetV3-推理指导
 
+- [MobileNetV3-推理指导](#mobilenetv3-推理指导)
 - [概述](#概述)
+    - [输入输出数据](#输入输出数据)
 - [推理环境准备](#推理环境准备)
 - [快速上手](#快速上手)
   - [获取源码](#获取源码)
   - [准备数据集](#准备数据集)
   - [模型推理](#模型推理)
-  - [TorchAIE推理](#torch-aie模型推理)
-- [模型推理性能&精度](#模型推理性能&精度)
+    - [1. 模型转换](#1-模型转换)
+    - [2. 开始推理验证](#2-开始推理验证)
+- [TorchAIE模型推理](#torchaie模型推理)
+- [模型推理性能\&精度](#模型推理性能精度)
 
 ******
 
@@ -102,7 +106,7 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
 
 
 ## 模型推理
-### 1 模型转换  
+### 1. 模型转换  
 将模型权重文件`.pth`转换为`.onnx`文件，再使用`ATC`工具将`.onnx`文件转为离线推理模型`.om`文件。
 
 1. 获取权重文件  
@@ -156,7 +160,7 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
         -   `--output_type`：指定网络输出数据类型或指定某个输出节点的输出类型
 
     
-### 2 开始推理验证
+### 2. 开始推理验证
 
 1. 安装`ais_bench`推理工具  
    请访问[ais_bench推理工具](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)代码仓，根据readme文档进行工具安装。
@@ -167,29 +171,40 @@ MobileNetV3引入了MobileNetV1的深度可分离卷积，MobileNetV2的具有�
    python3 om_val.py --dataset=imagenet --checkpoint=output/mbv3_small_bs1.om --batch=1
    ```
    精度和性能(以FPS记)会在屏幕上显示。
-# Torch-AIE模型推理
 
-1. 在mobilenetv3目录下，执行torchscript_export.py以导出原始torchscript模型
- ```
- python torchscript_export.py
- ```
- 导出的ts模型为同目录下的```mobilenetv3.ts```
- 2. torch_aie推理需要pytorch2.0.1，安装Pytorch2.0.1命令为
- ```
-python -m pip install --force-reinstall torch==2.0.1
- ```
- torch_aie也需安装对应pytorch2.0.1的版本。
- 3.性能&精度验证
-```
-python3 torchscript_infer.py --dataset=/path/to/your/imagenet/val  --batch=1
-```
-精度和性能(以FPS记)会在屏幕上显示。
-注意：需要将/path/to/your/imagenet/val替换为你的实际imagenet目录，且是没有经过转换的原始数据集
+# TorchAIE模型推理
+
+1. torch_aie推理需要pytorch2.0.1，安装Pytorch2.0.1命令为
+  ```
+  python -m pip install --force-reinstall torch==2.0.1
+  ```
+torch_aie也需安装对应pytorch2.0.1的版本。
+
+2. 性能&精度验证
+  ```
+  python3 torchscript_infer.py --dataset=/path/to/your/imagenet/val  --batch=1
+  ```
+精度和性能(以FPS记)会在屏幕上显示。--batch参数输入所需的实际batchsize。
+
+注意：将/path/to/your/imagenet/val替换为你的实际imagenet目录，且是没有经过转换的原始数据集
 
 # 模型推理性能&精度
-
-调用ACL接口推理计算，性能&精度参考下列数据。
-
+OM模型推理性能：
 |   芯片型号   | Batch Size |    数据集     |         精度           |      性能      |
 |:-----------:|:----------:|:----------:|:-----------------------:|:------------:|
-| Ascend310P3 |     1      |  ImageNet  | 65.094/Top1 85.432/Top5 | FPS=161（OM性能）FPS=268(torch_aie编译后性能) |
+| Ascend310P3 |     1      |  ImageNet  | 65.094/Top1 85.432/Top5 | 2769.64 fps  |
+| Ascend310P3 |     4      |  ImageNet  | 65.094/Top1 85.432/Top5 | 7743.44 fps  |
+| Ascend310P3 |     8     |  ImageNet  | 65.094/Top1 85.432/Top5 | 10965.24 fps  |
+| Ascend310P3 |     16      |  ImageNet  | 65.094/Top1 85.432/Top5 | 14284.28 fps  |
+| Ascend310P3 |     32      |  ImageNet  | 65.094/Top1 85.432/Top5 | 15442.12 fps  |
+| Ascend310P3 |     64     |  ImageNet  | 65.079/Top1 85.417/Top5 | 14863.88 fps |
+
+TorchAIE编译后推理性能：
+|   芯片型号   | Batch Size |    数据集     |         精度           |      性能      |
+|:-----------:|:----------:|:----------:|:-----------------------:|:------------:|
+| Ascend310P3 |     1      |  ImageNet  | 65.082/Top1 85.434/Top5 | 5570.89 fps  |
+| Ascend310P3 |     4      |  ImageNet  | 65.082/Top1 85.432/Top5 | 18499 fps  |
+| Ascend310P3 |     8     |  ImageNet  | 65.082/Top1 85.432/Top5 | 30136 fps  |
+| Ascend310P3 |     16      |  ImageNet  | 65.082/Top1 85.432/Top5 | 48829 fps  |
+| Ascend310P3 |     32      |  ImageNet  | 65.082/Top1 85.432/Top5 | 81957 fps  |
+| Ascend310P3 |     64     |  ImageNet  | 65.082./Top1 85.417/Top5 | 180060 fps |

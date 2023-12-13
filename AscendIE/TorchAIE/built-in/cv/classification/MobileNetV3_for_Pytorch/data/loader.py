@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import math
+
 import numpy as np
 from PIL import Image
 import torch
@@ -32,7 +33,6 @@ def _pil_interp(method):
     elif method == 'hamming':
         return transforms.InterpolationMode.HAMMING
     else:
-        # default bilinear, do we want to allow nearest?
         return transforms.InterpolationMode.BILINEAR
 
 
@@ -57,9 +57,6 @@ def transforms_imagenet_eval(
     tfl = [
         transforms.Resize(scale_size, _pil_interp(interpolation)),
         transforms.CenterCrop(img_size),
-    ]
-
-    tfl += [
         transforms.ToTensor(),
         transforms.Normalize(
                     mean=torch.tensor(mean),

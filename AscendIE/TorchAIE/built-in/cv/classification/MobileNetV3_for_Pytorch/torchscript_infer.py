@@ -26,10 +26,12 @@ import numpy as np
 
 from mobilenetv3 import MobileNetV3_Small
 from data import Dataset, create_loader, compute_accuracy, AverageMeter
+from torchscript_export import torchscript_export
 
 def main(args):
     BATCH_SIZE = args.batch_size
-    ts_model = torch.jit.load("./mobilenetv3.ts")
+    ts_path = torchscript_export(BATCH_SIZE)
+    ts_model = torch.jit.load(ts_path)
     torch_aie.set_device(0)
     try:
         compiled_module = torch_aie.compile(
@@ -73,6 +75,7 @@ def main(args):
     print(f'ACC: Top1@ {top1.avg:.3f} | Top5@ {top5.avg:.3f}')
     avg_infer_time = sum(inference_time) / len(inference_time)
     print(f'FPS = {BATCH_SIZE / avg_infer_time}')    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Validation')

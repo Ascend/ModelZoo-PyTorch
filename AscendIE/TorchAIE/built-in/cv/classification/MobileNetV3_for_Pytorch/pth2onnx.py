@@ -56,8 +56,8 @@ def pth2onnx(args, model_pt):
         dynamic_axes={'input': {0: 'batch'}, 'output': {0: 'batch'}} if args.dynamic else None)
     
     # Checks
-    model_onnx = onnx.load(output_onnx)  # load onnx model
-    onnx.checker.check_model(model_onnx)  # check onnx model
+    model_onnx = onnx.load(output_onnx) 
+    onnx.checker.check_model(model_onnx)
 
     # Simplify
     if args.simplify:
@@ -85,9 +85,9 @@ if __name__ == "__main__":
     parser.add_argument('--simplify', action='store_true', help='ONNX: simplify model')
     args = parser.parse_args()
     
-    ### load model
+    # load model
     model_pt = get_model(args)
  
-    ### pth2onnx
+    # pth2onnx
     model_onnx = pth2onnx(args, model_pt)
-    print("导出onnx success")
+    print("onnx model successfully exported.")
