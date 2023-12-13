@@ -26,9 +26,9 @@ import numpy as np
 
 from mobilenetv3 import MobileNetV3_Small
 from data import Dataset, create_loader, compute_accuracy, AverageMeter
-BATCH_SIZE = 1
 
 def main(args):
+    BATCH_SIZE = args.batch_size
     ts_model = torch.jit.load("./mobilenetv3.ts")
     torch_aie.set_device(0)
     try:
@@ -57,20 +57,22 @@ def main(args):
     # infer and compute accuracy
     top1 = AverageMeter()
     top5 = AverageMeter()
-    start_time = time.time()
+    inference_time = []
     for i, (input_data, target) in enumerate(tqdm(loader)):
-
         input_npu = input_data.to("npu:0")
+        start_time = time.time()
         output_npu = model.forward(input_npu)
+        end_time = time.time()
         output = output_npu.to("cpu")
-        # measure accuracy and record loss
+        if i >= 5:
+            inference_time.append(end_time - start_time)
         prec1, prec5 = compute_accuracy(output, target, topk=(1, 5))
         top1.update(prec1.item(), input_data.size(0))
         top5.update(prec5.item(), input_data.size(0))
-    end_time = time.time()
+    print(f'batch_size = {BATCH_SIZE}')
     print(f'ACC: Top1@ {top1.avg:.3f} | Top5@ {top5.avg:.3f}')
-    time_elapsed = end_time - start_time
-    print(f'Total number = {i}, time elapsed = {time_elapsed}s, FPS={i/time_elapsed}')
+    avg_infer_time = sum(inference_time) / len(inference_time)
+    print(f'FPS = {BATCH_SIZE / avg_infer_time}')    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch ImageNet Validation')

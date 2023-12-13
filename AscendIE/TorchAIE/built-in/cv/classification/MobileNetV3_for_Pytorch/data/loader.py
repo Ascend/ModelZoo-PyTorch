@@ -99,6 +99,7 @@ def create_loader(
         shuffle=False,
         num_workers=num_workers,
         collate_fn=torch.utils.data.dataloader.default_collate,
+        drop_last=True,
     )
 
     return loader
