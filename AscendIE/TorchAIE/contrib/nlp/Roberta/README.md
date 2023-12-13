@@ -127,14 +127,13 @@ source set_env.sh
 
 1. 获取源码
 
-   通过Git获取对应版本的代码并安装的方法如下：
-   ```bash
-   git clone https://github.com/huggingface/transformers.git    # 克隆仓库的代码
-   cd transformers                                              # 切换到模型的代码仓目录
-   git checkout v4.20.0                                         # 切换到对应版本
-   git reset --hard 39b4aba54d349f35e2f0bd4addbe21847d037e9e    # 将暂存区与工作区都回到上一次版本
-   pip3 install ./                                              # 通过源码进行安装
-   cd ..
+
+   ```
+   git clone https://github.com/pytorch/fairseq.git fairseq_workspace
+   cd fairseq_workspace
+   git checkout c1624b27
+   patch -p1 < ../roberta-infer.patch
+   pip3 install --editable ./
    ```
 
 2. 安装依赖
@@ -147,15 +146,6 @@ source set_env.sh
    pip3 install -r requirements.txt
    ```
 
-  安装模型依赖:
-
-   ```
-   git clone https://github.com/pytorch/fairseq.git fairseq_workspace
-   cd fairseq_workspace
-   git checkout c1624b27
-   git apply ../roberta-infer.patch
-   pip3 install --editable ./
-   ```
 
 
 
@@ -268,7 +258,7 @@ source set_env.sh
     
    | NPU芯片型号 | Batch Size |  数据集   |  精度 | 性能|
    | :-------:  | :--------: | :---------: | :-----: | :----: | 
-   |Ascend310P3 |      1     | SST-2 |   Acc: 91.8% |  356   |     
+   |Ascend310P3 |      1     | SST-2 |   Acc: 94.7% |  356   |     
    |Ascend310P3 |      4     | SST-2 |    |   764  |     
    |Ascend310P3 |      8     | SST-2 |    |   942  |     
    |Ascend310P3 |      16    | SST-2 |    |   1027  |     

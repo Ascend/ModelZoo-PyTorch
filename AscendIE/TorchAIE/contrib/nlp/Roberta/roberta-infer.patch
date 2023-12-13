@@ -1,0 +1,823 @@
+diff --git a/examples/roberta/preprocess_GLUE_tasks.sh b/examples/roberta/preprocess_GLUE_tasks.sh
+old mode 100755
+new mode 100644
+index 7f215a3b..95d51728
+--- a/examples/roberta/preprocess_GLUE_tasks.sh
++++ b/examples/roberta/preprocess_GLUE_tasks.sh
+@@ -134,7 +134,7 @@ do
+     do
+       LANG="input$INPUT_TYPE"
+       echo "BPE encoding $SPLIT/$LANG"
+-      python -m examples.roberta.multiprocessing_bpe_encoder \
++      python3 -m fairseq_workspace.examples.roberta.multiprocessing_bpe_encoder \
+       --encoder-json encoder.json \
+       --vocab-bpe vocab.bpe \
+       --inputs "$TASK_DATA_FOLDER/processed/$SPLIT.raw.$LANG" \
+@@ -159,7 +159,7 @@ do
+   for INPUT_TYPE in $(seq 0 $((INPUT_COUNT-1)))
+   do
+     LANG="input$INPUT_TYPE"
+-    fairseq-preprocess \
++      python3 ./fairseq_workspace/fairseq_cli/preprocess.py \
+       --only-source \
+       --trainpref "$TASK_DATA_FOLDER/processed/train.$LANG" \
+       --validpref "${DEVPREF//LANG/$LANG}" \
+@@ -170,7 +170,7 @@ do
+   done
+   if [[ "$TASK" !=  "STS-B" ]]
+   then
+-    fairseq-preprocess \
++    python3 ./fairseq_workspace/fairseq_cli/preprocess.py \
+       --only-source \
+       --trainpref "$TASK_DATA_FOLDER/processed/train.label" \
+       --validpref "${DEVPREF//LANG/label}" \
+@@ -182,4 +182,5 @@ do
+     awk '{print $1 / 5.0 }' "$TASK_DATA_FOLDER/processed/train.label" > "$TASK-bin/label/train.label"
+     awk '{print $1 / 5.0 }' "$TASK_DATA_FOLDER/processed/dev.label" > "$TASK-bin/label/valid.label"
+   fi
++  mv $TASK-bin ./data
+ done
+diff --git a/fairseq/criterions/sentence_prediction.py b/fairseq/criterions/sentence_prediction.py
+index 482b9798..ca1bd4fe 100644
+--- a/fairseq/criterions/sentence_prediction.py
++++ b/fairseq/criterions/sentence_prediction.py
+@@ -44,7 +44,7 @@ class SentencePredictionCriterion(FairseqCriterion):
+             and self.classification_head_name in model.classification_heads
+         ), "model must provide sentence classification head for --criterion=sentence_prediction"
+ 
+-        logits, _ = model(
++        logits = model(
+             **sample["net_input"],
+             features_only=True,
+             classification_head_name=self.classification_head_name,
+diff --git a/fairseq/data/iterators.py b/fairseq/data/iterators.py
+index 86f6d055..a94afa18 100644
+--- a/fairseq/data/iterators.py
++++ b/fairseq/data/iterators.py
+@@ -549,19 +549,27 @@ class ShardedIterator(CountingIterator):
+ 
+ 
+ class BackgroundConsumer(Thread):
+-    def __init__(self, queue, source, max_len, cuda_device):
++    def __init__(self, queue, source, max_len, device):
+         Thread.__init__(self)
+ 
+         self._queue = queue
+         self._source = source
+         self._max_len = max_len
+         self.count = 0
+-        self.cuda_device = cuda_device
++        # self.cuda_device = cuda_device
++        self.device = device
+ 
+     def run(self):
+         # set_device to avoid creation of GPU0 context when using pin_memory
+-        if self.cuda_device is not None:
+-            torch.cuda.set_device(self.cuda_device)
++        # if self.cuda_device is not None:
++        #     torch.cuda.set_device(self.cuda_device)
++        # if self.npu_device is not None:
++        #     torch.npu.set_device(self.npu_device)
++        if self.device is not None:
++            if torch.cuda.is_available():
++                torch.cuda.set_device(self.device)
++            elif torch.npu.is_available():
++                torch.npu.set_device(self.device)
+ 
+         try:
+             for item in self._source:
+@@ -590,11 +598,16 @@ class BufferedIterator(object):
+         self.total = len(iterable)
+ 
+     def _create_consumer(self):
++        currentDevice = None
++        if torch.cuda.is_available():
++            currentDevice = torch.cuda.current_device()
++        elif torch.npu.is_available():
++            currentDevice = torch.npu.current_device()
+         self._consumer = BackgroundConsumer(
+             self._queue,
+             self._iterable,
+             self.total,
+-            torch.cuda.current_device() if torch.cuda.is_available() else None
++            currentDevice
+         )
+         self._consumer.daemon = True
+         self._consumer.start()
+diff --git a/fairseq/data/pad_dataset.py b/fairseq/data/pad_dataset.py
+index 8075bba6..a6671d23 100644
+--- a/fairseq/data/pad_dataset.py
++++ b/fairseq/data/pad_dataset.py
+@@ -9,13 +9,14 @@ from . import BaseWrapperDataset
+ 
+ 
+ class PadDataset(BaseWrapperDataset):
+-    def __init__(self, dataset, pad_idx, left_pad):
++    def __init__(self, dataset, pad_idx, pad_to_length, left_pad):
+         super().__init__(dataset)
+         self.pad_idx = pad_idx
+         self.left_pad = left_pad
++        self.pad_to_length = pad_to_length
+ 
+     def collater(self, samples):
+-        return data_utils.collate_tokens(samples, self.pad_idx, left_pad=self.left_pad)
++        return data_utils.collate_tokens(samples, self.pad_idx, left_pad=self.left_pad, pad_to_length=self.pad_to_length)
+ 
+ 
+ class LeftPadDataset(PadDataset):
+@@ -24,5 +25,5 @@ class LeftPadDataset(PadDataset):
+ 
+ 
+ class RightPadDataset(PadDataset):
+-    def __init__(self, dataset, pad_idx):
+-        super().__init__(dataset, pad_idx, left_pad=False)
++    def __init__(self, dataset, pad_to_length, pad_idx):
++        super().__init__(dataset, pad_idx, pad_to_length=pad_to_length, left_pad=False)
+diff --git a/fairseq/dataclass/configs.py b/fairseq/dataclass/configs.py
+index 6a86ea01..93a0ebe7 100644
+--- a/fairseq/dataclass/configs.py
++++ b/fairseq/dataclass/configs.py
+@@ -132,8 +132,10 @@ class CommonConfig(FairseqDataclass):
+     seed: int = field(
+         default=1, metadata={"help": "pseudo random number generator seed"}
+     )
+-    cpu: bool = field(default=False, metadata={"help": "use CPU instead of CUDA"})
+-    tpu: bool = field(default=False, metadata={"help": "use TPU instead of CUDA"})
++    cpu: bool = field(default=False, metadata={"help": "use CPU"})
++    tpu: bool = field(default=False, metadata={"help": "use TPU"})
++    npu: bool = field(default=False, metadata={"help": "use NPU"})
++    gpu: bool = field(default=False, metadata={"help": "use GPU"})
+     bf16: bool = field(default=False, metadata={"help": "use bfloat16; implies --tpu"})
+     memory_efficient_bf16: bool = field(
+         default=False,
+@@ -211,7 +213,13 @@ class CommonConfig(FairseqDataclass):
+         default=None, metadata={"help": "path to quantization config file"}
+     )
+     profile: bool = field(
+-        default=False, metadata={"help": "enable autograd profiler emit_nvtx"}
++        default=False, metadata={"help": "enable autograd profiler"}
++    )
++    use_profile: bool = field(
++        default=False, metadata={"help": "enable autograd profiler"}
++    )
++    profile_step: int = field(
++        default=5, metadata={"help": "step of generating profiler"}
+     )
+     reset_logging: bool = field(
+         default=False,
+@@ -237,6 +245,7 @@ class CommonConfig(FairseqDataclass):
+     )
+ 
+ 
++
+ @dataclass
+ class DistributedTrainingConfig(FairseqDataclass):
+     distributed_world_size: int = field(
+@@ -574,6 +583,18 @@ class OptimizationConfig(FairseqDataclass):
+             "help": "specify global optimizer for syncing models on different GPUs/shards"
+         },
+     )
++    use_apex: bool = field(
++        default=False,
++    )
++    use_npu_adam: bool = field(
++        default=False,
++    )
++    opt_level: str = field(
++        default="O1",
++    )
++    loss_scale: float = field(
++        default=128.0,
++    )
+ 
+ 
+ @dataclass
+diff --git a/fairseq/distributed/utils.py b/fairseq/distributed/utils.py
+index b7736116..9fbcd6d4 100644
+--- a/fairseq/distributed/utils.py
++++ b/fairseq/distributed/utils.py
+@@ -1,8 +1,3 @@
+-# Copyright (c) Facebook, Inc. and its affiliates.
+-#
+-# This source code is licensed under the MIT license found in the
+-# LICENSE file in the root directory of this source tree.
+-
+ import io
+ import logging
+ import os
+@@ -53,8 +48,8 @@ def infer_init_method(cfg: DistributedTrainingConfig, force_distributed=False):
+ 
+     if all(
+         key in os.environ
+-        for key in ["MASTER_ADDR", "MASTER_PORT", "WORLD_SIZE", "RANK"]
+-    ):
++        for key in ["MASTER_ADDR", "MASTER_PORT"]
++    ) and cfg.distributed_world_size > 1:
+         # support torch.distributed.launch
+         _infer_torch_distributed_launch_init(cfg)
+     elif cfg.distributed_port > 0:
+@@ -67,18 +62,20 @@ def infer_init_method(cfg: DistributedTrainingConfig, force_distributed=False):
+     if cfg.pipeline_model_parallel:
+         _pipeline_parallel_post_init(cfg, num_pipeline_devices, num_pipelines_per_node)
+     elif not cfg.distributed_no_spawn:
++        if torch.cuda.is_available():
++            device_count = torch.cuda.device_count()
++        elif torch.npu.is_available():
++            device_count = torch.npu.device_count()
++        else:
++            device_count = 0
+         with open_dict(cfg):
+             cfg.distributed_num_procs = min(
+-                torch.cuda.device_count(), cfg.distributed_world_size
++                device_count, cfg.distributed_world_size
+             )
+ 
+ 
+ def _infer_torch_distributed_launch_init(cfg: DistributedTrainingConfig):
+     cfg.distributed_init_method = "env://"
+-    cfg.distributed_world_size = int(os.environ["WORLD_SIZE"])
+-    cfg.distributed_rank = int(os.environ["RANK"])
+-    # processes are created by torch.distributed.launch
+-    cfg.distributed_no_spawn = True
+ 
+ 
+ def _infer_slurm_init(cfg: DistributedTrainingConfig, num_pipelines_per_node):
+@@ -138,8 +135,14 @@ def _infer_slurm_init(cfg: DistributedTrainingConfig, num_pipelines_per_node):
+ 
+ 
+ def _infer_single_node_init(cfg: DistributedTrainingConfig):
++    if torch.cuda.is_available():
++        device_count = torch.cuda.device_count()
++    elif torch.npu.is_available():
++        device_count = torch.npu.device_count()
++    else:
++        device_count = 0
+     assert (
+-        cfg.distributed_world_size <= torch.cuda.device_count()
++        cfg.distributed_world_size <= device_count
+     ), f"world size is {cfg.distributed_world_size} but have {torch.cuda.device_count()} available devices"
+     port = random.randint(10000, 20000)
+     cfg.distributed_init_method = "tcp://localhost:{port}".format(port=port)
+@@ -256,12 +259,22 @@ def distributed_init(cfg: FairseqConfig):
+                     cfg.distributed_training.distributed_init_method,
+                 )
+             )
+-            dist.init_process_group(
+-                backend=cfg.distributed_training.distributed_backend,
+-                init_method=cfg.distributed_training.distributed_init_method,
+-                world_size=cfg.distributed_training.distributed_world_size,
+-                rank=cfg.distributed_training.distributed_rank,
+-            )
++            if all(
++                key in os.environ
++                for key in ["MASTER_ADDR", "MASTER_PORT"]
++            ):
++                dist.init_process_group(
++                    backend=cfg.distributed_training.distributed_backend,
++                    world_size=cfg.distributed_training.distributed_world_size,
++                    rank=cfg.distributed_training.distributed_rank,
++                )
++            else:
++                dist.init_process_group(
++                    backend=cfg.distributed_training.distributed_backend,
++                    init_method=cfg.distributed_training.distributed_init_method,
++                    world_size=cfg.distributed_training.distributed_world_size,
++                    rank=cfg.distributed_training.distributed_rank,
++                )
+             logger.info(
+                 "initialized host {} as rank {}".format(
+                     socket.gethostname(),
+@@ -316,6 +329,8 @@ def distributed_main(i, main, cfg: FairseqConfig, kwargs):
+     cfg.distributed_training.device_id = i
+     if torch.cuda.is_available() and not cfg.common.cpu and not cfg.common.tpu:
+         torch.cuda.set_device(cfg.distributed_training.device_id)
++    elif torch.npu.is_available() and not cfg.common.cpu and not cfg.common.tpu:
++        torch.npu.set_device(cfg.distributed_training.device_id)
+     if cfg.distributed_training.distributed_rank is None:  # torch.multiprocessing.spawn
+         cfg.distributed_training.distributed_rank = kwargs.pop("start_rank", 0) + i
+ 
+@@ -341,11 +356,17 @@ def call_main(cfg: FairseqConfig, main, **kwargs):
+             start_rank = cfg.distributed_training.distributed_rank
+             cfg.distributed_training.distributed_rank = None  # assign automatically
+             kwargs["start_rank"] = start_rank
++            if torch.cuda.is_available():
++                device_count = torch.cuda.device_count()
++            elif torch.npu.is_available():
++                device_count = torch.npu.device_count()
++            else:
++                device_count = 0
+             torch.multiprocessing.spawn(
+                 fn=distributed_main,
+                 args=(main, cfg, kwargs),
+                 nprocs=min(
+-                    torch.cuda.device_count(),
++                    device_count,
+                     cfg.distributed_training.distributed_world_size,
+                 ),
+                 join=True,
+diff --git a/fairseq/hub_utils.py b/fairseq/hub_utils.py
+index d74470d2..eee70384 100644
+--- a/fairseq/hub_utils.py
++++ b/fairseq/hub_utils.py
+@@ -53,7 +53,8 @@ def from_pretrained(
+ 
+     # convenience hack for loading data and BPE codes from model archive
+     if data_name_or_path.startswith("."):
+-        kwargs["data"] = os.path.abspath(os.path.join(model_path, data_name_or_path))
++        # kwargs["data"] = os.path.abspath(os.path.join(model_path, data_name_or_path))
++        kwargs["data"] = os.path.abspath(os.path.join(data_name_or_path))
+     else:
+         kwargs["data"] = file_utils.load_archive_file(data_name_or_path)
+     for file, arg in {
+diff --git a/fairseq/models/roberta/model.py b/fairseq/models/roberta/model.py
+index 3337616b..3605836f 100644
+--- a/fairseq/models/roberta/model.py
++++ b/fairseq/models/roberta/model.py
+@@ -214,7 +214,7 @@ class RobertaModel(FairseqEncoderModel):
+         src_tokens,
+         features_only=False,
+         return_all_hiddens=False,
+-        classification_head_name=None,
++        classification_head_name="sentence_classification_head",
+         **kwargs,
+     ):
+         if classification_head_name is not None:
+@@ -224,7 +224,7 @@ class RobertaModel(FairseqEncoderModel):
+ 
+         if classification_head_name is not None:
+             x = self.classification_heads[classification_head_name](x)
+-        return x, extra
++        return x
+ 
+     def get_normalized_probs(self, net_output, log_probs, sample=None):
+         """Get normalized probabilities (or log probs) from a net's output."""
+diff --git a/fairseq/optim/adam.py b/fairseq/optim/adam.py
+index 6a31e53a..cb78f34b 100644
+--- a/fairseq/optim/adam.py
++++ b/fairseq/optim/adam.py
+@@ -17,7 +17,6 @@ from fairseq.optim import FairseqOptimizer, register_optimizer
+ from fairseq.optim.fused_adam import get_fused_adam_class
+ from omegaconf import II, OmegaConf
+ 
+-
+ logger = logging.getLogger(__name__)
+ 
+ 
+@@ -36,6 +35,7 @@ class FairseqAdamConfig(FairseqDataclass):
+     # TODO common vars below in parent
+     tpu: bool = II("common.tpu")
+     lr: List[float] = II("optimization.lr")
++    use_npu_adam: bool = II("optimization.use_npu_adam")
+ 
+ 
+ @register_optimizer("adam", dataclass=FairseqAdamConfig)
+@@ -62,6 +62,10 @@ class FairseqAdam(FairseqOptimizer):
+         elif use_fused_adam:
+             logger.info("using FusedAdam")
+             self._optimizer = fused_adam_cls(params, **self.optimizer_config)
++        elif cfg.use_npu_adam:
++            # 使用fused npu adam
++            cf = dict(self.optimizer_config)
++            self._optimizer = apex.optimizers.NpuFusedAdam(params, **cf)
+         else:
+             self._optimizer = Adam(params, **self.optimizer_config)
+ 
+diff --git a/fairseq/tasks/fairseq_task.py b/fairseq/tasks/fairseq_task.py
+index 8148c77f..9f4d2e2b 100644
+--- a/fairseq/tasks/fairseq_task.py
++++ b/fairseq/tasks/fairseq_task.py
+@@ -16,6 +16,7 @@ from fairseq.dataclass import FairseqDataclass
+ from fairseq.dataclass.utils import gen_parser_from_dataclass
+ from fairseq.optim.amp_optimizer import AMPOptimizer
+ from omegaconf import DictConfig
++from torch import optim
+ 
+ 
+ logger = logging.getLogger(__name__)
+@@ -286,6 +287,10 @@ class FairseqTask(object):
+             required_batch_size_multiple=required_batch_size_multiple,
+         )
+ 
++        for i in batch_sampler:
++            if len(i) != max_sentences:
++                batch_sampler.remove(i)
++
+         # return a reusable, sharded iterator
+         epoch_iter = iterators.EpochBatchIterator(
+             dataset=dataset,
+@@ -488,12 +493,15 @@ class FairseqTask(object):
+         model.train()
+         model.set_num_updates(update_num)
+         with torch.autograd.profiler.record_function("forward"):
+-            with torch.cuda.amp.autocast(enabled=(isinstance(optimizer, AMPOptimizer))):
+-                loss, sample_size, logging_output = criterion(model, sample)
++            loss, sample_size, logging_output = criterion(model, sample)
+         if ignore_grad:
+             loss *= 0
+         with torch.autograd.profiler.record_function("backward"):
+-            optimizer.backward(loss)
++            if self.cfg.use_apex:
++                with amp.scale_loss(loss, optimizer.optimizer) as scaled_loss:
++                    optimizer.backward(scaled_loss)
++            else:
++                optimizer.backward(loss)
+         return loss, sample_size, logging_output
+ 
+     def valid_step(self, sample, model, criterion):
+diff --git a/fairseq/trainer.py b/fairseq/trainer.py
+index 1deb1432..50822171 100644
+--- a/fairseq/trainer.py
++++ b/fairseq/trainer.py
+@@ -53,8 +53,11 @@ class Trainer(object):
+         # catalog shared parameters
+         shared_params = _catalog_shared_params(model)
+         self.tpu = cfg.common.tpu
+-        self.cuda = torch.cuda.is_available() and not cfg.common.cpu and not self.tpu
+-        if self.cuda:
++        self.npu = cfg.common.npu and torch.npu.is_available()
++        self.cuda = cfg.common.gpu and torch.cuda.is_available()
++        if self.npu:
++            self.device = torch.device("npu")
++        elif self.cuda:
+             self.device = torch.device("cuda")
+         elif self.tpu:
+             self.device = utils.get_tpu_device()
+@@ -85,8 +88,11 @@ class Trainer(object):
+         if cfg.distributed_training.ddp_backend != "fully_sharded":
+             if cfg.common.fp16:
+                 assert not cfg.common.amp, "Cannot use fp16 and AMP together"
+-                self._criterion = self._criterion.half()
+-                self._model = self._model.half()
++                # self._criterion = self._criterion.half()
++                # self._model = self._model.half()
++                # 原仓对model和criterion先进行了半精度操作，出错
++                self._criterion = self._criterion
++                self._model = self._model
+             elif cfg.common.bf16:
+                 self._criterion = self._criterion.to(dtype=torch.bfloat16)
+                 self._model = self._model.to(dtype=torch.bfloat16)
+@@ -671,6 +677,17 @@ class Trainer(object):
+     def reset_dummy_batch(self, batch):
+         self._dummy_batch = batch
+ 
++    def apex_init(self):
++        # 使用apex使用混合精度
++        # self._model, self._optimizer._optimizer = amp.initialize(self._model, self._optimizer._optimizer, opt_level="O1", loss_scale=128.0)
++        combine_grad = True if self.cfg.optimization.use_npu_adam else None
++        
++        self._model, self._optimizer._optimizer = amp.initialize(self._model,
++                                                                self._optimizer._optimizer, 
++                                                                opt_level=self.cfg.optimization.opt_level, 
++                                                                loss_scale=self.cfg.optimization.loss_scale,
++                                                                combine_grad=combine_grad)
++
+     @metrics.aggregate("train")
+     def train_step(self, samples, raise_oom=False):
+         """Do forward, backward and parameter update."""
+@@ -679,7 +696,7 @@ class Trainer(object):
+         self.criterion.train()
+         self.zero_grad()
+ 
+-        metrics.log_start_time("train_wall", priority=800, round=0)
++        metrics.log_start_time("train_wall", priority=800, round=2)
+ 
+         # forward and backward pass
+         logging_outputs, sample_size, ooms = [], 0, 0
+@@ -719,7 +736,12 @@ class Trainer(object):
+ 
+                 # emptying the CUDA cache after the first step can
+                 # reduce the chance of OOM
+-                if self.cuda and self.get_num_updates() == 0:
++                # if self.cuda and self.get_num_updates() == 0:
++                #     torch.cuda.empty_cache()
++                # 释放显存
++                if self.npu and self.get_num_updates() == 0:
++                    torch.npu.empty_cache()
++                elif self.cuda and self.get_num_updates() == 0:
+                     torch.cuda.empty_cache()
+             except RuntimeError as e:
+                 if "out of memory" in str(e):
+@@ -731,7 +753,11 @@ class Trainer(object):
+                     )
+                     ooms += 1
+                     self.zero_grad()
+-                    if self.cuda:
++                    # if self.cuda:
++                    #     torch.cuda.empty_cache()
++                    if self.npu:
++                        torch.npu.empty_cache()
++                    elif self.cuda:
+                         torch.cuda.empty_cache()
+                     if self.cfg.distributed_training.distributed_world_size == 1:
+                         return None
+@@ -758,18 +784,18 @@ class Trainer(object):
+             sample_size = float(sample_size)
+ 
+         # gather logging outputs from all replicas
+-        if self._sync_stats():
+-            train_time = self._local_cumulative_training_time()
+-            logging_outputs, (
+-                sample_size,
+-                ooms,
+-                total_train_time,
+-            ) = self._aggregate_logging_outputs(
+-                logging_outputs, sample_size, ooms, train_time, ignore=is_dummy_batch
+-            )
+-            self._cumulative_training_time = (
+-                total_train_time / self.data_parallel_world_size
+-            )
++        # if self._sync_stats():
++        #     train_time = self._local_cumulative_training_time()
++        #     logging_outputs, (
++        #         sample_size,
++        #         ooms,
++        #         total_train_time,
++        #     ) = self._aggregate_logging_outputs(
++        #         logging_outputs, sample_size, ooms, train_time, ignore=is_dummy_batch
++        #     )
++        #     self._cumulative_training_time = (
++        #         total_train_time / self.data_parallel_world_size
++        #     )
+ 
+         overflow = False
+         try:
+@@ -802,22 +828,22 @@ class Trainer(object):
+                 # clip grads
+                 grad_norm = self.clip_grad_norm(self.cfg.optimization.clip_norm)
+ 
+-            # check that grad norms are consistent across workers
+-            # on tpu check tensor is slow
+-            if not self.tpu:
+-                if (
+-                    not self.cfg.optimization.use_bmuf
+-                    and self.cfg.distributed_training.ddp_backend != "slow_mo"
+-                ):
+-                    self._check_grad_norms(grad_norm)
+-                if not torch.isfinite(grad_norm).all():
+-                    # in case of AMP, if gradients are Nan/Inf then
+-                    # optimizer step is still required
+-                    if self.cfg.common.amp:
+-                        overflow = True
+-                    else:
+-                        # check local gradnorm single GPU case, trigger NanDetector
+-                        raise FloatingPointError("gradients are Nan/Inf")
++            # # check that grad norms are consistent across workers
++            # # on tpu check tensor is slow
++            # if not self.tpu:
++            #     if (
++            #         not self.cfg.optimization.use_bmuf
++            #         and self.cfg.distributed_training.ddp_backend != "slow_mo"
++            #     ):
++            #         self._check_grad_norms(grad_norm)
++            #     if not torch.isfinite(grad_norm).all():
++            #         # in case of AMP, if gradients are Nan/Inf then
++            #         # optimizer step is still required
++            #         if self.cfg.common.amp:
++            #             overflow = True
++            #         else:
++            #             # check local gradnorm single GPU case, trigger NanDetector
++            #             raise FloatingPointError("gradients are Nan/Inf")
+ 
+             with torch.autograd.profiler.record_function("optimizer"):
+                 # take an optimization step
+@@ -992,12 +1018,12 @@ class Trainer(object):
+                     sample_size *= 0.0
+ 
+         # gather logging outputs from all replicas
+-        if self.data_parallel_world_size > 1:
+-            logging_outputs, (sample_size,) = self._aggregate_logging_outputs(
+-                logging_outputs,
+-                sample_size,
+-                ignore=is_dummy_batch,
+-            )
++        # if self.data_parallel_world_size > 1:
++        #     logging_outputs, (sample_size,) = self._aggregate_logging_outputs(
++        #         logging_outputs,
++        #         sample_size,
++        #         ignore=is_dummy_batch,
++        #     )
+ 
+         # log validation stats
+         if self.tpu:
+@@ -1168,7 +1194,9 @@ class Trainer(object):
+         if self.cfg.common.on_cpu_convert_precision:
+             sample = self._fp_convert_sample(sample)
+ 
+-        if self.cuda:
++        if self.npu:
++            sample = utils.move_to_cuda(sample, self.device)
++        elif self.cuda:
+             if self.pipeline_model_parallel:
+                 if 'target' in sample:
+                     sample['target'] = utils.move_to_cuda(sample['target'], device=self.last_device)
+diff --git a/fairseq/utils.py b/fairseq/utils.py
+index d1ec9a27..20e45dcb 100644
+--- a/fairseq/utils.py
++++ b/fairseq/utils.py
+@@ -608,6 +608,8 @@ class set_torch_seed(object):
+             xm.set_rng_state(seed)
+         if torch.cuda.is_available():
+             torch.cuda.manual_seed(seed)
++        elif torch.npu.is_available():
++            torch.npu.manual_seed(seed)
+ 
+     def __enter__(self):
+         return self
+diff --git a/fairseq_cli/train.py b/fairseq_cli/train.py
+index 83475873..c523a78b 100644
+--- a/fairseq_cli/train.py
++++ b/fairseq_cli/train.py
+@@ -11,9 +11,12 @@ import argparse
+ import logging
+ import math
+ import os
++from posixpath import commonpath
+ import sys
+ from typing import Dict, Optional, Any, List, Tuple, Callable
+ 
++from torch import cuda
++
+ # We need to setup root logger before importing any fairseq libraries.
+ logging.basicConfig(
+     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+@@ -42,9 +45,10 @@ from fairseq.logging import meters, metrics, progress_bar
+ from fairseq.model_parallel.megatron_trainer import MegatronTrainer
+ from fairseq.trainer import Trainer
+ from omegaconf import DictConfig, OmegaConf
++import time
+ 
+-
+-
++os.environ['MASTER_ADDR'] = '127.0.0.1' # 可以使用当前真实ip或者'127.0.0.1'
++os.environ['MASTER_PORT'] = '29688' # 随意一个可使用的port即可
+ 
+ def main(cfg: FairseqConfig) -> None:
+     if isinstance(cfg, argparse.Namespace):
+@@ -139,7 +143,7 @@ def main(cfg: FairseqConfig) -> None:
+     else:
+         trainer = MegatronTrainer(cfg, task, model, criterion)
+     logger.info(
+-        "training on {} devices (GPUs/TPUs)".format(
++        "training on {} devices (GPUs/TPUs/NPUs)".format(
+             cfg.distributed_training.distributed_world_size
+         )
+     )
+@@ -164,7 +168,8 @@ def main(cfg: FairseqConfig) -> None:
+ 
+     max_epoch = cfg.optimization.max_epoch or math.inf
+     lr = trainer.get_lr()
+-
++    if cfg.optimization.use_apex:
++        trainer.apex_init()
+     train_meter = meters.StopwatchMeter()
+     train_meter.start()
+     while epoch_itr.next_epoch_idx <= max_epoch:
+@@ -284,17 +289,42 @@ def train(
+     should_stop = False
+     num_updates = trainer.get_num_updates()
+     logger.info("Start iterating over samples")
++    btsize = cfg.dataset.batch_size
++    numdevices = cfg.distributed_training.distributed_world_size
++    fps_li = []
+     for i, samples in enumerate(progress):
+-        with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
+-            "train_step-%d" % i
+-        ):
+-            log_output = trainer.train_step(samples)
++        if cfg.common.use_profile and i == cfg.common.profile_step:
++            # profile at profile_step
++            use_npu = False
++            use_cuda = False
++            if cfg.common.npu:
++                use_npu = True
++            elif cfg.common.gpu:
++                use_cuda = True
++            with torch.autograd.profiler.profile(use_npu=use_npu, use_cuda=use_cuda) as prof:
++                with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
++                    "train_step-%d" % i
++                ):
++                    log_output = trainer.train_step(samples)
++            print(prof.key_averages().table(sort_by="self_cpu_time_total"))
++            if cfg.common.log_file:
++                prof.export_chrome_trace("{}.prof".format(cfg.common.log_file))
++            else:
++                prof.export_chrome_trace("output.prof")
++        else :
++            with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
++                "train_step-%d" % i
++            ):
++                log_output = trainer.train_step(samples)
+ 
+         if log_output is not None:  # not OOM, overflow, ...
+             # log mid-epoch stats
+             num_updates = trainer.get_num_updates()
+             if num_updates % cfg.common.log_interval == 0:
+                 stats = get_training_stats(metrics.get_smoothed_values("train_inner"))
++                fps = round(btsize * numdevices * cfg.common.log_interval / stats["train_wall"], 2)
++                stats["FPS"] = fps
++                fps_li.append(fps)
+                 progress.log(stats, tag="train_inner", step=num_updates)
+ 
+                 # reset mid-epoch stats after each log interval
+@@ -308,10 +338,11 @@ def train(
+ 
+         if should_stop:
+             break
+-
++    
+     # log end-of-epoch stats
+     logger.info("end of epoch {} (average epoch stats below)".format(epoch_itr.epoch))
+     stats = get_training_stats(metrics.get_smoothed_values("train"))
++    stats["FPS"] = round(sum(fps_li[1:]) / len(fps_li[1:]), 2)
+     progress.print(stats, tag="train", step=num_updates)
+ 
+     # reset epoch-level meters
+diff --git a/fairseq_cli/validate.py b/fairseq_cli/validate.py
+index 22b93e9a..0dd5914f 100644
+--- a/fairseq_cli/validate.py
++++ b/fairseq_cli/validate.py
+@@ -1,9 +1,3 @@
+-#!/usr/bin/env python3 -u
+-# Copyright (c) Facebook, Inc. and its affiliates.
+-#
+-# This source code is licensed under the MIT license found in the
+-# LICENSE file in the root directory of this source tree.
+-
+ import logging
+ import os
+ import sys
+@@ -16,6 +10,8 @@ from fairseq.dataclass.utils import convert_namespace_to_omegaconf
+ from fairseq.logging import metrics, progress_bar
+ from fairseq.utils import reset_logging
+ from omegaconf import DictConfig
++from torch.cuda import current_device
++import time
+ 
+ 
+ logging.basicConfig(
+@@ -40,10 +36,15 @@ def main(cfg: DictConfig, override_args=None):
+     ), "Must specify batch size either with --max-tokens or --batch-size"
+ 
+     use_fp16 = cfg.common.fp16
+-    use_cuda = torch.cuda.is_available() and not cfg.common.cpu
+-
++    use_cuda = torch.cuda.is_available() and cfg.common.gpu
++    use_npu = torch.npu.is_available() and cfg.common.npu
++    CALCULATE_DEVICE = None
+     if use_cuda:
+         torch.cuda.set_device(cfg.distributed_training.device_id)
++        CALCULATE_DEVICE = "cuda:{}".format(torch.cuda.current_device())
++    elif use_npu:
++        torch.npu.set_device(cfg.distributed_training.device_id)
++        CALCULATE_DEVICE = "npu:{}".format(torch.npu.current_device())
+ 
+     if cfg.distributed_training.distributed_world_size > 1:
+         data_parallel_world_size = distributed_utils.get_data_parallel_world_size()
+@@ -73,7 +74,9 @@ def main(cfg: DictConfig, override_args=None):
+         if use_fp16:
+             model.half()
+         if use_cuda:
+-            model.cuda()
++            model.to(CALCULATE_DEVICE)
++        elif use_npu:
++            model.to(CALCULATE_DEVICE)
+ 
+     # Print args
+     logger.info(saved_cfg)
+@@ -115,11 +118,15 @@ def main(cfg: DictConfig, override_args=None):
+         )
+ 
+         log_outputs = []
++        fps_li = []
+         for i, sample in enumerate(progress):
+-            sample = utils.move_to_cuda(sample) if use_cuda else sample
++            start = time.time()
++            sample = utils.move_to_cuda(sample, CALCULATE_DEVICE) if CALCULATE_DEVICE else sample
+             _loss, _sample_size, log_output = task.valid_step(sample, model, criterion)
+             progress.log(log_output, step=i)
+             log_outputs.append(log_output)
++            end = time.time()
++            fps_li.append(cfg.dataset.batch_size / (end-start))
+ 
+         if data_parallel_world_size > 1:
+             log_outputs = distributed_utils.all_gather_list(
+@@ -133,6 +140,7 @@ def main(cfg: DictConfig, override_args=None):
+             task.reduce_metrics(log_outputs, criterion)
+             log_output = agg.get_smoothed_values()
+ 
++        log_output["FPS"] = round(sum(fps_li[1:]) / len(fps_li[1:]), 2)
+         progress.print(log_output, tag=subset, step=i)
+ 
+ 
+@@ -146,8 +154,10 @@ def cli_main():
+         override_parser, suppress_defaults=True
+     )
+ 
++    cfg = convert_namespace_to_omegaconf(args)
++
+     distributed_utils.call_main(
+-        convert_namespace_to_omegaconf(args), main, override_args=override_args
++        cfg , main, override_args=override_args
+     )
+ 
+ 

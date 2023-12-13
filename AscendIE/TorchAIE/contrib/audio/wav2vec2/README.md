@@ -242,11 +242,11 @@ source set_env.sh
 
 # 模型静态推理性能&精度
 
-   | NPU芯片型号 | Batch Size |  数据集   |  精度 |  性能(有ts模型优化)| 性能(无ts模型优化)|
-   | :-------:  | :--------: | :---------: | :-----: | :----: | :----: |
-   |Ascend310P3 |      1     | LibriSpeech |  0.970  |86.58|  83.06    |
-   |Ascend310P3 |      4     | LibriSpeech |  0.970  |89.48|  89.25    |
-   |Ascend310P3 |      8     | LibriSpeech |  0.970  |92.25|  86.03    |
-   |Ascend310P3 |      16    | LibriSpeech |  0.970  |90.25|  84.99    |
-   |Ascend310P3 |      32    | LibriSpeech |  0.970  |85.41|  80.47    |
-   |Ascend310P3 |      64    | LibriSpeech |  0.970  |84.81|  80.34   |
+   | NPU芯片型号 | Batch Size |  数据集     |   精度   |    性能    |
+   | :-------:  | :--------: | :---------: | :-----: |   :----:   |
+   |Ascend310P3 |      1     | LibriSpeech |  0.970  |   83.06    |
+   |Ascend310P3 |      4     | LibriSpeech |  0.970  |   89.25    |
+   |Ascend310P3 |      8     | LibriSpeech |  0.970  |   86.03    |
+   |Ascend310P3 |      16    | LibriSpeech |  0.970  |   984.99   |
+   |Ascend310P3 |      32    | LibriSpeech |  0.970  |   80.47    |
+   |Ascend310P3 |      64    | LibriSpeech |  0.970  |   80.34    |

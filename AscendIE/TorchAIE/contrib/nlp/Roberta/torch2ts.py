@@ -17,7 +17,7 @@ import torch
 import argparse
 import os
 
-def pth2onnx(checkpoint_path, checkpoint_file, data_name_or_path, batch_size, pad_length):
+def pth2ts(checkpoint_path, checkpoint_file, data_name_or_path, batch_size, pad_length):
     """convert pth to ts
 
     Args:
@@ -27,19 +27,20 @@ def pth2onnx(checkpoint_path, checkpoint_file, data_name_or_path, batch_size, pa
         batch_size (int): batch size
         pad_length (int): pad length of sentence
     """
-    model = hub_utils.from_pretrained(
-        checkpoint_path,
-        checkpoint_file=checkpoint_file,
-        data_name_or_path=data_name_or_path,
-        bpe="gpt2",
-        load_checkpoint_heads=True,
-    )["models"][0]
-    model.eval()
-     
-    org_dummy_input = torch.randint(1, 70, (batch_size, pad_length)).long()     
+    with torch.no_grad():
+        model = hub_utils.from_pretrained(
+            checkpoint_path,
+            checkpoint_file=checkpoint_file,
+            data_name_or_path=data_name_or_path,
+            bpe="gpt2",
+            load_checkpoint_heads=True,
+        )["models"][0]
+        model.eval()
+        
+        org_dummy_input = torch.randint(1, 70, (batch_size, pad_length)).long()     
 
-    traced_model = torch.jit.trace(model.eval(), org_dummy_input, strict=False)  
-    traced_model.save("roberta_traced.pth")
+        traced_model = torch.jit.trace(model.eval(), org_dummy_input, strict=False)  
+        traced_model.save("roberta_traced.pth")
 
 
 if __name__ == "__main__":
@@ -55,5 +56,5 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', default=1, type=int, help='batch size')
     args = parser.parse_args()
 
-    pth2onnx(args.checkpoint_path, args.checkpoint_file, args.data_name_or_path,
+    pth2ts(args.checkpoint_path, args.checkpoint_file, args.data_name_or_path,
              args.batch_size, args.pad_length)

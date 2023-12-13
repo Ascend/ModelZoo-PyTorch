@@ -27,7 +27,6 @@ def postProcess(res_dir, label_path, batch_size=1):
     """
     labels = np.fromfile(label_path, dtype=np.int64).reshape(-1, batch_size)
     neg_res = 0
-    print(len(labels))
     for i in range(len(labels)):
         #print(i)
         res_path = os.path.join(
