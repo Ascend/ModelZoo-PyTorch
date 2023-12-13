@@ -69,7 +69,7 @@ python3 \
   --max_grad_norm=1 \
   --mixed_precision=$mixed_precision \
   --checkpointing_steps=500 \
-  --output_dir=${test_path_dir}/output/$ASCEND_DEVICE_ID/  > ${test_path_dir}/output/$ASCEND_DEVICE_ID/train_${ASCEND_DEVICE_ID}.log 2>&1 &
+  --output_dir=${output_path}/  > ${output_path}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 wait
 
 #训练结束时间，不需要修改
@@ -80,7 +80,7 @@ e2e_time=$(($end_time - $start_time))
 echo "------------------ Final result ------------------"
 
 #输出性能FPS，需要模型审视修改
-FPS=$(grep "FPS: " ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
+FPS=$(grep "FPS: " ${output_path}/train_${ASCEND_DEVICE_ID}.log | awk '{print $NF}' | sed -n '100,199p' | awk '{a+=$1}END{print a/NR}')
 
 #获取性能数据，不需要修改
 #吞吐量
@@ -90,7 +90,7 @@ ActualFPS=$(awk 'BEGIN{printf "%.2f\n", '${FPS}'}')
 echo "Final Performance images/sec : $ActualFPS"
 
 #loss值，不需要修改
-ActualLoss=$(grep -o "step_loss=[0-9.]*" ${test_path_dir}/output/${ASCEND_DEVICE_ID}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
+ActualLoss=$(grep -o "step_loss=[0-9.]*" ${output_path}/train_${ASCEND_DEVICE_ID}.log | awk 'END {print $NF}')
 
 #打印，不需要修改
 echo "Final Train Loss : ${ActualLoss}"
@@ -100,18 +100,17 @@ echo "E2E Training Duration sec : $e2e_time"
 #训练用例信息，不需要修改
 BatchSize=${batch_size}
 DeviceType=$(uname -m)
-CaseName=${Network}_bs${BatchSize}_${WORLD_SIZE}'p'_'acc'
+CaseName=${Network}_bs${BatchSize}_'1p'_'acc'
 
 #单迭代训练时长
-TrainingTime=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1000/'${FPS}'}')
+TrainingTime=$(awk 'BEGIN{printf "%.2f\n", '${batch_size}'*1/'${FPS}'}')
 
 #关键信息打印到${CaseName}.log中，不需要修改
-echo "Network = ${Network}" >${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "RankSize = ${WORLD_SIZE}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "BatchSize = ${BatchSize}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "DeviceType = ${DeviceType}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "CaseName = ${CaseName}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "ActualFPS = ${ActualFPS}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "TrainingTime = ${TrainingTime}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "ActualLoss = ${ActualLoss}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
-echo "E2ETrainingTime = ${e2e_time}" >>${test_path_dir}/output/${ASCEND_DEVICE_ID}/${CaseName}.log
+echo "Network = ${Network}" >${output_path}/${CaseName}.log
+echo "BatchSize = ${BatchSize}" >>${output_path}/${CaseName}.log
+echo "DeviceType = ${DeviceType}" >>${output_path}/${CaseName}.log
+echo "CaseName = ${CaseName}" >>${output_path}/${CaseName}.log
+echo "ActualFPS = ${ActualFPS}" >>${output_path}/${CaseName}.log
+echo "TrainingTime = ${TrainingTime}" >>${output_path}/${CaseName}.log
+echo "ActualLoss = ${ActualLoss}" >>${output_path}/${CaseName}.log
+echo "E2ETrainingTime = ${e2e_time}" >>${output_path}/${CaseName}.log
