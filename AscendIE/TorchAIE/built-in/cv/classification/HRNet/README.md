@@ -78,7 +78,7 @@ model_name=HRNet-W18-C
 
 ## 准备数据集<a name="section183221994411"></a>
 
-1. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
+0. 获取原始数据集。（解压命令参考tar –xvf  \*.tar与 unzip \*.zip）
 
    本模型使用ImageNet 50000张图片的验证集，请前往[ImageNet官网](https://image-net.org/download.php)下载数据集
     ```
@@ -90,14 +90,6 @@ model_name=HRNet-W18-C
     |   ├── val_label.txt
     ```
 
-2. 数据预处理，步骤如下：
-```
-# 参考https://github.com/pytorch/examples/tree/main/imagnet/extract_ILSVRC.sh的处理。
-mkdir -p imagenet/val && mv ILSVRC2012_img_val.tar imagenet/val/ && cd imagenet/val && tar -xvf ILSVRC2012_img_val.tar && rm -f ILSVRC2012_img_val.tar
-wget -qO- https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
-bash valprep.sh
-```
-执行valprep.sh之后，相同类别的图片会被放到同一个目录，当前路径下会生成 ./imagenet/val 数据集目录。
 
 1. 模型转换。
 
@@ -129,15 +121,21 @@ bash valprep.sh
 
          获得hrnet.pt文件。
 
-3. 运行模型评估脚本，测试ImageNet验证集推理精度
+2. 运行模型评估脚本，测试ImageNet验证集推理精度
  ```
- python3 eval.py --model_path ./hrnet.pt --data_path ./imagenet/val --batch_size 1 --image_size 224
+    python3 eval.py --batch_size 1 --device_id 0 --dataset /path/to/val
+        --label_file /path/to/val_label.txt --traced_model hrnet.pt
  ```
 
 # 模型推理性能及精度<a name="ZH-CN_TOPIC_0000001172201573"></a>
 
 调用torch-aie推理计算，精度参考下列数据。
 
-| 芯片型号 | Batch Size | 数据集 | 精度                                | 性能      |
-| --------- |------------| ---------- |-----------------------------------|---------|
-| 310P3 | 1          | ImageNet | top-1: 74.562% <br>top-5: 92.466% | 580 FPS |
+| 芯片型号 | Batch Size | 数据集 | 精度                                | 性能       |
+| --------- |------------| ---------- |-----------------------------------|----------|
+| 310P3 | 1          | ImageNet | top-1: 76.756% <br>top-5: 93.446% | 500 FPS  |
+| 310P3 | 4          | ImageNet | top-1: 76.756% <br>top-5: 93.446% | 1333 FPS |
+| 310P3 | 8          | ImageNet | top-1: 76.756% <br>top-5: 93.446% | 1305 FPS |
+| 310P3 | 16         | ImageNet | top-1: 76.756% <br>top-5: 93.446% | 1511 FPS |
+| 310P3 | 32         | ImageNet | top-1: 76.756% <br>top-5: 93.446% | 1562 FPS |
+| 310P3 | 64         | ImageNet | top-1: 76.756% <br>top-5: 93.446% | 1315 FPS |

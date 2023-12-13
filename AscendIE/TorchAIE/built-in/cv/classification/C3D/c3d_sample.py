@@ -123,7 +123,7 @@ class TestC3D:
             print("trace model success.")
 
             compiled_model = torch_aie.compile(traced_model, inputs = [torch_aie.Input(input_shape)])
-            print("compile model success, bs is,", batch_size)
+            print("compile model success.")
             if batch_size == 1:
                 self.compiled_torch_aie_bs1 = compiled_model
             return compiled_model
@@ -143,6 +143,7 @@ class TestC3D:
         print("generate labels success.")
 
     def cal_accuracy(self):
+        print("start calculate accuracy.")
         if self.labels_dict is None:
             self.process_label()
         num_correct_top1 = 0
@@ -162,9 +163,10 @@ class TestC3D:
                         num_correct_top1 += 1
         top1_acc = num_correct_top1 / num_total
         result_dict = {"top1_acc": top1_acc}
-        print(result_dict)
+        print("calculate acc done,", result_dict)
 
     def cal_qps(self, model, batch_size, warm_up=5):
+        print("start caculate qps.")
         cost_steps = []
         dataset = CustomDataset(self.args)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size, drop_last=True, shuffle=False)
@@ -180,7 +182,6 @@ class TestC3D:
             batch_size * (len(cost_steps) - warm_up) / sum(cost_steps[warm_up:-1]), batch_size))
 
 if __name__ == '__main__':
-
     args = parse_args()
     torch_aie.set_device(args.device_id)
     c3d_sample = TestC3D(args)
