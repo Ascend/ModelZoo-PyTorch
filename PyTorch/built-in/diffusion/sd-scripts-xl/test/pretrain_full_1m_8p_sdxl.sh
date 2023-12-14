@@ -78,7 +78,6 @@ python3 -m torch.distributed.launch --nproc_per_node 8 --use_env \
   --mixed_precision=${mixed_precision} \
   --seed=1 \
   --caption_extension=".txt" \
-  --shuffle_caption \
   --keep_tokens=0 \
   --optimizer_type="oss" \
   --max_token_length=77 \

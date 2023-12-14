@@ -411,6 +411,7 @@ class CrossAttention(nn.Module):
         self.to_out.append(nn.Linear(inner_dim, query_dim))
         # no dropout here
 
+        self.use_npu_flash_attention = False
         self.use_memory_efficient_attention_xformers = False
         self.use_memory_efficient_attention_mem_eff = False
         self.use_sdpa = False
@@ -429,14 +430,14 @@ class CrossAttention(nn.Module):
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, head_size, dim // head_size)
-        tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size * head_size, seq_len, dim // head_size)
+        tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size * head_size, seq_len, dim // head_size).contiguous()
         return tensor
 
     def reshape_batch_dim_to_heads(self, tensor):
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim)
-        tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size // head_size, seq_len, dim * head_size)
+        tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size // head_size, seq_len, dim * head_size).contiguous()
         return tensor
 
     def forward(self, hidden_states, context=None, mask=None):
@@ -522,7 +523,7 @@ class CrossAttention(nn.Module):
         k_in = self.to_k(context)
         v_in = self.to_v(context)
 
-        if k_in.shape[1] % 256 == 0:
+        if q_in.shape[1] % 256 == 0 and k_in.shape[1] % 256 == 0 and q_in.shape[1] > 2000:
             h = self.heads
             q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=h), (q_in, k_in, v_in))
             del q_in, k_in, v_in
@@ -550,9 +551,9 @@ class CrossAttention(nn.Module):
             key = self.to_k(context_org)
             value = self.to_v(context_org)
 
-            query = self.reshape_heads_to_batch_dim(q_in).contiguous()
-            key = self.reshape_heads_to_batch_dim(key).contiguous()
-            value = self.reshape_heads_to_batch_dim(value).contiguous()
+            query = self.reshape_heads_to_batch_dim(q_in)
+            key = self.reshape_heads_to_batch_dim(key)
+            value = self.reshape_heads_to_batch_dim(value)
 
             hidden_states = self._attention(query, key, value)
 
@@ -795,10 +796,10 @@ class Transformer2DModel(nn.Module):
         if not self.use_linear_projection:
             hidden_states = self.proj_in(hidden_states)
             inner_dim = hidden_states.shape[1]
-            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim)
+            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim).contiguous()
         else:
             inner_dim = hidden_states.shape[1]
-            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim)
+            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim).contiguous()
             hidden_states = self.proj_in(hidden_states)
 
         # 2. Blocks

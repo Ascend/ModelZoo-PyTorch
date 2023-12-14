@@ -8,9 +8,12 @@ tokenizer1_path="openai/clip-vit-large-patch14"
 tokenizer2_path="laion/CLIP-ViT-bigG-14-laion2B-39B-b160k"
 dataset_name="laion"
 batch_size=4
-max_train_epoch=120
+max_train_epoch=20000
 mixed_precision="fp16"
 resolution="1024,1024"
+
+export HCCL_BUFFSIZE=50
+export MULTI_STREAM_MEMORY_REUSE=1
 
 # 多机多卡训练参数
 nproc_per_node=8
@@ -76,7 +79,7 @@ python3 -m torch.distributed.launch --nnodes=${nnodes} --nproc_per_node=${nproc_
   --max_bucket_reso=2048 \
   --output_dir=${output_path} \
   --output_name="test_sdxl" \
-  --save_every_n_epochs=10 \
+  --save_every_n_epochs=200 \
   --save_precision=float \
   --save_model_as="ckpt" \
   --logging_dir="./logs" \
@@ -95,9 +98,9 @@ python3 -m torch.distributed.launch --nnodes=${nnodes} --nproc_per_node=${nproc_
   --mixed_precision=${mixed_precision} \
   --seed=1 \
   --caption_extension=".txt" \
-  --shuffle_caption \
   --keep_tokens=0 \
   --optimizer_type="oss" \
+  --max_data_loader_n_workers=1 \
   --max_token_length=77 \
   --enable_npu_flash_attention > ${output_path}/train_${ASCEND_DEVICE_ID}.log 2>&1 &
 

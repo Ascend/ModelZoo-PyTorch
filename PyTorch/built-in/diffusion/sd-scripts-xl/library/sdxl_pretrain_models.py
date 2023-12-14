@@ -51,11 +51,11 @@ class SdxlPretrainModels(nn.Module):
 
         noisy_latents = noisy_latents.to(self.weight_dtype)  # TODO check why noisy_latents is not weight_dtype
 
-        if not args.full_fp16:
-            noisy_latents = noisy_latents.to(torch.float32)
-            timesteps = timesteps.to(torch.float32)
-            text_embedding = text_embedding.to(torch.float32)
-            vector_embedding = vector_embedding.to(torch.float32)
+        # if not args.full_fp16:
+        #     noisy_latents = noisy_latents.to(torch.float32)
+        #     timesteps = timesteps.to(torch.float32)
+        #     text_embedding = text_embedding.to(torch.float32)
+        #     vector_embedding = vector_embedding.to(torch.float32)
 
         # Predict the noise residual
         with accelerator.autocast():
