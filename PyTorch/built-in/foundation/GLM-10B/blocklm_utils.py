@@ -21,7 +21,7 @@ import numpy as np
 import math
 from utils import print_rank_0
 from scipy.stats import poisson
-
+np.long = np.int64 # numpy1.24版本之后不在支持np.long格式
 
 def rindex(lst, val, start=None):
     if start is None:

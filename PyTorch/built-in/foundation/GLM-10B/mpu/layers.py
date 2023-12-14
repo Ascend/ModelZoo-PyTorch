@@ -23,6 +23,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn.init as init
 from torch.nn.parameter import Parameter
+import torch_npu
 
 from .initialize import get_model_parallel_rank
 from .initialize import get_model_parallel_world_size
@@ -232,10 +233,11 @@ class ColumnParallelLinear(torch.nn.Module):
             stride=stride, return_master_weight=keep_master_weight_for_test)
 
     def forward(self, input_):
+        b, s, h = input_.size()
         # Set up backprop all-reduce.
         input_parallel = copy_to_model_parallel_region(input_)
         # Matrix multiply.
-        output_parallel = F.linear(input_parallel, self.weight, self.bias)
+        output_parallel = torch_npu.npu_linear(input_parallel.view(-1, h), self.weight, self.bias).view(b, s, -1)
         if self.gather_output:
             # All-gather across the partitions.
             output = gather_from_model_parallel_region(output_parallel)
@@ -305,13 +307,14 @@ class RowParallelLinear(torch.nn.Module):
             stride=stride, return_master_weight=keep_master_weight_for_test)
 
     def forward(self, input_):
+        b, s, h = input_.size()
         # Set up backprop all-reduce.
         if self.input_is_parallel:
             input_parallel = input_
         else:
             input_parallel = scatter_to_model_parallel_region(input_)
         # Matrix multiply.
-        output_parallel = F.linear(input_parallel, self.weight)
+        output_parallel = torch_npu.npu_linear(input_parallel.reshape(-1, h), self.weight).view(b, s, -1)
         # All-reduce across all the partitions.
         output_ = reduce_from_model_parallel_region(output_parallel)
         if self.bias is not None:

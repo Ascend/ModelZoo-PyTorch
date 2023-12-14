@@ -52,7 +52,7 @@ export HCCL_OP_BASE_FFTS_MODE_ENABLE=True
 
 ulimit -SHn 512000
 
-path_lib=$(python3.7 -c """
+path_lib=$(python3 -c """
 import sys
 import re
 result=''

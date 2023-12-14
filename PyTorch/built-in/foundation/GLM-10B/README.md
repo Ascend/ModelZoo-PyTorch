@@ -42,7 +42,8 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
 
   | Torch_Version      | 三方库依赖版本                                 |
   | :--------: | :----------------------------------------------------------: |
-  | PyTorch 1.11 | deepspeed 0.6.0 |
+  | PyTorch 1.11 | deepspeed 0.9.2 |
+  | PyTorch 2.1 | deepspeed 0.9.2 |
   
 - 环境准备指导。
 
@@ -54,15 +55,15 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
 
   在模型源码包根目录下执行命令，安装模型对应PyTorch版本需要的依赖。
   ```
-  pip install -r requirements.txt  # PyTorch1.11版本
+  pip3 install -r requirements.txt 
   ```
 
   2. 安装deepspeed_npu插件
 
   ```
-  git clone https://gitee.com/ascend/DeepSpeed.git
+  git clone https://gitee.com/ascend/DeepSpeed.git  # 默认master为0.9.2版本
   cd Deepspeed
-  pip3 install ./
+  pip3 install -e ./
   ```
 
   3. 安装pdsh
@@ -156,6 +157,9 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
      bash ./tests/train_pretrain_full_16p.sh # 16卡预训练长稳
      
      bash ./tests/train_pretrain_performance_16p.sh # 16卡预训练性能
+
+     bash ./tests/train_pretrain_full_16p_single_node.sh # 单机16卡预训练长稳
+
      ```
 
      --data_path参数填写数据集路径，若仅使用一个jsonl文件，指定到具体的文件，若使用多个，指定到上一级目录；
@@ -192,13 +196,17 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
 
 | NAME  | SamplesPerSec  | Iterations  | DataType  | Torch_Version |
 |:-:|:-:|:-:|:-:|:-:|
-| Pretrain 16p-NPU  | 25  | 5000   | fp16  | 1.11  |
-| Pretrain 16p-GPU  | 31  | 5000   | fp16  | 1.11  |
+| Pretrain 16p-NPU  | 39  | 5000   | fp16  | 1.11  |
+| Pretrain 16p-GPU  | 38  | 5000   | fp16  | 1.11  |
+| Pretrain 16p-NPU  | 44  | 5000   | bf16  | 2.1  |
+| Pretrain 16p-GPU  | 41  | 5000   | bf16  | 2.1  |
 
 | NAME  | Accuracy  | Epochs  | DataType  | Torch_Version |
 |:-:|:-:|:-:|:-:|:-:|
 | Finetune 8p-NPU  | 98  | 100 | fp16  | 1.11  |
 | Finetune 8p-GPU  | 98  | 100 | fp16  | 1.11  |
+| Finetune 8p-NPU  | 52  | 100 | bf16  | 2.1  |
+| Finetune 8p-GPU  | 52  | 100 | bf16  | 2.1  |
 
    > **说明：** 
    > Accuracy指微调过程中最高精度，实际验证NPU与GPU均存在1~2%波动。
@@ -208,6 +216,8 @@ GLM是一个用自回归完型填空目标预训练的通用语言模型，可�
 ## 变更
 
 2023.6.10：首次发布。
+2023.11.15：预训练支持BF16和FA
+2023.12.15：微调支持BF16和FA
 
 ## FAQ
 
