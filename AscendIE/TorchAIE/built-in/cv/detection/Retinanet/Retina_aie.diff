@@ -1,0 +1,34 @@
+diff --git a/detectron2/layers/nms.py b/detectron2/layers/nms.py
+index ff2e166..41647e6 100644
+--- a/detectron2/layers/nms.py
++++ b/detectron2/layers/nms.py
+@@ -15,6 +15,8 @@ if TORCH_VERSION < (1, 7):
+ else:
+     nms_rotated_func = torch.ops.detectron2.nms_rotated
+ 
++torch.ops.load_library("./mmdet_ops/build/libmmdet_ops.so")
++
+ 
+ class BatchNMSOp(torch.autograd.Function):
+     @staticmethod
+@@ -52,13 +54,15 @@ def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_cl
+     """
+ 
+     if bboxes.dtype == torch.float32:
+-        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4).half()
+-        scores = scores.reshape(1, scores.shape[0].numpy(), -1).half()
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0], -1).half()
+     else:
+-        bboxes = bboxes.reshape(1, bboxes.shape[0].numpy(), -1, 4)
+-        scores = scores.reshape(1, scores.shape[0].numpy(), -1)
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4)
++        scores = scores.reshape(1, scores.shape[0], -1)
++
++    batch_nms = torch.ops.aie.batch_nms
+ 
+-    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = BatchNMSOp.apply(bboxes, scores,
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = batch_nms(bboxes, scores,
+         score_threshold, iou_threshold, max_size_per_class, max_total_size)
+     nmsed_boxes = nmsed_boxes.float()
+     nmsed_scores = nmsed_scores.float()
