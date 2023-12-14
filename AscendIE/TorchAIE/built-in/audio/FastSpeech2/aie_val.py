@@ -158,16 +158,12 @@ if __name__ == "__main__":
     start_time = time.time()
     cnt = 0
     batch_data = []
-    for batch in tqdm(batchs):
+    for data in batchs:
+        data = to_device(data, 'cpu')
+        batch_data.append(data)
+    batch_data.sort(key=lambda x : x[5])
+    for batch in tqdm(batch_data):
         cnt += 1
-        if cnt <= 4:
-            batch_data.append(batch)
-            continue
-        batch = to_device(batch, 'cpu')
-        src_masks = get_mask_from_lengths(batch[4], batch[5])
-        mel_output, mel_lens = fastspeech2_infer(batch[3], src_masks, fastspeech2_aie, control_values)
-        hifigan_infer(batch[0], mel_output, mel_lens, preprocess_config, train_config, hifigan_aie)
-    for batch in batch_data:
         batch = to_device(batch, 'cpu')
         src_masks = get_mask_from_lengths(batch[4], batch[5])
         mel_output, mel_lens = fastspeech2_infer(batch[3], src_masks, fastspeech2_aie, control_values)
@@ -176,7 +172,7 @@ if __name__ == "__main__":
     fps = (cnt * args.batch_size) / (end_time - start_time)
     res = 'fps: {}'.format(fps)
     print(res)
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL 
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     modes = stat.S_IWUSR | stat.S_IRUSR
     with os.fdopen(os.open('result.txt', flags, modes), 'w') as f:
         f.write(res)

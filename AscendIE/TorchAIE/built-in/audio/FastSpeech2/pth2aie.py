@@ -22,8 +22,6 @@ import torch_aie
 import torch.nn as nn
 import yaml
 import numpy as np
-from gener_core.mod_modify.interface import AttrType as AT
-from gener_core.mod_modify.onnx_graph import OXGraph
 
 import hifigan
 from model import FastSpeech2
@@ -40,43 +38,6 @@ class Encoder(nn.Module):
     def forward(self, src_seq, src_mask):
         output = self.encoder(src_seq, src_mask)
         return output
-
-
-def modify_if(input_onnx, output_onnx):
-    '''
-      add  —— gather —— equal —— if —— where
-                         condition  ——
-                                 x  ——
-      add‘ ————————— squeeze ————————— where’
-    '''
-
-    mod = OXGraph(input_onnx)
-    io_map = mod.get_net_in_out_map()
-
-    # get operator to modify
-    if_node = mod.get_nodes_by_optype("If")[0]
-    if if_node:
-        equal_node = mod.get_node(if_node.input_name[0])
-        gather_node = mod.get_node(equal_node.input_name[0])
-        shape_node = mod.get_node(gather_node.input_name[0])
-
-        # add squeeze_node, update input
-        squeeze_node = mod.add_new_node("Squeeze", "Squeeze",
-                                        {"axes": (AT.LIST_INT, [2])})
-        add_node = mod.get_node(shape_node.input_name[0])
-        squeeze_node.set_input_node(0, [add_node])
-
-        # update input of where_node(origin cast/x, new squeeze)
-        where_node = mod.get_node(io_map.get(if_node.name)[0])
-        cast_node = mod.get_node(where_node.input_name[0])
-        x_node = mod.get_node(where_node.input_name[1])
-        where_node.set_input_node(0, [cast_node, x_node, squeeze_node])
-
-        # delete useless node, save modified model
-        mod.node_remove([shape_node.name, gather_node.name, equal_node.name, if_node.name])
-        mod.save_new_model(output_onnx)
-    else:
-        pass
 
 
 class VarianceAdaptorSim(VarianceAdaptor):
