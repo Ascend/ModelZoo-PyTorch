@@ -19,17 +19,23 @@ import os
 import time
 from typing import Callable, List, Optional, Union
 
+import numpy as np
 import torch
 import torch_aie
 from diffusers import StableDiffusionPipeline
 from torch_aie import _enums
 
+from background_runtime import BackgroundRuntime, RuntimeIOInfo
+
 clip_time = 0
 unet_time = 0
+unet_forward_time = 0
 vae_time = 0
 p1_time = 0
 p2_time = 0
 p3_time = 0
+unet_bg_send_time = 0
+unet_bg_recv_time = 0
 
 
 class PromptLoader:
@@ -139,23 +145,33 @@ class VaeExport(torch.nn.Module):
 
 
 class AIEStableDiffusionPipeline(StableDiffusionPipeline):
+    device_0 = None
+    device_1 = None
+    runtime = None
+    engines = {}
+    contexts = {}
+    buffer_bindings = {}
+    use_parallel_inferencing = False
+    unet_bg = None
+
     def parser_args(self, args):
         self.args = args
-        self.is_init = False
-        if isinstance(self.args.device, list):
-            self.device_0 = self.args.device[0]
+        if isinstance(args.device, list):
+            self.device_0, self.device_1 = args.device
+            print(f'Using parallel inferencing on device {self.device_0} and {self.device_1}')
         else:
             self.device_0 = args.device
+        self.is_init = False
 
     def compile_aie_model(self):
         if self.is_init:
             return
-
+        torch_aie.set_device(self.device_0)
         in_channels = self.unet.config.out_channels
         sample_size = self.unet.config.sample_size
         encoder_hidden_size = self.text_encoder.config.hidden_size
         max_position_embeddings = self.text_encoder.config.max_position_embeddings
-        batch_size = self.args.batch_size * 2
+        batch_size = self.args.batch_size
         if self.args.unet:
             self.compiled_unet_model = torch.jit.load(self.args.unet).eval()
         else:
@@ -168,26 +184,39 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
             )
             unet = UnetExport(self.unet)
             model = torch.jit.trace(unet, dummy_input)
+            unet_input_info = [
+                torch_aie.Input((batch_size, in_channels, sample_size, sample_size), dtype=torch_aie.dtype.FLOAT),
+                torch_aie.Input((1,), dtype=torch_aie.dtype.INT64),
+                torch_aie.Input((batch_size, max_position_embeddings, encoder_hidden_size),
+                                dtype=torch_aie.dtype.FLOAT)]
+            self.compiled_unet_model = torch_aie.compile(model, inputs=unet_input_info,
+                                                         allow_tensor_replace_int=True,
+                                                         require_full_compilation=True,
+                                                         truncate_long_and_double=True,
+                                                         soc_version="Ascend310P3",
+                                                         precision_policy=_enums.PrecisionPolicy.FP16,
+                                                         optimization_level=0
+                                                         )
+            torch.jit.save(self.compiled_unet_model, 'unet_aie_compile.pt')
 
-            self.compiled_unet_model = (
-                torch_aie.compile(model,
-                                  inputs=[torch_aie.Input((batch_size,
-                                                           in_channels, sample_size,
-                                                           sample_size),
-                                                          dtype=torch_aie.dtype.FLOAT),
-                                          torch_aie.Input((1,),
-                                                          dtype=torch_aie.dtype.INT64),
-                                          torch_aie.Input((batch_size,
-                                                           max_position_embeddings,
-                                                           encoder_hidden_size),
-                                                          dtype=torch_aie.dtype.FLOAT)],
-                                  allow_tensor_replace_int=True,
-                                  require_full_compilation=True,
-                                  truncate_long_and_double=True,
-                                  soc_version="Ascend910B4",
-                                  precision_policy=_enums.PrecisionPolicy.FP16,
-                                  optimization_level=0
-                                  ))
+        runtime_info = RuntimeIOInfo(
+            input_shapes=[
+                (batch_size, in_channels, sample_size, sample_size),
+                (1,),
+                (batch_size, max_position_embeddings, encoder_hidden_size)
+            ],
+            input_dtypes=[np.float32, np.int64, np.float32],
+            output_shapes=[(batch_size, in_channels, sample_size, sample_size)],
+            output_dtypes=[np.float32]
+
+        )
+        if hasattr(self, 'device_1'):
+            if self.args.unet:
+                self.unet_bg = BackgroundRuntime.clone(self.device_1, self.args.unet, runtime_info)
+                self.use_parallel_inferencing = True
+            else:
+                self.unet_bg = BackgroundRuntime.clone(self.device_1, 'unet_aie_compile.pt', runtime_info)
+                self.use_parallel_inferencing = True
 
         if self.args.vae:
             self.compiled_vae_model = torch.jit.load(self.args.vae).eval()
@@ -198,16 +227,16 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
             self.compiled_vae_model = (
                 torch_aie.compile(model,
                                   inputs=[
-                                      torch_aie.Input((self.args.batch_size, in_channels,
-                                                       sample_size, sample_size),
+                                      torch_aie.Input((self.args.batch_size, in_channels, sample_size, sample_size),
                                                       dtype=torch_aie.dtype.FLOAT)],
                                   allow_tensor_replace_int=True,
                                   require_full_compilation=True,
                                   truncate_long_and_double=True,
-                                  soc_version="Ascend910B4",
+                                  soc_version="Ascend310P3",
                                   precision_policy=_enums.PrecisionPolicy.FP16,
                                   optimization_level=0
                                   ))
+            torch.jit.save(self.compiled_vae_model, 'vae_aie_compile.pt')
 
         if self.args.clip:
             self.compiled_clip_model = torch.jit.load(self.args.clip).eval()
@@ -224,8 +253,9 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
                                   require_full_compilation=True,
                                   truncate_long_and_double=True,
                                   precision_policy=_enums.PrecisionPolicy.FP16,
-                                  soc_version="Ascend910B4",
+                                  soc_version="Ascend310P3",
                                   optimization_level=0))
+            torch.jit.save(self.compiled_clip_model, 'clip_aie_compile.pt')
 
         self.is_init = True
 
@@ -346,25 +376,60 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 
         # 7. Denoising loop
-        global unet_time
+        global unet_time, unet_bg_send_time, unet_bg_recv_time, unet_forward_time
         global vae_time
+        if self.use_parallel_inferencing and do_classifier_free_guidance:
+            # Split embeddings
+            text_embeddings, text_embeddings_2 = text_embeddings.chunk(2)
+
+        stream = torch_aie.npu.Stream(f'npu:{self.device_0}')
+
         for i, t in enumerate(self.progress_bar(timesteps)):
             # expand the latents if we are doing classifier free guidance
+            if not self.use_parallel_inferencing and do_classifier_free_guidance:
+                latent_model_input = torch.cat([latents] * 2)
+            else:
+                latent_model_input = latents
 
-            latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
-            latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
+            latent_model_input = self.scheduler.scale_model_input(
+                latent_model_input, t)
 
             # predict the noise residual
-            # run inference
-            start = time.time()
-            noise_pred = self.compiled_unet_model(latent_model_input.to(f'npu:{self.device_0}'),
-                                                  t[None].to(f'npu:{self.device_0}'),
-                                                  text_embeddings.to(f'npu:{self.device_0}')).to('cpu')
 
+            if self.use_parallel_inferencing and do_classifier_free_guidance:
+                print(
+                    f'bg send latent_model_input:{latent_model_input.shape}, t:{t.shape}, text_embeddings_2:{text_embeddings_2.shape}')
+                self.unet_bg.infer_asyn([
+                    latent_model_input.numpy(),
+                    t[None].numpy().astype(np.int64),
+                    text_embeddings_2.numpy(),
+                ])
+
+            latent_model_input_npu = latent_model_input.to(f'npu:{self.device_0}')
+            t_npu = t[None].to(f'npu:{self.device_0}')
+            text_embeddings_npu = text_embeddings.to(f'npu:{self.device_0}')
+
+            start = time.time()
+            with torch_aie.npu.stream(stream):
+                inf_start = time.time()
+                noise_pred_npu = self.compiled_unet_model(latent_model_input_npu, t_npu, text_embeddings_npu)
+                stream.synchronize()
+                inf_end = time.time()
+
+            noise_pred = noise_pred_npu.to('cpu')
+            unet_forward_time += inf_end - inf_start
             unet_time += time.time() - start
+
             # perform guidance
             if do_classifier_free_guidance:
-                noise_pred, noise_pred_text = noise_pred.chunk(2)
+                if self.use_parallel_inferencing:
+                    recv_start = time.time()
+                    noise_pred_text = torch.from_numpy(
+                        self.unet_bg.wait_and_get_outputs()[0])
+                    unet_bg_recv_time += time.time() - recv_start
+                else:
+                    noise_pred, noise_pred_text = noise_pred.chunk(2)
+
                 noise_pred = noise_pred + guidance_scale * (noise_pred_text -
                                                             noise_pred)
 
@@ -389,7 +454,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         image = (image / 2 + 0.5).clamp(0, 1)
 
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloa16
-        image = image.permute(0, 2, 3, 1).float().numpy()
+        image = image.cpu().permute(0, 2, 3, 1).float().numpy()
 
         # 9. Run safety checker
         has_nsfw_concept = False
@@ -397,7 +462,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         # 10. Convert to PIL
         if output_type == "pil":
             image = self.numpy_to_pil(image)
-        p3_time += time.time() - start1
+
         return (image, has_nsfw_concept)
 
     def _encode_prompt(
@@ -446,7 +511,10 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
         global clip_time
         start = time.time()
         text_embeddings = self.compiled_clip_model(text_input_ids.to(f'npu:{self.device_0}')).to('cpu')
+        # text_embeddings = self.compiled_clip_model(text_input_ids)
         clip_time += time.time() - start
+
+        # SD2.1
 
         # duplicate text embeddings for each generation per prompt, using mps friendly method
         bs_embed, seq_len, _ = text_embeddings.shape
@@ -483,6 +551,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
             # run inference
             start = time.time()
             uncond_embeddings = self.compiled_clip_model(uncond_input.input_ids.to(f'npu:{self.device_0}')).to('cpu')
+            # uncond_embeddings = self.compiled_clip_model(uncond_input.input_ids)
             clip_time += time.time() - start
 
             # duplicate unconditional embeddings for each generation per prompt, using mps friendly method
@@ -546,7 +615,7 @@ def parse_arguments():
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="./results",
+        default="./parallel_results",
         help="Path to save result images.",
     )
     parser.add_argument(
@@ -564,7 +633,7 @@ def parse_arguments():
     parser.add_argument(
         "--device",
         type=check_device_range_valid,
-        default=0,
+        default=[0, 1],
         help="NPU device id. Give 2 ids to enable parallel inferencing.",
     )
     parser.add_argument(
@@ -596,9 +665,10 @@ def main():
     save_dir = args.save_dir
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    torch_aie.set_device(args.device)
+
     pipe = AIEStableDiffusionPipeline.from_pretrained(args.model).to("cpu")
     pipe.parser_args(args)
+
     pipe.compile_aie_model()
 
     use_time = 0
@@ -640,10 +710,16 @@ def main():
           f"average time: {use_time / infer_num:.3f}s\n"
           f"clip time: {clip_time / infer_num:.3f}s\n"
           f"unet time: {unet_time / infer_num:.3f}s\n"
+          f"unet forward time: {unet_forward_time / infer_num:.3f}s\n"
           f"vae time: {vae_time / infer_num:.3f}s\n"
           f"p1 time: {p1_time / infer_num:.3f}s\n"
           f"p2 time: {p2_time / infer_num:.3f}s\n"
-          f"p3 time: {p3_time / infer_num:.3f}s\n")
+          f"p3 time: {p3_time / infer_num:.3f}s\n"
+          f"unet send time: {unet_bg_send_time / infer_num:.3f}s\n"
+          f"unet recv time: {unet_bg_recv_time / infer_num:.3f}s\n"
+          )
+    if hasattr(pipe, 'device_1'):
+        pipe.unet_bg.stop()
 
     # Save image information to a json file
     if os.path.exists(args.info_file_save_path):
@@ -651,6 +727,7 @@ def main():
 
     with os.fdopen(os.open(args.info_file_save_path, os.O_RDWR | os.O_CREAT, 0o640), "w") as f:
         json.dump(image_info, f)
+
     torch_aie.finalize()
 
 

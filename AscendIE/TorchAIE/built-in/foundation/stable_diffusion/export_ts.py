@@ -60,7 +60,7 @@ def export_clip(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size:
     print("Exporting the text encoder...")
     clip_path = os.path.join(save_dir, "clip")
     if not os.path.exists(clip_path):
-        os.makedirs(clip_path, mode=0o744)
+        os.makedirs(clip_path, mode=0o640)
 
     clip_model = sd_pipeline.text_encoder
 
@@ -85,7 +85,7 @@ def export_unet(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size:
     print("Exporting the image information creater...")
     unet_path = os.path.join(save_dir, "unet")
     if not os.path.exists(unet_path):
-        os.makedirs(unet_path, mode=0o744)
+        os.makedirs(unet_path, mode=0o640)
 
     unet_model = sd_pipeline.unet
     clip_model = sd_pipeline.text_encoder
@@ -122,7 +122,7 @@ def export_vae(sd_pipeline: StableDiffusionPipeline, save_dir: str, batch_size: 
 
     vae_path = os.path.join(save_dir, "vae")
     if not os.path.exists(vae_path):
-        os.makedirs(vae_path, mode=0o744)
+        os.makedirs(vae_path, mode=0o640)
 
     vae_model = sd_pipeline.vae
     unet_model = sd_pipeline.unet
