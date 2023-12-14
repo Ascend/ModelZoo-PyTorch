@@ -1,0 +1,10 @@
+22a23
+> import numpy as np
+760c761,762
+<         mask.triu_(1)  # zero out the lower diagonal
+---
+>         # mask.triu_(1)  # zero out the lower diagonal
+>         mask = torch.from_numpy(np.triu(mask.numpy(), 1))
+1324a1327
+> 
+

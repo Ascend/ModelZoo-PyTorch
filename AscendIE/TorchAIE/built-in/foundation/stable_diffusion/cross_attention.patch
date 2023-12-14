@@ -1,0 +1,14 @@
+--- cross_attention.py	2023-12-12 03:15:11.776000000 +0000
++++ cross_attention.py	2023-12-12 03:15:25.400000000 +0000
+@@ -101,8 +101,9 @@ class CrossAttention(nn.Module):
+         # set attention processor
+         # We use the AttnProcessor2_0 by default when torch2.x is used which uses
+         # torch.nn.functional.scaled_dot_product_attention for native Flash/memory_efficient_attention
+-        if processor is None:
+-            processor = AttnProcessor2_0() if hasattr(F, "scaled_dot_product_attention") else CrossAttnProcessor()
++        #if processor is None:
++        #    processor = AttnProcessor2_0() if hasattr(F, "scaled_dot_product_attention") else CrossAttnProcessor()
++        processor = CrossAttnProcessor()
+         self.set_processor(processor)
+
+     def set_use_memory_efficient_attention_xformers(
