@@ -585,9 +585,9 @@ def parse_arguments():
         default=1,
         help="Batch size."
     )
-    parser.add_argument('--unet', type=str, default='./unet_fa_bs2.pt', help='unet torchScript model path')
-    parser.add_argument('--clip', type=str, default='./clip_aie.pt', help='unet torchScript model path')
-    parser.add_argument('--vae', type=str, default='./vae_aie.pt', help='unet torchScript model path')
+    parser.add_argument('--unet', type=str, default='', help='unet torchScript model path')
+    parser.add_argument('--clip', type=str, default='', help='unet torchScript model path')
+    parser.add_argument('--vae', type=str, default='', help='unet torchScript model path')
     return parser.parse_args()
 
 
