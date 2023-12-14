@@ -193,7 +193,7 @@ class AIEStableDiffusionPipeline(StableDiffusionPipeline):
             self.compiled_vae_model = torch.jit.load(self.args.vae).eval()
         else:
             dummy_input = torch.ones([self.args.batch_size, in_channels, sample_size, sample_size])
-            vae_export = VaeExport(self.vae.decode)
+            vae_export = VaeExport(self.vae)
             model = torch.jit.trace(vae_export, dummy_input)
             self.compiled_vae_model = (
                 torch_aie.compile(model,
