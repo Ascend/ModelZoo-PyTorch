@@ -1,0 +1,450 @@
+Subject: [PATCH] Cascade_RCNN-detectron2
+---
+Index: detectron2/modeling/poolers.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/poolers.py b/detectron2/modeling/poolers.py
+--- a/detectron2/modeling/poolers.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/poolers.py	(date 1702546209998)
+@@ -202,6 +202,14 @@
+                 A tensor of shape (M, C, output_size, output_size) where M is the total number of
+                 boxes aggregated over all N batch images and C is the number of channels in `x`.
+         """
++
++        output_size = self.output_size[0]
++        pooler_fmt_boxes = convert_boxes_to_pooler_format(box_lists)
++        roi_extractor = torch.ops.aie.roi_extractor
++        roi_feats = roi_extractor(x, pooler_fmt_boxes, 1, 56, output_size, output_size, 'avg',
++            0, 0, [0.25, 0.125, 0.0625, 0.03125])
++        return roi_feats
++
+         num_level_assignments = len(self.level_poolers)
+ 
+         assert isinstance(x, list) and isinstance(
+Index: detectron2/export/api.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/export/api.py b/detectron2/export/api.py
+--- a/detectron2/export/api.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/export/api.py	(date 1702462053553)
+@@ -3,16 +3,11 @@
+ import logging
+ import os
+ import torch
+-from caffe2.proto import caffe2_pb2
+ from torch import nn
+ 
+ from detectron2.config import CfgNode
+ from detectron2.utils.file_io import PathManager
+ 
+-from .caffe2_inference import ProtobufDetectionModel
+-from .caffe2_modeling import META_ARCH_CAFFE2_EXPORT_TYPE_MAP, convert_batched_inputs_to_c2_format
+-from .shared import get_pb_arg_vali, get_pb_arg_vals, save_graph
+-
+ __all__ = [
+     "add_export_config",
+     "export_caffe2_model",
+Index: detectron2/structures/boxes.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/structures/boxes.py b/detectron2/structures/boxes.py
+--- a/detectron2/structures/boxes.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/structures/boxes.py	(date 1702460829747)
+@@ -199,10 +199,11 @@
+         """
+         assert torch.isfinite(self.tensor).all(), "Box tensor contains infinite or NaN!"
+         h, w = box_size
+-        x1 = self.tensor[:, 0].clamp(min=0, max=w)
+-        y1 = self.tensor[:, 1].clamp(min=0, max=h)
+-        x2 = self.tensor[:, 2].clamp(min=0, max=w)
+-        y2 = self.tensor[:, 3].clamp(min=0, max=h)
++        boxes_prof = self.tensor.permute(1, 0)
++        x1 = boxes_prof[0, :].clamp(min=0, max=w)
++        y1 = boxes_prof[1, :].clamp(min=0, max=h)
++        x2 = boxes_prof[2, :].clamp(min=0, max=w)
++        y2 = boxes_prof[3, :].clamp(min=0, max=h)
+         self.tensor = torch.stack((x1, y1, x2, y2), dim=-1)
+ 
+     def nonempty(self, threshold: float = 0.0) -> torch.Tensor:
+Index: detectron2/modeling/roi_heads/cascade_rcnn.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/roi_heads/cascade_rcnn.py b/detectron2/modeling/roi_heads/cascade_rcnn.py
+--- a/detectron2/modeling/roi_heads/cascade_rcnn.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/roi_heads/cascade_rcnn.py	(date 1702460829728)
+@@ -31,7 +31,7 @@
+ @ROI_HEADS_REGISTRY.register()
+ class CascadeROIHeads(StandardROIHeads):
+     """
+-    The ROI heads that implement :paper:`Cascade R-CNN`.
++    Implement :paper:`Cascade R-CNN`.
+     """
+ 
+     @configurable
+@@ -270,7 +270,7 @@
+         # but scale up the parameter gradients of the heads.
+         # This is equivalent to adding the losses among heads,
+         # but scale down the gradients on features.
+-        box_features = _ScaleGradient.apply(box_features, 1.0 / self.num_cascade_stages)
++        #box_features = _ScaleGradient.apply(box_features, 1.0 / self.num_cascade_stages)
+         box_features = self.box_head[stage](box_features)
+         return self.box_predictor[stage](box_features)
+ 
+Index: detectron2/layers/nms.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/layers/nms.py b/detectron2/layers/nms.py
+--- a/detectron2/layers/nms.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/layers/nms.py	(date 1702467091434)
+@@ -15,6 +15,28 @@
+ else:
+     nms_rotated_func = torch.ops.detectron2.nms_rotated
+ 
++def batch_nms_op(bboxes, scores, score_threshold, iou_threshold, max_size_per_class, max_total_size):
++    """
++    boxes (torch.Tensor): boxes in shape (N, 4).
++    scores (torch.Tensor): scores in shape (N, ).
++    """
++
++    if bboxes.dtype == torch.float32:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4).half()
++        scores = scores.reshape(1, scores.shape[0], -1).half()
++    else:
++        bboxes = bboxes.reshape(1, bboxes.shape[0], -1, 4)
++        scores = scores.reshape(1, scores.shape[0], -1)
++
++    batch_nms = torch.ops.aie.batch_nms
++    nmsed_boxes, nmsed_scores, nmsed_classes, nmsed_num = batch_nms(bboxes, scores,
++        score_threshold, iou_threshold, max_size_per_class, max_total_size)
++    nmsed_boxes = nmsed_boxes.float()
++    nmsed_scores = nmsed_scores.float()
++    nmsed_classes = nmsed_classes.long()
++    dets = torch.cat((nmsed_boxes.reshape((max_total_size, 4)), nmsed_scores.reshape((max_total_size, 1))), -1)
++    labels = nmsed_classes.reshape((max_total_size, ))
++    return dets, labels
+ 
+ def batched_nms(
+     boxes: torch.Tensor, scores: torch.Tensor, idxs: torch.Tensor, iou_threshold: float
+Index: tools/deploy/export_model.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tools/deploy/export_model.py b/tools/deploy/export_model.py
+--- a/tools/deploy/export_model.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/tools/deploy/export_model.py	(date 1702468924088)
+@@ -103,13 +103,37 @@
+     # TODO inference in Python now missing postprocessing glue code
+     return None
+ 
++from typing import Dict, Tuple
++import numpy
++from detectron2.structures import ImageList
++def preprocess_image(batched_inputs: Tuple[Dict[str, torch.Tensor]]):
++        """
++        Normalize, pad and batch the input images.
++        """
++        images = [x["image"].to('cpu') for x in batched_inputs]
++        images = [(x - numpy.array([[[103.530]], [[116.280]], [[123.675]]])) / numpy.array([[[1.]], [[1.]], [[1.]]]) for x in images]
++        import torch.nn.functional as F
++        image = torch.zeros(0, 1344, 1344)
++        for i in range(images[0].size(0)):
++            img = images[0][i]
++            img = img.expand((1, 1, img.size(0), img.size(1)))
++            img = img.to(dtype=torch.float32)
++            img = F.interpolate(img, size=(int(1344), int(1344)), mode='bilinear', align_corners=False)
++            img = img[0][0]
++            img = img.unsqueeze(0)
++            image = torch.cat((image, img))
++        images = [image]
++        images = ImageList.from_tensors(images, 32)
++        return images
+ 
+ # experimental. API not yet final
+ def export_tracing(torch_model, inputs):
+     assert TORCH_VERSION >= (1, 8)
+     image = inputs[0]["image"]
+     inputs = [{"image": image}]  # remove other unused keys
+-
++    torch.ops.load_library("")
++    inputs = preprocess_image(inputs).tensor.to(torch.float32)
++    image = inputs
+     if isinstance(torch_model, GeneralizedRCNN):
+ 
+         def inference(model, inputs):
+@@ -130,7 +154,7 @@
+     elif args.format == "onnx":
+         # NOTE onnx export currently failing in pytorch
+         with PathManager.open(os.path.join(args.output, "model.onnx"), "wb") as f:
+-            torch.onnx.export(traceable_model, (image,), f)
++            torch.onnx.export(traceable_model, (image,), f, opset_version=11, verbose=True)
+     logger.info("Inputs schema: " + str(traceable_model.inputs_schema))
+     logger.info("Outputs schema: " + str(traceable_model.outputs_schema))
+ 
+Index: detectron2/modeling/meta_arch/rcnn.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/meta_arch/rcnn.py b/detectron2/modeling/meta_arch/rcnn.py
+--- a/detectron2/modeling/meta_arch/rcnn.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/meta_arch/rcnn.py	(date 1702460829700)
+@@ -196,8 +196,9 @@
+         """
+         assert not self.training
+ 
+-        images = self.preprocess_image(batched_inputs)
+-        features = self.backbone(images.tensor)
++        # images = self.preprocess_image(batched_inputs)
++        images = batched_inputs
++        features = self.backbone(images)
+ 
+         if detected_instances is None:
+             if self.proposal_generator is not None:
+Index: detectron2/modeling/proposal_generator/proposal_utils.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/proposal_generator/proposal_utils.py b/detectron2/modeling/proposal_generator/proposal_utils.py
+--- a/detectron2/modeling/proposal_generator/proposal_utils.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/proposal_generator/proposal_utils.py	(date 1702463084834)
+@@ -4,7 +4,7 @@
+ from typing import List, Tuple, Union
+ import torch
+ 
+-from detectron2.layers import batched_nms, cat
++from detectron2.layers import batch_nms_op, cat
+ from detectron2.structures import Boxes, Instances
+ from detectron2.utils.env import TORCH_VERSION
+ 
+@@ -68,15 +68,19 @@
+     for level_id, (proposals_i, logits_i) in enumerate(zip(proposals, pred_objectness_logits)):
+         Hi_Wi_A = logits_i.shape[1]
+         if isinstance(Hi_Wi_A, torch.Tensor):  # it's a tensor in tracing
+-            num_proposals_i = torch.clamp(Hi_Wi_A, max=pre_nms_topk)
++            num_proposals_i = torch.clamp(Hi_Wi_A, min=0, max=pre_nms_topk)
++            num_proposals_i = num_proposals_i.item()
+         else:
+             num_proposals_i = min(Hi_Wi_A, pre_nms_topk)
+ 
+         # sort is faster than topk: https://github.com/pytorch/pytorch/issues/22812
+-        # topk_scores_i, topk_idx = logits_i.topk(num_proposals_i, dim=1)
+-        logits_i, idx = logits_i.sort(descending=True, dim=1)
++        logits_i = logits_i.reshape(logits_i.size(1))
++        topk_scores_i, topk_idx = torch.topk(logits_i, num_proposals_i)
++        topk_scores_i = topk_scores_i.reshape(1, topk_scores_i.size(0))
++        topk_idx = topk_idx.reshape(1, topk_idx.size(0))
++        '''logits_i, idx = logits_i.sort(descending=True, dim=1)
+         topk_scores_i = logits_i.narrow(1, 0, num_proposals_i)
+-        topk_idx = idx.narrow(1, 0, num_proposals_i)
++        topk_idx = idx.narrow(1, 0, num_proposals_i)'''
+ 
+         # each is N x topk
+         topk_proposals_i = proposals_i[batch_idx[:, None], topk_idx]  # N x topk x 4
+@@ -108,7 +112,7 @@
+             lvl = lvl[valid_mask]
+         boxes.clip(image_size)
+ 
+-        # filter empty boxes
++        '''# filter empty boxes
+         keep = boxes.nonempty(threshold=min_box_size)
+         if _is_tracing() or keep.sum().item() != len(boxes):
+             boxes, scores_per_img, lvl = boxes[keep], scores_per_img[keep], lvl[keep]
+@@ -126,7 +130,14 @@
+         res = Instances(image_size)
+         res.proposal_boxes = boxes[keep]
+         res.objectness_logits = scores_per_img[keep]
++        results.append(res)'''
++
++        dets, labels = batch_nms_op(boxes.tensor, scores_per_img, 0, nms_thresh, post_nms_topk, post_nms_topk)
++        res = Instances(image_size)
++        res.proposal_boxes = Boxes(dets[:, :4])
++        res.objectness_logits = dets[:, 4]
+         results.append(res)
++
+     return results
+ 
+ 
+Index: detectron2/data/datasets/builtin.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/data/datasets/builtin.py b/detectron2/data/datasets/builtin.py
+--- a/detectron2/data/datasets/builtin.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/data/datasets/builtin.py	(date 1702462973522)
+@@ -255,7 +255,7 @@
+ # Internally at fb, we register them elsewhere
+ if __name__.endswith(".builtin"):
+     # Assume pre-defined datasets live in `./datasets`.
+-    _root = os.getenv("DETECTRON2_DATASETS", "datasets")
++    _root = os.getenv("DETECTRON2_DATASETS", "/home/ascend/")
+     register_all_coco(_root)
+     register_all_lvis(_root)
+     register_all_cityscapes(_root)
+Index: detectron2/layers/__init__.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/layers/__init__.py b/detectron2/layers/__init__.py
+--- a/detectron2/layers/__init__.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/layers/__init__.py	(date 1702460829682)
+@@ -2,7 +2,7 @@
+ from .batch_norm import FrozenBatchNorm2d, get_norm, NaiveSyncBatchNorm
+ from .deform_conv import DeformConv, ModulatedDeformConv
+ from .mask_ops import paste_masks_in_image
+-from .nms import batched_nms, batched_nms_rotated, nms, nms_rotated
++from .nms import batched_nms, batch_nms_op, batched_nms_rotated, nms, nms_rotated
+ from .roi_align import ROIAlign, roi_align
+ from .roi_align_rotated import ROIAlignRotated, roi_align_rotated
+ from .shape_spec import ShapeSpec
+Index: detectron2/modeling/proposal_generator/rpn.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/proposal_generator/rpn.py b/detectron2/modeling/proposal_generator/rpn.py
+--- a/detectron2/modeling/proposal_generator/rpn.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/proposal_generator/rpn.py	(date 1702460829719)
+@@ -475,7 +475,7 @@
+         else:
+             losses = {}
+         proposals = self.predict_proposals(
+-            anchors, pred_objectness_logits, pred_anchor_deltas, images.image_sizes
++            anchors, pred_objectness_logits, pred_anchor_deltas, [(1344, 1344)]
+         )
+         return proposals, losses
+ 
+@@ -526,7 +526,8 @@
+             B = anchors_i.tensor.size(1)
+             pred_anchor_deltas_i = pred_anchor_deltas_i.reshape(-1, B)
+             # Expand anchors to shape (N*Hi*Wi*A, B)
+-            anchors_i = anchors_i.tensor.unsqueeze(0).expand(N, -1, -1).reshape(-1, B)
++            s = torch.zeros(N, anchors_i.tensor.unsqueeze(0).size(1), anchors_i.tensor.unsqueeze(0).size(2))
++            anchors_i = anchors_i.tensor.unsqueeze(0).expand_as(s).reshape(-1, B)
+             proposals_i = self.box2box_transform.apply_deltas(pred_anchor_deltas_i, anchors_i)
+             # Append feature map proposals with shape (N, Hi*Wi*A, B)
+             proposals.append(proposals_i.view(N, -1, B))
+Index: detectron2/modeling/box_regression.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/box_regression.py b/detectron2/modeling/box_regression.py
+--- a/detectron2/modeling/box_regression.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/box_regression.py	(date 1702460829694)
+@@ -87,20 +87,33 @@
+         deltas = deltas.float()  # ensure fp32 for decoding precision
+         boxes = boxes.to(deltas.dtype)
+ 
+-        widths = boxes[:, 2] - boxes[:, 0]
+-        heights = boxes[:, 3] - boxes[:, 1]
+-        ctr_x = boxes[:, 0] + 0.5 * widths
+-        ctr_y = boxes[:, 1] + 0.5 * heights
++        boxes_prof = boxes.permute(1, 0)
++        widths = boxes_prof[2, :] - boxes_prof[0, :]
++        heights = boxes_prof[3, :] - boxes_prof[1, :]
++        ctr_x = boxes_prof[0, :] + 0.5 * widths
++        ctr_y = boxes_prof[1, :] + 0.5 * heights
+ 
+         wx, wy, ww, wh = self.weights
+-        dx = deltas[:, 0::4] / wx
++        '''dx = deltas[:, 0::4] / wx
+         dy = deltas[:, 1::4] / wy
+         dw = deltas[:, 2::4] / ww
+-        dh = deltas[:, 3::4] / wh
++        dh = deltas[:, 3::4] / wh'''
++        denorm_deltas = deltas
++        if denorm_deltas.shape[1] > 4:
++            denorm_deltas = denorm_deltas.view(-1, 80, 4)
++            dx = denorm_deltas[:, :, 0:1:].view(-1, 80) / wx
++            dy = denorm_deltas[:, :, 1:2:].view(-1, 80) / wy
++            dw = denorm_deltas[:, :, 2:3:].view(-1, 80) / ww
++            dh = denorm_deltas[:, :, 3:4:].view(-1, 80) / wh
++        else:
++            dx = denorm_deltas[:, 0:1:] / wx
++            dy = denorm_deltas[:, 1:2:] / wy
++            dw = denorm_deltas[:, 2:3:] / ww
++            dh = denorm_deltas[:, 3:4:] / wh
+ 
+         # Prevent sending too large values into torch.exp()
+-        dw = torch.clamp(dw, max=self.scale_clamp)
+-        dh = torch.clamp(dh, max=self.scale_clamp)
++        dw = torch.clamp(dw, min=-float('inf'), max=self.scale_clamp)
++        dh = torch.clamp(dh, min=-float('inf'), max=self.scale_clamp)
+ 
+         pred_ctr_x = dx * widths[:, None] + ctr_x[:, None]
+         pred_ctr_y = dy * heights[:, None] + ctr_y[:, None]
+Index: detectron2/modeling/roi_heads/fast_rcnn.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/roi_heads/fast_rcnn.py b/detectron2/modeling/roi_heads/fast_rcnn.py
+--- a/detectron2/modeling/roi_heads/fast_rcnn.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/roi_heads/fast_rcnn.py	(date 1702468739981)
+@@ -7,7 +7,7 @@
+ from torch.nn import functional as F
+ 
+ from detectron2.config import configurable
+-from detectron2.layers import ShapeSpec, batched_nms, cat, cross_entropy, nonzero_tuple
++from detectron2.layers import ShapeSpec, batch_nms_op, cat, cross_entropy, nonzero_tuple
+ from detectron2.modeling.box_regression import Box2BoxTransform
+ from detectron2.structures import Boxes, Instances
+ from detectron2.utils.events import get_event_storage
+@@ -152,7 +152,7 @@
+     # R' x 2. First column contains indices of the R predictions;
+     # Second column contains indices of classes.
+     filter_inds = filter_mask.nonzero()
+-    if num_bbox_reg_classes == 1:
++    '''if num_bbox_reg_classes == 1:
+         boxes = boxes[filter_inds[:, 0], 0]
+     else:
+         boxes = boxes[filter_mask]
+@@ -167,7 +167,14 @@
+     result = Instances(image_shape)
+     result.pred_boxes = Boxes(boxes)
+     result.scores = scores
+-    result.pred_classes = filter_inds[:, 1]
++    result.pred_classes = filter_inds[:, 1]'''
++
++    dets, labels = batch_nms_op(boxes, scores, score_thresh, nms_thresh, topk_per_image, topk_per_image)
++    result = Instances(image_shape)
++    result.pred_boxes = Boxes(dets[:, :4])
++    result.scores = dets.permute(1, 0)[4, :]
++    result.pred_classes = labels
++
+     return result, filter_inds[:, 0]
+ 
+ 
+Index: detectron2/modeling/roi_heads/mask_head.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/detectron2/modeling/roi_heads/mask_head.py b/detectron2/modeling/roi_heads/mask_head.py
+--- a/detectron2/modeling/roi_heads/mask_head.py	(revision 13afb035142734a309b20634dadbba0504d7eefe)
++++ b/detectron2/modeling/roi_heads/mask_head.py	(date 1702460829741)
+@@ -142,7 +142,9 @@
+         num_masks = pred_mask_logits.shape[0]
+         class_pred = cat([i.pred_classes for i in pred_instances])
+         indices = torch.arange(num_masks, device=class_pred.device)
+-        mask_probs_pred = pred_mask_logits[indices, class_pred][:, None].sigmoid()
++        print(indices,class_pred)
++        # mask_probs_pred = pred_mask_logits[indices, class_pred][:, None].sigmoid()
++        mask_probs_pred = pred_mask_logits.sigmoid()
+     # mask_probs_pred.shape: (B, 1, Hmask, Wmask)
+ 
+     num_boxes_per_image = [len(i) for i in pred_instances]
