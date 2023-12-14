@@ -42,6 +42,7 @@ do
     if [[ $para == --fp32 ]];then
         fp32=`echo ${para#*=}`
         export ALLOW_FP32=True
+        use_amp=false
     fi
 done
 
