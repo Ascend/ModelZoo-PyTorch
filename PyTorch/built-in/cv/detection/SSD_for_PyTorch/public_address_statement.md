@@ -1033,3 +1033,5 @@
 | 开源代码引入 | https://github.com/open-mmlab/mmdetection/blob/v2.25.0/mmdet/models/roi_heads/dynamic_roi_head.py | SSD_for_PyTorch/mmdet/models/roi_heads/dynamic_roi_head.py | https://arxiv.org/abs/2004.06002 | 论文地址 |
 | 开源代码引入 | https://github.com/open-mmlab/mmdetection/blob/v2.25.0/mmdet/models/dense_heads/deformable_detr_head.py | SSD_for_PyTorch/mmdet/models/dense_heads/deformable_detr_head.py | https://github.com/fundamentalvision/Deformable-DETR | 源码实现 |
 | 开源代码引入 | https://github.com/open-mmlab/mmdetection/blob/v2.25.0/mmdet/core/bbox/samplers/ohem_sampler.py | SSD_for_PyTorch/mmdet/core/bbox/samplers/ohem_sampler.py | https://arxiv.org/abs/1604.03540 | 论文地址 |
+| 开发引入 | / | SSD_for_PyTorch/requirements/docs.txt | https://github.com/open-mmlab/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |
+| 开发引入 | / | SSD_for_PyTorch/requirements/tests.txt | https://github.com/open-mmlab/mmtracking#egg=mmtrack | 相关依赖 |

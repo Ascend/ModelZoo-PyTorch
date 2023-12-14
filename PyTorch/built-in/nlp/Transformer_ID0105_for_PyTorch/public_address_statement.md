@@ -38,3 +38,4 @@
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/Translation/Transformer/examples/translation/prepare-wmt14en2de.sh|Transformer_ID0105_for_PyTorch/examples/translation/prepare-wmt14en2de.sh	| https://arxiv.org/abs/1705.031 | 模型相关说明 |
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/Translation/Transformer/examples/translation/prepare-wmt14en2de.sh|Transformer_ID0105_for_PyTorch/examples/translation/prepare-wmt14en2de.sh	| https://arxiv.org/abs/1806.001 | 模型相关说明 |
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/Translation/Transformer/examples/translation/prepare-iwslt14.sh|Transformer_ID0105_for_PyTorch/examples/translation/prepare-iwslt14.sh	| https://github.com/facebookresearch/MIXER/blob/master/prepareData. | 源码实现 |
+| 开发引入 | / |Transformer_ID0105_for_PyTorch/requirements.txt	| https://github.com/NVIDIA/dllogger.git | 相关依赖 |

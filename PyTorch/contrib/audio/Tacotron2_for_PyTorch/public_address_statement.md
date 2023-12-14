@@ -9,3 +9,4 @@
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/SpeechSynthesis/Tacotron2/tacotron2/text/cleaners.py | Tacotron2_for_PyTorch/tacotron2/text/cleaners.py | https://github.com/keithito/tacotron | tacotron在github上的公网来源说明 | 
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/SpeechSynthesis/Tacotron2/tacotron2/text/cleaners.py | Tacotron2_for_PyTorch/tacotron2/text/cleaners.py | https://pypi.python.org/pypi/Unidecode | Unidecode在pypi.python.org上的公网来源说明 |
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/SpeechSynthesis/Tacotron2/tacotron2/text/__init__.py | Tacotron2_for_PyTorch/tacotron2/text/__init__.py | https://github.com/keithito/tacotron | tacotron在github上的公网来源说明 |
+| 开发引入 | / | Tacotron2_for_PyTorch/requirements.txt | https://github.com/NVIDIA/dllogger | 相关依赖 |

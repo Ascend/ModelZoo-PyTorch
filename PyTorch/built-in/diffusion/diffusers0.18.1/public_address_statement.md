@@ -1368,3 +1368,4 @@
 | 开源代码引入 | https://github.com/huggingface/diffusers/examples/community/pipeline_zero1to3.py | diffusers0.18.1/src/diffusers/pipelines/deepfloyd_if/pipeline_if_superresolution.py | https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/cross_attention.py | 源码实现 |
 | 开发引入 | / | diffusers0.18.1/src/diffusers/schedulers/scheduling_dpmsolver_multistep_flax.py | https://arxiv.org/abs/2206.00927","https://arxiv.org/abs/2211.01095 | 论文地址 |
 | 开发引入 | / | diffusers0.18.1/src/diffusers/pipelines/stable_diffusion/pipeline_stable_diffusion_k_diffusion.py | https://pillow.readthedocs.io/en/stable/ | 相关说明 |
+| 开发引入 | / | diffusers0.18.1/examples/research_projects/lora/requirements.txt | https://github.com/huggingface/peft.git | 相关依赖 |

@@ -167,3 +167,4 @@
 | 开源代码引入 | https://github.com/open-mmlab/mmsegmentation/blob/main/docs/en/make.bat | BiseNetV1_for_PyTorch/docs/en/make.bat	| http://sphinx-doc.org/ | 模型相关说明 |
 | 开源代码引入 | https://github.com/open-mmlab/mmsegmentation/blob/main/mmseg/datasets/basesegdataset.py | BiseNetV1_for_PyTorch/mmseg/datasets/custom.py	| https://github.com/open-mmlab/mmdetection/issues/5844 | 模型相关说明 |
 | 开源代码引入 | https://github.com/open-mmlab/mmsegmentation/blob/main/docs/en/make.bat | BiseNetV1_for_PyTorch/docs/zh_cn/make.bat	| http://sphinx-doc.org/ | 模型相关说明 |
+| 开发引入 | / | BiseNetV1_for_PyTorch/requirements/docs.txt	| https://github.com/gaotongxiao/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |

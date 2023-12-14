@@ -111,7 +111,7 @@ class mywindow(QTabWidget,Ui_TabWidget): #这个窗口继承了用QtDesignner �
             self.detector = detector_factory[opt.task](opt)
 
         if not hasattr(self, 'product_thread'):         # 声明进程
-            # video_path = 'rtsp://admin:Shenlan2018@171.211.125.44:1554/h264/ch1/main/av_stream'
+            # video_path = 'rtsp://admin:password@ip:port/h264/ch1/main/av_stream'
             video_path = 0
             self.product_thread = product_thread(self.detector, video_path, self.combobox41)
             self.product_thread.mysignal.connect(self.product_cess)
@@ -140,7 +140,7 @@ class collect_image_thread(QThread):
     
     def __init__(self):
         super(collect_image_thread, self).__init__()
-        # self.cap = cv2.VideoCapture('rtsp://admin:Shenlan2018@171.211.125.44:1554/h264/ch1/main/av_stream')
+        # self.cap = cv2.VideoCapture('rtsp://admin:password@ip:port/h264/ch1/main/av_stream')
         self.cap = cv2.VideoCapture(0)
 
     def run(self):

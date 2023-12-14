@@ -70,3 +70,4 @@
 | 开源代码引入 | https://github.com/EleutherAI/gpt-neox/blob/master/configs/neox_arguments.md|GPT-NeoX/megatron/neox_arguments/neox_args.py	| https://arxiv.org/abs/1911.02116 | 模型相关说明 |
 | 开源代码引入 | https://github.com/EleutherAI/gpt-neox/blob/master/configs/neox_arguments.md|GPT-NeoX/megatron/neox_arguments/neox_args.py	| https://github.com/microsoft/mup | 源码实现 |
 | 开源代码引入 | https://github.com/EleutherAI/gpt-neox/blob/master/megatron/tokenizer/tokenizer.py|GPT-NeoX/megatron/tokenizer/tokenizer.py	| https://github.com/openai/tiktoken | 源码实现 |
+| 开发引入 | https://github.com/EleutherAI/gpt-neox/blob/master/megatron/tokenizer/tokenizer.py|GPT-NeoX/megatron/tokenizer/tokenizer.py	| https://github.com/openai/tiktoken | 源码实现 |

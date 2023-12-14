@@ -312,3 +312,4 @@
 | 开源代码引入 | https://github.com/wenet-e2e/wenet.git/runtime/kunlun/xpu/xpu_util.h | Wenet_Conformer_for_Pytorch/runtime/kunlun/xpu/xpu_conformer.h | qihan@baidu.com | 邮箱地址 |
 | 开发引入 | / | Wenet_Conformer_for_Pytorch/examples/timit/run.sh | https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html | 相关说明 |
 | 开源代码引入 | https://github.com/wenet-e2e/wenet.git/runtime/ios/WenetDemo/WenetDemo/wenet/WenetDemo-Bridging-Header.h | Wenet_Conformer_for_Pytorch/runtime/ios/WenetDemo/WenetDemo/ViewController.swift | 1067837450@qq.com | 邮箱地址 |
+| 开发引入 | / | Wenet_Conformer_for_Pytorch/runtime/gpu/tensorrt/requirements.txt | https://pypi.ngc.nvidia.com | 相关依赖 |

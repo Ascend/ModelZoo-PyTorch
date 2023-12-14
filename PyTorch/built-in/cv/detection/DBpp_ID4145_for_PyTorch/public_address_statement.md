@@ -119,3 +119,4 @@
 | 开源代码引入 | https://github.com/open-mmlab/mmocr/blob/26bc4713d4a451ed510a67be0a4fdd9903fd9011/mmocr/models/textdet/losses/pan_loss.py | DBpp_ID4145_for_PyTorch/mmocr/models/textdet/losses/drrg_loss.py | https://arxiv.org/abs/1908.05900 | 论文地址 |
 | 开源代码引入 | https://github.com/open-mmlab/mmocr/blob/26bc4713d4a451ed510a67be0a4fdd9903fd9011/setup.py | DBpp_ID4145_for_PyTorch/mmcv_need/setup.py | http://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-platform-specific-dependencies | 相关说明 |
 | 开源代码引入 | https://github.com/open-mmlab/mmocr/blob/26bc4713d4a451ed510a67be0a4fdd9903fd9011/mmocr/models/textrecog/recognizer/master.py | DBpp_ID4145_for_PyTorch/mmocr/models/textrecog/decoders/master_decoder.py | https://arxiv.org/abs/1910.02562 | 论文地址 |
+| 开发引入 | / | DBpp_ID4145_for_PyTorch/requirements/docs.txt | https://github.com/open-mmlab/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |

@@ -1085,3 +1085,7 @@ April 2020
 - Custom dot interaction kernels for FP16 and TF32 assume that embedding size <= 128 and number of categorical variables < 32.
   Pass `--interaction_op dot` to use the slower native operation in those cases.
 
+
+# Statement
+
+For details about the public address of the code in this repository, you can get from the file public_address_statement.md

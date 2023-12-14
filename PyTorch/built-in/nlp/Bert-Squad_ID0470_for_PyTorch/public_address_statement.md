@@ -53,3 +53,4 @@
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/BERT/modeling.py|Bert-Squad_ID0470_for_PyTorch/modeling.py	| https://github.com/pytorch/pytorch/pull/5617 | 源码实现 |
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/BERT/PyTorch/Detection/Efficientdet/utils/scheduler.py|Bert-Squad_ID0470_for_PyTorch/file_utils.py	| https://github.com/allenai/allennlp | 源码实现 |
 | 开源代码引入 | https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/LanguageModeling/BERT/PaddlePaddle/LanguageModeling/BERT/data/squad/squad_download.sh|Bert-Squad_ID0470_for_PyTorch/data/SquadDownloader.py	| https://worksheets.codalab.org/rest/bundles/0x6b567e1cf2e041ec80d7098f031c5c9e/contents/blob/ | 模型相关说明 |
+| 开发引入 | / |Bert-Squad_ID0470_for_PyTorch/requirements.txt	| requirements.txt | 相关依赖 |

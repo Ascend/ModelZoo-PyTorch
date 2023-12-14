@@ -1232,3 +1232,4 @@
 | 开源代码引入 | https://github.com/huggingface/diffusers/src/diffusers/schedulers/scheduling_ddim_parallel.py | diffusers0.17.0/src/diffusers/pipelines/versatile_diffusion/pipeline_versatile_diffusion_text_to_image.py | https://arxiv.org/abs/2010.02502 | 论文地址 |
 | 开源代码引入 | https://github.com/huggingface/diffusers/src/diffusers/schedulers/scheduling_ddim_parallel.py | diffusers0.17.0/src/diffusers/pipelines/unidiffuser/pipeline_unidiffuser.py | https://arxiv.org/abs/2010.02502 | 论文地址 |
 | 开源代码引入 | https://github.com/huggingface/diffusers/src/diffusers/pipelines/wuerstchen/pipeline_wuerstchen_prior.py | diffusers0.17.0/src/diffusers/pipelines/latent_diffusion_uncond/pipeline_latent_diffusion_uncond.py | https://pytorch.org/docs/stable/generated/torch.Generator.html | 相关说明 |
+| 开发引入 | / | diffusers0.17.0/examples/research_projects/lora/requirements.txt | https://github.com/huggingface/peft.git | 相关依赖 |

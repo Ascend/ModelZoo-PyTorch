@@ -597,3 +597,4 @@
 | 开源代码引入 | https://github.com/open-mmlab/mmpretrain/blob/main/mmpretrain/models/selfsup/mocov3.py | Resnet50_Cifar_for_PyTorch/mmcls/models/backbones/vision_transformer.py | https://arxiv.org/abs/2010.11929 | 论文地址 |
 | 开源代码引入 | https://github.com/open-mmlab/mmpretrain/blob/main/mmpretrain/models/losses/seesaw_loss.py | Resnet50_Cifar_for_PyTorch/mmcls/models/losses/seesaw_loss.py | https://arxiv.org/abs/2008.10032 | 论文地址 |
 | 开源代码引入 | https://github.com/open-mmlab/mmpretrain/blob/main/mmpretrain/models/backbones/swin_transformer.py | Resnet50_Cifar_for_PyTorch/mmcls/models/backbones/swin_transformer.py | https://arxiv.org/abs/2103.14030 | 论文地址 |
+| 开发引入 | / | Resnet50_Cifar_for_PyTorch/requirements/docs.txt | https://github.com/open-mmlab/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |

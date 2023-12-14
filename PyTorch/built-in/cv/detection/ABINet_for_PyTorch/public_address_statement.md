@@ -48,3 +48,5 @@
 | 开源代码引入 | https://github.com/open-mmlab/mmocr/blob/a4fe6bb67f066bbb5023e38d404c1210b1b3bab2/mmocr/models/textrecog/backbones/shallow_cnn.py | ABINet_for_PyTorch/mmocr/models/textrecog/backbones/shallow_cnn.py | https://arxiv.org/pdf/1910.04396.pdf | 论文地址 |
 | 开源代码引入 | https://github.com/open-mmlab/mmocr/blob/a4fe6bb67f066bbb5023e38d404c1210b1b3bab2/mmocr/models/textrecog/recognizer/sar.py | ABINet_for_PyTorch/mmocr/models/textrecog/encoders/sar_encoder.py | https://arxiv.org/abs/1811.00751 | 论文地址 |
 | 开源代码引入 | https://github.com/open-mmlab/mmocr/blob/a4fe6bb67f066bbb5023e38d404c1210b1b3bab2/mmocr/models/textrecog/decoders/sequence_attention_decoder.py | ABINet_for_PyTorch/mmocr/models/textrecog/decoders/sequence_attention_decoder.py | https://arxiv.org/abs/2007.07542 | 论文地址 |
+| 开发引入 | / | ABINet_for_PyTorch/requirements/docs.txt | https://github.com/open-mmlab/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |
+| 开发引入 | / | ABINet_for_PyTorch/requirements/docs.txt | https://github.com/open-mmlab/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |

@@ -490,3 +490,6 @@
 | 开源代码引入 | https://github.com/open-mmlab/mmpose/blob/main/docs/en/notes/changelog.md| HRNet_MMPose_for_PyTorch/tools/deployment/mmpose2torchserve.py	| https://github.com/open-mmlab/mmdeploy | 源码实现 |
 | 开源代码引入 | https://github.com/open-mmlab/mmpose/blob/main/docs/en/notes/changelog.md| HRNet_MMPose_for_PyTorch/tools/deployment/test_torchserver.py	| https://github.com/open-mmlab/mmdeploy | 源码实现 |
 | 开源代码引入 | https://github.com/open-mmlab/mmpose/blob/main/docs/en/notes/changelog.md| HRNet_MMPose_for_PyTorch/tools/deployment/pytorch2onnx.py	| https://github.com/open-mmlab/mmdeplo | 源码实现 |
+| 开发引入 | /| HRNet_MMPose_for_PyTorch/requirements/docs.txt	| https://github.com/gaotongxiao/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme | 相关依赖 |
+| 开发引入 | /| HRNet_MMPose_for_PyTorch/requirements/poseval.txt	| https://github.com/svenkreiss/poseval.git | 相关依赖 |
+| 开发引入 | /| HRNet_MMPose_for_PyTorch/requirements/readthedocs.txt	| https://github.com/svenkreiss/poseval.git | 相关依赖 |
