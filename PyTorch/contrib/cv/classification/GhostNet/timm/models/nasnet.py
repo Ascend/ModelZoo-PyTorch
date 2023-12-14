@@ -2,6 +2,7 @@
  nasnetalarge implementation grabbed from Cadene's pretrained models
  https://github.com/Cadene/pretrained-models.pytorch
 """
+import os
 from functools import partial
 
 import torch
@@ -14,9 +15,16 @@ from .registry import register_model
 
 __all__ = ['NASNetALarge']
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    nasnetalarge_a1897284_url = _content.split('nasnetalarge_a1897284_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'nasnetalarge': {
-        'url': 'http://data.lip6.fr/cadene/pretrainedmodels/nasnetalarge-a1897284.pth',
+        'url': nasnetalarge_a1897284_url,
         'input_size': (3, 331, 331),
         'pool_size': (11, 11),
         'crop_pct': 0.911,

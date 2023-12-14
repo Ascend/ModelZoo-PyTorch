@@ -2,6 +2,7 @@
 Adapted from Official Pytorch impl at: https://github.com/gasvn/Res2Net/
 Paper: `Res2Net: A New Multi-scale Backbone Architecture` - https://arxiv.org/abs/1904.01169
 """
+import os
 import math
 
 import torch
@@ -26,21 +27,33 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    res2net50_26w_4s_06e79181_url = _content.split('res2net50_26w_4s_06e79181_url=')[1].split('\n')[0]
+    res2net50_48w_2s_afed724a_url = _content.split('res2net50_48w_2s_afed724a_url=')[1].split('\n')[0]
+    res2net50_14w_8s_6527dddc_url = _content.split('res2net50_14w_8s_6527dddc_url=')[1].split('\n')[0]
+    res2net50_26w_6s_19041792_url = _content.split('res2net50_26w_6s_19041792_url=')[1].split('\n')[0]
+    res2net50_26w_8s_2c7c9f12_url = _content.split('res2net50_26w_8s_2c7c9f12_url=')[1].split('\n')[0]
+    res2net101_26w_4s_02a759a1_url = _content.split('res2net101_26w_4s_02a759a1_url=')[1].split('\n')[0]
+    res2next50_4s_6ef7e7bf_url = _content.split('res2next50_4s_6ef7e7bf_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'res2net50_26w_4s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net50_26w_4s-06e79181.pth'),
+        url=res2net50_26w_4s_06e79181_url),
     'res2net50_48w_2s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net50_48w_2s-afed724a.pth'),
+        url=res2net50_48w_2s_afed724a_url),
     'res2net50_14w_8s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net50_14w_8s-6527dddc.pth'),
+        url=res2net50_14w_8s_6527dddc_url),
     'res2net50_26w_6s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net50_26w_6s-19041792.pth'),
+        url=res2net50_26w_6s_19041792_url),
     'res2net50_26w_8s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net50_26w_8s-2c7c9f12.pth'),
+        url=res2net50_26w_8s_2c7c9f12_url),
     'res2net101_26w_4s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net101_26w_4s-02a759a1.pth'),
+        url=res2net101_26w_4s_02a759a1_url),
     'res2next50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2next50_4s-6ef7e7bf.pth'),
+        url=res2next50_4s_6ef7e7bf_url),
 }
 
 

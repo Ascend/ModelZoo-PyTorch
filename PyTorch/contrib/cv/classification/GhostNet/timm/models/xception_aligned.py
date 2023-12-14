@@ -5,6 +5,7 @@ https://github.com/tensorflow/models/blob/master/research/deeplab/g3doc/model_zo
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 from functools import partial
 
 import torch.nn as nn
@@ -30,13 +31,21 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    tf_xception_41_e6439c97_url = _content.split('tf_xception_41_e6439c97_url=')[1].split('\n')[0]
+    tf_xception_65_c9ae96e8_url = _content.split('tf_xception_65_c9ae96e8_url=')[1].split('\n')[0]
+    tf_xception_71_8eec7df1_url = _content.split('tf_xception_71_8eec7df1_url=')[1].split('\n')[0]
+
+
 default_cfgs = dict(
     xception41=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_xception_41-e6439c97.pth'),
+        url=tf_xception_41_e6439c97_url),
     xception65=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_xception_65-c9ae96e8.pth'),
+        url=tf_xception_65_c9ae96e8_url),
     xception71=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_xception_71-8eec7df1.pth'),
+        url=tf_xception_71_8eec7df1_url),
 )
 
 

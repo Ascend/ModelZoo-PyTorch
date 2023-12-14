@@ -5,6 +5,7 @@ https://arxiv.org/pdf/2003.13630.pdf
 Original model: https://github.com/mrT23/TResNet
 
 """
+import os
 import copy
 from collections import OrderedDict
 from functools import partial
@@ -30,22 +31,33 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    tresnet_m_80_8_dbc13962_url = _content.split('tresnet_m_80_8_dbc13962_url=')[1].split('\n')[0]
+    tresnet_l_81_5_235b486c_url = _content.split('tresnet_l_81_5_235b486c_url=')[1].split('\n')[0]
+    tresnet_xl_82_0_a2d51b00_url = _content.split('tresnet_xl_82_0_a2d51b00_url=')[1].split('\n')[0]
+    tresnet_m_448_bc359d10_url = _content.split('tresnet_m_448_bc359d10_url=')[1].split('\n')[0]
+    tresnet_l_448_940d0cd1_url = _content.split('tresnet_l_448_940d0cd1_url=')[1].split('\n')[0]
+    tresnet_xl_448_8c1815de_url = _content.split('tresnet_xl_448_8c1815de_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'tresnet_m': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_m_80_8-dbc13962.pth'),
+        url=tresnet_m_80_8_dbc13962_url),
     'tresnet_l': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_l_81_5-235b486c.pth'),
+        url=tresnet_l_81_5_235b486c_url),
     'tresnet_xl': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_xl_82_0-a2d51b00.pth'),
+        url=tresnet_xl_82_0_a2d51b00_url),
     'tresnet_m_448': _cfg(
         input_size=(3, 448, 448), pool_size=(14, 14),
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_m_448-bc359d10.pth'),
+        url=tresnet_m_448_bc359d10_url),
     'tresnet_l_448': _cfg(
         input_size=(3, 448, 448), pool_size=(14, 14),
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_l_448-940d0cd1.pth'),
+        url=tresnet_l_448_940d0cd1_url),
     'tresnet_xl_448': _cfg(
         input_size=(3, 448, 448), pool_size=(14, 14),
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-tresnet/tresnet_xl_448-8c1815de.pth')
+        url=tresnet_xl_448_8c1815de_url)
 }
 
 

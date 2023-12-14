@@ -11,6 +11,7 @@ https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 FIXME I'm deprecating this model and moving them to ResNet as I don't want to maintain duplicate
 support for extras like dilation, switchable BN/activations, feature extraction, etc that don't exist here.
 """
+import os
 import math
 from collections import OrderedDict
 
@@ -35,27 +36,41 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    senet154_c7b49a05_url = _content.split('senet154_c7b49a05_url=')[1].split('\n')[0]
+    seresnet18_4bb0ce65_url = _content.split('seresnet18_4bb0ce65_url=')[1].split('\n')[0]
+    seresnet34_a4004e63_url = _content.split('seresnet34_a4004e63_url=')[1].split('\n')[0]
+    se_resnet50_ce0d4300_url = _content.split('se_resnet50_ce0d4300_url=')[1].split('\n')[0]
+    se_resnet101_7e38fcc6_url = _content.split('se_resnet101_7e38fcc6_url=')[1].split('\n')[0]
+    se_resnet152_d17c99b7_url = _content.split('se_resnet152_d17c99b7_url=')[1].split('\n')[0]
+    seresnext26_32x4d_65ebdb501_url = _content.split('seresnext26_32x4d_65ebdb501_url=')[1].split('\n')[0]
+    se_resnext50_32x4d_a260b3a4_url = _content.split('se_resnext50_32x4d_a260b3a4_url=')[1].split('\n')[0]
+    se_resnext101_32x4d_3b2fe3d8_url = _content.split('se_resnext101_32x4d_3b2fe3d8_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'legacy_senet154':
-        _cfg(url='http://data.lip6.fr/cadene/pretrainedmodels/senet154-c7b49a05.pth'),
+        _cfg(url=senet154_c7b49a05_url),
     'legacy_seresnet18': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnet18-4bb0ce65.pth',
+        url=seresnet18_4bb0ce65_url,
         interpolation='bicubic'),
     'legacy_seresnet34': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnet34-a4004e63.pth'),
+        url=seresnet34_a4004e63_url),
     'legacy_seresnet50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-cadene/se_resnet50-ce0d4300.pth'),
+        url=se_resnet50_ce0d4300_url),
     'legacy_seresnet101': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-cadene/se_resnet101-7e38fcc6.pth'),
+        url=se_resnet101_7e38fcc6_url),
     'legacy_seresnet152': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-cadene/se_resnet152-d17c99b7.pth'),
+        url=se_resnet152_d17c99b7_url),
     'legacy_seresnext26_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnext26_32x4d-65ebdb501.pth',
+        url=seresnext26_32x4d_65ebdb501_url,
         interpolation='bicubic'),
     'legacy_seresnext50_32x4d':
-        _cfg(url='http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth'),
+        _cfg(url=se_resnext50_32x4d_a260b3a4_url),
     'legacy_seresnext101_32x4d':
-        _cfg(url='http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth'),
+        _cfg(url=se_resnext101_32x4d_3b2fe3d8_url),
 }
 
 

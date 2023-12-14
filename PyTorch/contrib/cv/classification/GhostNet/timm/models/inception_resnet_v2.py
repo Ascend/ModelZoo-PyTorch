@@ -2,6 +2,7 @@
 Sourced from https://github.com/Cadene/tensorflow-model-zoo.torch (MIT License) which is
 based upon Google's Tensorflow implementation and pretrained weights (Apache 2.0 License)
 """
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,10 +14,18 @@ from .registry import register_model
 
 __all__ = ['InceptionResnetV2']
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    inception_resnet_v2_940b1cd6_url = _content.split('inception_resnet_v2_940b1cd6_url=')[1].split('\n')[0]
+    ens_adv_inception_resnet_v2_2592a550_url = _content.split('ens_adv_inception_resnet_v2_2592a550_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     # ported from http://download.tensorflow.org/models/inception_resnet_v2_2016_08_30.tar.gz
     'inception_resnet_v2': {
-        'url': 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/inception_resnet_v2-940b1cd6.pth',
+        'url': inception_resnet_v2_940b1cd6_url,
         'num_classes': 1000, 'input_size': (3, 299, 299), 'pool_size': (8, 8),
         'crop_pct': 0.8975, 'interpolation': 'bicubic',
         'mean': IMAGENET_INCEPTION_MEAN, 'std': IMAGENET_INCEPTION_STD,
@@ -25,7 +34,7 @@ default_cfgs = {
     },
     # ported from http://download.tensorflow.org/models/ens_adv_inception_resnet_v2_2017_08_18.tar.gz
     'ens_adv_inception_resnet_v2': {
-        'url': 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ens_adv_inception_resnet_v2-2592a550.pth',
+        'url': ens_adv_inception_resnet_v2_2592a550_url,
         'num_classes': 1000, 'input_size': (3, 299, 299), 'pool_size': (8, 8),
         'crop_pct': 0.8975, 'interpolation': 'bicubic',
         'mean': IMAGENET_INCEPTION_MEAN, 'std': IMAGENET_INCEPTION_STD,

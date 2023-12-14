@@ -3,7 +3,7 @@ This file evolved from https://github.com/pytorch/vision 'resnet.py' with (SE)-R
 and ports of Gluon variations (https://github.com/dmlc/gluon-cv/blob/master/gluoncv/model_zoo/resnet.py) 
 by Ross Wightman
 """
-
+import os
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from .helpers import build_model_with_cfg
 from .layers import SEModule
@@ -22,37 +22,63 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    gluon_resnet18_v1b_0757602b_url = _content.split('gluon_resnet18_v1b_0757602b_url=')[1].split('\n')[0]
+    gluon_resnet34_v1b_c6d82d59_url = _content.split('gluon_resnet34_v1b_c6d82d59_url=')[1].split('\n')[0]
+    gluon_resnet50_v1b_0ebe02e2_url = _content.split('gluon_resnet50_v1b_0ebe02e2_url=')[1].split('\n')[0]
+    gluon_resnet101_v1b_3b017079_url = _content.split('gluon_resnet101_v1b_3b017079_url=')[1].split('\n')[0]
+    gluon_resnet152_v1b_c1edb0dd_url = _content.split('gluon_resnet152_v1b_c1edb0dd_url=')[1].split('\n')[0]
+    gluon_resnet50_v1c_48092f55_url = _content.split('gluon_resnet50_v1c_48092f55_url=')[1].split('\n')[0]
+    gluon_resnet101_v1c_1f26822a_url = _content.split('gluon_resnet101_v1c_1f26822a_url=')[1].split('\n')[0]
+    gluon_resnet152_v1c_a3bb0b98_url = _content.split('gluon_resnet152_v1c_a3bb0b98_url=')[1].split('\n')[0]
+    gluon_resnet50_v1d_818a1b1b_url = _content.split('gluon_resnet50_v1d_818a1b1b_url=')[1].split('\n')[0]
+    gluon_resnet101_v1d_0f9c8644_url = _content.split('gluon_resnet101_v1d_0f9c8644_url=')[1].split('\n')[0]
+    gluon_resnet152_v1d_bd354e12_url = _content.split('gluon_resnet152_v1d_bd354e12_url=')[1].split('\n')[0]
+    gluon_resnet50_v1s_1762acc0_url = _content.split('gluon_resnet50_v1s_1762acc0_url=')[1].split('\n')[0]
+    gluon_resnet101_v1s_60fe0cc1_url = _content.split('gluon_resnet101_v1s_60fe0cc1_url=')[1].split('\n')[0]
+    gluon_resnet152_v1s_dcc41b81_url = _content.split('gluon_resnet152_v1s_dcc41b81_url=')[1].split('\n')[0]
+    gluon_resnext50_32x4d_e6a097c1_url = _content.split('gluon_resnext50_32x4d_e6a097c1_url=')[1].split('\n')[0]
+    gluon_resnext101_32x4d_b253c8c4_url = _content.split('gluon_resnext101_32x4d_b253c8c4_url=')[1].split('\n')[0]
+    gluon_resnext101_64x4d_f9a8e184_url = _content.split('gluon_resnext101_64x4d_f9a8e184_url=')[1].split('\n')[0]
+    gluon_seresnext50_32x4d_90cf2d6e_url = _content.split('gluon_seresnext50_32x4d_90cf2d6e_url=')[1].split('\n')[0]
+    gluon_seresnext101_32x4d_cf52900d_url = _content.split('gluon_seresnext101_32x4d_cf52900d_url=')[1].split('\n')[0]
+    gluon_seresnext101_64x4d_f9926f93_url = _content.split('gluon_seresnext101_64x4d_f9926f93_url=')[1].split('\n')[0]
+    gluon_senet154_70a1a3c0_url = _content.split('gluon_senet154_70a1a3c0_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
-    'gluon_resnet18_v1b': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet18_v1b-0757602b.pth'),
-    'gluon_resnet34_v1b': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet34_v1b-c6d82d59.pth'),
-    'gluon_resnet50_v1b': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet50_v1b-0ebe02e2.pth'),
-    'gluon_resnet101_v1b': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet101_v1b-3b017079.pth'),
-    'gluon_resnet152_v1b': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet152_v1b-c1edb0dd.pth'),
-    'gluon_resnet50_v1c': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet50_v1c-48092f55.pth',
+    'gluon_resnet18_v1b': _cfg(url=gluon_resnet18_v1b_0757602b_url),
+    'gluon_resnet34_v1b': _cfg(url=gluon_resnet34_v1b_c6d82d59_url),
+    'gluon_resnet50_v1b': _cfg(url=gluon_resnet50_v1b_0ebe02e2_url),
+    'gluon_resnet101_v1b': _cfg(url=gluon_resnet101_v1b_3b017079_url),
+    'gluon_resnet152_v1b': _cfg(url=gluon_resnet152_v1b_c1edb0dd_url),
+    'gluon_resnet50_v1c': _cfg(url=gluon_resnet50_v1c_48092f55_url,
                                first_conv='conv1.0'),
-    'gluon_resnet101_v1c': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet101_v1c-1f26822a.pth',
+    'gluon_resnet101_v1c': _cfg(url=gluon_resnet101_v1c_1f26822a_url,
                                 first_conv='conv1.0'),
-    'gluon_resnet152_v1c': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet152_v1c-a3bb0b98.pth',
+    'gluon_resnet152_v1c': _cfg(url=gluon_resnet152_v1c_a3bb0b98_url,
                                 first_conv='conv1.0'),
-    'gluon_resnet50_v1d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet50_v1d-818a1b1b.pth',
+    'gluon_resnet50_v1d': _cfg(url=gluon_resnet50_v1d_818a1b1b_url,
                                first_conv='conv1.0'),
-    'gluon_resnet101_v1d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet101_v1d-0f9c8644.pth',
+    'gluon_resnet101_v1d': _cfg(url=gluon_resnet101_v1d_0f9c8644_url,
                                 first_conv='conv1.0'),
-    'gluon_resnet152_v1d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet152_v1d-bd354e12.pth',
+    'gluon_resnet152_v1d': _cfg(url=gluon_resnet152_v1d_bd354e12_url,
                                 first_conv='conv1.0'),
-    'gluon_resnet50_v1s': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet50_v1s-1762acc0.pth',
+    'gluon_resnet50_v1s': _cfg(url=gluon_resnet50_v1s_1762acc0_url,
                                first_conv='conv1.0'),
-    'gluon_resnet101_v1s': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet101_v1s-60fe0cc1.pth',
+    'gluon_resnet101_v1s': _cfg(url=gluon_resnet101_v1s_60fe0cc1_url,
                                 first_conv='conv1.0'),
-    'gluon_resnet152_v1s': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnet152_v1s-dcc41b81.pth',
+    'gluon_resnet152_v1s': _cfg(url=gluon_resnet152_v1s_dcc41b81_url,
                                 first_conv='conv1.0'),
-    'gluon_resnext50_32x4d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnext50_32x4d-e6a097c1.pth'),
-    'gluon_resnext101_32x4d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnext101_32x4d-b253c8c4.pth'),
-    'gluon_resnext101_64x4d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_resnext101_64x4d-f9a8e184.pth'),
-    'gluon_seresnext50_32x4d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_seresnext50_32x4d-90cf2d6e.pth'),
-    'gluon_seresnext101_32x4d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_seresnext101_32x4d-cf52900d.pth'),
-    'gluon_seresnext101_64x4d': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_seresnext101_64x4d-f9926f93.pth'),
-    'gluon_senet154': _cfg(url='https://github.com/rwightman/pytorch-pretrained-gluonresnet/releases/download/v0.1/gluon_senet154-70a1a3c0.pth',
+    'gluon_resnext50_32x4d': _cfg(url=gluon_resnext50_32x4d_e6a097c1_url),
+    'gluon_resnext101_32x4d': _cfg(url=gluon_resnext101_32x4d_b253c8c4_url),
+    'gluon_resnext101_64x4d': _cfg(url=gluon_resnext101_64x4d_f9a8e184_url),
+    'gluon_seresnext50_32x4d': _cfg(url=gluon_seresnext50_32x4d_90cf2d6e_url),
+    'gluon_seresnext101_32x4d': _cfg(url=gluon_seresnext101_32x4d_cf52900d_url),
+    'gluon_seresnext101_64x4d': _cfg(url=gluon_seresnext101_64x4d_f9926f93_url),
+    'gluon_senet154': _cfg(url=gluon_senet154_70a1a3c0_url,
                            first_conv='conv1.0'),
 }
 

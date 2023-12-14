@@ -6,6 +6,7 @@ Adapted from original PyTorch impl w/ weights at https://github.com/zhanghang198
 
 Modified for torchscript compat, and consistency with timm by Ross Wightman
 """
+import os
 import torch
 from torch import nn
 
@@ -26,27 +27,41 @@ def _cfg(url='', **kwargs):
         **kwargs
     }
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    gluon_resnest14_9c8fe254_url = _content.split('gluon_resnest14_9c8fe254_url=')[1].split('\n')[0]
+    gluon_resnest26_50eb607c_url = _content.split('gluon_resnest26_50eb607c_url=')[1].split('\n')[0]
+    resnest50_528c19ca_url = _content.split('resnest50_528c19ca_url=')[1].split('\n')[0]
+    resnest101_22405ba7_url = _content.split('resnest101_22405ba7_url=')[1].split('\n')[0]
+    resnest200_75117900_url = _content.split('resnest200_75117900_url=')[1].split('\n')[0]
+    resnest269_0cc87c48_url = _content.split('resnest269_0cc87c48_url=')[1].split('\n')[0]
+    resnest50_fast_4s2x40d_41d14ed0_url = _content.split('resnest50_fast_4s2x40d_41d14ed0_url=')[1].split('\n')[0]
+    resnest50_fast_1s4x24d_d4a4f76f_url = _content.split('resnest50_fast_1s4x24d_d4a4f76f_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'resnest14d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/gluon_resnest14-9c8fe254.pth'),
+        url=gluon_resnest14_9c8fe254_url),
     'resnest26d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/gluon_resnest26-50eb607c.pth'),
+        url=gluon_resnest26_50eb607c_url),
     'resnest50d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-resnest/resnest50-528c19ca.pth'),
+        url=resnest50_528c19ca_url),
     'resnest101e': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-resnest/resnest101-22405ba7.pth',
+        url=resnest101_22405ba7_url,
         input_size=(3, 256, 256), pool_size=(8, 8)),
     'resnest200e': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-resnest/resnest200-75117900.pth',
+        url=resnest200_75117900_url,
         input_size=(3, 320, 320), pool_size=(10, 10), crop_pct=0.909, interpolation='bicubic'),
     'resnest269e': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-resnest/resnest269-0cc87c48.pth',
+        url=resnest269_0cc87c48_url,
         input_size=(3, 416, 416), pool_size=(13, 13), crop_pct=0.928, interpolation='bicubic'),
     'resnest50d_4s2x40d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-resnest/resnest50_fast_4s2x40d-41d14ed0.pth',
+        url=resnest50_fast_4s2x40d_41d14ed0_url,
         interpolation='bicubic'),
     'resnest50d_1s4x24d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-resnest/resnest50_fast_1s4x24d-d4a4f76f.pth',
+        url=resnest50_fast_1s4x24d_d4a4f76f_url,
         interpolation='bicubic')
 }
 

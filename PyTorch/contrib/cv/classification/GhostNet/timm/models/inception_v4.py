@@ -2,6 +2,7 @@
 Sourced from https://github.com/Cadene/tensorflow-model-zoo.torch (MIT License) which is
 based upon Google's Tensorflow implementation and pretrained weights (Apache 2.0 License)
 """
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,9 +14,16 @@ from .registry import register_model
 
 __all__ = ['InceptionV4']
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    inceptionv4_8e4777a0_url = _content.split('inceptionv4_8e4777a0_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'inception_v4': {
-        'url': 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-cadene/inceptionv4-8e4777a0.pth',
+        'url': inceptionv4_8e4777a0_url,
         'num_classes': 1000, 'input_size': (3, 299, 299), 'pool_size': (8, 8),
         'crop_pct': 0.875, 'interpolation': 'bicubic',
         'mean': IMAGENET_INCEPTION_MEAN, 'std': IMAGENET_INCEPTION_STD,

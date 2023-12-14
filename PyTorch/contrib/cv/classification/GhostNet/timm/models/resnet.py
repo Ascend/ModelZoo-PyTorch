@@ -6,6 +6,7 @@ additional dropout and dynamic global avg/max pool.
 ResNeXt, SE-ResNeXt, SENet, and MXNet Gluon stem/downsample variants, tiered stems added by Ross Wightman
 Copyright 2020 Ross Wightman
 """
+import os
 import math
 
 import torch
@@ -31,103 +32,158 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    resnet18_5c106cde_url = _content.split('resnet18_5c106cde_url=')[1].split('\n')[0]
+    resnet18d_ra2_48a79e06_url = _content.split('resnet18d_ra2_48a79e06_url=')[1].split('\n')[0]
+    resnet34_43635321_url = _content.split('resnet34_43635321_url=')[1].split('\n')[0]
+    resnet34d_ra2_f8dcfcaf_url = _content.split('resnet34d_ra2_f8dcfcaf_url=')[1].split('\n')[0]
+    resnet26_9aa10e23_url = _content.split('resnet26_9aa10e23_url=')[1].split('\n')[0]
+    resnet26d_69e92c46_url = _content.split('resnet26d_69e92c46_url=')[1].split('\n')[0]
+    resnet50_ram_a26f946b_url = _content.split('resnet50_ram_a26f946b_url=')[1].split('\n')[0]
+    resnet50d_ra2_464e36ba_url = _content.split('resnet50d_ra2_464e36ba_url=')[1].split('\n')[0]
+    resnet101d_ra2_2803ffab_url = _content.split('resnet101d_ra2_2803ffab_url=')[1].split('\n')[0]
+    resnet152d_ra2_5cac0439_url = _content.split('resnet152d_ra2_5cac0439_url=')[1].split('\n')[0]
+    resnet200d_ra2_bdba9bf9_url = _content.split('resnet200d_ra2_bdba9bf9_url=')[1].split('\n')[0]
+    resnet34_333f7ec4_url = _content.split('resnet34_333f7ec4_url=')[1].split('\n')[0]
+    resnet50_19c8e357_url = _content.split('resnet50_19c8e357_url=')[1].split('\n')[0]
+    resnet101_5d3b4d8f_url = _content.split('resnet101_5d3b4d8f_url=')[1].split('\n')[0]
+    resnet152_b121ed2d_url = _content.split('resnet152_b121ed2d_url=')[1].split('\n')[0]
+    wide_resnet50_racm_8234f177_url = _content.split('wide_resnet50_racm_8234f177_url=')[1].split('\n')[0]
+    wide_resnet101_2_32ee1156_url = _content.split('wide_resnet101_2_32ee1156_url=')[1].split('\n')[0]
+    resnext50_32x4d_ra_d733960d_url = _content.split('resnext50_32x4d_ra_d733960d_url=')[1].split('\n')[0]
+    resnext50d_32x4d_103e99f8_url = _content.split('resnext50d_32x4d_103e99f8_url=')[1].split('\n')[0]
+    resnext101_32x8d_8ba56ff5_url = _content.split('resnext101_32x8d_8ba56ff5_url=')[1].split('\n')[0]
+    resnext50_32x4d_7cdf4587_url = _content.split('resnext50_32x4d_7cdf4587_url=')[1].split('\n')[0]
+    ig_resnext101_32x8_c38310e5_url = _content.split('ig_resnext101_32x8_c38310e5_url=')[1].split('\n')[0]
+    ig_resnext101_32x16_c6f796b0_url = _content.split('ig_resnext101_32x16_c6f796b0_url=')[1].split('\n')[0]
+    ig_resnext101_32x32_e4b90b00_url = _content.split('ig_resnext101_32x32_e4b90b00_url=')[1].split('\n')[0]
+    ig_resnext101_32x48_3e41cc8a_url = _content.split('ig_resnext101_32x48_3e41cc8a_url=')[1].split('\n')[0]
+    semi_supervised_resnet18_d92f0530_url = _content.split('semi_supervised_resnet18_d92f0530_url=')[1].split('\n')[0]
+    semi_supervised_resnet50_08389792_url = _content.split('semi_supervised_resnet50_08389792_url=')[1].split('\n')[0]
+    semi_supervised_resnext50_32x4_ddb3e555_url = _content.split('semi_supervised_resnext50_32x4_ddb3e555_url=')[1].split('\n')[0]
+    semi_supervised_resnext101_32x4_dc43570a_url = _content.split('semi_supervised_resnext101_32x4_dc43570a_url=')[1].split('\n')[0]
+    semi_supervised_resnext101_32x8_2cfe2f8b_url = _content.split('semi_supervised_resnext101_32x8_2cfe2f8b_url=')[1].split('\n')[0]
+    semi_supervised_resnext101_32x16_15fffa57_url = _content.split('semi_supervised_resnext101_32x16_15fffa57_url=')[1].split('\n')[0]
+    semi_weakly_supervised_resnet18_118f1556_url = _content.split('semi_weakly_supervised_resnet18_118f1556_url=')[1].split('\n')[0]
+    semi_weakly_supervised_resnet50_16a12f1b_url = _content.split('semi_weakly_supervised_resnet50_16a12f1b_url=')[1].split('\n')[0]
+    semi_weakly_supervised_resnext50_32x4_72679e44_url = _content.split('semi_weakly_supervised_resnext50_32x4_72679e44_url=')[1].split('\n')[0]
+    semi_weakly_supervised_resnext101_32x4_3f87e46b_url = _content.split('semi_weakly_supervised_resnext101_32x4_3f87e46b_url=')[1].split('\n')[0]
+    semi_weakly_supervised_resnext101_32x8_b4712904_url = _content.split('semi_weakly_supervised_resnext101_32x8_b4712904_url=')[1].split('\n')[0]
+    semi_weakly_supervised_resnext101_32x16_f3559a9c_url = _content.split('semi_weakly_supervised_resnext101_32x16_f3559a9c_url=')[1].split('\n')[0]
+    seresnet50_ra_224_8efdb4bb_url = _content.split('seresnet50_ra_224_8efdb4bb_url=')[1].split('\n')[0]
+    seresnet152d_ra2_04464dd2_url = _content.split('seresnet152d_ra2_04464dd2_url=')[1].split('\n')[0]
+    seresnext26d_32x4d_80fa48a3_url = _content.split('seresnext26d_32x4d_80fa48a3_url=')[1].split('\n')[0]
+    seresnext26tn_32x4d_569cb627_url = _content.split('seresnext26tn_32x4d_569cb627_url=')[1].split('\n')[0]
+    seresnext50_32x4d_racm_a304a460_url = _content.split('seresnext50_32x4d_racm_a304a460_url=')[1].split('\n')[0]
+    ecaresnet26t_ra2_46609757_url = _content.split('ecaresnet26t_ra2_46609757_url=')[1].split('\n')[0]
+    ECAResNetLight_4f34b35b_url = _content.split('ECAResNetLight_4f34b35b_url=')[1].split('\n')[0]
+    ECAResNet50D_833caf58_url = _content.split('ECAResNet50D_833caf58_url=')[1].split('\n')[0]
+    ECAResNet50D_P_9c67f710_url = _content.split('ECAResNet50D_P_9c67f710_url=')[1].split('\n')[0]
+    ecaresnet50t_ra2_f7ac63c4_url = _content.split('ecaresnet50t_ra2_f7ac63c4_url=')[1].split('\n')[0]
+    ECAResNet101D_281c5844_url = _content.split('ECAResNet101D_281c5844_url=')[1].split('\n')[0]
+    ECAResNet101D_P_75a3370e_url = _content.split('ECAResNet101D_P_75a3370e_url=')[1].split('\n')[0]
+    ecaresnet269d_320_ra2_7baa55cb_url = _content.split('ecaresnet269d_320_ra2_7baa55cb_url=')[1].split('\n')[0]
+    resnetblur50_84f4748f_url = _content.split('resnetblur50_84f4748f_url=')[1].split('\n')[0]
+
 default_cfgs = {
     # ResNet and Wide ResNet
-    'resnet18': _cfg(url='https://download.pytorch.org/models/resnet18-5c106cde.pth'),
+    'resnet18': _cfg(url=resnet18_5c106cde_url),
     'resnet18d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet18d_ra2-48a79e06.pth',
+        url=resnet18d_ra2_48a79e06_url,
         interpolation='bicubic', first_conv='conv1.0'),
     'resnet34': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth'),
+        url=resnet34_43635321_url),
     'resnet34d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34d_ra2-f8dcfcaf.pth',
+        url=resnet34d_ra2_f8dcfcaf_url,
         interpolation='bicubic', first_conv='conv1.0'),
     'resnet26': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet26-9aa10e23.pth',
+        url=resnet26_9aa10e23_url,
         interpolation='bicubic'),
     'resnet26d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet26d-69e92c46.pth',
+        url=resnet26d_69e92c46_url,
         interpolation='bicubic', first_conv='conv1.0'),
     'resnet50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth',
+        url=resnet50_ram_a26f946b_url,
         interpolation='bicubic'),
     'resnet50d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50d_ra2-464e36ba.pth',
+        url=resnet50d_ra2_464e36ba_url,
         interpolation='bicubic', first_conv='conv1.0'),
     'resnet101': _cfg(url='', interpolation='bicubic'),
     'resnet101d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet101d_ra2-2803ffab.pth',
+        url=resnet101d_ra2_2803ffab_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), pool_size=(8, 8),
         crop_pct=1.0, test_input_size=(3, 320, 320)),
     'resnet152': _cfg(url='', interpolation='bicubic'),
     'resnet152d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet152d_ra2-5cac0439.pth',
+        url=resnet152d_ra2_5cac0439_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), pool_size=(8, 8),
         crop_pct=1.0, test_input_size=(3, 320, 320)),
     'resnet200': _cfg(url='', interpolation='bicubic'),
     'resnet200d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet200d_ra2-bdba9bf9.pth',
+        url=resnet200d_ra2_bdba9bf9_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), pool_size=(8, 8),
         crop_pct=1.0, test_input_size=(3, 320, 320)),
-    'tv_resnet34': _cfg(url='https://download.pytorch.org/models/resnet34-333f7ec4.pth'),
-    'tv_resnet50': _cfg(url='https://download.pytorch.org/models/resnet50-19c8e357.pth'),
-    'tv_resnet101': _cfg(url='https://download.pytorch.org/models/resnet101-5d3b4d8f.pth'),
-    'tv_resnet152': _cfg(url='https://download.pytorch.org/models/resnet152-b121ed2d.pth'),
+    'tv_resnet34': _cfg(url=resnet34_333f7ec4_url),
+    'tv_resnet50': _cfg(url=resnet50_19c8e357_url),
+    'tv_resnet101': _cfg(url=resnet101_5d3b4d8f_url),
+    'tv_resnet152': _cfg(url=resnet152_b121ed2d_url),
     'wide_resnet50_2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/wide_resnet50_racm-8234f177.pth',
+        url=wide_resnet50_racm_8234f177_url,
         interpolation='bicubic'),
-    'wide_resnet101_2': _cfg(url='https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth'),
+    'wide_resnet101_2': _cfg(url=wide_resnet101_2_32ee1156_url),
 
     # ResNeXt
     'resnext50_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnext50_32x4d_ra-d733960d.pth',
+        url=resnext50_32x4d_ra_d733960d_url,
         interpolation='bicubic'),
     'resnext50d_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnext50d_32x4d-103e99f8.pth',
+        url=resnext50d_32x4d_103e99f8_url,
         interpolation='bicubic',
         first_conv='conv1.0'),
     'resnext101_32x4d': _cfg(url=''),
-    'resnext101_32x8d': _cfg(url='https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth'),
+    'resnext101_32x8d': _cfg(url=resnext101_32x8d_8ba56ff5_url),
     'resnext101_64x4d': _cfg(url=''),
-    'tv_resnext50_32x4d': _cfg(url='https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth'),
+    'tv_resnext50_32x4d': _cfg(url=resnext50_32x4d_7cdf4587_url),
 
     #  ResNeXt models - Weakly Supervised Pretraining on Instagram Hashtags
     #  from https://github.com/facebookresearch/WSL-Images
     #  Please note the CC-BY-NC 4.0 license on theses weights, non-commercial use only.
-    'ig_resnext101_32x8d': _cfg(url='https://download.pytorch.org/models/ig_resnext101_32x8-c38310e5.pth'),
-    'ig_resnext101_32x16d': _cfg(url='https://download.pytorch.org/models/ig_resnext101_32x16-c6f796b0.pth'),
-    'ig_resnext101_32x32d': _cfg(url='https://download.pytorch.org/models/ig_resnext101_32x32-e4b90b00.pth'),
-    'ig_resnext101_32x48d': _cfg(url='https://download.pytorch.org/models/ig_resnext101_32x48-3e41cc8a.pth'),
+    'ig_resnext101_32x8d': _cfg(url=ig_resnext101_32x8_c38310e5_url),
+    'ig_resnext101_32x16d': _cfg(url=ig_resnext101_32x16_c6f796b0_url),
+    'ig_resnext101_32x32d': _cfg(url=ig_resnext101_32x32_e4b90b00_url),
+    'ig_resnext101_32x48d': _cfg(url=ig_resnext101_32x48_3e41cc8a_url),
 
     #  Semi-Supervised ResNe*t models from https://github.com/facebookresearch/semi-supervised-ImageNet1K-models
     #  Please note the CC-BY-NC 4.0 license on theses weights, non-commercial use only.
     'ssl_resnet18':  _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_supervised_resnet18-d92f0530.pth'),
+        url=semi_supervised_resnet18_d92f0530_url),
     'ssl_resnet50':  _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_supervised_resnet50-08389792.pth'),
+        url=semi_supervised_resnet50_08389792_url),
     'ssl_resnext50_32x4d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_supervised_resnext50_32x4-ddb3e555.pth'),
+        url=semi_supervised_resnext50_32x4_ddb3e555_url),
     'ssl_resnext101_32x4d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_supervised_resnext101_32x4-dc43570a.pth'),
+        url=semi_supervised_resnext101_32x4_dc43570a_url),
     'ssl_resnext101_32x8d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_supervised_resnext101_32x8-2cfe2f8b.pth'),
+        url=semi_supervised_resnext101_32x8_2cfe2f8b_url),
     'ssl_resnext101_32x16d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_supervised_resnext101_32x16-15fffa57.pth'),
+        url=semi_supervised_resnext101_32x16_15fffa57_url),
 
     #  Semi-Weakly Supervised ResNe*t models from https://github.com/facebookresearch/semi-supervised-ImageNet1K-models
     #  Please note the CC-BY-NC 4.0 license on theses weights, non-commercial use only.
     'swsl_resnet18': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_weakly_supervised_resnet18-118f1556.pth'),
+        url=semi_weakly_supervised_resnet18_118f1556_url),
     'swsl_resnet50': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_weakly_supervised_resnet50-16a12f1b.pth'),
+        url=semi_weakly_supervised_resnet50_16a12f1b_url),
     'swsl_resnext50_32x4d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_weakly_supervised_resnext50_32x4-72679e44.pth'),
+        url=semi_weakly_supervised_resnext50_32x4_72679e44_url),
     'swsl_resnext101_32x4d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_weakly_supervised_resnext101_32x4-3f87e46b.pth'),
+        url=semi_weakly_supervised_resnext101_32x4_3f87e46b_url),
     'swsl_resnext101_32x8d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_weakly_supervised_resnext101_32x8-b4712904.pth'),
+        url=semi_weakly_supervised_resnext101_32x8_b4712904_url),
     'swsl_resnext101_32x16d': _cfg(
-        url='https://dl.fbaipublicfiles.com/semiweaksupervision/model_files/semi_weakly_supervised_resnext101_32x16-f3559a9c.pth'),
+        url=semi_weakly_supervised_resnext101_32x16_f3559a9c_url),
 
     #  Squeeze-Excitation ResNets, to eventually replace the models in senet.py
     'seresnet18': _cfg(
@@ -137,7 +193,7 @@ default_cfgs = {
         url='',
         interpolation='bicubic'),
     'seresnet50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnet50_ra_224-8efdb4bb.pth',
+        url=seresnet50_ra_224_8efdb4bb_url,
         interpolation='bicubic'),
     'seresnet50t': _cfg(
         url='',
@@ -150,7 +206,7 @@ default_cfgs = {
         url='',
         interpolation='bicubic'),
     'seresnet152d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnet152d_ra2-04464dd2.pth',
+        url=seresnet152d_ra2_04464dd2_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), pool_size=(8, 8),
         crop_pct=1.0, test_input_size=(3, 320, 320)
     ),
@@ -164,15 +220,15 @@ default_cfgs = {
 
     #  Squeeze-Excitation ResNeXts, to eventually replace the models in senet.py
     'seresnext26d_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnext26d_32x4d-80fa48a3.pth',
+        url=seresnext26d_32x4d_80fa48a3_url,
         interpolation='bicubic',
         first_conv='conv1.0'),
     'seresnext26t_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnext26tn_32x4d-569cb627.pth',
+        url=seresnext26tn_32x4d_569cb627_url,
         interpolation='bicubic',
         first_conv='conv1.0'),
     'seresnext50_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/seresnext50_32x4d_racm-a304a460.pth',
+        url=seresnext50_32x4d_racm_a304a460_url,
         interpolation='bicubic'),
     'seresnext101_32x4d': _cfg(
         url='',
@@ -187,36 +243,36 @@ default_cfgs = {
 
     # Efficient Channel Attention ResNets
     'ecaresnet26t': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ecaresnet26t_ra2-46609757.pth',
+        url=ecaresnet26t_ra2_46609757_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), pool_size=(8, 8),
         crop_pct=0.95, test_input_size=(3, 320, 320)),
     'ecaresnetlight': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45402/outputs/ECAResNetLight_4f34b35b.pth',
+        url=ECAResNetLight_4f34b35b_url,
         interpolation='bicubic'),
     'ecaresnet50d': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45402/outputs/ECAResNet50D_833caf58.pth',
+        url=ECAResNet50D_833caf58_url,
         interpolation='bicubic',
         first_conv='conv1.0'),
     'ecaresnet50d_pruned': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45899/outputs/ECAResNet50D_P_9c67f710.pth',
+        url=ECAResNet50D_P_9c67f710_url,
         interpolation='bicubic',
         first_conv='conv1.0'),
     'ecaresnet50t': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ecaresnet50t_ra2-f7ac63c4.pth',
+        url=ecaresnet50t_ra2_f7ac63c4_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), pool_size=(8, 8),
         crop_pct=0.95, test_input_size=(3, 320, 320)),
     'ecaresnet101d': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45402/outputs/ECAResNet101D_281c5844.pth',
+        url=ECAResNet101D_281c5844_url,
         interpolation='bicubic', first_conv='conv1.0'),
     'ecaresnet101d_pruned': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45610/outputs/ECAResNet101D_P_75a3370e.pth',
+        url=ECAResNet101D_P_75a3370e_url,
         interpolation='bicubic',
         first_conv='conv1.0'),
     'ecaresnet200d': _cfg(
         url='',
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 256, 256), crop_pct=0.94, pool_size=(8, 8)),
     'ecaresnet269d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ecaresnet269d_320_ra2-7baa55cb.pth',
+        url=ecaresnet269d_320_ra2_7baa55cb_url,
         interpolation='bicubic', first_conv='conv1.0', input_size=(3, 320, 320), pool_size=(10, 10),
         crop_pct=1.0, test_input_size=(3, 352, 352)),
 
@@ -232,7 +288,7 @@ default_cfgs = {
     'resnetblur18': _cfg(
         interpolation='bicubic'),
     'resnetblur50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnetblur50-84f4748f.pth',
+        url=resnetblur50_84f4748f_url,
         interpolation='bicubic')
 }
 

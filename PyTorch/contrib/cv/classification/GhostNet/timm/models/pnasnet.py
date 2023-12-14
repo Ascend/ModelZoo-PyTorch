@@ -5,6 +5,7 @@
  https://github.com/Cadene/pretrained-models.pytorch/blob/master/pretrainedmodels/models/pnasnet.py
 
 """
+import os
 from collections import OrderedDict
 from functools import partial
 
@@ -18,9 +19,16 @@ from .registry import register_model
 
 __all__ = ['PNASNet5Large']
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    pnasnet5large_bf079911_url = _content.split('pnasnet5large_bf079911_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'pnasnet5large': {
-        'url': 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-cadene/pnasnet5large-bf079911.pth',
+        'url': pnasnet5large_bf079911_url,
         'input_size': (3, 331, 331),
         'pool_size': (11, 11),
         'crop_pct': 0.911,

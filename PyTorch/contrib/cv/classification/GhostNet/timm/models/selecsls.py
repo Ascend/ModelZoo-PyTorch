@@ -9,6 +9,7 @@ https://arxiv.org/abs/1907.00837
 Based on ResNet implementation in https://github.com/rwightman/pytorch-image-models
 and SelecSLS Net implementation in https://github.com/mehtadushy/SelecSLS-Pytorch
 """
+import os
 from typing import List
 
 import torch
@@ -34,18 +35,26 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    selecsls42b_8af30141_url = _content.split('selecsls42b_8af30141_url=')[1].split('\n')[0]
+    selecsls60_bbf87526_url = _content.split('selecsls60_bbf87526_url=')[1].split('\n')[0]
+    selecsls60b_94e619b5_url = _content.split('selecsls60b_94e619b5_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'selecsls42': _cfg(
         url='',
         interpolation='bicubic'),
     'selecsls42b': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-selecsls/selecsls42b-8af30141.pth',
+        url=selecsls42b_8af30141_url,
         interpolation='bicubic'),
     'selecsls60': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-selecsls/selecsls60-bbf87526.pth',
+        url=selecsls60_bbf87526_url,
         interpolation='bicubic'),
     'selecsls60b': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-selecsls/selecsls60b-94e619b5.pth',
+        url=selecsls60b_94e619b5_url,
         interpolation='bicubic'),
     'selecsls84': _cfg(
         url='',

@@ -27,7 +27,7 @@ Original copyright of Google code below, modifications by Ross Wightman, Copyrig
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 from collections import OrderedDict  # pylint: disable=g-importing-member
 
 import torch
@@ -51,39 +51,56 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    bit_m_r50x1_ILSVRC2012_url = _content.split('bit_m_r50x1_ILSVRC2012_url=')[1].split('\n')[0]
+    bit_m_r50x3_ILSVRC2012_url = _content.split('bit_m_r50x3_ILSVRC2012_url=')[1].split('\n')[0]
+    bit_m_r101x1_ILSVRC2012_url = _content.split('bit_m_r101x1_ILSVRC2012_url=')[1].split('\n')[0]
+    bit_m_r101x3_ILSVRC2012_url = _content.split('bit_m_r101x3_ILSVRC2012_url=')[1].split('\n')[0]
+    bit_m_r152x2_ILSVRC2012_url = _content.split('bit_m_r152x2_ILSVRC2012_url=')[1].split('\n')[0]
+    bit_m_r152x4_ILSVRC2012_url = _content.split('bit_m_r152x4_ILSVRC2012_url=')[1].split('\n')[0]
+    bit_m_r50x1_url = _content.split('bit_m_r50x1_url=')[1].split('\n')[0]
+    bit_m_r50x3_url = _content.split('bit_m_r50x3_url=')[1].split('\n')[0]
+    bit_m_r101x1_url = _content.split('bit_m_r101x1_url=')[1].split('\n')[0]
+    bit_m_r101x3_url = _content.split('bit_m_r101x3_url=')[1].split('\n')[0]
+    bit_m_r152x2_url = _content.split('bit_m_r152x2_url=')[1].split('\n')[0]
+    bit_m_r152x4_url = _content.split('bit_m_r152x4_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     # pretrained on imagenet21k, finetuned on imagenet1k
     'resnetv2_50x1_bitm': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R50x1-ILSVRC2012.npz'),
+        url=bit_m_r50x1_ILSVRC2012_url),
     'resnetv2_50x3_bitm': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R50x3-ILSVRC2012.npz'),
+        url=bit_m_r50x3_ILSVRC2012_url),
     'resnetv2_101x1_bitm': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R101x1-ILSVRC2012.npz'),
+        url=bit_m_r101x1_ILSVRC2012_url),
     'resnetv2_101x3_bitm': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R101x3-ILSVRC2012.npz'),
+        url=bit_m_r101x3_ILSVRC2012_url),
     'resnetv2_152x2_bitm': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R152x2-ILSVRC2012.npz'),
+        url=bit_m_r152x2_ILSVRC2012_url),
     'resnetv2_152x4_bitm': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R152x4-ILSVRC2012.npz'),
+        url=bit_m_r152x4_ILSVRC2012_url),
 
     # trained on imagenet-21k
     'resnetv2_50x1_bitm_in21k': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R50x1.npz',
+        url=bit_m_r50x1_url,
         num_classes=21843),
     'resnetv2_50x3_bitm_in21k': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R50x3.npz',
+        url=bit_m_r50x3_url,
         num_classes=21843),
     'resnetv2_101x1_bitm_in21k': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R101x1.npz',
+        url=bit_m_r101x1_url,
         num_classes=21843),
     'resnetv2_101x3_bitm_in21k': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R101x3.npz',
+        url=bit_m_r101x3_url,
         num_classes=21843),
     'resnetv2_152x2_bitm_in21k': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R152x2.npz',
+        url=bit_m_r152x2_url,
         num_classes=21843),
     'resnetv2_152x4_bitm_in21k': _cfg(
-        url='https://storage.googleapis.com/bit_models/BiT-M-R152x4.npz',
+        url=bit_m_r152x4_url,
         num_classes=21843),
 
 

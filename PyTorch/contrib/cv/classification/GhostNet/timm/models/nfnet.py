@@ -16,6 +16,7 @@ Status:
 
 Hacked together by / copyright Ross Wightman, 2021.
 """
+import os
 import math
 from dataclasses import dataclass, field
 from collections import OrderedDict
@@ -43,27 +44,42 @@ def _dcfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    dm_nfnet_f0_604f9c3a_url = _content.split('dm_nfnet_f0_604f9c3a_url=')[1].split('\n')[0]
+    dm_nfnet_f1_fc540f82_url = _content.split('dm_nfnet_f1_fc540f82_url=')[1].split('\n')[0]
+    dm_nfnet_f2_89875923_url = _content.split('dm_nfnet_f2_89875923_url=')[1].split('\n')[0]
+    dm_nfnet_f3_d74ab3aa_url = _content.split('dm_nfnet_f3_d74ab3aa_url=')[1].split('\n')[0]
+    dm_nfnet_f4_0ac5b10b_url = _content.split('dm_nfnet_f4_0ac5b10b_url=')[1].split('\n')[0]
+    dm_nfnet_f5_ecb20ab1_url = _content.split('dm_nfnet_f5_ecb20ab1_url=')[1].split('\n')[0]
+    dm_nfnet_f6_e0f12116_url = _content.split('dm_nfnet_f6_e0f12116_url=')[1].split('\n')[0]
+    ecanfnet_l0_ra2_e3e9ac50_url = _content.split('ecanfnet_l0_ra2_e3e9ac50_url=')[1].split('\n')[0]
+    nf_regnet_b1_256_ra2_ad85cfef_url = _content.split('nf_regnet_b1_256_ra2_ad85cfef_url=')[1].split('\n')[0]
+    nf_resnet50_ra2_9f236009_url = _content.split('nf_resnet50_ra2_9f236009_url=')[1].split('\n')[0]
+
+
 default_cfgs = dict(
     dm_nfnet_f0=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f0-604f9c3a.pth',
+        url=dm_nfnet_f0_604f9c3a_url,
         pool_size=(6, 6), input_size=(3, 192, 192), test_input_size=(3, 256, 256), crop_pct=.9),
     dm_nfnet_f1=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f1-fc540f82.pth',
+        url=dm_nfnet_f1_fc540f82_url,
         pool_size=(7, 7), input_size=(3, 224, 224), test_input_size=(3, 320, 320), crop_pct=0.91),
     dm_nfnet_f2=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f2-89875923.pth',
+        url=dm_nfnet_f2_89875923_url,
         pool_size=(8, 8), input_size=(3, 256, 256), test_input_size=(3, 352, 352), crop_pct=0.92),
     dm_nfnet_f3=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f3-d74ab3aa.pth',
+        url=dm_nfnet_f3_d74ab3aa_url,
         pool_size=(10, 10), input_size=(3, 320, 320), test_input_size=(3, 416, 416), crop_pct=0.94),
     dm_nfnet_f4=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f4-0ac5b10b.pth',
+        url=dm_nfnet_f4_0ac5b10b_url,
         pool_size=(12, 12), input_size=(3, 384, 384), test_input_size=(3, 512, 512), crop_pct=0.951),
     dm_nfnet_f5=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f5-ecb20ab1.pth',
+        url=dm_nfnet_f5_ecb20ab1_url,
         pool_size=(13, 13), input_size=(3, 416, 416), test_input_size=(3, 544, 544), crop_pct=0.954),
     dm_nfnet_f6=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-dnf-weights/dm_nfnet_f6-e0f12116.pth',
+        url=dm_nfnet_f6_e0f12116_url,
         pool_size=(14, 14), input_size=(3, 448, 448), test_input_size=(3, 576, 576), crop_pct=0.956),
 
     nfnet_f0=_dcfg(
@@ -105,14 +121,14 @@ default_cfgs = dict(
     nfnet_l0b=_dcfg(
         url='', pool_size=(7, 7), input_size=(3, 224, 224), test_input_size=(3, 288, 288)),
     eca_nfnet_l0=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ecanfnet_l0_ra2-e3e9ac50.pth',
+        url=ecanfnet_l0_ra2_e3e9ac50_url,
         hf_hub='timm/eca_nfnet_l0',
         pool_size=(7, 7), input_size=(3, 224, 224), test_input_size=(3, 288, 288), crop_pct=1.0),
 
     nf_regnet_b0=_dcfg(
         url='', pool_size=(6, 6), input_size=(3, 192, 192), test_input_size=(3, 256, 256), first_conv='stem.conv'),
     nf_regnet_b1=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/nf_regnet_b1_256_ra2-ad85cfef.pth',
+        url=nf_regnet_b1_256_ra2_ad85cfef_url,
         pool_size=(8, 8), input_size=(3, 256, 256), test_input_size=(3, 288, 288), first_conv='stem.conv'),  # NOT to paper spec
     nf_regnet_b2=_dcfg(
         url='', pool_size=(8, 8), input_size=(3, 240, 240), test_input_size=(3, 272, 272), first_conv='stem.conv'),
@@ -125,7 +141,7 @@ default_cfgs = dict(
 
     nf_resnet26=_dcfg(url='', first_conv='stem.conv'),
     nf_resnet50=_dcfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/nf_resnet50_ra2-9f236009.pth',
+        url=nf_resnet50_ra2_9f236009_url,
         pool_size=(8, 8), input_size=(3, 256, 256), test_input_size=(3, 288, 288), crop_pct=0.94, first_conv='stem.conv'),
     nf_resnet101=_dcfg(url='', first_conv='stem.conv'),
 

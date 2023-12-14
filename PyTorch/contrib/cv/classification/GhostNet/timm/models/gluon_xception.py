@@ -6,6 +6,7 @@ Original PyTorch DeepLab impl: https://github.com/jfzhang95/pytorch-deeplab-xcep
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 from collections import OrderedDict
 
 import torch.nn as nn
@@ -18,9 +19,16 @@ from .registry import register_model
 
 __all__ = ['Xception65']
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    gluon_xception_7015a15c_url = _content.split('gluon_xception_7015a15c_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'gluon_xception65': {
-        'url': 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/gluon_xception-7015a15c.pth',
+        'url': gluon_xception_7015a15c_url,
         'input_size': (3, 299, 299),
         'crop_pct': 0.903,
         'pool_size': (10, 10),

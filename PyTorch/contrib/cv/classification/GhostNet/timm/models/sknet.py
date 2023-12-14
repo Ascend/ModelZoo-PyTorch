@@ -8,6 +8,7 @@ to the original paper with some modifications of my own to better balance param 
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 import math
 
 from torch import nn as nn
@@ -30,16 +31,24 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    skresnet18_ra_4eec2804_url = _content.split('skresnet18_ra_4eec2804_url=')[1].split('\n')[0]
+    skresnet34_ra_bdc0ccde_url = _content.split('skresnet34_ra_bdc0ccde_url=')[1].split('\n')[0]
+    skresnext50_ra_f40e40bf_url = _content.split('skresnext50_ra_f40e40bf_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'skresnet18': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/skresnet18_ra-4eec2804.pth'),
+        url=skresnet18_ra_4eec2804_url),
     'skresnet34': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/skresnet34_ra-bdc0ccde.pth'),
+        url=skresnet34_ra_bdc0ccde_url),
     'skresnet50': _cfg(),
     'skresnet50d': _cfg(
         first_conv='conv1.0'),
     'skresnext50_32x4d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/skresnext50_ra-f40e40bf.pth'),
+        url=skresnext50_ra_f40e40bf_url),
 }
 
 

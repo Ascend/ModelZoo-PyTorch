@@ -7,6 +7,7 @@ Paper: Searching for MobileNetV3 - https://arxiv.org/abs/1905.02244
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,33 +35,46 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    mobilenetv3_large_100_ra_f55367f5_url = _content.split('mobilenetv3_large_100_ra_f55367f5_url=')[1].split('\n')[0]
+    mobilenetv3_100_35495452_url = _content.split('mobilenetv3_100_35495452_url=')[1].split('\n')[0]
+    tf_mobilenetv3_large_075_150ee8b0_url = _content.split('tf_mobilenetv3_large_075_150ee8b0_url=')[1].split('\n')[0]
+    tf_mobilenetv3_large_100_427764d5_url = _content.split('tf_mobilenetv3_large_100_427764d5_url=')[1].split('\n')[0]
+    tf_mobilenetv3_large_minimal_100_8596ae28_url = _content.split('tf_mobilenetv3_large_minimal_100_8596ae28_url=')[1].split('\n')[0]
+    tf_mobilenetv3_small_075_da427f52_url = _content.split('tf_mobilenetv3_small_075_da427f52_url=')[1].split('\n')[0]
+    tf_mobilenetv3_small_100_37f49e2b_url = _content.split('tf_mobilenetv3_small_100_37f49e2b_url=')[1].split('\n')[0]
+    tf_mobilenetv3_small_minimal_100_922a7843_url = _content.split('tf_mobilenetv3_small_minimal_100_922a7843_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'mobilenetv3_large_075': _cfg(url=''),
     'mobilenetv3_large_100': _cfg(
         interpolation='bicubic',
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv3_large_100_ra-f55367f5.pth'),
+        url=mobilenetv3_large_100_ra_f55367f5_url),
     'mobilenetv3_small_075': _cfg(url=''),
     'mobilenetv3_small_100': _cfg(url=''),
     'mobilenetv3_rw': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv3_100-35495452.pth',
+        url=mobilenetv3_100_35495452_url,
         interpolation='bicubic'),
     'tf_mobilenetv3_large_075': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mobilenetv3_large_075-150ee8b0.pth',
+        url=tf_mobilenetv3_large_075_150ee8b0_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_mobilenetv3_large_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mobilenetv3_large_100-427764d5.pth',
+        url=tf_mobilenetv3_large_100_427764d5_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_mobilenetv3_large_minimal_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mobilenetv3_large_minimal_100-8596ae28.pth',
+        url=tf_mobilenetv3_large_minimal_100_8596ae28_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_mobilenetv3_small_075': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mobilenetv3_small_075-da427f52.pth',
+        url=tf_mobilenetv3_small_075_da427f52_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_mobilenetv3_small_100': _cfg(
-        url= 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mobilenetv3_small_100-37f49e2b.pth',
+        url= tf_mobilenetv3_small_100_37f49e2b_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_mobilenetv3_small_minimal_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mobilenetv3_small_minimal_100-922a7843.pth',
+        url=tf_mobilenetv3_small_minimal_100_922a7843_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
 }
 

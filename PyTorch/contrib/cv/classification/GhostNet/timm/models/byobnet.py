@@ -24,6 +24,7 @@ above nets that include attention.
 
 Hacked together by / copyright Ross Wightman, 2021.
 """
+import os
 import math
 from dataclasses import dataclass, field
 from collections import OrderedDict
@@ -52,40 +53,56 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    gernet_s_756b4751_url = _content.split('gernet_s_756b4751_url=')[1].split('\n')[0]
+    gernet_m_0873c53a_url = _content.split('gernet_m_0873c53a_url=')[1].split('\n')[0]
+    gernet_l_f31e2e8d_url = _content.split('gernet_l_f31e2e8d_url=')[1].split('\n')[0]
+    repvgg_a2_c1ee6d2b_url = _content.split('repvgg_a2_c1ee6d2b_url=')[1].split('\n')[0]
+    repvgg_b0_80ac3f1b_url = _content.split('repvgg_b0_80ac3f1b_url=')[1].split('\n')[0]
+    repvgg_b1_77ca2989_url = _content.split('repvgg_b1_77ca2989_url=')[1].split('\n')[0]
+    repvgg_b1g4_abde5d92_url = _content.split('repvgg_b1g4_abde5d92_url=')[1].split('\n')[0]
+    repvgg_b2_25b7494e_url = _content.split('repvgg_b2_25b7494e_url=')[1].split('\n')[0]
+    repvgg_b2g4_165a85f2_url = _content.split('repvgg_b2g4_165a85f2_url=')[1].split('\n')[0]
+    repvgg_b3_199bc50d_url = _content.split('repvgg_b3_199bc50d_url=')[1].split('\n')[0]
+    repvgg_b3g4_73c370bf_url = _content.split('repvgg_b3g4_73c370bf_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     # GPU-Efficient (ResNet) weights
     'gernet_s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-ger-weights/gernet_s-756b4751.pth'),
+        url=gernet_s_756b4751_url),
     'gernet_m': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-ger-weights/gernet_m-0873c53a.pth'),
+        url=gernet_m_0873c53a_url),
     'gernet_l': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-ger-weights/gernet_l-f31e2e8d.pth',
+        url=gernet_l_f31e2e8d_url,
         input_size=(3, 256, 256), pool_size=(8, 8)),
 
     # RepVGG weights
     'repvgg_a2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_a2-c1ee6d2b.pth',
+        url=repvgg_a2_c1ee6d2b_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b0': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b0-80ac3f1b.pth',
+        url=repvgg_b0_80ac3f1b_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b1': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b1-77ca2989.pth',
+        url=repvgg_b1_77ca2989_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b1g4': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b1g4-abde5d92.pth',
+        url=repvgg_b1g4_abde5d92_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b2-25b7494e.pth',
+        url=repvgg_b2_25b7494e_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b2g4': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b2g4-165a85f2.pth',
+        url=repvgg_b2g4_165a85f2_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b3': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b3-199bc50d.pth',
+        url=repvgg_b3_199bc50d_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
     'repvgg_b3g4': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-repvgg-weights/repvgg_b3g4-73c370bf.pth',
+        url=repvgg_b3g4_73c370bf_url,
         first_conv=('stem.conv_kxk.conv', 'stem.conv_1x1.conv')),
 }
 

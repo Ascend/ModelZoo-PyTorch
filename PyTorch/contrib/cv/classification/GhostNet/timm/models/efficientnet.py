@@ -24,6 +24,7 @@ An implementation of EfficienNet that covers variety of related models with effi
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -51,52 +52,124 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    mnasnet_b1_74cb7081_url = _content.split('mnasnet_b1_74cb7081_url=')[1].split('\n')[0]
+    mnasnet_a1_d9418771_url = _content.split('mnasnet_a1_d9418771_url=')[1].split('\n')[0]
+    mobilenetv2_100_ra_b33bc2c4_url = _content.split('mobilenetv2_100_ra_b33bc2c4_url=')[1].split('\n')[0]
+    mobilenetv2_110d_ra_77090ade_url = _content.split('mobilenetv2_110d_ra_77090ade_url=')[1].split('\n')[0]
+    mobilenetv2_120d_ra_5987e2ed_url = _content.split('mobilenetv2_120d_ra_5987e2ed_url=')[1].split('\n')[0]
+    mobilenetv2_140_ra_21a4e913_url = _content.split('mobilenetv2_140_ra_21a4e913_url=')[1].split('\n')[0]
+    fbnetc_100_c345b898_url = _content.split('fbnetc_100_c345b898_url=')[1].split('\n')[0]
+    spnasnet_100_048bc3f4_url = _content.split('spnasnet_100_048bc3f4_url=')[1].split('\n')[0]
+    efficientnet_b0_ra_3dd342df_url = _content.split('efficientnet_b0_ra_3dd342df_url=')[1].split('\n')[0]
+    efficientnet_b1_533bc792_url = _content.split('efficientnet_b1_533bc792_url=')[1].split('\n')[0]
+    efficientnet_b2_ra_bcdf34b7_url = _content.split('efficientnet_b2_ra_bcdf34b7_url=')[1].split('\n')[0]
+    efficientnet_b3_ra2_cf984f9c_url = _content.split('efficientnet_b3_ra2_cf984f9c_url=')[1].split('\n')[0]
+    efficientnet_es_ra_f111e99c_url = _content.split('efficientnet_es_ra_f111e99c_url=')[1].split('\n')[0]
+    efficientnet_em_ra2_66250f76_url = _content.split('efficientnet_em_ra2_66250f76_url=')[1].split('\n')[0]
+    efficientnet_el_url = _content.split('efficientnet_el_url=')[1].split('\n')[0]
+    efficientnet_es_pruned75_url = _content.split('efficientnet_es_pruned75_url=')[1].split('\n')[0]
+    efficientnet_el_pruned70_url = _content.split('efficientnet_el_pruned70_url=')[1].split('\n')[0]
+    efficientnet_lite0_ra_37913777_url = _content.split('efficientnet_lite0_ra_37913777_url=')[1].split('\n')[0]
+    effnetb1_pruned_9ebb3fe6_url = _content.split('effnetb1_pruned_9ebb3fe6_url=')[1].split('\n')[0]
+    effnetb2_pruned_203f55bc_url = _content.split('effnetb2_pruned_203f55bc_url=')[1].split('\n')[0]
+    effnetb3_pruned_5abcc29f_url = _content.split('effnetb3_pruned_5abcc29f_url=')[1].split('\n')[0]
+    tf_efficientnet_b0_aa_827b6e33_url = _content.split('tf_efficientnet_b0_aa_827b6e33_url=')[1].split('\n')[0]
+    tf_efficientnet_b1_aa_ea7a6ee0_url = _content.split('tf_efficientnet_b1_aa_ea7a6ee0_url=')[1].split('\n')[0]
+    tf_efficientnet_b2_aa_60c94f97_url = _content.split('tf_efficientnet_b2_aa_60c94f97_url=')[1].split('\n')[0]
+    tf_efficientnet_b3_aa_84b4657e_url = _content.split('tf_efficientnet_b3_aa_84b4657e_url=')[1].split('\n')[0]
+    tf_efficientnet_b4_aa_818f208c_url = _content.split('tf_efficientnet_b4_aa_818f208c_url=')[1].split('\n')[0]
+    tf_efficientnet_b5_ra_9a3e5369_url = _content.split('tf_efficientnet_b5_ra_9a3e5369_url=')[1].split('\n')[0]
+    tf_efficientnet_b6_aa_80ba17e4_url = _content.split('tf_efficientnet_b6_aa_80ba17e4_url=')[1].split('\n')[0]
+    tf_efficientnet_b7_ra_6c08e654_url = _content.split('tf_efficientnet_b7_ra_6c08e654_url=')[1].split('\n')[0]
+    tf_efficientnet_b8_ra_572d5dd9_url = _content.split('tf_efficientnet_b8_ra_572d5dd9_url=')[1].split('\n')[0]
+    tf_efficientnet_b0_ap_f262efe1_url = _content.split('tf_efficientnet_b0_ap_f262efe1_url=')[1].split('\n')[0]
+    tf_efficientnet_b1_ap_44ef0a3d_url = _content.split('tf_efficientnet_b1_ap_44ef0a3d_url=')[1].split('\n')[0]
+    tf_efficientnet_b2_ap_2f8e7636_url = _content.split('tf_efficientnet_b2_ap_2f8e7636_url=')[1].split('\n')[0]
+    tf_efficientnet_b3_ap_aad25bdd_url = _content.split('tf_efficientnet_b3_ap_aad25bdd_url=')[1].split('\n')[0]
+    tf_efficientnet_b4_ap_dedb23e6_url = _content.split('tf_efficientnet_b4_ap_dedb23e6_url=')[1].split('\n')[0]
+    tf_efficientnet_b5_ap_9e82fae8_url = _content.split('tf_efficientnet_b5_ap_9e82fae8_url=')[1].split('\n')[0]
+    tf_efficientnet_b6_ap_4ffb161f_url = _content.split('tf_efficientnet_b6_ap_4ffb161f_url=')[1].split('\n')[0]
+    tf_efficientnet_b7_ap_ddb28fec_url = _content.split('tf_efficientnet_b7_ap_ddb28fec_url=')[1].split('\n')[0]
+    tf_efficientnet_b8_ap_00e169fa_url = _content.split('tf_efficientnet_b8_ap_00e169fa_url=')[1].split('\n')[0]
+    tf_efficientnet_b0_ns_c0e6a31c_url = _content.split('tf_efficientnet_b0_ns_c0e6a31c_url=')[1].split('\n')[0]
+    tf_efficientnet_b1_ns_99dd0c41_url = _content.split('tf_efficientnet_b1_ns_99dd0c41_url=')[1].split('\n')[0]
+    tf_efficientnet_b2_ns_00306e48_url = _content.split('tf_efficientnet_b2_ns_00306e48_url=')[1].split('\n')[0]
+    tf_efficientnet_b3_ns_9d44bf68_url = _content.split('tf_efficientnet_b3_ns_9d44bf68_url=')[1].split('\n')[0]
+    tf_efficientnet_b4_ns_d6313a46_url = _content.split('tf_efficientnet_b4_ns_d6313a46_url=')[1].split('\n')[0]
+    tf_efficientnet_b5_ns_6f26d0cf_url = _content.split('tf_efficientnet_b5_ns_6f26d0cf_url=')[1].split('\n')[0]
+    tf_efficientnet_b6_ns_51548356_url = _content.split('tf_efficientnet_b6_ns_51548356_url=')[1].split('\n')[0]
+    tf_efficientnet_b7_ns_1dbc32de_url = _content.split('tf_efficientnet_b7_ns_1dbc32de_url=')[1].split('\n')[0]
+    tf_efficientnet_l2_ns_475_bebbd00a_url = _content.split('tf_efficientnet_l2_ns_475_bebbd00a_url=')[1].split('\n')[0]
+    tf_efficientnet_l2_ns_df73bb44_url = _content.split('tf_efficientnet_l2_ns_df73bb44_url=')[1].split('\n')[0]
+    tf_efficientnet_es_ca1afbfe_url = _content.split('tf_efficientnet_es_ca1afbfe_url=')[1].split('\n')[0]
+    tf_efficientnet_em_e78cfe58_url = _content.split('tf_efficientnet_em_e78cfe58_url=')[1].split('\n')[0]
+    tf_efficientnet_el_5143854e_url = _content.split('tf_efficientnet_el_5143854e_url=')[1].split('\n')[0]
+    tf_efficientnet_cc_b0_4e_4362b6b2_url = _content.split('tf_efficientnet_cc_b0_4e_4362b6b2_url=')[1].split('\n')[0]
+    tf_efficientnet_cc_b0_8e_66184a25_url = _content.split('tf_efficientnet_cc_b0_8e_66184a25_url=')[1].split('\n')[0]
+    tf_efficientnet_cc_b1_8e_f7c79ae1_url = _content.split('tf_efficientnet_cc_b1_8e_f7c79ae1_url=')[1].split('\n')[0]
+    tf_efficientnet_lite0_0aa007d2_url = _content.split('tf_efficientnet_lite0_0aa007d2_url=')[1].split('\n')[0]
+    tf_efficientnet_lite1_bde8b488_url = _content.split('tf_efficientnet_lite1_bde8b488_url=')[1].split('\n')[0]
+    tf_efficientnet_lite2_dcccb7df_url = _content.split('tf_efficientnet_lite2_dcccb7df_url=')[1].split('\n')[0]
+    tf_efficientnet_lite3_b733e338_url = _content.split('tf_efficientnet_lite3_b733e338_url=')[1].split('\n')[0]
+    tf_efficientnet_lite4_741542c3_url = _content.split('tf_efficientnet_lite4_741542c3_url=')[1].split('\n')[0]
+    mixnet_s_a907afbc_url = _content.split('mixnet_s_a907afbc_url=')[1].split('\n')[0]
+    mixnet_m_4647fc68_url = _content.split('mixnet_m_4647fc68_url=')[1].split('\n')[0]
+    mixnet_l_5a9a2ed8_url = _content.split('mixnet_l_5a9a2ed8_url=')[1].split('\n')[0]
+    mixnet_xl_ra_aac3c00c_url = _content.split('mixnet_xl_ra_aac3c00c_url=')[1].split('\n')[0]
+    tf_mixnet_s_89d3354b_url = _content.split('tf_mixnet_s_89d3354b_url=')[1].split('\n')[0]
+    tf_mixnet_m_0f4d8805_url = _content.split('tf_mixnet_m_0f4d8805_url=')[1].split('\n')[0]
+    tf_mixnet_l_6c92e0c8_url = _content.split('tf_mixnet_l_6c92e0c8_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'mnasnet_050': _cfg(url=''),
     'mnasnet_075': _cfg(url=''),
     'mnasnet_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mnasnet_b1-74cb7081.pth'),
+        url=mnasnet_b1_74cb7081_url),
     'mnasnet_140': _cfg(url=''),
 
     'semnasnet_050': _cfg(url=''),
     'semnasnet_075': _cfg(url=''),
     'semnasnet_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mnasnet_a1-d9418771.pth'),
+        url=mnasnet_a1_d9418771_url),
     'semnasnet_140': _cfg(url=''),
     'mnasnet_small': _cfg(url=''),
 
     'mobilenetv2_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv2_100_ra-b33bc2c4.pth'),
+        url=mobilenetv2_100_ra_b33bc2c4_url),
     'mobilenetv2_110d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv2_110d_ra-77090ade.pth'),
+        url=mobilenetv2_110d_ra_77090ade_url),
     'mobilenetv2_120d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv2_120d_ra-5987e2ed.pth'),
+        url=mobilenetv2_120d_ra_5987e2ed_url),
     'mobilenetv2_140': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mobilenetv2_140_ra-21a4e913.pth'),
+        url=mobilenetv2_140_ra_21a4e913_url),
 
     'fbnetc_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/fbnetc_100-c345b898.pth',
+        url=fbnetc_100_c345b898_url,
         interpolation='bilinear'),
     'spnasnet_100': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/spnasnet_100-048bc3f4.pth',
+        url=spnasnet_100_048bc3f4_url,
         interpolation='bilinear'),
 
     'efficientnet_b0': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b0_ra-3dd342df.pth'),
+        url=efficientnet_b0_ra_3dd342df_url),
     'efficientnet_b1': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b1-533bc792.pth',
+        url=efficientnet_b1_533bc792_url,
         input_size=(3, 240, 240), pool_size=(8, 8)),
     'efficientnet_b2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b2_ra-bcdf34b7.pth',
+        url=efficientnet_b2_ra_bcdf34b7_url,
         input_size=(3, 260, 260), pool_size=(9, 9)),
     'efficientnet_b2a': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b2_ra-bcdf34b7.pth',
+        url=efficientnet_b2_ra_bcdf34b7_url,
         input_size=(3, 288, 288), pool_size=(9, 9), crop_pct=1.0),
     'efficientnet_b3': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b3_ra2-cf984f9c.pth',
+        url=efficientnet_b3_ra2_cf984f9c_url,
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
     'efficientnet_b3a': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_b3_ra2-cf984f9c.pth',
+        url=efficientnet_b3_ra2_cf984f9c_url,
         input_size=(3, 320, 320), pool_size=(10, 10), crop_pct=1.0),
     'efficientnet_b4': _cfg(
         url='', input_size=(3, 380, 380), pool_size=(12, 12), crop_pct=0.922),
@@ -112,18 +185,18 @@ default_cfgs = {
         url='', input_size=(3, 800, 800), pool_size=(25, 25), crop_pct=0.961),
 
     'efficientnet_es': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_es_ra-f111e99c.pth'),
+        url=efficientnet_es_ra_f111e99c_url),
     'efficientnet_em': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_em_ra2-66250f76.pth',
+        url=efficientnet_em_ra2_66250f76_url,
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
     'efficientnet_el': _cfg(
-        url='https://github.com/DeGirum/pruned-models/releases/download/efficientnet_v1.0/efficientnet_el.pth', 
+        url=efficientnet_el_url, 
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
 
     'efficientnet_es_pruned': _cfg(
-        url='https://github.com/DeGirum/pruned-models/releases/download/efficientnet_v1.0/efficientnet_es_pruned75.pth'),
+        url=efficientnet_es_pruned75_url),
     'efficientnet_el_pruned': _cfg(
-        url='https://github.com/DeGirum/pruned-models/releases/download/efficientnet_v1.0/efficientnet_el_pruned70.pth', 
+        url=efficientnet_el_pruned70_url, 
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
 
     'efficientnet_cc_b0_4e': _cfg(url=''),
@@ -131,7 +204,7 @@ default_cfgs = {
     'efficientnet_cc_b1_8e': _cfg(url='', input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
 
     'efficientnet_lite0': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/efficientnet_lite0_ra-37913777.pth'),
+        url=efficientnet_lite0_ra_37913777_url),
     'efficientnet_lite1': _cfg(
         url='',
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
@@ -145,176 +218,176 @@ default_cfgs = {
         url='', input_size=(3, 380, 380), pool_size=(12, 12), crop_pct=0.922),
 
     'efficientnet_b1_pruned': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45403/outputs/effnetb1_pruned_9ebb3fe6.pth',
+        url=effnetb1_pruned_9ebb3fe6_url,
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882, mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'efficientnet_b2_pruned': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45403/outputs/effnetb2_pruned_203f55bc.pth',
+        url=effnetb2_pruned_203f55bc_url,
         input_size=(3, 260, 260), pool_size=(9, 9), crop_pct=0.890, mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'efficientnet_b3_pruned': _cfg(
-        url='https://imvl-automl-sh.oss-cn-shanghai.aliyuncs.com/darts/hyperml/hyperml/job_45403/outputs/effnetb3_pruned_5abcc29f.pth',
+        url=effnetb3_pruned_5abcc29f_url,
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904, mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
 
     'tf_efficientnet_b0': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b0_aa-827b6e33.pth',
+        url=tf_efficientnet_b0_aa_827b6e33_url,
         input_size=(3, 224, 224)),
     'tf_efficientnet_b1': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b1_aa-ea7a6ee0.pth',
+        url=tf_efficientnet_b1_aa_ea7a6ee0_url,
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
     'tf_efficientnet_b2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b2_aa-60c94f97.pth',
+        url=tf_efficientnet_b2_aa_60c94f97_url,
         input_size=(3, 260, 260), pool_size=(9, 9), crop_pct=0.890),
     'tf_efficientnet_b3': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b3_aa-84b4657e.pth',
+        url=tf_efficientnet_b3_aa_84b4657e_url,
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
     'tf_efficientnet_b4': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b4_aa-818f208c.pth',
+        url=tf_efficientnet_b4_aa_818f208c_url,
         input_size=(3, 380, 380), pool_size=(12, 12), crop_pct=0.922),
     'tf_efficientnet_b5': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b5_ra-9a3e5369.pth',
+        url=tf_efficientnet_b5_ra_9a3e5369_url,
         input_size=(3, 456, 456), pool_size=(15, 15), crop_pct=0.934),
     'tf_efficientnet_b6': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b6_aa-80ba17e4.pth',
+        url=tf_efficientnet_b6_aa_80ba17e4_url,
         input_size=(3, 528, 528), pool_size=(17, 17), crop_pct=0.942),
     'tf_efficientnet_b7': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b7_ra-6c08e654.pth',
+        url=tf_efficientnet_b7_ra_6c08e654_url,
         input_size=(3, 600, 600), pool_size=(19, 19), crop_pct=0.949),
     'tf_efficientnet_b8': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b8_ra-572d5dd9.pth',
+        url=tf_efficientnet_b8_ra_572d5dd9_url,
         input_size=(3, 672, 672), pool_size=(21, 21), crop_pct=0.954),
 
     'tf_efficientnet_b0_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b0_ap-f262efe1.pth',
+        url=tf_efficientnet_b0_ap_f262efe1_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD, input_size=(3, 224, 224)),
     'tf_efficientnet_b1_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b1_ap-44ef0a3d.pth',
+        url=tf_efficientnet_b1_ap_44ef0a3d_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
     'tf_efficientnet_b2_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b2_ap-2f8e7636.pth',
+        url=tf_efficientnet_b2_ap_2f8e7636_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 260, 260), pool_size=(9, 9), crop_pct=0.890),
     'tf_efficientnet_b3_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b3_ap-aad25bdd.pth',
+        url=tf_efficientnet_b3_ap_aad25bdd_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
     'tf_efficientnet_b4_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b4_ap-dedb23e6.pth',
+        url=tf_efficientnet_b4_ap_dedb23e6_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 380, 380), pool_size=(12, 12), crop_pct=0.922),
     'tf_efficientnet_b5_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b5_ap-9e82fae8.pth',
+        url=tf_efficientnet_b5_ap_9e82fae8_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 456, 456), pool_size=(15, 15), crop_pct=0.934),
     'tf_efficientnet_b6_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b6_ap-4ffb161f.pth',
+        url=tf_efficientnet_b6_ap_4ffb161f_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 528, 528), pool_size=(17, 17), crop_pct=0.942),
     'tf_efficientnet_b7_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b7_ap-ddb28fec.pth',
+        url=tf_efficientnet_b7_ap_ddb28fec_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 600, 600), pool_size=(19, 19), crop_pct=0.949),
     'tf_efficientnet_b8_ap': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b8_ap-00e169fa.pth',
+        url=tf_efficientnet_b8_ap_00e169fa_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 672, 672), pool_size=(21, 21), crop_pct=0.954),
 
     'tf_efficientnet_b0_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b0_ns-c0e6a31c.pth',
+        url=tf_efficientnet_b0_ns_c0e6a31c_url,
         input_size=(3, 224, 224)),
     'tf_efficientnet_b1_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b1_ns-99dd0c41.pth',
+        url=tf_efficientnet_b1_ns_99dd0c41_url,
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
     'tf_efficientnet_b2_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b2_ns-00306e48.pth',
+        url=tf_efficientnet_b2_ns_00306e48_url,
         input_size=(3, 260, 260), pool_size=(9, 9), crop_pct=0.890),
     'tf_efficientnet_b3_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b3_ns-9d44bf68.pth',
+        url=tf_efficientnet_b3_ns_9d44bf68_url,
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
     'tf_efficientnet_b4_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b4_ns-d6313a46.pth',
+        url=tf_efficientnet_b4_ns_d6313a46_url,
         input_size=(3, 380, 380), pool_size=(12, 12), crop_pct=0.922),
     'tf_efficientnet_b5_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b5_ns-6f26d0cf.pth',
+        url=tf_efficientnet_b5_ns_6f26d0cf_url,
         input_size=(3, 456, 456), pool_size=(15, 15), crop_pct=0.934),
     'tf_efficientnet_b6_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b6_ns-51548356.pth',
+        url=tf_efficientnet_b6_ns_51548356_url,
         input_size=(3, 528, 528), pool_size=(17, 17), crop_pct=0.942),
     'tf_efficientnet_b7_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b7_ns-1dbc32de.pth',
+        url=tf_efficientnet_b7_ns_1dbc32de_url,
         input_size=(3, 600, 600), pool_size=(19, 19), crop_pct=0.949),
     'tf_efficientnet_l2_ns_475': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_l2_ns_475-bebbd00a.pth',
+        url=tf_efficientnet_l2_ns_475_bebbd00a_url,
         input_size=(3, 475, 475), pool_size=(15, 15), crop_pct=0.936),
     'tf_efficientnet_l2_ns': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_l2_ns-df73bb44.pth',
+        url=tf_efficientnet_l2_ns_df73bb44_url,
         input_size=(3, 800, 800), pool_size=(25, 25), crop_pct=0.96),
 
     'tf_efficientnet_es': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_es-ca1afbfe.pth',
+        url=tf_efficientnet_es_ca1afbfe_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 224, 224), ),
     'tf_efficientnet_em': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_em-e78cfe58.pth',
+        url=tf_efficientnet_em_e78cfe58_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
     'tf_efficientnet_el': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_el-5143854e.pth',
+        url=tf_efficientnet_el_5143854e_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904),
 
     'tf_efficientnet_cc_b0_4e': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_cc_b0_4e-4362b6b2.pth',
+        url=tf_efficientnet_cc_b0_4e_4362b6b2_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_efficientnet_cc_b0_8e': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_cc_b0_8e-66184a25.pth',
+        url=tf_efficientnet_cc_b0_8e_66184a25_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
     'tf_efficientnet_cc_b1_8e': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_cc_b1_8e-f7c79ae1.pth',
+        url=tf_efficientnet_cc_b1_8e_f7c79ae1_url,
         mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882),
 
     'tf_efficientnet_lite0': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_lite0-0aa007d2.pth',
+        url=tf_efficientnet_lite0_0aa007d2_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         interpolation='bicubic',  # should be bilinear but bicubic better match for TF bilinear at low res
     ),
     'tf_efficientnet_lite1': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_lite1-bde8b488.pth',
+        url=tf_efficientnet_lite1_bde8b488_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 240, 240), pool_size=(8, 8), crop_pct=0.882,
         interpolation='bicubic',  # should be bilinear but bicubic better match for TF bilinear at low res
     ),
     'tf_efficientnet_lite2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_lite2-dcccb7df.pth',
+        url=tf_efficientnet_lite2_dcccb7df_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 260, 260), pool_size=(9, 9), crop_pct=0.890,
         interpolation='bicubic',  # should be bilinear but bicubic better match for TF bilinear at low res
     ),
     'tf_efficientnet_lite3': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_lite3-b733e338.pth',
+        url=tf_efficientnet_lite3_b733e338_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 300, 300), pool_size=(10, 10), crop_pct=0.904, interpolation='bilinear'),
     'tf_efficientnet_lite4': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_lite4-741542c3.pth',
+        url=tf_efficientnet_lite4_741542c3_url,
         mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5),
         input_size=(3, 380, 380), pool_size=(12, 12), crop_pct=0.920, interpolation='bilinear'),
 
     'mixnet_s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mixnet_s-a907afbc.pth'),
+        url=mixnet_s_a907afbc_url),
     'mixnet_m': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mixnet_m-4647fc68.pth'),
+        url=mixnet_m_4647fc68_url),
     'mixnet_l': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mixnet_l-5a9a2ed8.pth'),
+        url=mixnet_l_5a9a2ed8_url),
     'mixnet_xl': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/mixnet_xl_ra-aac3c00c.pth'),
+        url=mixnet_xl_ra_aac3c00c_url),
     'mixnet_xxl': _cfg(),
 
     'tf_mixnet_s': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mixnet_s-89d3354b.pth'),
+        url=tf_mixnet_s_89d3354b_url),
     'tf_mixnet_m': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mixnet_m-0f4d8805.pth'),
+        url=tf_mixnet_m_0f4d8805_url),
     'tf_mixnet_l': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_mixnet_l-6c92e0c8.pth'),
+        url=tf_mixnet_l_6c92e0c8_url),
 }
 
 _DEBUG = False

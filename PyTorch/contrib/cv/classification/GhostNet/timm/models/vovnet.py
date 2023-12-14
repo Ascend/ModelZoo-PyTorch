@@ -11,6 +11,7 @@ for some reference, rewrote most of the code.
 Hacked together by / Copyright 2020 Ross Wightman
 """
 
+import os
 from typing import List
 
 import torch
@@ -145,15 +146,22 @@ def _cfg(url=''):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    ese_vovnet19b_dw_a8741004_url = _content.split('ese_vovnet19b_dw_a8741004_url=')[1].split('\n')[0]
+    ese_vovnet39b_f912fe73_url = _content.split('ese_vovnet39b_f912fe73_url=')[1].split('\n')[0]
+
+
 default_cfgs = dict(
     vovnet39a=_cfg(url=''),
     vovnet57a=_cfg(url=''),
     ese_vovnet19b_slim_dw=_cfg(url=''),
     ese_vovnet19b_dw=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ese_vovnet19b_dw-a8741004.pth'),
+        url=ese_vovnet19b_dw_a8741004_url),
     ese_vovnet19b_slim=_cfg(url=''),
     ese_vovnet39b=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/ese_vovnet39b-f912fe73.pth'),
+        url=ese_vovnet39b_f912fe73_url),
     ese_vovnet57b=_cfg(url=''),
     ese_vovnet99b=_cfg(url=''),
     eca_vovnet39b=_cfg(url=''),

@@ -6,6 +6,7 @@ This implementation is compatible with the pretrained weights from cypw's MXNet 
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 from collections import OrderedDict
 from functools import partial
 from typing import Tuple
@@ -32,20 +33,31 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    dpn68_66bebafa7_url = _content.split('dpn68_66bebafa7_url=')[1].split('\n')[0]
+    dpn68b_ra_a31ca160_url = _content.split('dpn68b_ra_a31ca160_url=')[1].split('\n')[0]
+    dpn92_extra_b040e4a9b_url = _content.split('dpn92_extra_b040e4a9b_url=')[1].split('\n')[0]
+    dpn98_5b90dec4d_url = _content.split('dpn98_5b90dec4d_url=')[1].split('\n')[0]
+    dpn131_71dfe43e0_url = _content.split('dpn131_71dfe43e0_url=')[1].split('\n')[0]
+    dpn107_extra_1ac7121e2_url = _content.split('dpn107_extra_1ac7121e2_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'dpn68': _cfg(
-        url='https://github.com/rwightman/pytorch-dpn-pretrained/releases/download/v0.1/dpn68-66bebafa7.pth'),
+        url=dpn68_66bebafa7_url),
     'dpn68b': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/dpn68b_ra-a31ca160.pth',
+        url=dpn68b_ra_a31ca160_url,
         mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
     'dpn92': _cfg(
-        url='https://github.com/rwightman/pytorch-dpn-pretrained/releases/download/v0.1/dpn92_extra-b040e4a9b.pth'),
+        url=dpn92_extra_b040e4a9b_url),
     'dpn98': _cfg(
-        url='https://github.com/rwightman/pytorch-dpn-pretrained/releases/download/v0.1/dpn98-5b90dec4d.pth'),
+        url=dpn98_5b90dec4d_url),
     'dpn131': _cfg(
-        url='https://github.com/rwightman/pytorch-dpn-pretrained/releases/download/v0.1/dpn131-71dfe43e0.pth'),
+        url=dpn131_71dfe43e0_url),
     'dpn107': _cfg(
-        url='https://github.com/rwightman/pytorch-dpn-pretrained/releases/download/v0.1/dpn107_extra-1ac7121e2.pth')
+        url=dpn107_extra_1ac7121e2_url)
 }
 
 

@@ -1,3 +1,4 @@
+import os
 import torch.nn as nn
 from .efficientnet_builder import decode_arch_def, resolve_bn_args
 from .mobilenetv3 import MobileNetV3, MobileNetV3Features, build_model_with_cfg, default_cfg_for_features
@@ -17,13 +18,24 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    hardcorenas_a_url = _content.split('hardcorenas_a_url=')[1].split('\n')[0]
+    hardcorenas_b_url = _content.split('hardcorenas_b_url=')[1].split('\n')[0]
+    hardcorenas_c_url = _content.split('hardcorenas_c_url=')[1].split('\n')[0]
+    hardcorenas_d_url = _content.split('hardcorenas_d_url=')[1].split('\n')[0]
+    hardcorenas_e_url = _content.split('hardcorenas_e_url=')[1].split('\n')[0]
+    hardcorenas_f_url = _content.split('hardcorenas_f_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
-    'hardcorenas_a': _cfg(url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/public/HardCoReNAS/HardCoreNAS_A_Green_38ms_75.9_23474aeb.pth'),
-    'hardcorenas_b': _cfg(url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/public/HardCoReNAS/HardCoreNAS_B_Green_40ms_76.5_1f882d1e.pth'),
-    'hardcorenas_c': _cfg(url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/public/HardCoReNAS/HardCoreNAS_C_Green_44ms_77.1_d4148c9e.pth'),
-    'hardcorenas_d': _cfg(url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/public/HardCoReNAS/HardCoreNAS_D_Green_50ms_77.4_23e3cdde.pth'),
-    'hardcorenas_e': _cfg(url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/public/HardCoReNAS/HardCoreNAS_E_Green_55ms_77.9_90f20e8a.pth'),
-    'hardcorenas_f': _cfg(url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/public/HardCoReNAS/HardCoreNAS_F_Green_60ms_78.1_2855edf1.pth'),
+    'hardcorenas_a': _cfg(url=hardcorenas_a_url),
+    'hardcorenas_b': _cfg(url=hardcorenas_b_url),
+    'hardcorenas_c': _cfg(url=hardcorenas_c_url),
+    'hardcorenas_d': _cfg(url=hardcorenas_d_url),
+    'hardcorenas_e': _cfg(url=hardcorenas_e_url),
+    'hardcorenas_f': _cfg(url=hardcorenas_f_url),
 }
 
 

@@ -8,6 +8,7 @@ Original header:
   Written by Bin Xiao (Bin.Xiao@microsoft.com)
   Modified by Ke Sun (sunk@mail.ustc.edu.cn)
 """
+import os
 import logging
 from typing import List
 
@@ -37,25 +38,39 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    hrnet_w18_small_v1_f460c6bc_url = _content.split('hrnet_w18_small_v1_f460c6bc_url=')[1].split('\n')[0]
+    hrnet_w18_small_v2_4c50a8cb_url = _content.split('hrnet_w18_small_v2_4c50a8cb_url=')[1].split('\n')[0]
+    hrnetv2_w18_8cb57bb9_url = _content.split('hrnetv2_w18_8cb57bb9_url=')[1].split('\n')[0]
+    hrnetv2_w30_8d7f8dab_url = _content.split('hrnetv2_w30_8d7f8dab_url=')[1].split('\n')[0]
+    hrnetv2_w32_90d8c5fb_url = _content.split('hrnetv2_w32_90d8c5fb_url=')[1].split('\n')[0]
+    hrnetv2_w40_7cd397a4_url = _content.split('hrnetv2_w40_7cd397a4_url=')[1].split('\n')[0]
+    hrnetv2_w44_c9ac8c18_url = _content.split('hrnetv2_w44_c9ac8c18_url=')[1].split('\n')[0]
+    hrnetv2_w48_abd2e6ab_url = _content.split('hrnetv2_w48_abd2e6ab_url=')[1].split('\n')[0]
+    hrnetv2_w64_b47cc881_url = _content.split('hrnetv2_w64_b47cc881_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'hrnet_w18_small': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnet_w18_small_v1-f460c6bc.pth'),
+        url=hrnet_w18_small_v1_f460c6bc_url),
     'hrnet_w18_small_v2': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnet_w18_small_v2-4c50a8cb.pth'),
+        url=hrnet_w18_small_v2_4c50a8cb_url),
     'hrnet_w18': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w18-8cb57bb9.pth'),
+        url=hrnetv2_w18_8cb57bb9_url),
     'hrnet_w30': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w30-8d7f8dab.pth'),
+        url=hrnetv2_w30_8d7f8dab_url),
     'hrnet_w32': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w32-90d8c5fb.pth'),
+        url=hrnetv2_w32_90d8c5fb_url),
     'hrnet_w40': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w40-7cd397a4.pth'),
+        url=hrnetv2_w40_7cd397a4_url),
     'hrnet_w44': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w44-c9ac8c18.pth'),
+        url=hrnetv2_w44_c9ac8c18_url),
     'hrnet_w48': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w48-abd2e6ab.pth'),
+        url=hrnetv2_w48_abd2e6ab_url),
     'hrnet_w64': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-hrnet/hrnetv2_w64-b47cc881.pth'),
+        url=hrnetv2_w64_b47cc881_url),
 }
 
 cfg_cls = dict(

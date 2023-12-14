@@ -13,6 +13,7 @@ Weights from original impl have been modified
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 import numpy as np
 import torch.nn as nn
 
@@ -66,31 +67,60 @@ def _cfg(url=''):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    regnetx_002_e7e85e5c_url = _content.split('regnetx_002_e7e85e5c_url=')[1].split('\n')[0]
+    regnetx_004_7d0e9424_url = _content.split('regnetx_004_7d0e9424_url=')[1].split('\n')[0]
+    regnetx_006_85ec1baa_url = _content.split('regnetx_006_85ec1baa_url=')[1].split('\n')[0]
+    regnetx_008_d8b470eb_url = _content.split('regnetx_008_d8b470eb_url=')[1].split('\n')[0]
+    regnetx_016_65ca972a_url = _content.split('regnetx_016_65ca972a_url=')[1].split('\n')[0]
+    regnetx_032_ed0c7f7e_url = _content.split('regnetx_032_ed0c7f7e_url=')[1].split('\n')[0]
+    regnetx_040_73c2a654_url = _content.split('regnetx_040_73c2a654_url=')[1].split('\n')[0]
+    regnetx_064_29278baa_url = _content.split('regnetx_064_29278baa_url=')[1].split('\n')[0]
+    regnetx_080_7c7fcab1_url = _content.split('regnetx_080_7c7fcab1_url=')[1].split('\n')[0]
+    regnetx_120_65d5521e_url = _content.split('regnetx_120_65d5521e_url=')[1].split('\n')[0]
+    regnetx_160_c98c4112_url = _content.split('regnetx_160_c98c4112_url=')[1].split('\n')[0]
+    regnetx_320_8ea38b93_url = _content.split('regnetx_320_8ea38b93_url=')[1].split('\n')[0]
+    regnety_002_e68ca334_url = _content.split('regnety_002_e68ca334_url=')[1].split('\n')[0]
+    regnety_004_0db870e6_url = _content.split('regnety_004_0db870e6_url=')[1].split('\n')[0]
+    regnety_006_c67e57ec_url = _content.split('regnety_006_c67e57ec_url=')[1].split('\n')[0]
+    regnety_008_dc900dbe_url = _content.split('regnety_008_dc900dbe_url=')[1].split('\n')[0]
+    regnety_016_54367f74_url = _content.split('regnety_016_54367f74_url=')[1].split('\n')[0]
+    regnety_032_ra_7f2439f9_url = _content.split('regnety_032_ra_7f2439f9_url=')[1].split('\n')[0]
+    regnety_040_f0d569f9_url = _content.split('regnety_040_f0d569f9_url=')[1].split('\n')[0]
+    regnety_064_0a48325c_url = _content.split('regnety_064_0a48325c_url=')[1].split('\n')[0]
+    regnety_080_e7f3eb93_url = _content.split('regnety_080_e7f3eb93_url=')[1].split('\n')[0]
+    regnety_120_721ba79a_url = _content.split('regnety_120_721ba79a_url=')[1].split('\n')[0]
+    regnety_160_d64013cd_url = _content.split('regnety_160_d64013cd_url=')[1].split('\n')[0]
+    regnety_320_ba464b29_url = _content.split('regnety_320_ba464b29_url=')[1].split('\n')[0]
+
+
 default_cfgs = dict(
-    regnetx_002=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_002-e7e85e5c.pth'),
-    regnetx_004=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_004-7d0e9424.pth'),
-    regnetx_006=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_006-85ec1baa.pth'),
-    regnetx_008=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_008-d8b470eb.pth'),
-    regnetx_016=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_016-65ca972a.pth'),
-    regnetx_032=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_032-ed0c7f7e.pth'),
-    regnetx_040=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_040-73c2a654.pth'),
-    regnetx_064=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_064-29278baa.pth'),
-    regnetx_080=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_080-7c7fcab1.pth'),
-    regnetx_120=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_120-65d5521e.pth'),
-    regnetx_160=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_160-c98c4112.pth'),
-    regnetx_320=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnetx_320-8ea38b93.pth'),
-    regnety_002=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_002-e68ca334.pth'),
-    regnety_004=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_004-0db870e6.pth'),
-    regnety_006=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_006-c67e57ec.pth'),
-    regnety_008=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_008-dc900dbe.pth'),
-    regnety_016=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_016-54367f74.pth'),
-    regnety_032=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/regnety_032_ra-7f2439f9.pth'),
-    regnety_040=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_040-f0d569f9.pth'),
-    regnety_064=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_064-0a48325c.pth'),
-    regnety_080=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_080-e7f3eb93.pth'),
-    regnety_120=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_120-721ba79a.pth'),
-    regnety_160=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_160-d64013cd.pth'),
-    regnety_320=_cfg(url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-regnet/regnety_320-ba464b29.pth'),
+    regnetx_002=_cfg(url=regnetx_002_e7e85e5c_url),
+    regnetx_004=_cfg(url=regnetx_004_7d0e9424_url),
+    regnetx_006=_cfg(url=regnetx_006_85ec1baa_url),
+    regnetx_008=_cfg(url=regnetx_008_d8b470eb_url),
+    regnetx_016=_cfg(url=regnetx_016_65ca972a_url),
+    regnetx_032=_cfg(url=regnetx_032_ed0c7f7e_url),
+    regnetx_040=_cfg(url=regnetx_040_73c2a654_url),
+    regnetx_064=_cfg(url=regnetx_064_29278baa_url),
+    regnetx_080=_cfg(url=regnetx_080_7c7fcab1_url),
+    regnetx_120=_cfg(url=regnetx_120_65d5521e_url),
+    regnetx_160=_cfg(url=regnetx_160_c98c4112_url),
+    regnetx_320=_cfg(url=regnetx_320_8ea38b93_url),
+    regnety_002=_cfg(url=regnety_002_e68ca334_url),
+    regnety_004=_cfg(url=regnety_004_0db870e6_url),
+    regnety_006=_cfg(url=regnety_006_c67e57ec_url),
+    regnety_008=_cfg(url=regnety_008_dc900dbe_url),
+    regnety_016=_cfg(url=regnety_016_54367f74_url),
+    regnety_032=_cfg(url=regnety_032_ra_7f2439f9_url),
+    regnety_040=_cfg(url=regnety_040_f0d569f9_url),
+    regnety_064=_cfg(url=regnety_064_0a48325c_url),
+    regnety_080=_cfg(url=regnety_080_e7f3eb93_url),
+    regnety_120=_cfg(url=regnety_120_721ba79a_url),
+    regnety_160=_cfg(url=regnety_160_d64013cd_url),
+    regnety_320=_cfg(url=regnety_320_ba464b29_url),
 )
 
 

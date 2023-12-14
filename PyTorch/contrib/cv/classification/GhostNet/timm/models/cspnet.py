@@ -12,6 +12,7 @@ Reference impl via darknet cfg files at https://github.com/WongKinYiu/CrossStage
 
 Hacked together by / Copyright 2020 Ross Wightman
 """
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -36,18 +37,26 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    cspresnet50_ra_d3e8d487_url = _content.split('cspresnet50_ra_d3e8d487_url=')[1].split('\n')[0]
+    cspresnext50_ra_224_648b4713_url = _content.split('cspresnext50_ra_224_648b4713_url=')[1].split('\n')[0]
+    cspdarknet53_ra_256_d05c7c21_url = _content.split('cspdarknet53_ra_256_d05c7c21_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'cspresnet50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/cspresnet50_ra-d3e8d487.pth'),
+        url=cspresnet50_ra_d3e8d487_url),
     'cspresnet50d': _cfg(url=''),
     'cspresnet50w': _cfg(url=''),
     'cspresnext50': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/cspresnext50_ra_224-648b4713.pth',
+        url=cspresnext50_ra_224_648b4713_url,
         input_size=(3, 224, 224), pool_size=(7, 7), crop_pct=0.875  # FIXME I trained this at 224x224, not 256 like ref impl
     ),
     'cspresnext50_iabn': _cfg(url=''),
     'cspdarknet53': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/cspdarknet53_ra_256-d05c7c21.pth'),
+        url=cspdarknet53_ra_256_d05c7c21_url),
     'cspdarknet53_iabn': _cfg(url=''),
     'darknet53': _cfg(url=''),
 }

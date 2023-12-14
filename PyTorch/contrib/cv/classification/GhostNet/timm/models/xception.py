@@ -22,6 +22,7 @@ normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
 The resize parameter of the validation transform should be 333, and make sure to center crop at 299x299
 """
 
+import os
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -31,9 +32,16 @@ from .registry import register_model
 
 __all__ = ['Xception']
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    xception_43020ad28_url = _content.split('xception_43020ad28_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'xception': {
-        'url': 'https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-cadene/xception-43020ad28.pth',
+        'url': xception_43020ad28_url,
         'input_size': (3, 299, 299),
         'pool_size': (10, 10),
         'crop_pct': 0.8975,

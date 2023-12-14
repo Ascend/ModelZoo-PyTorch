@@ -5,6 +5,7 @@ DLA Paper: `Deep Layer Aggregation` - https://arxiv.org/abs/1707.06484
 Res2Net additions from: https://github.com/gasvn/Res2Net/
 Res2Net Paper: `Res2Net: A New Multi-scale Backbone Architecture` - https://arxiv.org/abs/1904.01169
 """
+import os
 import math
 
 import torch
@@ -30,21 +31,38 @@ def _cfg(url='', **kwargs):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    dla34_ba72cf86_url = _content.split('dla34_ba72cf86_url=')[1].split('\n')[0]
+    dla46_c_2bfd52c3_url = _content.split('dla46_c_2bfd52c3_url=')[1].split('\n')[0]
+    dla46x_c_d761bae7_url = _content.split('dla46x_c_d761bae7_url=')[1].split('\n')[0]
+    dla60x_c_b870c45c_url = _content.split('dla60x_c_b870c45c_url=')[1].split('\n')[0]
+    dla60_24839fc4_url = _content.split('dla60_24839fc4_url=')[1].split('\n')[0]
+    dla60x_d15cacda_url = _content.split('dla60x_d15cacda_url=')[1].split('\n')[0]
+    dla102_d94d9790_url = _content.split('dla102_d94d9790_url=')[1].split('\n')[0]
+    dla102x_ad62be81_url = _content.split('dla102x_ad62be81_url=')[1].split('\n')[0]
+    dla102x2_262837b6_url = _content.split('dla102x2_262837b6_url=')[1].split('\n')[0]
+    dla169_0914e092_url = _content.split('dla169_0914e092_url=')[1].split('\n')[0]
+    res2net_dla60_4s_d88db7f9_url = _content.split('res2net_dla60_4s_d88db7f9_url=')[1].split('\n')[0]
+    res2next_dla60_4s_d327927b_url = _content.split('res2next_dla60_4s_d327927b_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
-    'dla34': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla34-ba72cf86.pth'),
-    'dla46_c': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla46_c-2bfd52c3.pth'),
-    'dla46x_c': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla46x_c-d761bae7.pth'),
-    'dla60x_c': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla60x_c-b870c45c.pth'),
-    'dla60': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla60-24839fc4.pth'),
-    'dla60x': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla60x-d15cacda.pth'),
-    'dla102': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla102-d94d9790.pth'),
-    'dla102x': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla102x-ad62be81.pth'),
-    'dla102x2': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla102x2-262837b6.pth'),
-    'dla169': _cfg(url='http://dl.yf.io/dla/models/imagenet/dla169-0914e092.pth'),
+    'dla34': _cfg(url=dla34_ba72cf86_url),
+    'dla46_c': _cfg(url=dla46_c_2bfd52c3_url),
+    'dla46x_c': _cfg(url=dla46x_c_d761bae7_url),
+    'dla60x_c': _cfg(url=dla60x_c_b870c45c_url),
+    'dla60': _cfg(url=dla60_24839fc4_url),
+    'dla60x': _cfg(url=dla60x_d15cacda_url),
+    'dla102': _cfg(url=dla102_d94d9790_url),
+    'dla102x': _cfg(url=dla102x_ad62be81_url),
+    'dla102x2': _cfg(url=dla102x2_262837b6_url),
+    'dla169': _cfg(url=dla169_0914e092_url),
     'dla60_res2net': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2net_dla60_4s-d88db7f9.pth'),
+        url=res2net_dla60_4s_d88db7f9_url),
     'dla60_res2next': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-res2net/res2next_dla60_4s-d327927b.pth'),
+        url=res2next_dla60_4s_d327927b_url),
 }
 
 

@@ -2,6 +2,7 @@
 This file is a copy of https://github.com/pytorch/vision 'densenet.py' (BSD-3-Clause) with
 fixed kwargs passthrough and addition of dynamic global avg/max pool.
 """
+import os
 import re
 from collections import OrderedDict
 from functools import partial
@@ -29,18 +30,29 @@ def _cfg(url=''):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    densenet121_ra_50efcf5c_url = _content.split('densenet121_ra_50efcf5c_url=')[1].split('\n')[0]
+    densenetblur121d_ra_100dcfbc_url = _content.split('densenetblur121d_ra_100dcfbc_url=')[1].split('\n')[0]
+    densenet169_b2777c0a_url = _content.split('densenet169_b2777c0a_url=')[1].split('\n')[0]
+    densenet201_c1103571_url = _content.split('densenet201_c1103571_url=')[1].split('\n')[0]
+    densenet161_8d451a50_url = _content.split('densenet161_8d451a50_url=')[1].split('\n')[0]
+    densenet121_a639ec97_url = _content.split('densenet121_a639ec97_url=')[1].split('\n')[0]
+
+
 default_cfgs = {
     'densenet121': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/densenet121_ra-50efcf5c.pth'),
+        url=densenet121_ra_50efcf5c_url),
     'densenet121d': _cfg(url=''),
     'densenetblur121d': _cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/densenetblur121d_ra-100dcfbc.pth'),
-    'densenet169': _cfg(url='https://download.pytorch.org/models/densenet169-b2777c0a.pth'),
-    'densenet201': _cfg(url='https://download.pytorch.org/models/densenet201-c1103571.pth'),
-    'densenet161': _cfg(url='https://download.pytorch.org/models/densenet161-8d451a50.pth'),
+        url=densenetblur121d_ra_100dcfbc_url),
+    'densenet169': _cfg(url=densenet169_b2777c0a_url),
+    'densenet201': _cfg(url=densenet201_c1103571_url),
+    'densenet161': _cfg(url=densenet161_8d451a50_url),
     'densenet264': _cfg(url=''),
     'densenet264d_iabn': _cfg(url=''),
-    'tv_densenet121': _cfg(url='https://download.pytorch.org/models/densenet121-a639ec97.pth'),
+    'tv_densenet121': _cfg(url=densenet121_a639ec97_url),
 }
 
 

@@ -10,6 +10,7 @@ Changes for timm, feature extraction, and rounded channel variant hacked togethe
 Copyright 2020 Ross Wightman
 """
 
+import os
 import torch.nn as nn
 from math import ceil
 
@@ -29,15 +30,24 @@ def _cfg(url=''):
     }
 
 
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(CURRENT_PATH, '../../url.ini'), 'r') as _f:
+    _content = _f.read()
+    rexnetv1_100_1b4dddf4_url = _content.split('rexnetv1_100_1b4dddf4_url=')[1].split('\n')[0]
+    rexnetv1_130_590d768e_url = _content.split('rexnetv1_130_590d768e_url=')[1].split('\n')[0]
+    rexnetv1_150_bd1a6aa8_url = _content.split('rexnetv1_150_bd1a6aa8_url=')[1].split('\n')[0]
+    rexnetv1_200_8c0b7f2d_url = _content.split('rexnetv1_200_8c0b7f2d_url=')[1].split('\n')[0]
+
+
 default_cfgs = dict(
     rexnet_100=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-rexnet/rexnetv1_100-1b4dddf4.pth'),
+        url=rexnetv1_100_1b4dddf4_url),
     rexnet_130=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-rexnet/rexnetv1_130-590d768e.pth'),
+        url=rexnetv1_130_590d768e_url),
     rexnet_150=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-rexnet/rexnetv1_150-bd1a6aa8.pth'),
+        url=rexnetv1_150_bd1a6aa8_url),
     rexnet_200=_cfg(
-        url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-rexnet/rexnetv1_200-8c0b7f2d.pth'),
+        url=rexnetv1_200_8c0b7f2d_url),
     rexnetr_100=_cfg(
         url=''),
     rexnetr_130=_cfg(
