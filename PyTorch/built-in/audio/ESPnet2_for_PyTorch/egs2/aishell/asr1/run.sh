@@ -21,11 +21,6 @@ use_wordlm=false
 speed_perturb_factors="0.9 1.0 1.1"
 
 inference_nj=32
-# arm 推理打开全核进行以提升推理速度
-if [ $(uname -m) = "aarch64" ]; then
-    inference_nj=192
-fi
-
 
 ./asr.sh                                               \
     --lang zh                                          \
